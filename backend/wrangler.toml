@@ -1,0 +1,7 @@
+name = "gm-assistant-bot"
+main = "src/worker.ts"
+compatibility_date = "2025-12-11"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
