@@ -1,9 +1,13 @@
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
+import { CORSPlugin } from "@orpc/server/plugins";
 import { router } from "./orpc/router";
 
 export function createApp() {
   const handler = new RPCHandler(router, {
+    plugins: [
+      new CORSPlugin()
+    ],
     interceptors: [
       onError((error) => {
         console.error(error);

@@ -11,7 +11,12 @@
     "type-check": "oxlint --type-aware --type-check",
     "backend:dev": "bun --hot ./backend/src/index.ts",
     "backend:preview": "wrangler dev --config ./backend/wrangler.toml",
-    "backend:deploy": "wrangler deploy --config ./backend/wrangler.toml"
+    "backend:deploy": "wrangler deploy --config ./backend/wrangler.toml",
+    "web:dev": "bun --hot ./ui/web/src/index.ts",
+    "web:build": "bun run ./ui/web/src/build.ts",
+    "web:preview": "wrangler dev --config ./ui/web/wrangler.toml",
+    "web:deploy": "wrangler deploy --config ./ui/web/wrangler.toml",
+    "dev": "bun run backend:dev & bun run web:dev"
   },
   "devDependencies": {
     "wrangler": "4.53.0",
