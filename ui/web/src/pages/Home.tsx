@@ -21,7 +21,7 @@ export function Home() {
   };
 
   useEffect(() => {
-    checkHealth();
+    void checkHealth();
   }, []);
 
   return (
@@ -37,7 +37,7 @@ export function Home() {
             <h2 className="text-xl font-semibold">Backend API Health</h2>
             <Button
               color="primary"
-              onPress={checkHealth}
+              onPress={() => void checkHealth()}
               isLoading={loading}
               size="sm"
             >

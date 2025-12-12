@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot ./src/index.ts",
-    "build": "bun --eval 'import(\"./src/index.ts\").then(m => m.build())'",
+    "dev": "bun --hot ./src/index.tsx",
+    "build": "bun --eval 'import(\"./src/index.tsx\").then(m => m.build())'",
     "preview": "wrangler dev --config ./wrangler.toml",
     "deploy": "wrangler deploy --config ./wrangler.toml",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "@heroui/react": "2.8.5",

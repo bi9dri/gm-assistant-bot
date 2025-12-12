@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { toSSG } from "hono/ssg";
-import { serveStatic } from "hono/bun";
+import { toSSG, serveStatic } from "hono/bun";
 import { renderToString } from "react-dom/server";
 import App from "./app";
 import { mkdir, readdir, copyFile, rm } from "fs/promises";

@@ -3,7 +3,16 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "lint": "bun run oxlint",
+    "format": "bun run oxlint --fix",
+    "type-check": "bun run oxlint --type-aware --type-check",
+    "dev": "bun --hot ./src/index.ts",
+    "preview": "wrangler dev --config ./wrangler.toml",
+    "deploy": "wrangler deploy --config ./wrangler.toml"
+  },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.5",
     "hono": "4.7.11",
     "zod": "4.1.13"
   },

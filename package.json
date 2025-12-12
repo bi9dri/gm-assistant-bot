@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "type-check": "oxlint --type-aware --type-check",
+    "type-check": "bun run --cwd backend type-check && bun run --cwd ui/web type-check",
     "backend:dev": "bun --hot ./backend/src/index.ts",
     "backend:preview": "wrangler dev --config ./backend/wrangler.toml",
     "backend:deploy": "wrangler deploy --config ./backend/wrangler.toml",

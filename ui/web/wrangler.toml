@@ -1,5 +1,5 @@
 name = "gm-assistant-bot-web"
-main = "src/index.ts"
+main = "src/index.tsx"
 compatibility_date = "2025-12-11"
 compatibility_flags = ["nodejs_compat"]
 
