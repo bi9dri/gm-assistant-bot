@@ -6,22 +6,18 @@
     "ui/*"
   ],
   "scripts": {
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "type-check": "bun run --cwd backend type-check && bun run --cwd ui/web type-check",
-    "backend:dev": "bun --hot ./backend/src/index.ts",
-    "backend:preview": "wrangler dev --config ./backend/wrangler.toml",
-    "backend:deploy": "wrangler deploy --config ./backend/wrangler.toml",
-    "web:dev": "bun --hot ./ui/web/src/index.ts",
-    "web:build": "bun run ./ui/web/src/build.ts",
-    "web:preview": "wrangler dev --config ./ui/web/wrangler.toml",
-    "web:deploy": "wrangler deploy --config ./ui/web/wrangler.toml",
-    "dev": "bun run backend:dev & bun run web:dev"
+    "lint": "bun --filter '*' lint",
+    "format": "bun --filter '*' format",
+    "type-check": "bun --filter '*' type-check",
+    "dev": "bun --filter '*' dev",
+    "preview": "bun --filter '*' preview",
+    "deploy": "bun --filter '*' deploy"
   },
   "devDependencies": {
-    "wrangler": "4.53.0",
-    "typescript": "5.9.3",
+    "oxfmt": "0.17.0",
     "oxlint": "1.32.0",
-    "oxlint-tsgolint": "0.8.4"
+    "oxlint-tsgolint": "0.8.6",
+    "typescript": "5.9.3",
+    "wrangler": "4.54.0"
   }
 }
