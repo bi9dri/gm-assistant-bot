@@ -28,26 +28,29 @@
 - **Type Safety**: Shared Zod schemas in `backend/src/types/api.ts`
 
 ### Frontend Structure
-- **Dual deployment**: Bun (local with HMR) + Cloudflare Workers Static Assets (production)
-- **Single entry point**: `ui/web/src/index.ts` - Hono app with SSG + Bun dev server
-- **Build**: SSG via Hono's `toSSG()` helper + Bun.build() for assets
-- **UI**: React 19 + HeroUI + Tailwind CSS v4
+- **Dual deployment**: Vite dev server (local with HMR) + Cloudflare Workers Static Assets (production)
+- **Entry point**: `ui/web/src/main.tsx` - React app with TanStack Router
+- **Build**: Vite build + TypeScript compilation
+- **UI**: React 19 + DaisyUI + Tailwind CSS v4
+- **Routing**: TanStack Router with file-based routing
 
 ### API Layer
 - **Hono** for HTTP routing and middleware
-- **Zod** for runtime type validation
-- Backend defines schemas in `backend/src/types/api.ts`
-- Frontend imports schemas for validation in `ui/web/src/lib/api-client.ts`
+- **Hono RPC** (`hono/client`) for type-safe API calls from frontend
+- **@hono/zod-validator** for runtime request validation on backend
+- Backend exports `AppType` for frontend type inference
+- Frontend uses `hc<AppType>()` client with full type safety
 - CORS enabled via Hono's `cors()` middleware
-- Type safety via shared Zod schemas + TypeScript project references
+- No manual schema imports needed - types flow automatically via RPC
 
 ### Database
 TBD
 
-### Bun APIs (Local Development Only)
-- HTML imports for React SSG (used in `ui/web/src/index.ts`)
-- `Bun.build()` for bundling JS/CSS (used in `ui/web/src/build.ts`)
-- `Bun.serve()` with HMR for development
+### Development Tools
+- **Vite** for frontend development and bundling (with HMR)
+- **TanStack Router** for file-based routing with type safety
+- **Bun** for backend hot reload (`bun --hot`)
+- **Wrangler** for Cloudflare Workers preview and deployment
 
 ## Development Commands
 
@@ -58,26 +61,30 @@ fish -c "bun run dev"
 # Backend only (Bun with hot reload, port 3000)
 fish -c "bun run backend:dev"
 
-# Frontend only (Bun with HMR, port 3001)
+# Frontend only (Vite with HMR, port 3000)
 fish -c "bun run web:dev"
 
 # Build frontend static files
 fish -c "bun run web:build"
 
-# Preview with Workers runtime
-fish -c "bun run backend:preview"  # Backend
-fish -c "bun run web:preview"      # Frontend
+# Preview with Vite
+fish -c "bun run web:preview"
+
+# Preview backend with Workers runtime
+fish -c "bun run backend:preview"
 
 # Linting
 fish -c "bun run lint"
-fish -c "bun run lint:fix"
+
+# Formatting
+fish -c "bun run format"
 
 # Type checking
 fish -c "bun run type-check"
 
 # Deploy to Cloudflare Workers
 fish -c "bun run backend:deploy"   # Backend
-fish -c "bun run web:deploy"       # Frontend
+fish -c "bun run web:deploy"       # Frontend (build + deploy)
 ```
 
 ## Testing
@@ -92,129 +99,85 @@ test("hello world", () => {
 });
 ```
 
-## Frontend (React SSG with HeroUI)
+## Frontend (React with TanStack Router + DaisyUI)
 
-Use HTML imports with `Bun.serve()` for development. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+Frontend uses Vite for fast development with HMR, TanStack Router for file-based routing, and DaisyUI for UI components.
 
-### Development Server + SSG
+### Main Entry Point
 
-`ui/web/src/index.ts`:
+`ui/web/src/main.tsx`:
 
-```ts#index.ts
-import { Hono } from "hono";
-import { toSSG } from "hono/ssg";
-import { renderToString } from "react-dom/server";
-import App from "./app";
+```tsx#main.tsx
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { routeTree } from "./routeTree.gen";
+import "./styles.css";
 
-const app = new Hono();
-
-// SSG route
-app.get("/", (c) => {
-  const appHtml = renderToString(<App />);
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GM Assistant Bot</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <div id="root">${appHtml}</div>
-  <script type="module" src="/app.js"></script>
-</body>
-</html>`;
-  return c.html(html);
+const router = createRouter({
+  routeTree,
+  context: {},
+  defaultPreload: "intent",
+  scrollRestoration: true,
+  defaultStructuralSharing: true,
+  defaultPreloadStaleTime: 0,
 });
 
-// Build function (called via package.json script)
-export async function build() {
-  await toSSG(app, { dir: "./dist" });
-  // Then build JS/CSS with Bun.build()...
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
 }
 
-// Bun development server (only runs locally)
-if (import.meta.main) {
-  const server = Bun.serve({
-    port: process.env.PORT ?? 3001,
-    fetch: app.fetch,
-    development: { hmr: true, console: true },
-  });
-  console.log(`🚀 Web app running at http://localhost:${server.port}`);
-}
-
-export default app;
-```
-
-### React App with HeroUI
-
-`ui/web/src/app.tsx`:
-
-```tsx#app.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { HeroUIProvider } from "@heroui/react";
-import { Home } from "./pages/Home";
-import "./styles/index.css";
-
-export default function App() {
-  return (
-    <HeroUIProvider>
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Home />
-      </main>
-    </HeroUIProvider>
+const rootElement = document.getElementById("app");
+if (rootElement && !rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
   );
 }
-
-// Client-side hydration
-if (typeof document !== "undefined") {
-  const root = createRoot(document.getElementById("root")!);
-  root.render(<App />);
-}
 ```
 
-### Tailwind CSS v4 Configuration
+### Tailwind CSS v4 + DaisyUI Configuration
 
-`ui/web/src/styles/index.css`:
+`ui/web/src/styles.css`:
 
-```css#index.css
+```css#styles.css
 @import "tailwindcss";
-@plugin './hero.ts';
-@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+@plugin "daisyui";
+
 @custom-variant dark (&:is(.dark *));
 ```
 
-`ui/web/src/hero.ts`:
+### Type-Safe API Client with Hono RPC
 
-```ts#hero.ts
-import { heroui } from "@heroui/react";
+`ui/web/src/api.ts`:
 
-export default heroui();
-```
-
-### Type-Safe API Client (Fetch + Zod)
-
-`ui/web/src/lib/api-client.ts`:
-
-```ts#api-client.ts
-import { HealthResponseSchema, type HealthResponse } from "../../../backend/src/types/api";
+```ts#api.ts
+import type { AppType } from "../../../backend";
+import { hc } from "hono/client";
 
 const API_BASE_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://gm-assistant-bot-backend.workers.dev";
 
-export const api = {
-  async health(): Promise<HealthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/health`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return HealthResponseSchema.parse(data); // Runtime validation
-  },
-} as const;
+const client = hc<AppType>(API_BASE_URL);
+export default client.api;
+```
+
+Usage in components:
+
+```tsx#example-usage.tsx
+import api from "../api";
+
+// Fully type-safe API calls - no manual type imports needed!
+const response = await api.health.$get();
+const data = await response.json();
+// `data` is automatically typed based on backend route definition
 ```
 
 ### Backend API with Hono
@@ -225,21 +188,13 @@ export const api = {
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { HealthResponseSchema } from "./types/api";
+import * as healthcheck from "./handler/healthcheck";
 
-const app = new Hono();
+const app = new Hono().basePath("/api");
+const route = app.get("/health", healthcheck.validator, healthcheck.handler);
 
 app.use("*", cors());
 app.use("*", logger());
-
-app.get("/api/health", (c) => {
-  const response = {
-    status: "ok" as const,
-    timestamp: new Date().toISOString(),
-  };
-  HealthResponseSchema.parse(response); // Validate
-  return c.json(response);
-});
 
 app.notFound((c) => c.json({ error: "Not Found" }, 404));
 app.onError((err, c) => {
@@ -248,21 +203,26 @@ app.onError((err, c) => {
 });
 
 export default app;
+export type AppType = typeof route; // For frontend RPC client
 ```
 
-### Shared Type Definitions
+### Handler with Validation
 
-`backend/src/types/api.ts`:
+`backend/src/handler/healthcheck.ts`:
 
-```ts#types/api.ts
-import { z } from "zod";
+```ts#healthcheck.ts
+import { zValidator } from "@hono/zod-validator";
+import type { Context } from "hono";
+import z from "zod";
 
-export const HealthResponseSchema = z.object({
-  status: z.literal("ok"),
-  timestamp: z.string(),
-});
+export const validator = zValidator("query", z.object({}));
 
-export type HealthResponse = z.infer<typeof HealthResponseSchema>;
+export const handler = (c: Context) => {
+  return c.json({
+    status: "ok" as const,
+    timestamp: new Date().toISOString(),
+  });
+};
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
