@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardBody, Button, Spinner, Divider } from "@heroui/react";
-import { api } from "../lib/orpc-client";
+import { api } from "../lib/api-client";
 
 export function Home() {
   const [health, setHealth] = useState<{ status: string; timestamp: string } | null>(null);
@@ -29,7 +29,7 @@ export function Home() {
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="flex flex-col gap-3">
           <h1 className="text-3xl font-bold">Welcome to GM Assistant Bot</h1>
-          <p className="text-default-500">A modern React SSG app with HeroUI and oRPC</p>
+          <p className="text-default-500">A modern React SSG app with HeroUI and Hono</p>
         </CardHeader>
         <Divider />
         <CardBody className="gap-4">
@@ -81,7 +81,7 @@ export function Home() {
           <div className="text-small text-default-400">
             <p>This demo showcases:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Type-safe API calls with oRPC</li>
+              <li>Type-safe API calls with Hono + Zod</li>
               <li>Beautiful UI components from HeroUI</li>
               <li>Static Site Generation with Bun</li>
               <li>Cloudflare Workers deployment</li>

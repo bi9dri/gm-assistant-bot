@@ -1,15 +1,26 @@
-import { createApp } from "./app.ts";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { HealthResponseSchema } from "./types/api";
 
-const app = createApp();
+const app = new Hono();
 
-const server = Bun.serve({
-  port: process.env.PORT ?? 3000,
-  fetch: (request) => app.fetch(request),
-  development: {
-    hmr: true,
-    console: true,
-  },
+app.use("*", cors());
+app.use("*", logger());
+
+app.get("/api/health", (c) => {
+  const response = {
+    status: "ok" as const,
+    timestamp: new Date().toISOString(),
+  };
+  HealthResponseSchema.parse(response);
+  return c.json(response);
 });
 
-console.log(`🚀 Server running at http://localhost:${server.port}`);
-console.log(`📍 Health check: http://localhost:${server.port}/health`);
+app.notFound((c) => c.json({ error: "Not Found" }, 404));
+app.onError((err, c) => {
+  console.error("Server error:", err);
+  return c.json({ error: "Internal Server Error" }, 500);
+});
+
+export default app;

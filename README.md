@@ -7,7 +7,7 @@ GameMaster's Assistant is a Discord bot designed to streamline tabletop RPG and 
 - **Backend**: TypeScript application server with dual deployment
   - Local development: Bun runtime
   - Production: Cloudflare Workers
-- **API Layer**: oRPC for end-to-end type-safe communication
+- **API Layer**: Hono framework with Zod validation for type-safe communication
 - **Frontend**: React SSG application with HeroUI
   - Local development: Bun with HMR
   - Production: Cloudflare Workers Static Assets
@@ -18,21 +18,17 @@ GameMaster's Assistant is a Discord bot designed to streamline tabletop RPG and 
 .
 ├── backend/              # Backend application
 │   ├── src/
-│   │   ├── orpc/        # oRPC routers and context
-│   │   ├── app.ts       # Core application logic (with CORS)
-│   │   ├── index.ts     # Bun entry point (local dev)
-│   │   └── worker.ts    # Cloudflare Workers entry point
+│   │   ├── types/       # Shared Zod schemas
+│   │   └── index.ts     # Hono app (Bun dev + Workers)
 │   └── wrangler.toml    # Cloudflare Workers config
 ├── ui/                  # Frontend applications
 │   └── web/             # React SSG Web UI
 │       ├── src/
 │       │   ├── pages/   # Page components
-│       │   ├── lib/     # oRPC client & utilities
+│       │   ├── lib/     # API client & utilities
 │       │   ├── styles/  # Tailwind CSS v4 config
 │       │   ├── app.tsx  # Root component (HeroUIProvider)
-│       │   ├── index.ts # Bun dev server
-│       │   ├── build.ts # SSG build script
-│       │   └── worker.ts # Cloudflare Workers handler
+│       │   └── index.ts # Hono app (SSG + Bun dev server)
 │       └── wrangler.toml # Cloudflare Workers config
 └── package.json         # Root workspace config
 ```
@@ -42,17 +38,18 @@ GameMaster's Assistant is a Discord bot designed to streamline tabletop RPG and 
 ### Backend
 - **Runtime**: Bun (local) / Cloudflare Workers (production)
 - **Language**: TypeScript
-- **API**: oRPC with CORSPlugin
-- **Database**: IndexedDB / Dexie.js
-- **Validation**: Zod
+- **Framework**: Hono v4.7.11
+- **Middleware**: CORS, Logger
+- **Database**: TBD
+- **Validation**: Zod v4.1.13
 
 ### Frontend
 - **Framework**: React 19.2.1
-- **UI Library**: HeroUI v3
+- **UI Library**: HeroUI v2.8.5
 - **Styling**: Tailwind CSS v4
 - **Animation**: Framer Motion
-- **API Client**: @orpc/client (type-safe)
-- **SSG**: Custom Bun-based build script
+- **API Client**: Fetch with Zod validation
+- **SSG**: Hono's toSSG() helper + Bun.build()
 
 ### Development Tools
 - **Linting**: oxlint
@@ -103,7 +100,7 @@ Server will be available at http://localhost:3001
 
 #### Available Endpoints
 
-- `GET /rpc/health` - Basic health check (backend)
+- `GET /api/health` - Basic health check (backend)
 
 ### Building Frontend
 
@@ -184,49 +181,76 @@ bun run web:deploy
 ## Features
 
 ### Backend API
-- Health check endpoint at `/rpc/health`
+- Health check endpoint at `/api/health`
 - CORS enabled for cross-origin requests
-- Type-safe API with oRPC
+- Type-safe API with Hono + Zod schemas
+- Single entry point for both Bun and Cloudflare Workers
 
 ### Frontend
 - Modern React 19 with HeroUI components
-- Type-safe API calls with oRPC client
-- Static Site Generation (SSG)
+- Type-safe API calls with Zod validation
+- Static Site Generation via Hono's SSG helper
 - Beautiful gradient background
 - Responsive design with Tailwind CSS v4
 - Health check demo page
+- Single entry point for dev server and SSG build
 
 ## Adding New API Endpoints
 
 To add a new API endpoint:
 
-1. Define the contract in `backend/src/orpc/router.ts`:
+1. Define the Zod schema in `backend/src/types/api.ts`:
 ```typescript
-export const contract = {
-  health: oc.input(z.void()).output(...).route({ method: "GET", path: "/health" }),
-  // Add your new endpoint
-  myEndpoint: oc.input(z.object({ ... })).output(z.object({ ... })).route({ method: "POST", path: "/my-endpoint" }),
-};
+export const MyRequestSchema = z.object({
+  name: z.string(),
+});
+
+export const MyResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type MyRequest = z.infer<typeof MyRequestSchema>;
+export type MyResponse = z.infer<typeof MyResponseSchema>;
 ```
 
-2. Implement the handler:
+2. Add the route in `backend/src/index.ts`:
 ```typescript
-export const router = os.router({
-  health: os.handler(() => ({ status: "ok", timestamp: new Date().toISOString() })),
-  // Add your handler
-  myEndpoint: os.handler(async (input) => {
-    // Your logic here
-    return { ... };
-  }),
+app.post("/api/my-endpoint", async (c) => {
+  const body = await c.req.json();
+  const input = MyRequestSchema.parse(body); // Validate input
+
+  const response: MyResponse = {
+    message: `Hello, ${input.name}!`,
+  };
+
+  MyResponseSchema.parse(response); // Validate output
+  return c.json(response);
 });
 ```
 
-3. Use in frontend via the type-safe client:
+3. Add the method to frontend API client in `ui/web/src/lib/api-client.ts`:
 ```typescript
-import { api } from '../lib/orpc-client';
+export const api = {
+  // ... existing methods
+  async myEndpoint(request: MyRequest): Promise<MyResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/my-endpoint`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return MyResponseSchema.parse(data); // Runtime validation
+  },
+} as const;
+```
 
-const result = await api.myEndpoint({ ... });
-// Fully type-safe!
+4. Use in frontend components:
+```typescript
+import { api } from '../lib/api-client';
+
+const result = await api.myEndpoint({ name: "World" });
+// Fully type-safe with runtime validation!
 ```
 
 ## License

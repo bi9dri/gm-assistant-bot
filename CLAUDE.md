@@ -23,25 +23,23 @@
 
 ### Backend Structure
 - **Dual deployment**: Bun (local) + Cloudflare Workers (production)
-- **Entry points**:
-  - `backend/src/index.ts` - Bun development server
-  - `backend/src/worker.ts` - Cloudflare Workers handler
-- **Shared logic**: `backend/src/app.ts` contains runtime-agnostic code with CORS
-- **API Router**: `backend/src/orpc/router.ts` - oRPC contract and implementation
+- **Single entry point**: `backend/src/index.ts` - Hono app for both Bun and Cloudflare Workers
+- **API Framework**: Hono with middleware (CORS, logger)
+- **Type Safety**: Shared Zod schemas in `backend/src/types/api.ts`
 
 ### Frontend Structure
 - **Dual deployment**: Bun (local with HMR) + Cloudflare Workers Static Assets (production)
-- **Entry points**:
-  - `ui/web/src/index.ts` - Bun development server (port 3001)
-  - `ui/web/src/worker.ts` - Cloudflare Workers static asset handler
-- **Build**: `ui/web/src/build.ts` - SSG build script
+- **Single entry point**: `ui/web/src/index.ts` - Hono app with SSG + Bun dev server
+- **Build**: SSG via Hono's `toSSG()` helper + Bun.build() for assets
 - **UI**: React 19 + HeroUI + Tailwind CSS v4
 
 ### API Layer
-- **oRPC** for type-safe API communication
-- Backend exports contract via `backend/src/orpc/router.ts`
-- Frontend imports contract for type-safe client in `ui/web/src/lib/orpc-client.ts`
-- CORS enabled via `CORSPlugin` in backend
+- **Hono** for HTTP routing and middleware
+- **Zod** for runtime type validation
+- Backend defines schemas in `backend/src/types/api.ts`
+- Frontend imports schemas for validation in `ui/web/src/lib/api-client.ts`
+- CORS enabled via Hono's `cors()` middleware
+- Type safety via shared Zod schemas + TypeScript project references
 
 ### Database
 TBD
@@ -98,45 +96,54 @@ test("hello world", () => {
 
 Use HTML imports with `Bun.serve()` for development. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
 
-### Development Server
+### Development Server + SSG
 
 `ui/web/src/index.ts`:
 
 ```ts#index.ts
-import indexHtml from "./index.html"
+import { Hono } from "hono";
+import { toSSG } from "hono/ssg";
+import { renderToString } from "react-dom/server";
+import App from "./app";
 
-const server = Bun.serve({
-  port: process.env.PORT ?? 3001,
-  routes: {
-    "/": indexHtml,
-  },
-  development: {
-    hmr: true,
-    console: true,
-  },
-});
+const app = new Hono();
 
-console.log(`🚀 Web app running at http://localhost:${server.port}`);
-```
-
-### HTML Entry Point
-
-`ui/web/src/index.html`:
-
-```html#index.html
-<!DOCTYPE html>
+// SSG route
+app.get("/", (c) => {
+  const appHtml = renderToString(<App />);
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GM Assistant Bot</title>
-  <link rel="stylesheet" href="./styles/index.css">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="./app.tsx"></script>
+  <div id="root">${appHtml}</div>
+  <script type="module" src="/app.js"></script>
 </body>
-</html>
+</html>`;
+  return c.html(html);
+});
+
+// Build function (called via package.json script)
+export async function build() {
+  await toSSG(app, { dir: "./dist" });
+  // Then build JS/CSS with Bun.build()...
+}
+
+// Bun development server (only runs locally)
+if (import.meta.main) {
+  const server = Bun.serve({
+    port: process.env.PORT ?? 3001,
+    fetch: app.fetch,
+    development: { hmr: true, console: true },
+  });
+  console.log(`🚀 Web app running at http://localhost:${server.port}`);
+}
+
+export default app;
 ```
 
 ### React App with HeroUI
@@ -186,121 +193,76 @@ import { heroui } from "@heroui/react";
 export default heroui();
 ```
 
-### Type-Safe API Client (oRPC)
+### Type-Safe API Client (Fetch + Zod)
 
-`ui/web/src/lib/orpc-client.ts`:
+`ui/web/src/lib/api-client.ts`:
 
-```ts#orpc-client.ts
-import { createORPCClient } from '@orpc/client';
-import { RPCLink } from '@orpc/client/fetch';
-import type { ContractRouterClient } from '@orpc/contract';
-import type { contract } from '../../../backend/src/orpc/router';
+```ts#api-client.ts
+import { HealthResponseSchema, type HealthResponse } from "../../../backend/src/types/api";
 
-const link = new RPCLink({
-  url: typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/rpc'
-    : 'https://gm-assistant-bot-backend.workers.dev/rpc',
+const API_BASE_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gm-assistant-bot-backend.workers.dev";
+
+export const api = {
+  async health(): Promise<HealthResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/health`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return HealthResponseSchema.parse(data); // Runtime validation
+  },
+} as const;
+```
+
+### Backend API with Hono
+
+`backend/src/index.ts`:
+
+```ts#index.ts
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { HealthResponseSchema } from "./types/api";
+
+const app = new Hono();
+
+app.use("*", cors());
+app.use("*", logger());
+
+app.get("/api/health", (c) => {
+  const response = {
+    status: "ok" as const,
+    timestamp: new Date().toISOString(),
+  };
+  HealthResponseSchema.parse(response); // Validate
+  return c.json(response);
 });
 
-export const api: ContractRouterClient<typeof contract> = createORPCClient(link);
+app.notFound((c) => c.json({ error: "Not Found" }, 404));
+app.onError((err, c) => {
+  console.error("Server error:", err);
+  return c.json({ error: "Internal Server Error" }, 500);
+});
+
+export default app;
 ```
 
-### SSG Build Script
+### Shared Type Definitions
 
-`ui/web/src/build.ts`:
+`backend/src/types/api.ts`:
 
-```ts#build.ts
-import { renderToStaticMarkup } from "react-dom/server";
-import App from "./app";
-import { mkdir, write, rm } from "fs/promises";
+```ts#types/api.ts
+import { z } from "zod";
 
-async function build() {
-  console.log("🔨 Building static site...");
+export const HealthResponseSchema = z.object({
+  status: z.literal("ok"),
+  timestamp: z.string(),
+});
 
-  // Clean and create dist directory
-  await rm("./dist", { recursive: true, force: true });
-  await mkdir("./dist", { recursive: true });
-
-  // Render React to static HTML
-  const appHtml = renderToStaticMarkup(<App />);
-
-  // Create full HTML document
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GM Assistant Bot</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <div id="root">${appHtml}</div>
-  <script type="module" src="/app.js"></script>
-</body>
-</html>`;
-
-  // Write HTML
-  await write("./dist/index.html", html);
-
-  // Build JavaScript bundle
-  await Bun.build({
-    entrypoints: ["./src/app.tsx"],
-    outdir: "./dist",
-    naming: "[name].js",
-    minify: true,
-    target: "browser",
-  });
-
-  // Build CSS bundle
-  await Bun.build({
-    entrypoints: ["./src/styles/index.css"],
-    outdir: "./dist",
-    naming: "styles.css",
-    minify: true,
-  });
-
-  console.log("✅ Build complete! Output in ./dist/");
-}
-
-build().catch(console.error);
-```
-
-### Cloudflare Workers Static Asset Handler
-
-`ui/web/src/worker.ts`:
-
-```ts#worker.ts
-/// <reference types="@cloudflare/workers-types" />
-
-export default {
-  async fetch(request: Request, env: { ASSETS: Fetcher }): Promise<Response> {
-    return env.ASSETS.fetch(request);
-  },
-} satisfies ExportedHandler<{ ASSETS: Fetcher }>;
-```
-
-`ui/web/wrangler.toml`:
-
-```toml
-name = "gm-assistant-bot-web"
-main = "src/worker.ts"
-compatibility_date = "2025-12-11"
-compatibility_flags = ["nodejs_compat"]
-
-[assets]
-directory = "./dist"
-binding = "ASSETS"
-not_found_handling = "single-page-application"
-html_handling = "auto-trailing-slash"
-
-[observability]
-enabled = true
-```
-
-Then, run development server:
-
-```sh
-bun --hot ./ui/web/src/index.ts
+export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.

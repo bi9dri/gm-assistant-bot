@@ -4,7 +4,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "dependencies": {
-    "@orpc/server": "1.12.2",
+    "hono": "4.7.11",
     "zod": "4.1.13"
   },
   "devDependencies": {

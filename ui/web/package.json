@@ -4,18 +4,19 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot ./src/index.ts",
-    "build": "bun run ./src/build.ts",
+    "build": "bun --eval 'import(\"./src/index.ts\").then(m => m.build())'",
     "preview": "wrangler dev --config ./wrangler.toml",
     "deploy": "wrangler deploy --config ./wrangler.toml",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@heroui/react": "2.8.5",
-    "@orpc/client": "1.12.2",
     "framer-motion": "12.23.26",
+    "hono": "4.7.11",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "tailwindcss": "4.1.0"
+    "tailwindcss": "4.1.0",
+    "zod": "4.1.13"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251210.0",
