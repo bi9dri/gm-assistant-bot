@@ -78,7 +78,7 @@ bun install
 
 #### Start Full Stack Development
 
-Start both backend and frontend with hot reload:
+Start both backend and frontend with hot reload (from root directory):
 
 ```bash
 bun run dev
@@ -89,16 +89,22 @@ bun run dev
 
 #### Start Backend Only
 
+From backend directory:
+
 ```bash
-bun run backend:dev
+cd backend
+bun run dev
 ```
 
 Server will be available at http://localhost:3000
 
 #### Start Frontend Only
 
+From frontend directory:
+
 ```bash
-bun run web:dev
+cd ui/web
+bun run dev
 ```
 
 Server will be available at http://localhost:3000
@@ -109,10 +115,11 @@ Server will be available at http://localhost:3000
 
 ### Building Frontend
 
-Build the static site for production:
+Build the static site for production (from frontend directory):
 
 ```bash
-bun run web:build
+cd ui/web
+bun run build
 ```
 
 Output will be in `ui/web/dist/`
@@ -121,29 +128,43 @@ Output will be in `ui/web/dist/`
 
 **Backend (Cloudflare Workers runtime):**
 ```bash
-bun run backend:preview
+cd backend
+bun run preview
 ```
 
 Server will be available at http://localhost:8787
 
 **Frontend (Vite preview):**
 ```bash
-bun run web:preview
+cd ui/web
+bun run preview
 ```
 
 Server will be available at http://localhost:4173
 
 ### Linting
 
+**Project-wide (from root directory):**
 ```bash
-# Run linter
+# Run linter for all packages
 bun run lint
 
-# Format code
+# Format code for all packages
 bun run format
 
-# Type checking
+# Type checking for all packages
 bun run type-check
+```
+
+**Individual service:**
+```bash
+# Backend
+cd backend
+bun run lint
+
+# Frontend
+cd ui/web
+bun run lint
 ```
 
 ## Deployment
@@ -152,34 +173,41 @@ bun run type-check
 
 **Backend:**
 ```bash
-bun run backend:deploy
+cd backend
+bun run deploy
 ```
 
 **Frontend:**
 ```bash
+cd ui/web
 # Build first
-bun run web:build
+bun run build
 
 # Then deploy
-bun run web:deploy
+bun run deploy
+```
+
+**Deploy All (from root directory):**
+```bash
+bun run deploy
 ```
 
 ## Development Workflow
 
 ### Backend
-1. **Local Development**: Use `bun run backend:dev` for fast iteration with Bun's hot reload
-2. **Preview**: Use `bun run backend:preview` to test with production runtime (workerd)
-3. **Deploy**: Use `bun run backend:deploy` to deploy to Cloudflare Workers
+1. **Local Development**: `cd backend && bun run dev` for fast iteration with Bun's hot reload
+2. **Preview**: `cd backend && bun run preview` to test with production runtime (workerd)
+3. **Deploy**: `cd backend && bun run deploy` to deploy to Cloudflare Workers
 
 ### Frontend
-1. **Local Development**: Use `bun run web:dev` for fast iteration with Vite HMR
-2. **Build**: Use `bun run web:build` to generate static files
-3. **Preview**: Use `bun run web:preview` to test production build locally
-4. **Deploy**: Use `bun run web:deploy` to build and deploy to Cloudflare Workers
+1. **Local Development**: `cd ui/web && bun run dev` for fast iteration with Vite HMR
+2. **Build**: `cd ui/web && bun run build` to generate static files
+3. **Preview**: `cd ui/web && bun run preview` to test production build locally
+4. **Deploy**: `cd ui/web && bun run deploy` to build and deploy to Cloudflare Workers
 
 ### Full Stack
-1. **Development**: Use `bun run dev` to start both backend and frontend
-2. **Deploy**: Deploy backend first, then frontend
+1. **Development**: `bun run dev` (from root) to start both backend and frontend
+2. **Deploy**: `bun run deploy` (from root) to deploy both services, or deploy individually from each directory
 
 ## Features
 

@@ -25,7 +25,7 @@
 - **Dual deployment**: Bun (local) + Cloudflare Workers (production)
 - **Single entry point**: `backend/src/index.ts` - Hono app for both Bun and Cloudflare Workers
 - **API Framework**: Hono with middleware (CORS, logger)
-- **Type Safety**: Shared Zod schemas in `backend/src/types/api.ts`
+- **Type Safety**: Zod validation in handlers + AppType export for Hono RPC
 
 ### Frontend Structure
 - **Dual deployment**: Vite dev server (local with HMR) + Cloudflare Workers Static Assets (production)
@@ -54,37 +54,55 @@ TBD
 
 ## Development Commands
 
+### Full Stack (from root directory)
 ```bash
-# Full stack development (backend + frontend)
+# Start both backend and frontend with hot reload
 fish -c "bun run dev"
 
-# Backend only (Bun with hot reload, port 3000)
-fish -c "bun run backend:dev"
-
-# Frontend only (Vite with HMR, port 3000)
-fish -c "bun run web:dev"
-
-# Build frontend static files
-fish -c "bun run web:build"
-
-# Preview with Vite
-fish -c "bun run web:preview"
-
-# Preview backend with Workers runtime
-fish -c "bun run backend:preview"
-
-# Linting
+# Lint all packages
 fish -c "bun run lint"
 
-# Formatting
+# Format all packages
 fish -c "bun run format"
 
-# Type checking
+# Type check all packages
 fish -c "bun run type-check"
 
+# Deploy all services to Cloudflare Workers
+fish -c "bun run deploy"
+```
+
+### Backend Only (from backend directory)
+```bash
+# Start backend with Bun hot reload (port 3000)
+fish -c "cd backend && bun run dev"
+
+# Preview with Cloudflare Workers runtime (port 8787)
+fish -c "cd backend && bun run preview"
+
 # Deploy to Cloudflare Workers
-fish -c "bun run backend:deploy"   # Backend
-fish -c "bun run web:deploy"       # Frontend (build + deploy)
+fish -c "cd backend && bun run deploy"
+
+# Lint backend only
+fish -c "cd backend && bun run lint"
+```
+
+### Frontend Only (from frontend directory)
+```bash
+# Start frontend with Vite HMR (port 3000)
+fish -c "cd ui/web && bun run dev"
+
+# Build static files
+fish -c "cd ui/web && bun run build"
+
+# Preview production build (port 4173)
+fish -c "cd ui/web && bun run preview"
+
+# Deploy to Cloudflare Workers (build + deploy)
+fish -c "cd ui/web && bun run deploy"
+
+# Lint frontend only
+fish -c "cd ui/web && bun run lint"
 ```
 
 ## Testing
