@@ -1,8 +1,0 @@
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "rules": {
-    "typescript/no-floating-promises": "error",
-    "typescript/await-thenable": "error",
-    "typescript/no-misused-promises": "error"
-  }
-}
