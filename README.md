@@ -222,7 +222,7 @@ bun run deploy
 - Modern React 19 with DaisyUI components
 - Type-safe API calls via Hono RPC client (no manual type imports)
 - File-based routing with TanStack Router
-- Theme switching support (light/dark)
+- Theme switching support (All DaisyUI themes including light, dark, cupcake, synthwave, etc.)
 - Responsive design with Tailwind CSS v4
 - Fast development with Vite HMR
 
