@@ -1,236 +1,232 @@
 # gm-assistant-bot
 
-GameMaster's Assistant is a Discord bot designed to streamline tabletop RPG and murder mystery game sessions by automating common GM tasks, enabling game masters to focus on storytelling and player engagement.
+GameMaster's Assistantは、TRPGやマーダーミステリーのセッションを効率化するDiscord botです。一般的なGMタスクを自動化することで、ゲームマスターがストーリーテリングとプレイヤーとの対話に集中できるように設計されています。
 
-## Architecture
+## アーキテクチャ
 
-- **Backend**: TypeScript application server with dual deployment
-  - Local development: Bun runtime with hot reload
-  - Production: Cloudflare Workers
-- **API Layer**: Hono framework with Hono RPC for end-to-end type safety
-- **Frontend**: React SPA with TanStack Router and DaisyUI
-  - Local development: Vite with HMR
-  - Production: Cloudflare Workers Static Assets
+- **バックエンド**: デュアルデプロイメント対応のTypeScriptアプリケーションサーバー
+  - ローカル開発: Bunランタイムでホットリロード
+  - 本番環境: Cloudflare Workers
+- **APIレイヤー**: E2Eの型安全性を提供するHonoフレームワークとHono RPC
+- **フロントエンド**: TanStack RouterとDaisyUIを使用したReact SPA
+  - ローカル開発: ViteでHMR対応
+  - 本番環境: Cloudflare Workers Static Assets
 
-## Project Structure
+## プロジェクト構造
 
 ```
 .
-├── backend/              # Backend application
+├── backend/              # バックエンドアプリケーション
 │   ├── src/
-│   │   ├── handler/     # Route handlers
-│   │   └── index.ts     # Hono app (exports AppType for RPC)
+│   │   ├── handler/     # ルートハンドラ
+│   │   └── index.ts     # Honoアプリ (RPCのためにAppTypeをエクスポート)
 │   ├── package.json
-│   └── wrangler.toml    # Cloudflare Workers config
-├── ui/                  # Frontend applications
-│   └── web/             # React SPA with TanStack Router
+│   └── wrangler.toml    # Cloudflare Workers設定
+├── ui/                  # フロントエンドアプリケーション
+│   └── web/             # TanStack Routerを使用したReact SPA
 │       ├── src/
-│       │   ├── routes/  # File-based routes (TanStack Router)
-│       │   ├── theme/   # Theme components
-│       │   ├── api.ts   # Hono RPC client
-│       │   └── main.tsx # Entry point
+│       │   ├── routes/  # ファイルベースルーティング (TanStack Router)
+│       │   ├── theme/   # テーマコンポーネント
+│       │   ├── api.ts   # Hono RPCクライアント
+│       │   └── main.tsx # エントリーポイント
 │       ├── index.html
 │       ├── vite.config.ts
 │       ├── package.json
 │       └── wrangler.toml
-└── package.json         # Root workspace config
+└── package.json         # ルートワークスペース設定
 ```
 
-## Tech Stack
+## 技術スタック
 
-### Backend
-- **Runtime**: Bun (local) / Cloudflare Workers (production)
-- **Language**: TypeScript 5.9.3
-- **Framework**: Hono 4.10.8
-- **Middleware**: CORS, Logger
-- **Database**: TBD
-- **Validation**: @hono/zod-validator 0.7.5 + Zod 4.1.13
+### バックエンド
+- **ランタイム**: Bun (ローカル) / Cloudflare Workers (本番環境)
+- **言語**: TypeScript
+- **フレームワーク**: Hono
+- **ミドルウェア**: CORS, Logger
+- **データベース**: 未定
+- **バリデーション**: @hono/zod-validator + Zod
 
-### Frontend
-- **Framework**: React 19.2.3
-- **UI Library**: DaisyUI 5.5.13
-- **Styling**: Tailwind CSS 4.1.18
-- **Routing**: TanStack Router 1.141.0 (file-based)
-- **API Client**: Hono RPC (hono/client) - end-to-end type safety
-- **Build Tool**: Vite 7.2.7
-- **Testing**: Vitest 4.0.15 + Testing Library
+### フロントエンド
+- **フレームワーク**: React
+- **UIライブラリ**: DaisyUI
+- **スタイリング**: Tailwind CSS
+- **ルーティング**: TanStack Router (ファイルベース)
+- **APIクライアント**: Hono RPC (hono/client) - E2Eの型安全性
+- **ビルドツール**: Vite
+- **テスト**: Vitest + Testing Library
 
-### Development Tools
-- **Linting**: oxlint 1.32.0
-- **Formatting**: oxfmt 0.17.0
-- **Type Checking**: oxlint-tsgolint 0.8.6 / TypeScript 5.9.3
-- **Deployment**: Wrangler 4.54.0 (Cloudflare CLI)
+### 開発ツール
+- **リンティング**: oxlint
+- **フォーマット**: oxfmt
+- **型チェック**: oxlint-tsgolint / TypeScript
+- **デプロイ**: Wrangler (Cloudflare CLI)
 
-## Getting Started
+## はじめに
 
-### Prerequisites
+### 前提条件
 
-- [Bun](https://bun.sh/) v1.3.4 or later
-- [Cloudflare account](https://dash.cloudflare.com/sign-up) (for deployment)
+- [Bun](https://bun.sh/) v1.3.4以降
+- [Cloudflareアカウント](https://dash.cloudflare.com/sign-up) (デプロイ用)
 
-### Installation
+### インストール
 
 ```bash
 bun install
 ```
 
-### Development
+### 開発
 
-#### Start Full Stack Development
+#### フルスタック開発を開始
 
-Start both backend and frontend with hot reload (from root directory):
+バックエンドとフロントエンドの両方をホットリロードで起動 (ルートディレクトリから):
 
 ```bash
 bun run dev
 ```
 
-- Backend: http://localhost:3000
-- Frontend: http://localhost:3000 (Vite dev server)
+- バックエンド: http://localhost:3000
+- フロントエンド: http://localhost:3000 (Vite開発サーバー)
 
-#### Start Backend Only
+#### バックエンドのみ起動
 
-From backend directory:
+backendディレクトリから:
 
 ```bash
 cd backend
 bun run dev
 ```
 
-Server will be available at http://localhost:3000
+サーバーは http://localhost:3000 で利用可能になります
 
-#### Start Frontend Only
+#### フロントエンドのみ起動
 
-From frontend directory:
+frontendディレクトリから:
 
 ```bash
 cd ui/web
 bun run dev
 ```
 
-Server will be available at http://localhost:3000
+サーバーは http://localhost:3000 で利用可能になります
 
-#### Available Endpoints
+#### 利用可能なエンドポイント
 
-- `GET /api/health` - Basic health check (backend)
+- `GET /api/health` - 基本的なヘルスチェック (バックエンド)
 
-### Building Frontend
+### フロントエンドのビルド
 
-Build the static site for production (from frontend directory):
+本番環境用の静的サイトをビルド (frontendディレクトリから):
 
 ```bash
 cd ui/web
 bun run build
 ```
 
-Output will be in `ui/web/dist/`
+出力先: `ui/web/dist/`
 
-### Testing with Preview
+### プレビューでのテスト
 
-**Backend (Cloudflare Workers runtime):**
+**バックエンド (Cloudflare Workersランタイム):**
 ```bash
 cd backend
 bun run preview
 ```
 
-Server will be available at http://localhost:8787
+サーバーは http://localhost:8787 で利用可能になります
 
-**Frontend (Vite preview):**
+**フロントエンド (Viteプレビュー):**
 ```bash
 cd ui/web
 bun run preview
 ```
 
-Server will be available at http://localhost:4173
+サーバーは http://localhost:4173 で利用可能になります
 
-### Linting
+### リンティング
 
-**Project-wide (from root directory):**
+**プロジェクト全体 (ルートディレクトリから):**
 ```bash
-# Run linter for all packages
+# 全サービスのLinterを実行
 bun run lint
 
-# Format code for all packages
+# 全サービスのコードフォーマット
 bun run format
 
-# Type checking for all packages
+# 全サービスの型チェック
 bun run type-check
 ```
 
-**Individual service:**
+**個別サービス:**
 ```bash
-# Backend
+# バックエンド
 cd backend
 bun run lint
 
-# Frontend
+# フロントエンド
 cd ui/web
 bun run lint
 ```
 
-## Deployment
+## デプロイ
 
-### Deploy to Cloudflare Workers:
+### Cloudflare Workersへのデプロイ:
 
-**Backend:**
+**バックエンド:**
 ```bash
 cd backend
 bun run deploy
 ```
 
-**Frontend:**
+**フロントエンド:**
 ```bash
 cd ui/web
-# Build first
-bun run build
-
-# Then deploy
 bun run deploy
 ```
 
-**Deploy All (from root directory):**
+**すべてデプロイ (ルートディレクトリから):**
 ```bash
 bun run deploy
 ```
 
-## Development Workflow
+## 開発ワークフロー
 
-### Backend
-1. **Local Development**: `cd backend && bun run dev` for fast iteration with Bun's hot reload
-2. **Preview**: `cd backend && bun run preview` to test with production runtime (workerd)
-3. **Deploy**: `cd backend && bun run deploy` to deploy to Cloudflare Workers
+### バックエンド
+1. **ローカル開発**: `cd backend && bun run dev` でBunのホットリロードを使った高速な開発
+2. **プレビュー**: `cd backend && bun run preview` で本番環境のランタイム (workerd) でテスト
+3. **デプロイ**: `cd backend && bun run deploy` でCloudflare Workersにデプロイ
 
-### Frontend
-1. **Local Development**: `cd ui/web && bun run dev` for fast iteration with Vite HMR
-2. **Build**: `cd ui/web && bun run build` to generate static files
-3. **Preview**: `cd ui/web && bun run preview` to test production build locally
-4. **Deploy**: `cd ui/web && bun run deploy` to build and deploy to Cloudflare Workers
+### フロントエンド
+1. **ローカル開発**: `cd ui/web && bun run dev` でVite HMRを使った高速な開発
+2. **ビルド**: `cd ui/web && bun run build` で静的ファイルを生成
+3. **プレビュー**: `cd ui/web && bun run preview` で本番ビルドをローカルでテスト
+4. **デプロイ**: `cd ui/web && bun run deploy` でビルドしてCloudflare Workersにデプロイ
 
-### Full Stack
-1. **Development**: `bun run dev` (from root) to start both backend and frontend
-2. **Deploy**: `bun run deploy` (from root) to deploy both services, or deploy individually from each directory
+### フルスタック
+1. **開発**: `bun run dev` (ルートから) でバックエンドとフロントエンドの両方を起動
+2. **デプロイ**: `bun run deploy` (ルートから) で両方のサービスをデプロイ、または各ディレクトリから個別にデプロイ
 
-## Features
+## 機能
 
-### Backend API
-- Health check endpoint at `/api/health`
-- CORS enabled for cross-origin requests
-- Type-safe API with Hono RPC (end-to-end type safety)
-- Request validation with @hono/zod-validator
-- Single entry point for both Bun and Cloudflare Workers
+### バックエンドAPI
+- `/api/health` でのヘルスチェックエンドポイント
+- クロスオリジンリクエストに対応したCORS
+- Hono RPCによる型安全なAPI (E2Eの型安全性)
+- @hono/zod-validatorによるリクエストバリデーション
+- BunとCloudflare Workersの両方に対応した単一エントリーポイント
 
-### Frontend
-- Modern React 19 with DaisyUI components
-- Type-safe API calls via Hono RPC client (no manual type imports)
-- File-based routing with TanStack Router
-- Theme switching support (All DaisyUI themes including light, dark, cupcake, synthwave, etc.)
-- Responsive design with Tailwind CSS v4
-- Fast development with Vite HMR
+### フロントエンド
+- DaisyUIコンポーネントを使用したモダンなReact 19
+- Hono RPCクライアントによる型安全なAPI呼び出し (手動での型インポート不要)
+- TanStack Routerによるファイルベースルーティング
+- テーマ切り替えサポート (light、dark、cupcake、synthwaveなどDaisyUIの全テーマ)
+- Tailwind CSS v4によるレスポンシブデザイン
+- Vite HMRによる高速な開発
 
-## Adding New API Endpoints
+## 新しいAPIエンドポイントの追加
 
-To add a new API endpoint with full type safety via Hono RPC:
+Hono RPCを使った完全な型安全性を持つAPIエンドポイントの追加方法:
 
-1. Create a handler in `backend/src/handler/`:
+1. `backend/src/handler/` にハンドラを作成:
 ```typescript
 // backend/src/handler/greet.ts
 import { zValidator } from "@hono/zod-validator";
@@ -247,37 +243,36 @@ export const validator = zValidator(
 export const handler = (c: Context) => {
   const { name } = c.req.valid("json");
   return c.json({
-    message: `Hello, ${name}!`,
+    message: `こんにちは、${name}さん!`,
   });
 };
 ```
 
-2. Add the route in `backend/src/index.ts`:
+2. `backend/src/index.ts` にルートを追加:
 ```typescript
 import * as greet from "./handler/greet";
 
 const route = app
   .get("/health", healthcheck.validator, healthcheck.handler)
-  .post("/greet", greet.validator, greet.handler); // Add new route
+  .post("/greet", greet.validator, greet.handler); // 新しいルートを追加
 
-export type AppType = typeof route; // Type automatically includes new route
+export type AppType = typeof route; // 型に自動的に新しいルートが含まれる
 ```
 
-3. Use in frontend - no manual client code needed!
+3. フロントエンドで使用 - 手動でのクライアントコード作成不要
 ```typescript
 // ui/web/src/routes/index.tsx
 import api from "../api";
 
 const response = await api.greet.$post({
-  json: { name: "World" },
+  json: { name: "ヤマタロー" },
 });
-const data = await response.json();
-// `data.message` is fully typed automatically!
-console.log(data.message); // "Hello, World!"
+const data = await response.json(); // 自動で型付けされる
+console.log(data.message);
 ```
 
-That's it! Types flow automatically from backend to frontend via Hono RPC.
+これだけです! Hono RPCを通じて型がバックエンドからフロントエンドに自動的に伝播します。
 
-## License
+## ライセンス
 
 MIT License
