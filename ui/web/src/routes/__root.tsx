@@ -7,6 +7,7 @@ import { FaDiscord } from "react-icons/fa";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
   component: () => (
@@ -43,13 +44,13 @@ export const Route = createRootRoute({
                 </button>
               </li>
               <li>
-                <button
+                <Link to="/discord-bot"
                   className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
                   data-tip="Discord bot"
                 >
                   <FaDiscord size="20" />
                   <span className="is-drawer-close:hidden">Discord bot</span>
-                </button>
+                </Link>
               </li>
             </ul>
             <ul className="menu w-full">
