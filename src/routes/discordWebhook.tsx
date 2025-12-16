@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { DiscordWebhook } from "../models/DiscordWebhook";
+import { DiscordWebhook } from "../models/discordWebhook";
 
-export const Route = createFileRoute("/discord-webhook")({
+export const Route = createFileRoute("/discordWebhook")({
   component: RouteComponent,
 });
 

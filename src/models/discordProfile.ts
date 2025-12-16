@@ -2,18 +2,15 @@ import { z } from "zod";
 import { ZodError } from "zod";
 import { db } from "../db";
 
-// Zodスキーマ定義
 export const discordProfileSchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1, "名前は必須です").trim(),
-  icon: z.string().url("有効なアイコンURLを入力してください"),
+  icon: z.url("有効なアイコンURLを入力してください"),
   description: z.string().max(500, "説明は500文字以内で入力してください").default(""),
 });
 
-// 型定義
 export type DiscordProfileType = z.infer<typeof discordProfileSchema>;
 
-// モデルクラス
 export class DiscordProfile {
   id?: number;
   name: string;

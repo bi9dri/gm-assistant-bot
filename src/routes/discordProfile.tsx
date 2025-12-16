@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { DiscordProfile } from "../models/DiscordProfile";
+import { DiscordProfile } from "../models/discordProfile";
 
-export const Route = createFileRoute("/discord-profile")({
+export const Route = createFileRoute("/discordProfile")({
   component: RouteComponent,
 });
 

@@ -2,14 +2,13 @@ import { z } from "zod";
 import { ZodError } from "zod";
 import { db } from "../db";
 
-// Zodスキーマ定義
-const discordWebhookUrl = z.string().url().refine(
+const discordWebhookUrl = z.url().refine(
   (url) => {
     try {
       const urlObj = new URL(url);
       return (
         urlObj.hostname === "discord.com" &&
-        urlObj.pathname.startsWith("/api/webhooks/")
+        urlObj.pathname.includes("webhooks")
       );
     } catch {
       return false;
@@ -26,10 +25,8 @@ export const discordWebhookSchema = z.object({
   url: discordWebhookUrl,
 });
 
-// 型定義
 export type DiscordWebhookType = z.infer<typeof discordWebhookSchema>;
 
-// モデルクラス
 export class DiscordWebhook {
   id?: number;
   name: string;
@@ -74,8 +71,8 @@ export class DiscordWebhook {
       return this.id;
     } else {
       const id = await db.webhooks.add(this);
-      this.id = id as number;
-      return id as number;
+      this.id = id;
+      return id;
     }
   }
 
