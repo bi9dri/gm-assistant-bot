@@ -1,43 +1,49 @@
 # gm-assistant-bot
 
-GameMaster's Assistantは、TRPGやマーダーミステリーのセッションを効率化するDiscord連携ツールです。Discord Webhookを使用してブラウザから直接Discordにメッセージを送信でき、ゲームマスターがストーリーテリングとプレイヤーとの対話に集中できるように設計されています。
+GameMaster's Assistantは、TRPGやマーダーミステリーのセッションを効率化するDiscord連携ツールです。Discord Webhookを使用してブラウザから直接Discordにメッセージを送信でき、ゲームマスターがストーリーテリングとプレイヤーとの対話に集中できるようになることを目指しています。
 
 ## アーキテクチャ
 
 - **フロントエンドのみのSPA**: React 19 + TanStack Router + DaisyUI
   - ローカル開発: ViteでHMR対応
   - 本番環境: Cloudflare Workers Static Assets
+- **データ永続化**: Dexie.js (IndexedDB)
+  - ブラウザ内でのデータ保存（バックエンドサーバー不要）
+  - Discord Webhookプロフィール、セッション、テンプレートの管理
+  - インポート・エクスポート機能（実装予定）
 - **Discord連携**: Webhookを使用した直接メッセージ送信（バックエンドサーバー不要）
 
 ## プロジェクト構造
 
 ```
 .
-├── src/                    # アプリケーションソースコード
-│   ├── routes/             # ファイルベースルーティング (TanStack Router)
-│   │   ├── __root.tsx      # ルートレイアウト
-│   │   ├── index.tsx       # ホームページ
-│   │   └── discord-bot.tsx # Discord設定ページ
-│   ├── theme/              # テーマコンポーネント
+├── src/                       # アプリケーションソースコード
+│   ├── routes/                # ファイルベースルーティング (TanStack Router)
+│   │   ├── __root.tsx         # ルートレイアウト
+│   │   ├── index.tsx          # ホームページ
+│   │   └── discordWebhook.tsx # Discord Webhook設定ページ
+│   ├── theme/                 # テーマコンポーネント
 │   │   ├── ThemeProvider.tsx
 │   │   ├── ThemeIcon.tsx
 │   │   └── ThemeSwichMenu.tsx
-│   ├── main.tsx            # エントリーポイント
-│   └── styles.css          # Tailwind CSS + DaisyUI設定
-├── public/                 # 静的アセット
-├── index.html              # HTMLエントリーポイント
-├── vite.config.ts          # Vite設定
-├── wrangler.toml           # Cloudflare Workers設定
-├── package.json            # 依存関係とスクリプト
-└── tsconfig.json           # TypeScript設定
+│   ├── main.tsx               # エントリーポイント
+│   └── styles.css             # Tailwind CSS + DaisyUI設定
+├── public/                    # 静的アセット
+├── index.html                 # HTMLエントリーポイント
+├── vite.config.ts             # Vite設定
+├── wrangler.toml              # Cloudflare Workers設定
+├── package.json               # 依存関係とスクリプト
+└── tsconfig.json              # TypeScript設定
 ```
 
 ## 技術スタック
 
-- **フレームワーク**: React 19
+- **フレームワーク**: React
 - **UIライブラリ**: DaisyUI
-- **スタイリング**: Tailwind CSS v4
+- **スタイリング**: Tailwind CSS
 - **ルーティング**: TanStack Router (ファイルベース)
+- **データベース**: Dexie.js (IndexedDB wrapper)
+- **バリデーション**: Zod
 - **ビルドツール**: Vite
 - **テスト**: Vitest + Testing Library
 - **ランタイム**: Bun
@@ -54,22 +60,12 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 
 ### 前提条件
 
-- [Bun](https://bun.sh/) v1.3.4以降
-- [Cloudflareアカウント](https://dash.cloudflare.com/sign-up) (デプロイ用)
-- Discord Webhook URL (Discord連携を使用する場合)
+- [Bun](https://bun.sh/)
 
 ### インストール
 
 ```bash
 bun install
-```
-
-### 環境変数の設定
-
-Discord Webhookを使用する場合、ルートディレクトリに `.env` ファイルを作成します:
-
-```env
-VITE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL
 ```
 
 ### 開発
@@ -140,12 +136,50 @@ bun run deploy
 
 ### フロントエンド
 
-- DaisyUIコンポーネントを使用したモダンなReact 19
 - TanStack Routerによるファイルベースルーティング
 - テーマ切り替えサポート (light、dark、cupcake、synthwaveなどDaisyUIの全テーマ)
-- Tailwind CSS v4によるレスポンシブデザイン
+- Tailwind CSS + DaisyUIによるレスポンシブデザイン
 - Vite HMRによる高速な開発
 - Bunテストランナーによる高速なテスト実行
+
+### データ永続化
+
+Dexie.js (IndexedDB) を使用したブラウザ内データストア:
+
+```typescript
+import Dexie, { type EntityTable } from "dexie";
+import { z } from "zod";
+
+// Zodスキーマ定義
+export const DiscordProfileSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  webhookUrl: z.string().url(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type DiscordProfile = z.infer<typeof DiscordProfileSchema>;
+
+// Dexieデータベース定義
+const db = new Dexie("GameMasterAssistant") as Dexie & {
+  discordProfiles: EntityTable<DiscordProfile, "id">;
+  sessions: EntityTable<Session, "id">;
+  templates: EntityTable<Template, "id">;
+};
+
+db.version(1).stores({
+  discordProfiles: "id, name, createdAt",
+  sessions: "id, name, createdAt",
+  templates: "id, name, createdAt",
+});
+```
+
+**特徴:**
+- バックエンドサーバー不要でデータを永続化
+- IndexedDBによる大容量データの保存が可能
+- Zodによる型安全なバリデーション
+- インポート・エクスポート機能（実装予定）
 
 ### Discord連携
 
@@ -153,9 +187,7 @@ Discord Webhookを使用してブラウザから直接メッセージを送信:
 
 ```typescript
 // Discord Webhookにメッセージを送信
-const sendToDiscord = async (message: string) => {
-  const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL;
-
+const sendToDiscord = async (message: string, webhookUrl: string) => {
   await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -168,39 +200,7 @@ const sendToDiscord = async (message: string) => {
 
 DaisyUIの全テーマがサポートされています。テーマを切り替えるには、アプリケーション内のテーマメニューを使用してください。
 
-利用可能なテーマ:
-- light
-- dark
-- cupcake
-- bumblebee
-- emerald
-- corporate
-- synthwave
-- retro
-- cyberpunk
-- valentine
-- halloween
-- garden
-- forest
-- aqua
-- lofi
-- pastel
-- fantasy
-- wireframe
-- black
-- luxury
-- dracula
-- cmyk
-- autumn
-- business
-- acid
-- lemonade
-- night
-- coffee
-- winter
-- dim
-- nord
-- sunset
+設定したテーマの情報はLocalStorageに保存されます。
 
 ## ライセンス
 

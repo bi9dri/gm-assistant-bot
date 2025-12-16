@@ -28,10 +28,15 @@
 - **Build**: Vite build + TypeScript compilation
 - **UI**: React 19 + DaisyUI + Tailwind CSS v4
 - **Routing**: TanStack Router with file-based routing
+- **Data Persistence**: Dexie.js (IndexedDB) with Zod validation
 - **External Integration**: Discord via Webhooks (no backend server needed)
 
 ### Database
-TBD
+- **Dexie.js**: TypeScript-friendly wrapper for IndexedDB
+- **Zod**: Schema validation for runtime type safety
+- **Storage**: Browser-based IndexedDB (no backend server required)
+- **Data Models**: Discord profiles, sessions, templates
+- **Future**: Import/export functionality planned
 
 ### Development Tools
 - **Vite** for frontend development and bundling (with HMR)
@@ -134,15 +139,70 @@ if (rootElement && !rootElement.innerHTML) {
 @custom-variant dark (&:is(.dark *));
 ```
 
+### Data Persistence with Dexie.js
+
+Browser-based data storage using IndexedDB with Dexie.js and Zod:
+
+```tsx#example-dexie-setup.tsx
+import Dexie, { type EntityTable } from "dexie";
+import { z } from "zod";
+
+// Zod schema for validation
+export const DiscordProfileSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  webhookUrl: z.string().url(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type DiscordProfile = z.infer<typeof DiscordProfileSchema>;
+
+// Dexie database definition
+const db = new Dexie("GameMasterAssistant") as Dexie & {
+  discordProfiles: EntityTable<DiscordProfile, "id">;
+  sessions: EntityTable<Session, "id">;
+  templates: EntityTable<Template, "id">;
+};
+
+db.version(1).stores({
+  discordProfiles: "id, name, createdAt",
+  sessions: "id, name, createdAt",
+  templates: "id, name, createdAt",
+});
+
+export { db };
+```
+
+**Usage patterns:**
+```tsx
+// Create
+await db.discordProfiles.add(newProfile);
+
+// Read
+const profiles = await db.discordProfiles.toArray();
+const profile = await db.discordProfiles.get(id);
+
+// Update
+await db.discordProfiles.update(id, { name: "Updated Name" });
+
+// Delete
+await db.discordProfiles.delete(id);
+```
+
+**Key features:**
+- No backend server required - all data stored in browser
+- Type-safe with TypeScript and Zod validation
+- Supports large datasets via IndexedDB
+- Planned: Import/export functionality for data portability
+
 ### Discord Integration
 
 Discord integration uses Webhooks for sending messages from the browser:
 
 ```tsx#example-discord-webhook.tsx
 // Send message to Discord via Webhook
-const sendToDiscord = async (message: string) => {
-  const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL;
-
+const sendToDiscord = async (message: string, webhookUrl: string) => {
   await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -151,11 +211,10 @@ const sendToDiscord = async (message: string) => {
 };
 ```
 
-**Environment Variables:**
-- Create `.env` file in repository root
-- Add `VITE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...`
-- Vite will automatically load variables prefixed with `VITE_`
-- Access via `import.meta.env.VITE_DISCORD_WEBHOOK_URL`
+**Notes:**
+- Webhook URLs are stored in the Dexie.js database (not environment variables)
+- Each Discord profile can have its own webhook URL
+- No backend server needed - direct browser-to-Discord communication
 
 ### Project Structure
 
@@ -167,7 +226,15 @@ const sendToDiscord = async (message: string) => {
 │   ├── routes/            # TanStack Router file-based routes
 │   │   ├── __root.tsx     # Root layout
 │   │   ├── index.tsx      # Home page
-│   │   └── discord-bot.tsx # Discord settings page
+│   │   ├── discordWebhook.tsx # Discord Webhook management
+│   │   ├── session.tsx    # Session management
+│   │   └── template.tsx   # Template management
+│   ├── db/                # Dexie.js database setup
+│   │   ├── schema.ts      # Zod schemas and TypeScript types
+│   │   └── index.ts       # Database initialization
+│   ├── components/        # Shared React components
+│   │   ├── forms/         # Form components (Create/Edit)
+│   │   └── ui/            # UI components
 │   └── theme/             # Theme management
 │       ├── ThemeProvider.tsx
 │       ├── ThemeIcon.tsx
@@ -177,8 +244,7 @@ const sendToDiscord = async (message: string) => {
 ├── vite.config.ts         # Vite configuration
 ├── wrangler.toml          # Cloudflare Workers config
 ├── package.json           # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-└── .env                   # Environment variables (not committed)
+└── tsconfig.json          # TypeScript configuration
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
