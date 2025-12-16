@@ -3,11 +3,11 @@ import { DiscordWebhook } from "./models/discordWebhook";
 import { DiscordProfile } from "./models/discordProfile";
 
 export const db = new Dexie("GmAssistant") as Dexie & {
-  webhooks: EntityTable<DiscordWebhook, "id">;
-  profiles: EntityTable<DiscordProfile, "id">;
+  discordWebhooks: EntityTable<DiscordWebhook, "id">;
+  discordProfiles: EntityTable<DiscordProfile, "id">;
 };
 
 db.version(1).stores({
-  webhooks: "++id, name, url",
-  profiles: "++id, name, icon, description",
+  discordWebhooks: "++id, name, url",
+  discordProfiles: "++id, name, icon, description",
 });
