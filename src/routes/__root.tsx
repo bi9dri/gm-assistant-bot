@@ -44,7 +44,8 @@ export const Route = createRootRoute({
                 </button>
               </li>
               <li>
-                <Link to="/discord-bot"
+                <Link
+                  to="/discord-bot"
                   className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
                   data-tip="Discord bot"
                 >

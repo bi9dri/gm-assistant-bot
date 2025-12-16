@@ -21,27 +21,14 @@
 
 ## Project Architecture
 
-### Backend Structure
-- **Dual deployment**: Bun (local) + Cloudflare Workers (production)
-- **Single entry point**: `backend/src/index.ts` - Hono app for both Bun and Cloudflare Workers
-- **API Framework**: Hono with middleware (CORS, logger)
-- **Type Safety**: Zod validation in handlers + AppType export for Hono RPC
-
-### Frontend Structure
-- **Dual deployment**: Vite dev server (local with HMR) + Cloudflare Workers Static Assets (production)
-- **Entry point**: `ui/web/src/main.tsx` - React app with TanStack Router
+### Frontend-Only SPA
+- **Single-page application** built with React 19
+- **Deployment**: Cloudflare Workers Static Assets
+- **Entry point**: `src/main.tsx` - React app with TanStack Router
 - **Build**: Vite build + TypeScript compilation
 - **UI**: React 19 + DaisyUI + Tailwind CSS v4
 - **Routing**: TanStack Router with file-based routing
-
-### API Layer
-- **Hono** for HTTP routing and middleware
-- **Hono RPC** (`hono/client`) for type-safe API calls from frontend
-- **@hono/zod-validator** for runtime request validation on backend
-- Backend exports `AppType` for frontend type inference
-- Frontend uses `hc<AppType>()` client with full type safety
-- CORS enabled via Hono's `cors()` middleware
-- No manual schema imports needed - types flow automatically via RPC
+- **External Integration**: Discord via Webhooks (no backend server needed)
 
 ### Database
 TBD
@@ -49,60 +36,37 @@ TBD
 ### Development Tools
 - **Vite** for frontend development and bundling (with HMR)
 - **TanStack Router** for file-based routing with type safety
-- **Bun** for backend hot reload (`bun --hot`)
-- **Wrangler** for Cloudflare Workers preview and deployment
+- **Bun** for package management and testing
+- **Wrangler** for Cloudflare Workers deployment
 
 ## Development Commands
 
-### Full Stack (from root directory)
+All commands should be run from the repository root:
+
 ```bash
-# Start both backend and frontend with hot reload
+# Start development server with Vite HMR (port 3000)
 fish -c "bun run dev"
 
-# Lint all packages
-fish -c "bun run lint"
-
-# Format all packages
-fish -c "bun run format"
-
-# Type check all packages
-fish -c "bun run type-check"
-
-# Deploy all services to Cloudflare Workers
-fish -c "bun run deploy"
-```
-
-### Backend Only (from backend directory)
-```bash
-# Start backend with Bun hot reload (port 3000)
-fish -c "cd backend && bun run dev"
-
-# Preview with Cloudflare Workers runtime (port 8787)
-fish -c "cd backend && bun run preview"
-
-# Deploy to Cloudflare Workers
-fish -c "cd backend && bun run deploy"
-
-# Lint backend only
-fish -c "cd backend && bun run lint"
-```
-
-### Frontend Only (from frontend directory)
-```bash
-# Start frontend with Vite HMR (port 3000)
-fish -c "cd ui/web && bun run dev"
-
-# Build static files
-fish -c "cd ui/web && bun run build"
+# Build static files for production
+fish -c "bun run build"
 
 # Preview production build (port 4173)
-fish -c "cd ui/web && bun run preview"
+fish -c "bun run preview"
 
-# Deploy to Cloudflare Workers (build + deploy)
-fish -c "cd ui/web && bun run deploy"
+# Deploy to Cloudflare Workers
+fish -c "bun run deploy"
 
-# Lint frontend only
-fish -c "cd ui/web && bun run lint"
+# Lint all code
+fish -c "bun run lint"
+
+# Format all code
+fish -c "bun run format"
+
+# Type check all code
+fish -c "bun run type-check"
+
+# Run tests
+fish -c "bun run test"
 ```
 
 ## Testing
@@ -123,7 +87,7 @@ Frontend uses Vite for fast development with HMR, TanStack Router for file-based
 
 ### Main Entry Point
 
-`ui/web/src/main.tsx`:
+`src/main.tsx`:
 
 ```tsx#main.tsx
 import { StrictMode } from "react";
@@ -160,7 +124,7 @@ if (rootElement && !rootElement.innerHTML) {
 
 ### Tailwind CSS v4 + DaisyUI Configuration
 
-`ui/web/src/styles.css`:
+`src/styles.css`:
 
 ```css#styles.css
 @import "tailwindcss";
@@ -170,77 +134,51 @@ if (rootElement && !rootElement.innerHTML) {
 @custom-variant dark (&:is(.dark *));
 ```
 
-### Type-Safe API Client with Hono RPC
+### Discord Integration
 
-`ui/web/src/api.ts`:
+Discord integration uses Webhooks for sending messages from the browser:
 
-```ts#api.ts
-import type { AppType } from "../../../backend";
-import { hc } from "hono/client";
+```tsx#example-discord-webhook.tsx
+// Send message to Discord via Webhook
+const sendToDiscord = async (message: string) => {
+  const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL;
 
-const API_BASE_URL =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://gm-assistant-bot-backend.workers.dev";
-
-const client = hc<AppType>(API_BASE_URL);
-export default client.api;
-```
-
-Usage in components:
-
-```tsx#example-usage.tsx
-import api from "../api";
-
-// Fully type-safe API calls - no manual type imports needed!
-const response = await api.health.$get();
-const data = await response.json();
-// `data` is automatically typed based on backend route definition
-```
-
-### Backend API with Hono
-
-`backend/src/index.ts`:
-
-```ts#index.ts
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import * as healthcheck from "./handler/healthcheck";
-
-const app = new Hono().basePath("/api");
-const route = app.get("/health", healthcheck.validator, healthcheck.handler);
-
-app.use("*", cors());
-app.use("*", logger());
-
-app.notFound((c) => c.json({ error: "Not Found" }, 404));
-app.onError((err, c) => {
-  console.error("Server error:", err);
-  return c.json({ error: "Internal Server Error" }, 500);
-});
-
-export default app;
-export type AppType = typeof route; // For frontend RPC client
-```
-
-### Handler with Validation
-
-`backend/src/handler/healthcheck.ts`:
-
-```ts#healthcheck.ts
-import { zValidator } from "@hono/zod-validator";
-import type { Context } from "hono";
-import z from "zod";
-
-export const validator = zValidator("query", z.object({}));
-
-export const handler = (c: Context) => {
-  return c.json({
-    status: "ok" as const,
-    timestamp: new Date().toISOString(),
+  await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: message }),
   });
 };
+```
+
+**Environment Variables:**
+- Create `.env` file in repository root
+- Add `VITE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...`
+- Vite will automatically load variables prefixed with `VITE_`
+- Access via `import.meta.env.VITE_DISCORD_WEBHOOK_URL`
+
+### Project Structure
+
+```
+/
+├── src/
+│   ├── main.tsx           # Application entry point
+│   ├── styles.css         # Global styles with Tailwind + DaisyUI
+│   ├── routes/            # TanStack Router file-based routes
+│   │   ├── __root.tsx     # Root layout
+│   │   ├── index.tsx      # Home page
+│   │   └── discord-bot.tsx # Discord settings page
+│   └── theme/             # Theme management
+│       ├── ThemeProvider.tsx
+│       ├── ThemeIcon.tsx
+│       └── ThemeSwichMenu.tsx
+├── public/                # Static assets
+├── index.html             # HTML entry point
+├── vite.config.ts         # Vite configuration
+├── wrangler.toml          # Cloudflare Workers config
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+└── .env                   # Environment variables (not committed)
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
