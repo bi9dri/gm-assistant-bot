@@ -45,12 +45,22 @@ export const Route = createRootRoute({
               </li>
               <li>
                 <Link
-                  to="/discord-bot"
+                  to="/discord-webhook"
                   className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
-                  data-tip="Discord bot"
+                  data-tip="Discord Webhook"
                 >
                   <FaDiscord size="20" />
-                  <span className="is-drawer-close:hidden">Discord bot</span>
+                  <span className="is-drawer-close:hidden">Discord Webhook</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/discord-profile"
+                  className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
+                  data-tip="Discord Profile"
+                >
+                  <FaDiscord size="20" />
+                  <span className="is-drawer-close:hidden">Discord Profile</span>
                 </Link>
               </li>
             </ul>

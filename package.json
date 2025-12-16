@@ -19,10 +19,13 @@
     "@tanstack/react-router-devtools": "1.141.0",
     "@tanstack/router-plugin": "1.141.0",
     "daisyui": "5.5.13",
+    "dexie": "4.2.1",
+    "dexie-react-hooks": "4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "5.5.0",
-    "tailwindcss": "4.1.18"
+    "tailwindcss": "4.1.18",
+    "zod": "4.2.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251212.0",
