@@ -4,7 +4,13 @@ import { db } from "../db";
 export const discordProfileSchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1).trim(),
-  icon: z.url().optional(),
+  icon: z
+    .string()
+    .regex(/^data:image\/(jpeg|png|gif);base64,/, {
+      message: "Icon must be a Data URI with format: data:image/{jpeg|png|gif};base64,...",
+    })
+    .optional()
+    .or(z.literal("")),
   description: z.string().max(500).default(""),
 });
 
@@ -16,7 +22,7 @@ export class DiscordProfile {
   icon: string;
   description: string;
 
-  constructor(name: string, icon: string, description: string, id?: number) {
+  constructor(name: string, icon: string = "", description: string = "", id?: number) {
     this.name = name;
     this.icon = icon;
     this.description = description;
@@ -38,5 +44,9 @@ export class DiscordProfile {
 
   static async getAll() {
     return db.discordProfiles.toArray();
+  }
+
+  static async getById(id: number) {
+    return db.discordProfiles.get(id);
   }
 }

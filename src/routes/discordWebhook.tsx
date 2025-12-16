@@ -18,6 +18,10 @@ function RouteComponent() {
     try {
       const webhook = new DiscordWebhook(name, url);
       await webhook.save();
+      addToast({
+        message: "Webhookを追加しました",
+        durationSeconds: 10,
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         addToast({
@@ -32,7 +36,7 @@ function RouteComponent() {
         return;
       } else {
         addToast({
-          message: "更新に失敗しました",
+          message: "Webhookの追加に失敗しました",
           status: "error",
         });
       }
