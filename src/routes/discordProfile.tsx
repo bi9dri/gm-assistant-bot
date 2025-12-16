@@ -14,11 +14,7 @@ function RouteComponent() {
   const profiles = useLiveQuery(() => DiscordProfile.getAll());
   const { addToast } = useToast();
 
-  const handleCreate = async (
-    name: string,
-    icon: string,
-    description: string,
-  ) => {
+  const handleCreate = async (name: string, icon: string, description: string) => {
     try {
       const profile = new DiscordProfile(name, icon, description);
       await profile.save();

@@ -136,30 +136,20 @@ export const EditDiscordProfileForm = ({ profileId }: Props) => {
             <button onClick={handleUpdate} className="btn btn-primary">
               更新
             </button>
-            <label
-              htmlFor={`confirmDeleteModal-${profileId}`}
-              className="btn btn-error"
-            >
+            <label htmlFor={`confirmDeleteModal-${profileId}`} className="btn btn-error">
               削除
             </label>
           </div>
         </div>
       </div>
 
-      <input
-        id={`confirmDeleteModal-${profileId}`}
-        type="checkbox"
-        className="modal-toggle"
-      />
+      <input id={`confirmDeleteModal-${profileId}`} type="checkbox" className="modal-toggle" />
       <div className="modal" role="dialog">
         <div className="modal-box">
           <h3 className="text-lg font-bold">「{name}」を削除しますか？</h3>
           <p className="py-4">この操作は元に戻せません。</p>
           <div className="modal-action">
-            <label
-              htmlFor={`confirmDeleteModal-${profileId}`}
-              className="btn"
-            >
+            <label htmlFor={`confirmDeleteModal-${profileId}`} className="btn">
               キャンセル
             </label>
             <button className="btn btn-error" onClick={handleDelete}>
@@ -167,10 +157,7 @@ export const EditDiscordProfileForm = ({ profileId }: Props) => {
             </button>
           </div>
         </div>
-        <label
-          htmlFor={`confirmDeleteModal-${profileId}`}
-          className="modal-backdrop"
-        >
+        <label htmlFor={`confirmDeleteModal-${profileId}`} className="modal-backdrop">
           キャンセル
         </label>
       </div>

@@ -1,7 +1,7 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { LuPanelLeftOpen } from "react-icons/lu";
+import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { IoMdHome } from "react-icons/io";
 import { FaDiscord } from "react-icons/fa";
 import { ThemeProvider } from "@/theme/ThemeProvider";
@@ -9,6 +9,7 @@ import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
 import { Link } from "@tanstack/react-router";
 import { ToastProvider } from "@/toast/ToastProvider";
+import { SiSessionize } from "react-icons/si";
 
 export const Route = createRootRoute({
   component: () => (
@@ -67,6 +68,26 @@ export const Route = createRootRoute({
                   >
                     <FaDiscord size="20" />
                     <span className="is-drawer-close:hidden">Discord Profile</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/session"
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
+                    data-tip="セッション"
+                  >
+                    <SiSessionize size="20" />
+                    <span className="is-drawer-close:hidden">セッション</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/template"
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
+                    data-tip="テンプレート"
+                  >
+                    <LuLayoutTemplate size="20" />
+                    <span className="is-drawer-close:hidden">テンプレート</span>
                   </Link>
                 </li>
               </ul>
