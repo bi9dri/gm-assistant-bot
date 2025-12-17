@@ -18,12 +18,12 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 - **フレームワーク**: Hono
 - **デプロイ先**: Cloudflare Workers
 - **Discord連携**: discord.js
-- **バリデーション**: Zod
+- **バリデーション**: Zod (@hono/zod-validator)
 - **API機能**:
-  - ギルド情報取得
-  - チャンネル管理（作成、削除）
-  - ロール管理（作成、削除、割り当て）
-  - 権限管理
+  - ギルド一覧取得
+  - カテゴリ作成
+  - チャンネル作成
+  - ロール作成
   - ヘルスチェック
 
 ## プロジェクト構造
@@ -36,28 +36,41 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 │   │   │   ├── __root.tsx     # ルートレイアウト
 │   │   │   ├── index.tsx      # ホームページ
 │   │   │   ├── session.tsx    # セッション管理
-│   │   │   └── ...
+│   │   │   └── template.tsx   # テンプレート管理
 │   │   ├── components/        # Reactコンポーネント
-│   │   ├── models/            # Dexie.js モデル
-│   │   ├── services/          # APIクライアント
-│   │   ├── theme/             # テーマコンポーネント
+│   │   │   └── CreateSession.tsx  # セッション作成フォーム
+│   │   ├── models/            # Dexie.js モデルとスキーマ
+│   │   │   ├── gameSession.ts # ゲームセッションモデル
+│   │   │   └── template.ts    # テンプレートモデル
+│   │   ├── theme/             # テーマ管理
+│   │   │   ├── ThemeProvider.tsx  # テーマプロバイダー
+│   │   │   ├── ThemeSwichMenu.tsx # テーマ切り替えメニュー
+│   │   │   └── ThemeIcon.tsx      # テーマアイコン
+│   │   ├── toast/             # トースト通知
+│   │   │   └── ToastProvider.tsx  # トーストプロバイダー
+│   │   ├── db.ts              # Dexie.js データベース設定
+│   │   ├── api.ts             # Backend API クライアント
 │   │   ├── main.tsx           # エントリーポイント
-│   │   └── styles.css         # Tailwind CSS + DaisyUI
+│   │   └── styles.css         # Tailwind CSS v4 + DaisyUI
 │   ├── public/                # 静的アセット
+│   ├── index.html             # HTML エントリーポイント
 │   ├── vite.config.ts         # Vite設定
-│   └── wrangler.toml          # Cloudflare Workers設定
+│   ├── wrangler.toml          # Cloudflare Workers設定
+│   └── package.json           # フロントエンド依存関係
 ├── backend/                   # バックエンドAPI
 │   ├── src/
 │   │   ├── index.ts           # Hono アプリケーション
-│   │   ├── discord.ts         # discord.js クライアント
-│   │   ├── env.ts             # 環境変数
-│   │   ├── handler/           # APIハンドラー
-│   │   │   ├── healthcheck.ts
-│   │   │   ├── guilds.ts      # サーバ情報
-│   │   │   ├── channels.ts    # チャンネル管理
-│   │   │   └── roles.ts       # ロール管理
+│   │   ├── discord.ts         # Discord.js クライアント
+│   │   ├── env.ts             # 環境変数型定義
+│   │   └── handler/           # APIハンドラー
+│   │       ├── healthcheck.ts     # ヘルスチェック
+│   │       ├── listGuilds.ts      # ギルド一覧取得
+│   │       ├── createCategory.ts  # カテゴリ作成
+│   │       ├── createChannel.ts   # チャンネル作成
+│   │       └── createRole.ts      # ロール作成
 │   ├── wrangler.toml          # Cloudflare Workers設定
-│   └── .dev.vars              # 開発環境変数 (gitignored)
+│   ├── .dev.vars              # 開発環境変数 (gitignored)
+│   └── package.json           # バックエンド依存関係
 └── package.json               # Workspaceルート
 ```
 
@@ -123,6 +136,7 @@ APIは http://localhost:8787 で利用可能になります
 cd backend
 # .dev.varsファイルを作成
 echo "DISCORD_BOT_TOKEN=your_bot_token_here" > .dev.vars
+cp .dev.vars .env
 ```
 
 ### ビルド
@@ -215,18 +229,20 @@ bun run deploy:backend
 
 ### フロントエンド機能
 - TanStack Routerによるファイルベースルーティング
-- テーマ切り替えサポート（DaisyUIの全テーマ対応）
+- テーマ切り替えサポート（DaisyUIの全テーマ対応、LocalStorageに保存）
 - Tailwind CSS + DaisyUIによるレスポンシブデザイン
 - Vite HMRによる高速な開発体験
-- セッション管理
-- テンプレート管理
+- Dexie.js（IndexedDB）でのデータ永続化
+  - ゲームセッション管理
+  - テンプレート管理（ロール・チャンネル構成の保存）
+- トースト通知機能
 
 ### バックエンドAPI機能
-- Discord Bot API連携
-- ギルド情報取得
-- チャンネル管理（作成・削除）
-- ロール管理（作成・削除・割り当て）
-- 権限管理
+- Discord Bot API連携（discord.js使用）
+- ギルド一覧取得
+- カテゴリ作成
+- チャンネル作成
+- ロール作成
 - ヘルスチェックエンドポイント
 
 **特徴:**

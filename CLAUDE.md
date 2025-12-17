@@ -24,32 +24,34 @@
 This is a monorepo with separate frontend and backend workspaces.
 
 ### Frontend (React SPA)
-- **Framework**: React 19
+- **Framework**: React
 - **Deployment**: Cloudflare Workers Static Assets
 - **Entry point**: `frontend/src/main.tsx` - React app with TanStack Router
 - **Build**: Vite build + TypeScript compilation
-- **UI**: React 19 + DaisyUI + Tailwind CSS v4
+- **UI**: React + DaisyUI + Tailwind CSS
 - **Routing**: TanStack Router with file-based routing
 - **Data Persistence**: Dexie.js (IndexedDB) with Zod validation
-- **External Integration**: Discord via Webhooks + Backend API
+- **External Integration**: Discord via Backend API
 
 ### Backend (Hono.js API)
 - **Framework**: Hono.js
 - **Deployment**: Cloudflare Workers
-- **Discord Integration**: Discord Bot API (via discord-api-types)
-- **Validation**: Zod schemas
+- **Discord Integration**: discord.js (Discord Bot API client)
+- **Validation**: Zod schemas with @hono/zod-validator
 - **API Features**:
-  - Guild information retrieval
-  - Channel management (create, delete)
-  - Role management (create, delete, assign)
-  - Permission management
+  - Guild list retrieval
+  - Category creation
+  - Channel creation
+  - Role creation
   - Health check endpoint
 
 ### Database
 - **Dexie.js**: TypeScript-friendly wrapper for IndexedDB (frontend-only)
 - **Zod**: Schema validation for runtime type safety
 - **Storage**: Browser-based IndexedDB
-- **Data Models**: Discord profiles, sessions, templates
+- **Data Models**:
+  - Game Sessions: Session information with guild, category, and channel IDs
+  - Templates: Reusable role and channel configurations
 - **Future**: Import/export functionality planned
 
 ### Development Tools
@@ -154,9 +156,7 @@ if (rootElement && !rootElement.innerHTML) {
 
 ```css#styles.css
 @import "tailwindcss";
-
 @plugin "daisyui";
-
 @custom-variant dark (&:is(.dark *));
 ```
 
@@ -164,51 +164,90 @@ if (rootElement && !rootElement.innerHTML) {
 
 Browser-based data storage using IndexedDB with Dexie.js and Zod:
 
-```tsx#example-dexie-setup.tsx
+`frontend/src/db.ts`:
+```tsx#db.ts
 import Dexie, { type EntityTable } from "dexie";
-import { z } from "zod";
+import type { GameSession } from "./models/gameSession";
+import type { Template } from "./models/template";
 
-// Zod schema for validation
-export const DiscordProfileSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1),
-  webhookUrl: z.string().url(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-export type DiscordProfile = z.infer<typeof DiscordProfileSchema>;
-
-// Dexie database definition
-const db = new Dexie("GameMasterAssistant") as Dexie & {
-  discordProfiles: EntityTable<DiscordProfile, "id">;
-  sessions: EntityTable<Session, "id">;
+export const db = new Dexie("GmAssistant") as Dexie & {
+  gameSessions: EntityTable<GameSession, "id">;
   templates: EntityTable<Template, "id">;
 };
 
-db.version(1).stores({
-  discordProfiles: "id, name, createdAt",
-  sessions: "id, name, createdAt",
-  templates: "id, name, createdAt",
+// Database schema definition
+db.version(2).stores({
+  gameSessions: "++id, name, createdAt",
+  templates: "++id, name, *roles, *channels, createdAt, updatedAt",
+});
+```
+
+`frontend/src/models/template.ts` (example model with Zod validation):
+```tsx#template.ts
+import { db } from "@/db";
+import z from "zod";
+
+const schema = z.object({
+  id: z.number(),
+  name: z.string().min(1).trim(),
+  roles: z.array(z.string().min(1).trim()),
+  channels: z.array(z.object({
+    name: z.string().min(1).max(50).trim(),
+    type: z.enum(["text", "voice"]),
+    writerRoles: z.array(z.string().min(1).trim()),
+    readerRoles: z.array(z.string().min(1).trim()),
+  })),
+  createdAt: z.date(),
+  updatedAt: z.date().optional(),
 });
 
-export { db };
+export class Template {
+  // ... constructor and properties
+
+  static async create(name: string, roles: string[], channels: {...}[]) {
+    schema.pick({ name: true }).parse({ name });
+    const now = new Date();
+    const id = await db.templates.add({ name, roles, channels, createdAt: now });
+    return new Template(id, name, roles, channels, now);
+  }
+
+  async update() {
+    schema.parse(this);
+    this.updatedAt = new Date();
+    await db.templates.put(this, this.id);
+  }
+
+  static async delete(id: number) {
+    await db.templates.delete(id);
+  }
+
+  static async getAll() {
+    return db.templates.toArray();
+  }
+
+  static async getById(id: number) {
+    return db.templates.get(id);
+  }
+}
 ```
 
 **Usage patterns:**
 ```tsx
 // Create
-await db.discordProfiles.add(newProfile);
+const template = await Template.create("My Template", ["Role1", "Role2"], [...]);
 
-// Read
-const profiles = await db.discordProfiles.toArray();
-const profile = await db.discordProfiles.get(id);
+// Read all
+const templates = await Template.getAll();
+
+// Read by ID
+const template = await Template.getById(1);
 
 // Update
-await db.discordProfiles.update(id, { name: "Updated Name" });
+template.name = "Updated Name";
+await template.update();
 
 // Delete
-await db.discordProfiles.delete(id);
+await Template.delete(1);
 ```
 
 **Key features:**
@@ -219,35 +258,100 @@ await db.discordProfiles.delete(id);
 
 ### Discord Integration
 
-**Webhooks (Simple messages):**
-```tsx#example-discord-webhook.tsx
-// Send message to Discord via Webhook
-const sendToDiscord = async (message: string, webhookUrl: string) => {
-  await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: message }),
-  });
-};
+The app integrates with Discord via the Backend API, which uses discord.js to interact with the Discord Bot API.
+
+**Frontend API Client** (`frontend/src/api.ts`):
+```tsx#api.ts
+// Example: List available guilds
+const guilds = await fetch(`${API_URL}/api/guilds`).then(r => r.json());
+
+// Example: Create a category in a guild
+const category = await fetch(`${API_URL}/api/guilds/${guildId}/categories`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Session Name" }),
+}).then(r => r.json());
+
+// Example: Create a channel in a category
+const channel = await fetch(`${API_URL}/api/guilds/${guildId}/channels`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "channel-name",
+    type: "text", // or "voice"
+    parentCategoryId: categoryId,
+    writerRoleIds: ["role1", "role2"],
+    readerRoleIds: ["role3"],
+  }),
+}).then(r => r.json());
+
+// Example: Create a role in a guild
+const role = await fetch(`${API_URL}/api/guilds/${guildId}/roles`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Player" }),
+}).then(r => r.json());
 ```
 
-**Bot API (Advanced features via backend):**
-```tsx#example-discord-api.tsx
-// Call backend API to create a Discord channel
-const createChannel = async (guildId: string, channelName: string) => {
-  const response = await fetch(`${API_URL}/api/guilds/${guildId}/channels`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: channelName }),
+**Backend Discord Client** (`backend/src/discord.ts`):
+```tsx#discord.ts
+import { REST } from "discord.js";
+import { Routes, ChannelType, OverwriteType, PermissionFlagsBits } from "discord-api-types/v10";
+
+const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN!);
+
+// Get guilds the bot has access to
+export const getGuilds = async () => {
+  const guilds = await rest.get(Routes.userGuilds());
+  return guilds.map(g => ({ id: g.id, name: g.name, icon: `...` }));
+};
+
+// Create a category with locked permissions
+export const createCategory = async (guildId: string, name: string) => {
+  const category = await rest.post(Routes.guildChannels(guildId), {
+    body: {
+      type: ChannelType.GuildCategory,
+      name,
+      permission_overwrites: [
+        { id: guildId, type: OverwriteType.Role, deny: channelPermissions.toString() }
+      ],
+    },
   });
-  return response.json();
+  return { id: category.id, name: category.name };
+};
+
+// Create a channel with role-based permissions
+export const createChannel = async (
+  guildId: string, parentCategoryId: string, name: string,
+  type: "text" | "voice", writerRoleIds: string[], readerRoleIds: string[]
+) => {
+  const channel = await rest.post(Routes.guildChannels(guildId), {
+    body: {
+      type: type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
+      name, parent_id: parentCategoryId,
+      permission_overwrites: [
+        ...writerRoleIds.map(r => ({ id: r, type: OverwriteType.Role, allow: writerPermission.toString() })),
+        ...readerRoleIds.map(r => ({ id: r, type: OverwriteType.Role, allow: readerPermission.toString() })),
+      ],
+    },
+  });
+  return { id: channel.id, name: channel.name };
+};
+
+// Create a mentionable role
+export const createRole = async (guildId: string, name: string) => {
+  const role = await rest.post(Routes.guildRoles(guildId), {
+    body: { name, mentionable: true },
+  });
+  return { id: role.id, name: role.name };
 };
 ```
 
 **Notes:**
-- Webhook URLs are stored in the Dexie.js database (not environment variables)
-- Each Discord profile can have its own webhook URL
-- Backend API uses Discord Bot Token (stored in Cloudflare Secrets)
+- Backend API uses Discord Bot Token (stored in Cloudflare Secrets via `wrangler secret put DISCORD_BOT_TOKEN`)
+- Frontend calls backend API endpoints to interact with Discord
+- Backend uses `discord.js` REST client with `discord-api-types` for type safety
+- Permissions are carefully configured for role-based channel access (writers, readers)
 
 ### Project Structure
 
@@ -256,18 +360,25 @@ const createChannel = async (guildId: string, channelName: string) => {
 ├── frontend/              # Frontend SPA
 │   ├── src/
 │   │   ├── main.tsx           # Application entry point
-│   │   ├── styles.css         # Global styles with Tailwind + DaisyUI
+│   │   ├── styles.css         # Global styles with Tailwind CSS v4 + DaisyUI
 │   │   ├── routes/            # TanStack Router file-based routes
 │   │   │   ├── __root.tsx     # Root layout
 │   │   │   ├── index.tsx      # Home page
-│   │   │   ├── discordProfile.tsx # Discord Profile management
-│   │   │   ├── discordWebhook.tsx # Discord Webhook management
-│   │   │   ├── session.tsx    # Session management
-│   │   │   └── template.tsx   # Template management
-│   │   ├── models/            # Dexie.js models and schemas
+│   │   │   ├── session.tsx    # Session management page
+│   │   │   └── template.tsx   # Template management page
+│   │   ├── models/            # Dexie.js models and Zod schemas
+│   │   │   ├── gameSession.ts # Game session model
+│   │   │   └── template.ts    # Template model
 │   │   ├── components/        # Shared React components
-│   │   ├── api.ts             # Backend API client
-│   │   └── theme/             # Theme management
+│   │   │   └── CreateSession.tsx # Session creation form
+│   │   ├── theme/             # Theme management
+│   │   │   ├── ThemeProvider.tsx  # Theme context provider
+│   │   │   ├── ThemeSwichMenu.tsx # Theme switcher menu
+│   │   │   └── ThemeIcon.tsx      # Theme icon component
+│   │   ├── toast/             # Toast notifications
+│   │   │   └── ToastProvider.tsx  # Toast context provider
+│   │   ├── db.ts              # Dexie.js database setup
+│   │   └── api.ts             # Backend API client
 │   ├── public/                # Static assets
 │   ├── index.html             # HTML entry point
 │   ├── vite.config.ts         # Vite configuration
@@ -276,11 +387,16 @@ const createChannel = async (guildId: string, channelName: string) => {
 ├── backend/               # Backend API
 │   ├── src/
 │   │   ├── index.ts           # Hono application entry point
+│   │   ├── discord.ts         # Discord.js client wrapper
 │   │   ├── env.ts             # Environment variable types
-│   │   ├── handler/           # API route handlers
-│   │   │   └── healthcheck.ts # Health check endpoint
-│   │   └── services/          # Business logic services
+│   │   └── handler/           # API route handlers
+│   │       ├── healthcheck.ts     # Health check endpoint
+│   │       ├── listGuilds.ts      # List guilds endpoint
+│   │       ├── createCategory.ts  # Create category endpoint
+│   │       ├── createChannel.ts   # Create channel endpoint
+│   │       └── createRole.ts      # Create role endpoint
 │   ├── wrangler.toml          # Cloudflare Workers config
+│   ├── .dev.vars              # Local env vars (gitignored)
 │   └── package.json           # Backend dependencies
 ├── package.json           # Workspace root
 └── tsconfig.json          # Root TypeScript configuration
@@ -299,23 +415,38 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import * as healthcheck from "./handler/healthcheck";
+import * as listGuilds from "./handler/listGuilds";
+import * as createCategory from "./handler/createCategory";
+import * as createRole from "./handler/createRole";
+import * as createChannel from "./handler/createChannel";
 
 const app = new Hono().basePath("/api");
 
 app.use("*", cors());
 app.use("*", logger());
 
-const route = app.get("/health", healthcheck.validator, healthcheck.handler);
-
-app.notFound((c) => c.json({ error: "Not Found" }, 404));
-app.onError((err, c) => {
-  console.error("Server error:", err);
-  return c.json({ error: "Internal Server Error" }, 500);
-});
+const route = app
+  .get("/health", healthcheck.handler)
+  .get("/guilds", listGuilds.handler)
+  .post("/categories", createCategory.validator, createCategory.handler)
+  .post("/roles", createRole.validator, createRole.handler)
+  .post("/channels", createChannel.validator, createChannel.handler)
+  .notFound((c) => c.json({ error: "Not Found" }, 404))
+  .onError((err, c) => {
+    console.error("Server error:", err);
+    return c.json({ error: "Internal Server Error" }, 500);
+  });
 
 export default app;
 export type AppType = typeof route;
 ```
+
+**Available API Endpoints:**
+- `GET /api/health` - Health check
+- `GET /api/guilds` - List all guilds
+- `POST /api/categories` - Create a category
+- `POST /api/roles` - Create a role
+- `POST /api/channels` - Create a channel
 
 ### Environment Variables
 
@@ -340,47 +471,74 @@ bunx wrangler secret put DISCORD_BOT_TOKEN
 # Enter your bot token when prompted
 ```
 
-### API Handler Example
+### API Handler Examples
 
 `backend/src/handler/healthcheck.ts`:
-
 ```tsx#healthcheck.ts
-import { zValidator } from "@hono/zod-validator";
 import type { Context } from "hono";
-import { z } from "zod";
-
-const schema = z.object({});
-
-export const validator = zValidator("query", schema);
 
 export const handler = (c: Context) => {
   return c.json({ status: "ok" });
 };
 ```
 
+`backend/src/handler/listGuilds.ts`:
+```tsx#listGuilds.ts
+import type { Context } from "hono";
+import { getGuilds } from "../discord";
+
+export const handler = async (c: Context) => {
+  const guilds = await getGuilds();
+  return c.json(guilds);
+};
+```
+
+`backend/src/handler/createCategory.ts`:
+```tsx#createCategory.ts
+import { zValidator } from "@hono/zod-validator";
+import type { Context } from "hono";
+import { z } from "zod";
+import { createCategory } from "../discord";
+
+const schema = z.object({
+  guildId: z.string().min(1),
+  name: z.string().min(1).max(100),
+});
+
+export const validator = zValidator("json", schema);
+
+type input = {
+  in: {
+    json: z.infer<typeof schema>;
+  };
+};
+
+export const handler = async (c: Context<any, any, input>) => {
+  const { guildId, name } = await c.req.json<input["in"]["json"]();
+  const category = await createCategory(guildId, name);
+  return c.json(category);
+};
+```
+
 ### Discord API Client
 
-Use `discord-api-types` for type-safe Discord API interactions:
+The backend uses `discord.js` REST client with `discord-api-types` for type-safe Discord API interactions.
 
-```tsx#example-discord-client.tsx
-import { REST } from '@discordjs/rest';
-import { Routes, type RESTPostAPIChannelResult } from 'discord-api-types/v10';
-import type { Env } from '../env';
+See `backend/src/discord.ts` for the full implementation. Key functions include:
 
-export class DiscordClient {
-  private rest: REST;
+- `getGuilds()`: List all guilds the bot has access to
+- `getCategory(guildId, categoryId)`: Get category and its channels
+- `createCategory(guildId, name)`: Create a category with locked @everyone permissions
+- `createChannel(guildId, parentCategoryId, name, type, writerRoleIds, readerRoleIds)`: Create a text/voice channel with role-based permissions
+- `createRole(guildId, name)`: Create a mentionable role
+- `deleteChannel(channelId)`: Delete a channel
+- `deleteRole(guildId, roleId)`: Delete a role
+- `changeChannelPermissions(channelId, writerRoleIds, readerRoleIds)`: Update channel permissions
 
-  constructor(env: Env) {
-    this.rest = new REST({ version: '10' }).setToken(env.DISCORD_BOT_TOKEN);
-  }
-
-  async createChannel(guildId: string, name: string): Promise<RESTPostAPIChannelResult> {
-    return await this.rest.post(Routes.guildChannels(guildId), {
-      body: { name, type: 0 }, // 0 = GUILD_TEXT
-    }) as RESTPostAPIChannelResult;
-  }
-}
-```
+**Permission Configuration:**
+- **Writer roles**: Can read, write messages, manage threads, send voice, etc.
+- **Reader roles**: Can view, read history, connect to voice, speak, but cannot write
+- **@everyone role**: Denied all permissions in categories (privacy by default)
 
 ### Development Commands (Backend)
 
