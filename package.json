@@ -15,7 +15,8 @@
     "test": "bun --filter 'gm-assistant-bot-frontend' test",
     "lint": "bun --filter '*' lint",
     "format": "bun --filter '*' format",
-    "type-check": "bun --filter '*' type-check"
+    "type-check": "bun --filter '*' type-check",
+    "dev": "bun --filter '*' dev"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251212.0",

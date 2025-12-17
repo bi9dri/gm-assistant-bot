@@ -7,7 +7,7 @@
     "lint": "bunx --bun oxlint && bunx --bun oxfmt --check ./src",
     "format": "bunx --bun oxlint --fix && bunx --bun oxfmt --write ./src",
     "type-check": "bunx --bun oxlint --type-aware --type-check",
-    "dev": "bun --hot ./src/index.ts",
+    "dev": "bun --port 8787 --hot ./src/index.ts",
     "preview": "bunx --bun wrangler dev --config ./wrangler.toml",
     "deploy": "bunx --bun wrangler deploy --config ./wrangler.toml"
   },

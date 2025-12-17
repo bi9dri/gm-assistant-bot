@@ -5,5 +5,9 @@ export const Route = createFileRoute("/session")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/session"!</div>;
+  return (
+    <>
+      <h1 className="text-3xl mb-8">セッション</h1>
+    </>
+  );
 }

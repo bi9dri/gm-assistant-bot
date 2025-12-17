@@ -40,7 +40,7 @@ export const CreateDiscordWebhookForm = ({ onSubmit }: Props) => {
           />
         </fieldset>
         <div className="card-actions justify-end">
-          <button className="btn btn-primary" onClick={handleSubmit}>
+          <button type="button" className="btn btn-primary" onClick={handleSubmit}>
             追加
           </button>
         </div>

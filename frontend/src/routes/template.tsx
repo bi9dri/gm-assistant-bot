@@ -5,5 +5,9 @@ export const Route = createFileRoute("/template")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/template"!</div>;
+  return (
+    <>
+      <h1>Template Route</h1>
+    </>
+  );
 }
