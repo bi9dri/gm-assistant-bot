@@ -2,8 +2,6 @@ import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
-import { IoMdHome } from "react-icons/io";
-import { FaDiscord } from "react-icons/fa";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
@@ -41,35 +39,6 @@ export const Route = createRootRoute({
             ></label>
             <aside className="flex min-h-full bg-base-200 flex-col items-start is-drawer-close:w-14 is-drawer-open:w-64">
               <ul className="menu w-full grow">
-                <li>
-                  <button
-                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
-                    data-tip="ホーム"
-                  >
-                    <IoMdHome size="20" />
-                    <span className="is-drawer-close:hidden">ホーム</span>
-                  </button>
-                </li>
-                <li>
-                  <Link
-                    to="/discordWebhook"
-                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
-                    data-tip="Discord Webhook"
-                  >
-                    <FaDiscord size="20" />
-                    <span className="is-drawer-close:hidden">Discord Webhook</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/discordProfile"
-                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
-                    data-tip="Discord Profile"
-                  >
-                    <FaDiscord size="20" />
-                    <span className="is-drawer-close:hidden">Discord Profile</span>
-                  </Link>
-                </li>
                 <li>
                   <Link
                     to="/session"

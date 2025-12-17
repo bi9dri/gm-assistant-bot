@@ -16,5 +16,5 @@ db.version(2).stores({
   DiscordWebhooks: null,
   discordProfiles: null,
   gameSessions: "++id, name, createdAt",
-  templates: "++id, name, createdAt",
+  templates: "++id, name, *roles, *channels, createdAt, updatedAt",
 });

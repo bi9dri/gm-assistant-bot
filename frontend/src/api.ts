@@ -1,5 +1,5 @@
 import type { AppType } from "../../backend";
-import { hc, type InferRequestType } from "hono/client";
+import { hc } from "hono/client";
 
 const API_BASE_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"

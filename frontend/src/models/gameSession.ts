@@ -30,7 +30,7 @@ export class GameSession {
 
   async update() {
     schema.parse(this);
-    await db.gameSessions.update(this.id, this);
+    await db.gameSessions.put(this, this.id);
   }
 
   static async delete(id: number) {

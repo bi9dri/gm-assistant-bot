@@ -1,14 +1,14 @@
 import { zValidator } from "@hono/zod-validator";
-import type { Context, InferRequestType } from "hono";
+import type { Context } from "hono";
 import z from "zod";
 import { createRole } from "../discord";
 
 const schema = z.object({
-    guildId: z.string().min(1),
-    name: z.string().min(1).max(100),
-  });
+  guildId: z.string().min(1),
+  name: z.string().min(1).max(100),
+});
 
-export const validator = zValidator("json",  schema);
+export const validator = zValidator("json", schema);
 
 type input = {
   in: {

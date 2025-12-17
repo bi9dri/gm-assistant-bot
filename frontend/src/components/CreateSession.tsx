@@ -4,7 +4,6 @@ import api from "@/api";
 import { Template } from "@/models/template";
 import { useToast } from "@/toast/ToastProvider";
 import { GameSession } from "@/models/gameSession";
-import type { InferRequestType } from "hono";
 
 export interface PartialGameSession {
   id: number;
@@ -13,13 +12,13 @@ export interface PartialGameSession {
 }
 
 interface Props {
-  onCreate: (session: PartialGameSession) => Promise<void>;
+  onCreate?: (session: PartialGameSession) => Promise<void>;
 }
 
 export const CreateSession = ({ onCreate }: Props) => {
   const { addToast } = useToast();
   const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [selectedGuild, setSelectedGuild] = useState<Guild | undefined>();
+  const [selectedGuildId, setSelectedGuildId] = useState("");
   const [templates, setTemplates] = useState<{ id: number; name: string }[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | "">("");
   const [sessionName, setSessionName] = useState("");
@@ -27,21 +26,35 @@ export const CreateSession = ({ onCreate }: Props) => {
   useEffect(() => {
     void (async () => {
       const gres = await api.guilds.$get();
-      setGuilds((await gres.json()).guilds);
+      if (gres.ok) {
+        const data = await gres.json();
+        setGuilds(data.guilds);
+      }
 
       const tres = await Template.getAll();
-      setTemplates(tres.map((t) => ({ id: t.id!, name: t.name })));
+      setTemplates(tres.map((t) => ({ id: t.id!, name: t.name })) || []);
     })();
   }, []);
+
+  const valid =
+    selectedGuildId !== "" && selectedTemplateId !== "" && sessionName.trim().length > 0;
 
   const handleCreate = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    // const res = await api.roles.$post({
-    //   json: {
-        
-    //   },
-    // });
+    const resCategory = await api.categories.$post({
+      json: {
+        guildId: selectedGuildId,
+        name: sessionName,
+      },
+    });
+    if (!resCategory.ok) {
+      addToast({
+        message: "カテゴリの作成に失敗しました",
+        status: "error",
+      });
+      return;
+    }
 
     const newSession = await GameSession.create(sessionName);
     addToast({
@@ -49,7 +62,9 @@ export const CreateSession = ({ onCreate }: Props) => {
       status: "success",
       durationSeconds: 5,
     });
-    await onCreate(newSession);
+    if (onCreate) {
+      await onCreate(newSession);
+    }
   };
 
   return (
@@ -58,19 +73,20 @@ export const CreateSession = ({ onCreate }: Props) => {
         <h2 className="text-xl">新しいセッションを作成する</h2>
         <fieldset className="fieldset">
           <legend className="fieldset-legend">Discordサーバ</legend>
-
-          <details className="dropdown">
-            <summary>
-              <GuildSelectItem guild={selectedGuild} />
-            </summary>
-            <ul className="menu dropdown-content bg-base-100 rounded-box z-1 p-2 shadow-sm">
-              {guilds.map((g) => (
-                <li key={g.id} onClick={() => setSelectedGuild(g)}>
-                  <GuildSelectItem guild={g} />
-                </li>
-              ))}
-            </ul>
-          </details>
+          <select
+            className="select"
+            value={selectedGuildId}
+            onChange={(e) => setSelectedGuildId(e.target.value)}
+          >
+            <option value="" disabled>
+              サーバを選択してください
+            </option>
+            {guilds.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </fieldset>
         <fieldset className="fieldset">
           <legend className="fieldset-legend">テンプレート</legend>
@@ -90,7 +106,7 @@ export const CreateSession = ({ onCreate }: Props) => {
           </select>
         </fieldset>
         <fieldset className="fieldset">
-          <legend className="fieldset-legend">セッション名</legend>
+          <legend className="fieldset-legend">セッション名 (Discordカテゴリ名)</legend>
           <input
             type="text"
             className="input"
@@ -100,23 +116,16 @@ export const CreateSession = ({ onCreate }: Props) => {
           />
         </fieldset>
         <div className="card-actions justify-end">
-          <button type="button" className="btn btn-primary" onClick={handleCreate}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!valid}
+            onClick={handleCreate}
+          >
             作成
           </button>
         </div>
       </div>
-    </div>
-  );
-};
-
-const GuildSelectItem = ({ guild }: { guild?: Guild }) => {
-  if (!guild) {
-    return <div className="h-3">サーバを選択してください</div>;
-  }
-  return (
-    <div>
-      <img src={guild.icon} className="h-3" />
-      <span>{guild.name}</span>
     </div>
   );
 };

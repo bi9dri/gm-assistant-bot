@@ -10,7 +10,7 @@ const schema = z.object({
   type: z.enum(["text", "voice"]),
   writerRoleIds: z.array(z.string()),
   readerRoleIds: z.array(z.string()),
-})
+});
 
 export const validator = zValidator("json", schema);
 

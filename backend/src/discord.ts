@@ -83,6 +83,7 @@ const writerPermission =
   PermissionFlagsBits.PinMessages |
   PermissionFlagsBits.BypassSlowmode;
 
+console.log("Discord bot token:", process.env.DISCORD_BOT_TOKEN!.slice(0, 4) + "****");
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_BOT_TOKEN!);
 
 export const getGuilds = async () => {

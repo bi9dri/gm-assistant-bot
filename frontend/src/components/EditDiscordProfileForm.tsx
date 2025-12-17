@@ -1,4 +1,4 @@
-import { DiscordProfile } from "@/models/discordProfile";
+// import { DiscordProfile } from "@/models/discordProfile";
 import { useToast } from "@/toast/ToastProvider";
 import React, { useState, useEffect } from "react";
 import { ZodError } from "zod";
@@ -15,24 +15,24 @@ export const EditDiscordProfileForm = ({ profileId }: Props) => {
 
   useEffect(() => {
     void (async () => {
-      const fetchedProfile = await DiscordProfile.getById(profileId);
-      if (!fetchedProfile) {
-        setName("");
-        setIcon("");
-        setDescription("");
-        return;
-      }
-      setName(fetchedProfile.name);
-      setIcon(fetchedProfile.icon);
-      setDescription(fetchedProfile.description);
+      // const fetchedProfile = await DiscordProfile.getById(profileId);
+      // if (!fetchedProfile) {
+      //   setName("");
+      //   setIcon("");
+      //   setDescription("");
+      //   return;
+      // }
+      // setName(fetchedProfile.name);
+      // setIcon(fetchedProfile.icon);
+      // setDescription(fetchedProfile.description);
     })();
   }, [profileId]);
 
   const handleUpdate = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const data = new DiscordProfile(name, icon, description, profileId);
-      await data.save();
+      // const data = new DiscordProfile(name, icon, description, profileId);
+      // await data.save();
       addToast({
         message: "プロフィールを更新しました",
         durationSeconds: 10,
@@ -62,7 +62,7 @@ export const EditDiscordProfileForm = ({ profileId }: Props) => {
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      await DiscordProfile.delete(profileId);
+      // await DiscordProfile.delete(profileId);
       const checkbox = document.getElementById(
         `confirmDeleteModal-${profileId}`,
       ) as HTMLInputElement;

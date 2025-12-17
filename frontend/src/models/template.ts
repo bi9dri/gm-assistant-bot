@@ -4,6 +4,15 @@ import z from "zod";
 const schema = z.object({
   id: z.number(),
   name: z.string().min(1).trim(),
+  roles: z.array(z.string().min(1).trim()),
+  channels: z.array(
+    z.object({
+      name: z.string().min(1).max(50).trim(),
+      type: z.enum(["text", "voice"]),
+      writerRoles: z.array(z.string().min(1).trim()),
+      readerRoles: z.array(z.string().min(1).trim()),
+    }),
+  ),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
 });
@@ -11,24 +20,56 @@ const schema = z.object({
 export class Template {
   id: number;
   name: string;
+  roles: string[];
+  channels: {
+    name: string;
+    type: "text" | "voice";
+    writerRoles: string[];
+    readerRoles: string[];
+  }[];
   createdAt: Date;
   updatedAt?: Date;
 
-  constructor(id: number, name: string, createdAt: Date, updatedAt?: Date) {
+  constructor(
+    id: number,
+    name: string,
+    roles: string[],
+    channels: {
+      name: string;
+      type: "text" | "voice";
+      writerRoles: string[];
+      readerRoles: string[];
+    }[],
+    createdAt: Date,
+    updatedAt?: Date,
+  ) {
     this.id = id;
     this.name = name;
+    this.roles = roles;
+    this.channels = channels;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
 
-  static async create(name: string) {
+  static async create(
+    name: string,
+    roles: string[],
+    channels: {
+      name: string;
+      type: "text" | "voice";
+      writerRoles: string[];
+      readerRoles: string[];
+    }[],
+  ) {
     schema.pick({ name: true }).parse({ name });
     const now = new Date();
     const id = await db.templates.add({
       name,
+      roles,
+      channels,
       createdAt: now,
     });
-    return new Template(id, name, now);
+    return new Template(id, name, roles, channels, now);
   }
 
   async update() {
@@ -36,7 +77,7 @@ export class Template {
     const u = this.updatedAt;
     try {
       this.updatedAt = new Date();
-      await db.templates.update(this.id, this);
+      await db.templates.put(this, this.id);
     } catch (e) {
       this.updatedAt = u;
       throw e;

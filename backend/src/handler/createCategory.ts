@@ -4,9 +4,9 @@ import z from "zod";
 import { createCategory } from "../discord";
 
 const schema = z.object({
-    guildId: z.string().min(1),
-    name: z.string().min(1).max(100),
-  })
+  guildId: z.string().min(1),
+  name: z.string().min(1).max(100),
+});
 
 export const validator = zValidator("json", schema);
 
