@@ -1,0 +1,10 @@
+name = "gm-assistant-bot-api"
+main = "src/index.ts"
+compatibility_date = "2025-12-11"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets are set via: wrangler secret put DISCORD_BOT_TOKEN
+# For local development, create a .dev.vars file with DISCORD_BOT_TOKEN
+
+[observability]
+enabled = true

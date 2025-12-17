@@ -30,7 +30,7 @@ export class DiscordProfile {
   }
 
   async save() {
-    discordProfileSchema.parse({ ...this });
+    discordProfileSchema.parse(this);
     const key = await db.discordProfiles.put(this);
     if (!key) {
       throw new Error("Failed to save DiscordProfile");

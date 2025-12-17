@@ -9,7 +9,7 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
   plugins: [
     devtools(),
-    // @ts-ignore -- tailwindcss has no types --
+    // @ts-ignore -- tailwindcss has no types
     tailwindcss(),
     tanstackRouter({
       target: "react",

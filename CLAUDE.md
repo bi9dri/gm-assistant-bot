@@ -21,20 +21,34 @@
 
 ## Project Architecture
 
-### Frontend-Only SPA
-- **Single-page application** built with React 19
+This is a monorepo with separate frontend and backend workspaces.
+
+### Frontend (React SPA)
+- **Framework**: React 19
 - **Deployment**: Cloudflare Workers Static Assets
-- **Entry point**: `src/main.tsx` - React app with TanStack Router
+- **Entry point**: `frontend/src/main.tsx` - React app with TanStack Router
 - **Build**: Vite build + TypeScript compilation
 - **UI**: React 19 + DaisyUI + Tailwind CSS v4
 - **Routing**: TanStack Router with file-based routing
 - **Data Persistence**: Dexie.js (IndexedDB) with Zod validation
-- **External Integration**: Discord via Webhooks (no backend server needed)
+- **External Integration**: Discord via Webhooks + Backend API
+
+### Backend (Hono.js API)
+- **Framework**: Hono.js
+- **Deployment**: Cloudflare Workers
+- **Discord Integration**: Discord Bot API (via discord-api-types)
+- **Validation**: Zod schemas
+- **API Features**:
+  - Guild information retrieval
+  - Channel management (create, delete)
+  - Role management (create, delete, assign)
+  - Permission management
+  - Health check endpoint
 
 ### Database
-- **Dexie.js**: TypeScript-friendly wrapper for IndexedDB
+- **Dexie.js**: TypeScript-friendly wrapper for IndexedDB (frontend-only)
 - **Zod**: Schema validation for runtime type safety
-- **Storage**: Browser-based IndexedDB (no backend server required)
+- **Storage**: Browser-based IndexedDB
 - **Data Models**: Discord profiles, sessions, templates
 - **Future**: Import/export functionality planned
 
@@ -43,31 +57,38 @@
 - **TanStack Router** for file-based routing with type safety
 - **Bun** for package management and testing
 - **Wrangler** for Cloudflare Workers deployment
+- **oxlint/oxfmt** for linting and formatting
 
 ## Development Commands
 
 All commands should be run from the repository root:
 
 ```bash
-# Start development server with Vite HMR (port 3000)
-fish -c "bun run dev"
+# Start frontend development server with Vite HMR (port 3000)
+fish -c "bun run dev:frontend"
 
-# Build static files for production
-fish -c "bun run build"
+# Start backend API development server (port 8787)
+fish -c "bun run dev:backend"
 
-# Preview production build (port 4173)
-fish -c "bun run preview"
+# Build frontend for production
+fish -c "bun run build:frontend"
 
-# Deploy to Cloudflare Workers
-fish -c "bun run deploy"
+# Build backend (type-check and format)
+fish -c "bun run build:backend"
 
-# Lint all code
+# Deploy frontend to Cloudflare Workers
+fish -c "bun run deploy:frontend"
+
+# Deploy backend API to Cloudflare Workers
+fish -c "bun run deploy:backend"
+
+# Lint all code (both frontend and backend)
 fish -c "bun run lint"
 
-# Format all code
+# Format all code (both frontend and backend)
 fish -c "bun run format"
 
-# Type check all code
+# Type check all code (both frontend and backend)
 fish -c "bun run type-check"
 
 # Run tests
@@ -198,8 +219,7 @@ await db.discordProfiles.delete(id);
 
 ### Discord Integration
 
-Discord integration uses Webhooks for sending messages from the browser:
-
+**Webhooks (Simple messages):**
 ```tsx#example-discord-webhook.tsx
 // Send message to Discord via Webhook
 const sendToDiscord = async (message: string, webhookUrl: string) => {
@@ -211,40 +231,194 @@ const sendToDiscord = async (message: string, webhookUrl: string) => {
 };
 ```
 
+**Bot API (Advanced features via backend):**
+```tsx#example-discord-api.tsx
+// Call backend API to create a Discord channel
+const createChannel = async (guildId: string, channelName: string) => {
+  const response = await fetch(`${API_URL}/api/guilds/${guildId}/channels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: channelName }),
+  });
+  return response.json();
+};
+```
+
 **Notes:**
 - Webhook URLs are stored in the Dexie.js database (not environment variables)
 - Each Discord profile can have its own webhook URL
-- No backend server needed - direct browser-to-Discord communication
+- Backend API uses Discord Bot Token (stored in Cloudflare Secrets)
 
 ### Project Structure
 
 ```
 /
-├── src/
-│   ├── main.tsx           # Application entry point
-│   ├── styles.css         # Global styles with Tailwind + DaisyUI
-│   ├── routes/            # TanStack Router file-based routes
-│   │   ├── __root.tsx     # Root layout
-│   │   ├── index.tsx      # Home page
-│   │   ├── discordWebhook.tsx # Discord Webhook management
-│   │   ├── session.tsx    # Session management
-│   │   └── template.tsx   # Template management
-│   ├── db/                # Dexie.js database setup
-│   │   ├── schema.ts      # Zod schemas and TypeScript types
-│   │   └── index.ts       # Database initialization
-│   ├── components/        # Shared React components
-│   │   ├── forms/         # Form components (Create/Edit)
-│   │   └── ui/            # UI components
-│   └── theme/             # Theme management
-│       ├── ThemeProvider.tsx
-│       ├── ThemeIcon.tsx
-│       └── ThemeSwichMenu.tsx
-├── public/                # Static assets
-├── index.html             # HTML entry point
-├── vite.config.ts         # Vite configuration
-├── wrangler.toml          # Cloudflare Workers config
-├── package.json           # Dependencies and scripts
-└── tsconfig.json          # TypeScript configuration
+├── frontend/              # Frontend SPA
+│   ├── src/
+│   │   ├── main.tsx           # Application entry point
+│   │   ├── styles.css         # Global styles with Tailwind + DaisyUI
+│   │   ├── routes/            # TanStack Router file-based routes
+│   │   │   ├── __root.tsx     # Root layout
+│   │   │   ├── index.tsx      # Home page
+│   │   │   ├── discordProfile.tsx # Discord Profile management
+│   │   │   ├── discordWebhook.tsx # Discord Webhook management
+│   │   │   ├── session.tsx    # Session management
+│   │   │   └── template.tsx   # Template management
+│   │   ├── models/            # Dexie.js models and schemas
+│   │   ├── components/        # Shared React components
+│   │   ├── api.ts             # Backend API client
+│   │   └── theme/             # Theme management
+│   ├── public/                # Static assets
+│   ├── index.html             # HTML entry point
+│   ├── vite.config.ts         # Vite configuration
+│   ├── wrangler.toml          # Cloudflare Workers config
+│   └── package.json           # Frontend dependencies
+├── backend/               # Backend API
+│   ├── src/
+│   │   ├── index.ts           # Hono application entry point
+│   │   ├── env.ts             # Environment variable types
+│   │   ├── handler/           # API route handlers
+│   │   │   └── healthcheck.ts # Health check endpoint
+│   │   └── services/          # Business logic services
+│   ├── wrangler.toml          # Cloudflare Workers config
+│   └── package.json           # Backend dependencies
+├── package.json           # Workspace root
+└── tsconfig.json          # Root TypeScript configuration
+```
+
+## Backend (Hono.js API)
+
+Backend uses Hono.js for lightweight API routing on Cloudflare Workers with Discord Bot API integration.
+
+### Main Entry Point
+
+`backend/src/index.ts`:
+
+```tsx#index.ts
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import * as healthcheck from "./handler/healthcheck";
+
+const app = new Hono().basePath("/api");
+
+app.use("*", cors());
+app.use("*", logger());
+
+const route = app.get("/health", healthcheck.validator, healthcheck.handler);
+
+app.notFound((c) => c.json({ error: "Not Found" }, 404));
+app.onError((err, c) => {
+  console.error("Server error:", err);
+  return c.json({ error: "Internal Server Error" }, 500);
+});
+
+export default app;
+export type AppType = typeof route;
+```
+
+### Environment Variables
+
+`backend/src/env.ts`:
+
+```tsx#env.ts
+export type Env = {
+  DISCORD_BOT_TOKEN: string;
+};
+```
+
+**Setup for local development:**
+```bash
+cd backend
+echo "DISCORD_BOT_TOKEN=your_bot_token_here" > .dev.vars
+```
+
+**Setup for production:**
+```bash
+cd backend
+bunx wrangler secret put DISCORD_BOT_TOKEN
+# Enter your bot token when prompted
+```
+
+### API Handler Example
+
+`backend/src/handler/healthcheck.ts`:
+
+```tsx#healthcheck.ts
+import { zValidator } from "@hono/zod-validator";
+import type { Context } from "hono";
+import { z } from "zod";
+
+const schema = z.object({});
+
+export const validator = zValidator("query", schema);
+
+export const handler = (c: Context) => {
+  return c.json({ status: "ok" });
+};
+```
+
+### Discord API Client
+
+Use `discord-api-types` for type-safe Discord API interactions:
+
+```tsx#example-discord-client.tsx
+import { REST } from '@discordjs/rest';
+import { Routes, type RESTPostAPIChannelResult } from 'discord-api-types/v10';
+import type { Env } from '../env';
+
+export class DiscordClient {
+  private rest: REST;
+
+  constructor(env: Env) {
+    this.rest = new REST({ version: '10' }).setToken(env.DISCORD_BOT_TOKEN);
+  }
+
+  async createChannel(guildId: string, name: string): Promise<RESTPostAPIChannelResult> {
+    return await this.rest.post(Routes.guildChannels(guildId), {
+      body: { name, type: 0 }, // 0 = GUILD_TEXT
+    }) as RESTPostAPIChannelResult;
+  }
+}
+```
+
+### Development Commands (Backend)
+
+From repository root:
+
+```bash
+# Start backend API development server (port 8787)
+fish -c "bun run dev:backend"
+
+# Build backend (type-check and format)
+fish -c "bun run build:backend"
+
+# Deploy backend to Cloudflare Workers
+fish -c "bun run deploy:backend"
+```
+
+From backend directory:
+
+```bash
+cd backend
+
+# Lint backend code
+fish -c "bun run lint"
+
+# Format backend code
+fish -c "bun run format"
+
+# Type check backend code
+fish -c "bun run type-check"
+
+# Start local development with hot reload
+fish -c "bun run dev"
+
+# Preview with Wrangler
+fish -c "bun run preview"
+
+# Deploy to Cloudflare Workers
+fish -c "bun run deploy"
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.

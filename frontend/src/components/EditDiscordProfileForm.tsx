@@ -1,37 +1,40 @@
-import { DiscordWebhook } from "@/models/discordWebhook";
+import { DiscordProfile } from "@/models/discordProfile";
 import { useToast } from "@/toast/ToastProvider";
 import React, { useState, useEffect } from "react";
 import { ZodError } from "zod";
 
 interface Props {
-  webhookId: number;
+  profileId: number;
 }
 
-export const EditWebhookForm = ({ webhookId }: Props) => {
+export const EditDiscordProfileForm = ({ profileId }: Props) => {
   const { addToast } = useToast();
   const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+  const [icon, setIcon] = useState("");
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
-    (async () => {
-      const fetchedWebhook = await DiscordWebhook.getById(webhookId);
-      if (!fetchedWebhook) {
+    void (async () => {
+      const fetchedProfile = await DiscordProfile.getById(profileId);
+      if (!fetchedProfile) {
         setName("");
-        setUrl("");
+        setIcon("");
+        setDescription("");
         return;
       }
-      setName(fetchedWebhook.name);
-      setUrl(fetchedWebhook.url);
+      setName(fetchedProfile.name);
+      setIcon(fetchedProfile.icon);
+      setDescription(fetchedProfile.description);
     })();
-  }, [webhookId]);
+  }, [profileId]);
 
   const handleUpdate = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const data = new DiscordWebhook(name, url, webhookId);
+      const data = new DiscordProfile(name, icon, description, profileId);
       await data.save();
       addToast({
-        message: "Webhookを更新しました",
+        message: "プロフィールを更新しました",
         durationSeconds: 10,
       });
     } catch (error) {
@@ -50,7 +53,7 @@ export const EditWebhookForm = ({ webhookId }: Props) => {
         return;
       }
       addToast({
-        message: "Webhookの更新に失敗しました",
+        message: "プロフィールの更新に失敗しました",
         status: "error",
       });
     }
@@ -59,11 +62,13 @@ export const EditWebhookForm = ({ webhookId }: Props) => {
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      await DiscordWebhook.delete(webhookId);
-      const checkbox = document.getElementById("confirmDeleteModal") as HTMLInputElement;
+      await DiscordProfile.delete(profileId);
+      const checkbox = document.getElementById(
+        `confirmDeleteModal-${profileId}`,
+      ) as HTMLInputElement;
       checkbox.checked = false;
       addToast({
-        message: "Webhookを削除しました",
+        message: "プロフィールを削除しました",
         durationSeconds: 10,
       });
     } catch (error) {
@@ -82,13 +87,13 @@ export const EditWebhookForm = ({ webhookId }: Props) => {
         return;
       }
       addToast({
-        message: "Webhookの削除に失敗しました",
+        message: "プロフィールの削除に失敗しました",
         status: "error",
       });
     }
   };
 
-  if (!webhookId) {
+  if (!profileId) {
     return <></>;
   }
 
@@ -101,39 +106,50 @@ export const EditWebhookForm = ({ webhookId }: Props) => {
             <input
               type="text"
               className="input"
-              placeholder="Webhook1"
+              placeholder="プロファイル1"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </fieldset>
           <fieldset className="fieldset">
-            <legend className="fieldset-legend">URL</legend>
+            <legend className="fieldset-legend">アイコン (オプション)</legend>
             <input
-              type="url"
+              type="text"
               className="input"
-              placeholder="https://discord.com/api/webhooks/..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              placeholder="data:image/png;base64,..."
+              value={icon}
+              onChange={(e) => setIcon(e.target.value)}
+            />
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">説明 (オプション)</legend>
+            <input
+              type="text"
+              className="input"
+              placeholder="説明"
+              maxLength={500}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </fieldset>
           <div className="card-actions justify-end">
             <button onClick={handleUpdate} className="btn btn-primary">
               更新
             </button>
-            <label htmlFor="confirmDeleteModal" className="btn btn-error">
+            <label htmlFor={`confirmDeleteModal-${profileId}`} className="btn btn-error">
               削除
             </label>
           </div>
         </div>
       </div>
 
-      <input id="confirmDeleteModal" type="checkbox" className="modal-toggle" />
+      <input id={`confirmDeleteModal-${profileId}`} type="checkbox" className="modal-toggle" />
       <div className="modal" role="dialog">
         <div className="modal-box">
           <h3 className="text-lg font-bold">「{name}」を削除しますか？</h3>
           <p className="py-4">この操作は元に戻せません。</p>
           <div className="modal-action">
-            <label htmlFor="confirmDeleteModal" className="btn">
+            <label htmlFor={`confirmDeleteModal-${profileId}`} className="btn">
               キャンセル
             </label>
             <button className="btn btn-error" onClick={handleDelete}>
@@ -141,7 +157,7 @@ export const EditWebhookForm = ({ webhookId }: Props) => {
             </button>
           </div>
         </div>
-        <label htmlFor="confirmDeleteModal" className="modal-backdrop">
+        <label htmlFor={`confirmDeleteModal-${profileId}`} className="modal-backdrop">
           キャンセル
         </label>
       </div>

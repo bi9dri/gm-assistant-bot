@@ -21,7 +21,7 @@ export class DiscordWebhook {
   }
 
   async save() {
-    discordWebhookSchema.parse({ ...this });
+    discordWebhookSchema.parse(this);
     const key = await db.discordWebhooks.put(this);
     if (!key) {
       throw new Error("Failed to save DiscordWebhook");
