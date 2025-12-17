@@ -462,6 +462,7 @@ export type Env = {
 ```bash
 cd backend
 echo "DISCORD_BOT_TOKEN=your_bot_token_here" > .dev.vars
+cp .dev.vars .env
 ```
 
 **Setup for production:**
