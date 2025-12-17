@@ -1,10 +1,10 @@
 # gm-assistant-bot
 
-GameMaster's Assistantは、TRPGやマーダーミステリーのセッションを効率化するDiscord連携ツールです。Discord Webhookを使用してブラウザから直接Discordにメッセージを送信でき、ゲームマスターがストーリーテリングとプレイヤーとの対話に集中できるようになることを目指しています。
+GameMaster's Assistantは、TRPGやマーダーミステリーのセッションを効率化するDiscord連携ツールです。ゲームマスターがストーリーテリングとプレイヤーとの対話に集中できるようになることを目指しています。
 
 ## アーキテクチャ
 
-このプロジェクトは、フロントエンドとバックエンドが分離したモノレポ構成です。
+フロントエンドとバックエンドが分離したモノレポ構成です。
 
 ### フロントエンド
 - **フレームワーク**: React + TanStack Router
@@ -12,12 +12,12 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 - **開発環境**: Vite (HMR対応)
 - **本番環境**: Cloudflare Workers Static Assets
 - **データ永続化**: Dexie.js (IndexedDB) - ブラウザ内保存
-- **外部連携**: Discord Webhook + Backend API
+- **バックエンド連携**: Hono RPC
 
 ### バックエンド
-- **フレームワーク**: Hono.js
+- **フレームワーク**: Hono
 - **デプロイ先**: Cloudflare Workers
-- **Discord連携**: Discord Bot API (discord-api-types)
+- **Discord連携**: discord.js
 - **バリデーション**: Zod
 - **API機能**:
   - ギルド情報取得
@@ -25,10 +25,6 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
   - ロール管理（作成、削除、割り当て）
   - 権限管理
   - ヘルスチェック
-
-### Discord連携
-- **Webhook**: シンプルなメッセージ送信（ブラウザから直接）
-- **Bot API**: 高度な機能（チャンネル作成・削除、ロール管理、権限設定）はバックエンド経由
 
 ## プロジェクト構造
 
@@ -53,14 +49,13 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 ├── backend/                   # バックエンドAPI
 │   ├── src/
 │   │   ├── index.ts           # Hono アプリケーション
+│   │   ├── discord.ts         # discord.js クライアント
+│   │   ├── env.ts             # 環境変数
 │   │   ├── handler/           # APIハンドラー
 │   │   │   ├── healthcheck.ts
-│   │   │   ├── guilds.ts      # ギルド情報
+│   │   │   ├── guilds.ts      # サーバ情報
 │   │   │   ├── channels.ts    # チャンネル管理
 │   │   │   └── roles.ts       # ロール管理
-│   │   ├── services/
-│   │   │   └── discordClient.ts # Discord APIクライアント
-│   │   └── types/             # TypeScript型定義
 │   ├── wrangler.toml          # Cloudflare Workers設定
 │   └── .dev.vars              # 開発環境変数 (gitignored)
 └── package.json               # Workspaceルート
@@ -76,10 +71,11 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 - **バリデーション**: Zod
 - **ビルドツール**: Vite
 - **テスト**: Bun test
+- **バックエンド連携**: Hono RPC
 
 ### バックエンド
-- **フレームワーク**: Hono.js
-- **Discord連携**: discord-api-types
+- **フレームワーク**: Hono
+- **Discord連携**: discord.js
 - **バリデーション**: Zod (@hono/zod-validator)
 - **型定義**: @cloudflare/workers-types
 
@@ -222,8 +218,6 @@ bun run deploy:backend
 - テーマ切り替えサポート（DaisyUIの全テーマ対応）
 - Tailwind CSS + DaisyUIによるレスポンシブデザイン
 - Vite HMRによる高速な開発体験
-- Discord Profile管理（Webhook URL設定）
-- Discord Webhook管理
 - セッション管理
 - テンプレート管理
 
@@ -235,82 +229,11 @@ bun run deploy:backend
 - 権限管理
 - ヘルスチェックエンドポイント
 
-### データ永続化
-
-Dexie.js (IndexedDB) を使用したブラウザ内データストア:
-
-```typescript
-import Dexie, { type EntityTable } from "dexie";
-import { z } from "zod";
-
-// Zodスキーマ定義
-export const DiscordProfileSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1),
-  webhookUrl: z.string().url(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-export type DiscordProfile = z.infer<typeof DiscordProfileSchema>;
-
-// Dexieデータベース定義
-const db = new Dexie("GameMasterAssistant") as Dexie & {
-  discordProfiles: EntityTable<DiscordProfile, "id">;
-  sessions: EntityTable<Session, "id">;
-  templates: EntityTable<Template, "id">;
-};
-
-db.version(1).stores({
-  discordProfiles: "id, name, createdAt",
-  sessions: "id, name, createdAt",
-  templates: "id, name, createdAt",
-});
-```
-
 **特徴:**
 - バックエンドサーバー不要でデータを永続化
 - IndexedDBによる大容量データの保存が可能
 - Zodによる型安全なバリデーション
 - インポート・エクスポート機能（実装予定）
-
-### Discord連携
-
-#### Webhook（シンプルなメッセージ送信）
-
-ブラウザから直接Discordにメッセージを送信:
-
-```typescript
-// Discord Webhookにメッセージを送信
-const sendToDiscord = async (message: string, webhookUrl: string) => {
-  await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: message }),
-  });
-};
-```
-
-#### Bot API（高度な機能）
-
-バックエンドAPI経由でDiscord Bot APIを利用:
-
-```typescript
-// バックエンドAPIを呼び出してDiscordチャンネルを作成
-const createChannel = async (guildId: string, channelName: string) => {
-  const response = await fetch(`${API_URL}/api/guilds/${guildId}/channels`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: channelName }),
-  });
-  return response.json();
-};
-```
-
-**注意事項:**
-- Webhook URLはDexie.jsデータベースに保存されます
-- 各Discord ProfileごとにWebhook URLを設定可能
-- Bot TokenはCloudflare Secretsで管理されます（バックエンド用）
 
 ## テーマのカスタマイズ
 
