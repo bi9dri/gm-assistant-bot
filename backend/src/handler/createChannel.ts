@@ -1,6 +1,6 @@
 import z from "zod";
 import { createChannel } from "../discord";
-import { defineJsonHandler } from "./utils";
+import { createJsonHandler } from "./utils";
 
 const schema = z.object({
   guildId: z.string().min(1),
@@ -11,7 +11,7 @@ const schema = z.object({
   readerRoleIds: z.array(z.string()),
 });
 
-export const { validator, handler } = defineJsonHandler(schema, async (data, c) => {
+export const { validator, handler } = createJsonHandler(schema, async (data, c) => {
   const channel = await createChannel(
     data.guildId,
     data.parentCategoryId,

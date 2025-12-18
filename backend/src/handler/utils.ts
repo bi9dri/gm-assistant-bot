@@ -18,12 +18,12 @@ type JsonInput<T> = {
  * @example
  * const schema = z.object({ name: z.string() });
  *
- * export const { validator, handler } = defineJsonHandler(schema, async (data, c) => {
+ * export const { validator, handler } = createJsonHandler(schema, async (data, c) => {
  *   // data is fully typed based on schema
  *   return c.json({ name: data.name });
  * });
  */
-export function defineJsonHandler<
+export function createJsonHandler<
   T extends z.ZodObject<z.ZodRawShape>,
   R,
 >(
