@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
+import type { Context } from "hono";
 import z from "zod";
 import { createRole } from "../discord";
-import type { JsonContext } from "./utils";
 
 const schema = z.object({
   guildId: z.string().min(1),
@@ -10,7 +10,9 @@ const schema = z.object({
 
 export const validator = zValidator("json", schema);
 
-export const handler = async (c: JsonContext<z.infer<typeof schema>>) => {
+export const handler = async (
+  c: Context<{}, string, { in: { json: z.infer<typeof schema> }; out: { json: z.infer<typeof schema> } }>,
+) => {
   const data = c.req.valid("json");
   const role = await createRole(data.guildId, data.name);
   return c.json({
