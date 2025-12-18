@@ -1,6 +1,7 @@
+import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { createChannel } from "../discord";
-import { createJsonHandler } from "./utils";
+import type { JsonContext } from "./utils";
 
 const schema = z.object({
   guildId: z.string().min(1),
@@ -11,7 +12,10 @@ const schema = z.object({
   readerRoleIds: z.array(z.string()),
 });
 
-export const { validator, handler } = createJsonHandler(schema, async (data, c) => {
+export const validator = zValidator("json", schema);
+
+export const handler = async (c: JsonContext<z.infer<typeof schema>>) => {
+  const data = c.req.valid("json");
   const channel = await createChannel(
     data.guildId,
     data.parentCategoryId,
@@ -27,4 +31,4 @@ export const { validator, handler } = createJsonHandler(schema, async (data, c) 
       type: data.type,
     },
   });
-});
+};

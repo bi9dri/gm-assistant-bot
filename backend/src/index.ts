@@ -1,13 +1,14 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import type { Env } from "./env";
 import * as healthcheck from "./handler/healthcheck";
 import * as listGuilds from "./handler/listGuilds";
 import * as createCategory from "./handler/createCategory";
 import * as createRole from "./handler/createRole";
 import * as createChannel from "./handler/createChannel";
 
-const app = new Hono().basePath("/api");
+const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
 app.use("*", cors());
 app.use("*", logger());

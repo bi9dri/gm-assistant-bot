@@ -1,43 +1,20 @@
-import { zValidator } from "@hono/zod-validator";
 import type { Context } from "hono";
-import type { z } from "zod";
+import type { Env } from "../env";
 
 /**
- * Type for handler input with JSON body
- */
-type JsonInput<T> = {
-  in: {
-    json: T;
-  };
-};
-
-/**
- * Creates a JSON handler with Zod validation.
- * Returns both the validator middleware and the handler function.
+ * Context type for handlers with JSON body validation.
+ * Use with c.req.valid("json") to get typed request data.
  *
  * @example
  * const schema = z.object({ name: z.string() });
- *
- * export const { validator, handler } = createJsonHandler(schema, async (data, c) => {
- *   // data is fully typed based on schema
+ * export const validator = zValidator("json", schema);
+ * export const handler = async (c: JsonContext<z.infer<typeof schema>>) => {
+ *   const data = c.req.valid("json");
  *   return c.json({ name: data.name });
- * });
+ * };
  */
-export function createJsonHandler<
-  T extends z.ZodObject<z.ZodRawShape>,
-  R,
->(
-  schema: T,
-  fn: (data: z.infer<T>, c: Context) => R | Promise<R>,
-) {
-  type Data = z.infer<T>;
-
-  const validator = zValidator("json", schema);
-
-  const handler = async (c: Context<any, any, JsonInput<Data>>) => {
-    const data = await c.req.json<Data>();
-    return fn(data, c);
-  };
-
-  return { validator, handler };
-}
+export type JsonContext<T> = Context<
+  { Bindings: Env },
+  string,
+  { in: { json: T }; out: { json: T } }
+>;
