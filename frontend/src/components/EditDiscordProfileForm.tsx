@@ -1,7 +1,8 @@
+import React, { useEffect, useState } from "react";
+import { ZodError } from "zod";
+
 // import { DiscordProfile } from "@/models/discordProfile";
 import { useToast } from "@/toast/ToastProvider";
-import React, { useState, useEffect } from "react";
-import { ZodError } from "zod";
 
 interface Props {
   profileId: number;

@@ -1,5 +1,6 @@
-import type { AppType } from "../../backend";
 import { hc } from "hono/client";
+
+import type { AppType } from "../../backend";
 
 const API_BASE_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"

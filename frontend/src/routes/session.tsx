@@ -1,5 +1,6 @@
-import { CreateSession } from "@/components/CreateSession";
 import { createFileRoute } from "@tanstack/react-router";
+
+import { CreateSession } from "@/components/CreateSession";
 
 export const Route = createFileRoute("/session")({
   component: RouteComponent,

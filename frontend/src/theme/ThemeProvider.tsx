@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type PropsWithChildren } from "react";
-import { THEMES, type THEME } from ".";
+import { type PropsWithChildren, createContext, useContext, useState } from "react";
+
+import { type THEME, THEMES } from ".";
 
 const THEME_LOCAL_STORAGE_KEY = "theme";
 let initialTheme: THEME = window.matchMedia("(prefers-color-scheme: dark)").matches

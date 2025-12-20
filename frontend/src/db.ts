@@ -1,20 +1,44 @@
-import Dexie, { type EntityTable } from "dexie";
-import type { GameSession } from "./models/gameSession";
-import type { Template } from "./models/template";
+import Dexie, { type EntityTable, type Table } from "dexie";
+import z from "zod";
 
-export const db = new Dexie("GmAssistant") as Dexie & {
-  gameSessions: EntityTable<GameSession, "id">;
-  templates: EntityTable<Template, "id">;
-};
+import * as models from "@/models";
 
-db.version(1).stores({
-  discordWebhooks: "++id, name, url",
-  discordProfiles: "++id, name, icon, description",
-});
+export class DB extends Dexie {
+  GameSession!: EntityTable<z.infer<typeof models.GameSessionSchema>, "id">;
+  SessionNode!: EntityTable<z.infer<typeof models.SessionNodeSchema>, "id">;
+  Guild!: Table<z.infer<typeof models.GuildSchema>, "id">;
+  Category!: Table<z.infer<typeof models.CategorySchema>, "id">;
+  Channel!: Table<z.infer<typeof models.ChannelSchema>, "id">;
+  Role!: Table<z.infer<typeof models.RoleSchema>, ["id", "guildId"]>;
+  Template!: EntityTable<models.Template, "id", z.infer<typeof models.TemplateInsertSchema>>;
+  TemplateChannel!: EntityTable<models.TemplateChannel, "id">;
+  TemplateNode!: EntityTable<models.TemplateNode, "id">;
 
-db.version(2).stores({
-  DiscordWebhooks: null,
-  discordProfiles: null,
-  gameSessions: "++id, name, createdAt",
-  templates: "++id, name, *roles, *channels, createdAt, updatedAt",
-});
+  constructor() {
+    super("GmAssistant");
+
+    this.version(1).stores({
+      GameSession: "++id, name, guildId, categoryId, *roleIds, createdAt",
+      SessionNode: "++id, sessionId, description, executedAt",
+      Guild: "id, name, icon",
+      Category: "id, name",
+      Channel: "id, name, type, *writerRoleIds, *readerRoleIds",
+      Role: "[id+guildId], name",
+      Template: "++id, name, *roles, createdAt, updatedAt",
+      TemplateChannel: "++id, templateId, name, type, *writerRoles, *readerRoles",
+      TemplateNode: "++id, templateId, description",
+    });
+
+    this.GameSession.mapToClass(models.GameSession);
+    this.SessionNode.mapToClass(models.SessionNode);
+    this.Guild.mapToClass(models.Guild);
+    this.Category.mapToClass(models.Category);
+    this.Channel.mapToClass(models.Channel);
+    this.Role.mapToClass(models.Role);
+    this.Template.mapToClass(models.Template);
+    this.TemplateChannel.mapToClass(models.TemplateChannel);
+    this.TemplateNode.mapToClass(models.TemplateNode);
+  }
+}
+
+export const db = new DB();

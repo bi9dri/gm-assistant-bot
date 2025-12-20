@@ -1,4 +1,4 @@
-import { THEMES, type THEME } from ".";
+import { type THEME, THEMES } from ".";
 import { ThemeIcon } from "./ThemeIcon";
 import { useTheme } from "./ThemeProvider";
 

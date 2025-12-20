@@ -1,4 +1,5 @@
 import type { THEME } from ".";
+
 import { useTheme } from "./ThemeProvider";
 
 interface Props {
