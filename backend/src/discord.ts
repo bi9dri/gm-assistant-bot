@@ -12,6 +12,12 @@ import {
   type RESTPostAPIGuildRoleJSONBody,
 } from "discord-api-types/v10";
 import { REST } from "discord.js";
+import type {
+  CreateRoleData,
+  CreateCategoryData,
+  CreateChannelData,
+  ChangeChannelPermissionsData,
+} from "./schemas";
 
 // Channel-specific permissions (Text & Voice channels)
 const channelPermissions =
@@ -118,16 +124,16 @@ export const getCategory = async (guildId: string, categoryId: string) => {
   };
 };
 
-export const createCategory = async (guildId: string, name: string) => {
-  const category = (await rest.post(Routes.guildChannels(guildId), {
+export const createCategory = async (data: CreateCategoryData) => {
+  const category = (await rest.post(Routes.guildChannels(data.guildId), {
     body: {
-      guild_id: guildId,
+      guild_id: data.guildId,
       type: ChannelType.GuildCategory,
-      name,
+      name: data.name,
       permission_overwrites: [
         {
           // @everyone role
-          id: guildId,
+          id: data.guildId,
           type: OverwriteType.Role,
           deny: channelPermissions.toString(),
         },
@@ -140,27 +146,20 @@ export const createCategory = async (guildId: string, name: string) => {
   };
 };
 
-export const createChannel = async (
-  guildId: string,
-  parentCategoryId: string,
-  name: string,
-  type: "text" | "voice" = "text",
-  writerRoleIds: string[],
-  readerRoleIds: string[],
-) => {
-  const channel = (await rest.post(Routes.guildChannels(guildId), {
+export const createChannel = async (data: CreateChannelData) => {
+  const channel = (await rest.post(Routes.guildChannels(data.guildId), {
     body: {
-      guild_id: guildId,
-      type: type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
-      name,
-      parent_id: parentCategoryId,
+      guild_id: data.guildId,
+      type: data.type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
+      name: data.name,
+      parent_id: data.parentCategoryId,
       permission_overwrites: [
-        ...writerRoleIds.map((r) => ({
+        ...data.writerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,
           allow: writerPermission.toString(),
         })),
-        ...readerRoleIds.map((r) => ({
+        ...data.readerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,
           allow: readerPermission.toString(),
@@ -178,20 +177,16 @@ export const deleteChannel = async (channelId: string) => {
   await rest.delete(Routes.channel(channelId));
 };
 
-export const changeChannelPermissions = async (
-  channelId: string,
-  writerRoleIds: string[],
-  readerRoleIds: string[],
-) => {
-  await rest.patch(Routes.channel(channelId), {
+export const changeChannelPermissions = async (data: ChangeChannelPermissionsData) => {
+  await rest.patch(Routes.channel(data.channelId), {
     body: {
       permission_overwrites: [
-        ...writerRoleIds.map((r) => ({
+        ...data.writerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,
           allow: writerPermission.toString(),
         })),
-        ...readerRoleIds.map((r) => ({
+        ...data.readerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,
           allow: readerPermission.toString(),
@@ -201,10 +196,10 @@ export const changeChannelPermissions = async (
   });
 };
 
-export const createRole = async (guildId: string, name: string) => {
-  const role = (await rest.post(Routes.guildRoles(guildId), {
+export const createRole = async (data: CreateRoleData) => {
+  const role = (await rest.post(Routes.guildRoles(data.guildId), {
     body: {
-      name,
+      name: data.name,
       mentionable: true,
     } as RESTPostAPIGuildRoleJSONBody,
   })) as RESTAPIGuildCreateRole;
