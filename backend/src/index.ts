@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { createCategory, createChannel, createRole, deleteRole, getGuilds } from "./discord";
+import { createCategory, createChannel, createRole, deleteChannel, deleteRole, getGuilds } from "./discord";
 import { zValidator } from "@hono/zod-validator";
-import { createRoleSchema, createCategorySchema, createChannelSchema, deleteRoleSchema } from "./schemas";
+import { createRoleSchema, createCategorySchema, createChannelSchema, deleteRoleSchema, deleteChannelSchema } from "./schemas";
 
 const app = new Hono()
   .basePath("/api")
@@ -29,8 +29,8 @@ const app = new Hono()
     const channel = await createChannel(c.req.valid("json"));
     return c.json({ channel });
   })
-  .delete("/channels", zValidator("json", deleteRoleSchema), async (c) => {
-    await deleteRole(c.req.valid("json"));
+  .delete("/channels", zValidator("json", deleteChannelSchema), async (c) => {
+    await deleteChannel(c.req.valid("json"));
     return new Response(undefined, { status: 204 });
   })
   .notFound((c) => c.json({ error: "Not Found" }, 404))
