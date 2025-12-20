@@ -13,7 +13,7 @@ export const TemplateSchema = z.object({
   channels: z.array(TemplateChannelSchema),
   nodes: z.record(z.number(), TemplateNodeSchema),
   createdAt: z.date(),
-  updatedAt: z.date().optional(),
+  updatedAt: z.date(),
 });
 
 export const TemplateInsertSchema = TemplateSchema.omit({ id: true, channels: true, nodes: true });
@@ -23,7 +23,7 @@ export class Template extends Entity<DB> {
   name!: string;
   roles!: string[];
   readonly createdAt!: Date;
-  readonly updatedAt?: Date;
+  readonly updatedAt!: Date;
 
   get channels() {
     return this.db.TemplateChannel.where("templateId").equals(this.id).toArray();
