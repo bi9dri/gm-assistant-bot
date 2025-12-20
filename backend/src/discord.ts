@@ -2,22 +2,23 @@ import {
   ChannelType,
   OverwriteType,
   PermissionFlagsBits,
-  Routes,
   type RESTAPIGuildCreateRole,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTPatchAPIChannelJSONBody,
   type RESTPostAPIGuildChannelJSONBody,
   type RESTPostAPIGuildChannelResult,
   type RESTPostAPIGuildRoleJSONBody,
+  Routes,
 } from "discord-api-types/v10";
 import { REST } from "discord.js";
+
 import type {
-  CreateRoleData,
+  ChangeChannelPermissionsData,
   CreateCategoryData,
   CreateChannelData,
-  ChangeChannelPermissionsData,
-  DeleteRoleData,
+  CreateRoleData,
   DeleteChannelData,
+  DeleteRoleData,
 } from "./schemas";
 
 // Channel-specific permissions (Text & Voice channels)

@@ -1,6 +1,8 @@
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
 import {
   createCategory,
   createChannel,
@@ -9,13 +11,12 @@ import {
   deleteRole,
   getGuilds,
 } from "./discord";
-import { zValidator } from "@hono/zod-validator";
 import {
-  createRoleSchema,
   createCategorySchema,
   createChannelSchema,
-  deleteRoleSchema,
+  createRoleSchema,
   deleteChannelSchema,
+  deleteRoleSchema,
 } from "./schemas";
 
 const app = new Hono()
