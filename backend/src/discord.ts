@@ -5,7 +5,6 @@ import {
   Routes,
   type RESTAPIGuildCreateRole,
   type RESTGetAPICurrentUserGuildsResult,
-  type RESTGetAPIGuildChannelsResult,
   type RESTPatchAPIChannelJSONBody,
   type RESTPostAPIGuildChannelJSONBody,
   type RESTPostAPIGuildChannelResult,
@@ -17,6 +16,8 @@ import type {
   CreateCategoryData,
   CreateChannelData,
   ChangeChannelPermissionsData,
+  DeleteRoleData,
+  DeleteChannelData,
 } from "./schemas";
 
 // Channel-specific permissions (Text & Voice channels)
@@ -101,29 +102,6 @@ export const getGuilds = async () => {
   }));
 };
 
-export const getCategory = async (guildId: string, categoryId: string) => {
-  const allChannels = (await rest.get(
-    Routes.guildChannels(guildId),
-  )) as RESTGetAPIGuildChannelsResult;
-  const category = allChannels.find(
-    (c) => c.id === categoryId && c.type === ChannelType.GuildCategory,
-  );
-  if (!category) {
-    throw new Error("Category not found");
-  }
-  const categoryChannels = allChannels.filter((c) => c.parent_id === categoryId);
-  return {
-    id: category.id,
-    name: category.name,
-    textChannels: categoryChannels
-      .filter((c) => c.type === ChannelType.GuildText)
-      .map((c) => ({ id: c.id, name: c.name })),
-    voiceChannels: categoryChannels
-      .filter((c) => c.type === ChannelType.GuildVoice)
-      .map((c) => ({ id: c.id, name: c.name })),
-  };
-};
-
 export const createCategory = async (data: CreateCategoryData) => {
   const category = (await rest.post(Routes.guildChannels(data.guildId), {
     body: {
@@ -173,8 +151,8 @@ export const createChannel = async (data: CreateChannelData) => {
   };
 };
 
-export const deleteChannel = async (channelId: string) => {
-  await rest.delete(Routes.channel(channelId));
+export const deleteChannel = async (data: DeleteChannelData) => {
+  await rest.delete(Routes.channel(data.channelId));
 };
 
 export const changeChannelPermissions = async (data: ChangeChannelPermissionsData) => {
@@ -209,6 +187,6 @@ export const createRole = async (data: CreateRoleData) => {
   };
 };
 
-export const deleteRole = async (guildId: string, roleId: string) => {
-  await rest.delete(Routes.guildRole(guildId, roleId));
+export const deleteRole = async (data: DeleteRoleData) => {
+  await rest.delete(Routes.guildRole(data.guildId, data.roleId));
 };

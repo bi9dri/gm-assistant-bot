@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { createCategory, createChannel, createRole, getGuilds } from "./discord";
+import { createCategory, createChannel, createRole, deleteRole, getGuilds } from "./discord";
 import { zValidator } from "@hono/zod-validator";
-import { createRoleSchema, createCategorySchema, createChannelSchema } from "./schemas";
+import { createRoleSchema, createCategorySchema, createChannelSchema, deleteRoleSchema } from "./schemas";
 
 const app = new Hono()
   .basePath("/api")
@@ -17,6 +17,10 @@ const app = new Hono()
     const role = await createRole(c.req.valid("json"));
     return c.json({ role });
   })
+  .delete("/roles", zValidator("json", deleteRoleSchema), async (c) => {
+    await deleteRole(c.req.valid("json"));
+    return new Response(undefined, { status: 201 });
+  })
   .post("/categories", zValidator("json", createCategorySchema), async (c) => {
     const category = await createCategory(c.req.valid("json"));
     return c.json({ category });
@@ -24,6 +28,10 @@ const app = new Hono()
   .post("/channels", zValidator("json", createChannelSchema), async (c) => {
     const channel = await createChannel(c.req.valid("json"));
     return c.json({ channel });
+  })
+  .delete("/channels", zValidator("json", deleteRoleSchema), async (c) => {
+    await deleteRole(c.req.valid("json"));
+    return new Response(undefined, { status: 204 });
   })
   .notFound((c) => c.json({ error: "Not Found" }, 404))
   .onError((err, c) => {
