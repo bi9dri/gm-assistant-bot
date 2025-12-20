@@ -120,7 +120,7 @@ export const createCategory = async (data: CreateCategoryData) => {
   })) as RESTPostAPIGuildChannelResult;
   return {
     id: category.id,
-    name: category.name,
+    name: category.name || "",
   };
 };
 
@@ -147,7 +147,7 @@ export const createChannel = async (data: CreateChannelData) => {
   })) as RESTPostAPIGuildChannelResult;
   return {
     id: channel.id,
-    name: channel.name,
+    name: channel.name || "",
   };
 };
 
@@ -182,8 +182,8 @@ export const createRole = async (data: CreateRoleData) => {
     } as RESTPostAPIGuildRoleJSONBody,
   })) as RESTAPIGuildCreateRole;
   return {
-    id: role.id,
-    name: role.name,
+    id: role.id.toString(),
+    name: role.name || "",
   };
 };
 
