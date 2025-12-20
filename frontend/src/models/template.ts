@@ -1,21 +1,44 @@
 import { db } from "@/db";
 import z from "zod";
 
-const schema = z.object({
-  id: z.number(),
-  name: z.string().min(1).trim(),
-  roles: z.array(z.string().min(1).trim()),
-  channels: z.array(
-    z.object({
-      name: z.string().min(1).max(50).trim(),
-      type: z.enum(["text", "voice"]),
-      writerRoles: z.array(z.string().min(1).trim()),
-      readerRoles: z.array(z.string().min(1).trim()),
-    }),
-  ),
-  createdAt: z.date(),
-  updatedAt: z.date().optional(),
-});
+const schema = z
+  .object({
+    id: z.number(),
+    name: z.string().min(1).trim(),
+    roles: z.array(z.string().min(1).trim()),
+    channels: z.array(
+      z.object({
+        name: z.string().min(1).max(50).trim(),
+        type: z.enum(["text", "voice"]),
+        writerRoles: z.array(z.string().min(1).trim()),
+        readerRoles: z.array(z.string().min(1).trim()),
+      }),
+    ),
+    createdAt: z.date(),
+    updatedAt: z.date().optional(),
+  })
+  .superRefine((data, ctx) => {
+    data.channels.forEach((channel, channelIndex) => {
+      channel.writerRoles.forEach((role, roleIndex) => {
+        if (!data.roles.includes(role)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Role "${role}" in writerRoles is not defined in roles array`,
+            path: ["channels", channelIndex, "writerRoles", roleIndex],
+          });
+        }
+      });
+      channel.readerRoles.forEach((role, roleIndex) => {
+        if (!data.roles.includes(role)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Role "${role}" in readerRoles is not defined in roles array`,
+            path: ["channels", channelIndex, "readerRoles", roleIndex],
+          });
+        }
+      });
+    });
+  });
 
 export class Template {
   id: number;
