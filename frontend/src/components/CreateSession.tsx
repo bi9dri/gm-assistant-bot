@@ -1,26 +1,21 @@
-import { useEffect, useState, type MouseEvent } from "react";
-import type { Guild } from "@/types";
-import api from "@/api";
-import { Template } from "@/models/template";
-import { useToast } from "@/toast/ToastProvider";
-import { GameSession } from "@/models/gameSession";
+import { type MouseEvent, useEffect, useState } from "react";
 
-export interface PartialGameSession {
-  id: number;
-  name: string;
-  lastUpdatedAt?: Date;
-}
+import api from "@/api";
+import { db } from "@/db";
+import { useToast } from "@/toast/ToastProvider";
+import type { GuildSchema } from "@/models";
+import type z from "zod";
 
 interface Props {
-  onCreate?: (session: PartialGameSession) => Promise<void>;
+  onCreate?: (created: {}) => Promise<void>;
 }
 
 export const CreateSession = ({ onCreate }: Props) => {
   const { addToast } = useToast();
-  const [guilds, setGuilds] = useState<Guild[]>([]);
+  const [guilds, setGuilds] = useState<z.infer<typeof GuildSchema>[]>([]);
   const [selectedGuildId, setSelectedGuildId] = useState("");
   const [templates, setTemplates] = useState<{ id: number; name: string }[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | "">("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number>(-1);
   const [sessionName, setSessionName] = useState("");
 
   useEffect(() => {
@@ -31,16 +26,75 @@ export const CreateSession = ({ onCreate }: Props) => {
         setGuilds(data.guilds);
       }
 
-      const tres = await Template.getAll();
-      setTemplates(tres.map((t) => ({ id: t.id!, name: t.name })) || []);
+      const tres = await db.Template.toArray();
+      setTemplates(tres.map((t) => ({ id: t.id, name: t.name })) || []);
     })();
   }, []);
 
-  const valid =
-    selectedGuildId !== "" && selectedTemplateId !== "" && sessionName.trim().length > 0;
-
   const handleCreate = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    const template = await db.Template.get(selectedTemplateId);
+    if (!template) {
+      addToast({
+        message: "テンプレートの取得に失敗しました",
+        status: "error",
+      });
+      return;
+    }
+
+    const createdRoles: { [name: string]: string } = {};
+    const createdChannels: { id: string; name: string }[] = [];
+    const rollback = async () => {
+      try {
+        for (const r of Object.values(createdRoles)) {
+          await api.roles.$delete({
+            json: {
+              guildId: selectedGuildId,
+              roleId: r,
+            },
+          });
+        }
+        for (const c of createdChannels) {
+          await api.channels.$delete({
+            json: {
+              guildId: selectedGuildId,
+              channelId: c.id,
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Rollback failed:", err);
+        addToast({
+          message: "ロールバックに失敗しました。手動でロールとチャンネルを削除してください。",
+          status: "error",
+        });
+      }
+    };
+
+    for (const roleName of template.roles) {
+      const resRole = await api.roles.$post({
+        json: {
+          guildId: selectedGuildId,
+          name: roleName,
+        },
+      });
+      if (!resRole.ok) {
+        addToast({
+          message: `ロール「${roleName}」の作成に失敗しました`,
+          status: "error",
+        });
+        await rollback();
+        return;
+      }
+      const roleData = await resRole.json();
+      createdRoles[roleName] = roleData.role.id;
+      await db.Role.add({
+        id: roleData.role.id,
+        guildId: selectedGuildId,
+        name: roleName,
+      });
+    }
 
     const resCategory = await api.categories.$post({
       json: {
@@ -53,12 +107,57 @@ export const CreateSession = ({ onCreate }: Props) => {
         message: "カテゴリの作成に失敗しました",
         status: "error",
       });
+      await rollback();
       return;
     }
+    const categoryData = await resCategory.json();
+    createdChannels.push({ id: categoryData.category.id, name: sessionName });
+    await db.Category.add({
+      id: categoryData.category.id,
+      name: sessionName,
+    });
 
-    const newSession = await GameSession.create(sessionName);
+    const channelDefs = await template.channels;
+    for (const channelDef of channelDefs) {
+      const resChannel = await api.channels.$post({
+        json: {
+          guildId: selectedGuildId,
+          parentCategoryId: categoryData.category.id,
+          name: channelDef.name,
+          type: channelDef.type,
+          writerRoleIds: channelDef.writerRoles.map((r) => createdRoles[r]),
+          readerRoleIds: channelDef.readerRoles.map((r) => createdRoles[r]),
+        },
+      });
+      if (!resChannel.ok) {
+        addToast({
+          message: `チャンネル「${channelDef.name}」の作成に失敗しました`,
+          status: "error",
+        });
+        await rollback();
+        return;
+      }
+      const channelData = await resChannel.json();
+      createdChannels.push({ id: channelData.channel.id, name: channelDef.name });
+      await db.Channel.add({
+        id: channelData.channel.id,
+        name: channelDef.name,
+        type: channelDef.type,
+        writerRoleIds: channelDef.writerRoles.map((r) => createdRoles[r]),
+        readerRoleIds: channelDef.readerRoles.map((r) => createdRoles[r]),
+      });
+    }
+
+    const newSession = await db.GameSession.add({
+      name: sessionName,
+      guildId: selectedGuildId,
+      categoryId: categoryData.category.id,
+      roleIds: Object.values(createdRoles),
+      createdAt: new Date(),
+    });
+
     addToast({
-      message: `セッション「${newSession.name}」を作成しました`,
+      message: `セッション「${sessionName}」を作成しました`,
       status: "success",
       durationSeconds: 5,
     });
@@ -66,6 +165,9 @@ export const CreateSession = ({ onCreate }: Props) => {
       await onCreate(newSession);
     }
   };
+
+  const valid =
+    selectedGuildId !== "" && selectedTemplateId !== -1 && sessionName.trim().length > 0;
 
   return (
     <div className="card lg:w-160 w-full shadow-md">
@@ -95,7 +197,7 @@ export const CreateSession = ({ onCreate }: Props) => {
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(Number(e.target.value))}
           >
-            <option value="" disabled>
+            <option value={-1} disabled>
               テンプレートを選択してください
             </option>
             {templates.map((t) => (
