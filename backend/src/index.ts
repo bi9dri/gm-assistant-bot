@@ -1,9 +1,22 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { createCategory, createChannel, createRole, deleteChannel, deleteRole, getGuilds } from "./discord";
+import {
+  createCategory,
+  createChannel,
+  createRole,
+  deleteChannel,
+  deleteRole,
+  getGuilds,
+} from "./discord";
 import { zValidator } from "@hono/zod-validator";
-import { createRoleSchema, createCategorySchema, createChannelSchema, deleteRoleSchema, deleteChannelSchema } from "./schemas";
+import {
+  createRoleSchema,
+  createCategorySchema,
+  createChannelSchema,
+  deleteRoleSchema,
+  deleteChannelSchema,
+} from "./schemas";
 
 const app = new Hono()
   .basePath("/api")
