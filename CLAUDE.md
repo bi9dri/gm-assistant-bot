@@ -19,6 +19,12 @@
 - This is a security measure against supply chain attacks
 - When updating dependencies, always specify exact versions
 
+## Design Documentation
+
+プロジェクトの詳細な設計ドキュメントは `/docs` ディレクトリに保存されています：
+
+- [ノードベースワークフローシステム設計書](docs/node-workflow-system.md) - TRPG/マーダーミステリーセッション管理のための、ノードベースワークフローシステムの設計
+
 ## Project Architecture
 
 This is a monorepo with separate frontend and backend workspaces.
@@ -42,7 +48,8 @@ This is a monorepo with separate frontend and backend workspaces.
   - Guild list retrieval
   - Category creation
   - Channel creation
-  - Role creation
+  - Role creation and deletion
+  - Channel deletion
   - Health check endpoint
 
 ### Database
@@ -386,15 +393,10 @@ export const createRole = async (guildId: string, name: string) => {
 │   └── package.json           # Frontend dependencies
 ├── backend/               # Backend API
 │   ├── src/
-│   │   ├── index.ts           # Hono application entry point
+│   │   ├── index.ts           # Hono application entry point with all route handlers
 │   │   ├── discord.ts         # Discord.js client wrapper
-│   │   ├── env.ts             # Environment variable types
-│   │   └── handler/           # API route handlers
-│   │       ├── healthcheck.ts     # Health check endpoint
-│   │       ├── listGuilds.ts      # List guilds endpoint
-│   │       ├── createCategory.ts  # Create category endpoint
-│   │       ├── createChannel.ts   # Create channel endpoint
-│   │       └── createRole.ts      # Create role endpoint
+│   │   ├── schemas.ts         # Zod validation schemas
+│   │   └── env.ts             # Environment variable types
 │   ├── wrangler.toml          # Cloudflare Workers config
 │   ├── .dev.vars              # Local env vars (gitignored)
 │   └── package.json           # Backend dependencies
@@ -411,26 +413,55 @@ Backend uses Hono.js for lightweight API routing on Cloudflare Workers with Disc
 `backend/src/index.ts`:
 
 ```tsx#index.ts
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import * as healthcheck from "./handler/healthcheck";
-import * as listGuilds from "./handler/listGuilds";
-import * as createCategory from "./handler/createCategory";
-import * as createRole from "./handler/createRole";
-import * as createChannel from "./handler/createChannel";
 
-const app = new Hono().basePath("/api");
+import {
+  createCategory,
+  createChannel,
+  createRole,
+  deleteChannel,
+  deleteRole,
+  getGuilds,
+} from "./discord";
+import {
+  createCategorySchema,
+  createChannelSchema,
+  createRoleSchema,
+  deleteChannelSchema,
+  deleteRoleSchema,
+} from "./schemas";
 
-app.use("*", cors());
-app.use("*", logger());
-
-const route = app
-  .get("/health", healthcheck.handler)
-  .get("/guilds", listGuilds.handler)
-  .post("/categories", createCategory.validator, createCategory.handler)
-  .post("/roles", createRole.validator, createRole.handler)
-  .post("/channels", createChannel.validator, createChannel.handler)
+const app = new Hono()
+  .basePath("/api")
+  .use("*", cors())
+  .use("*", logger())
+  .get("/health", (c) => c.json({ status: "ok" as const }))
+  .get("/guilds", async (c) => {
+    return c.json({ guilds: await getGuilds() });
+  })
+  .post("/roles", zValidator("json", createRoleSchema), async (c) => {
+    const role = await createRole(c.req.valid("json"));
+    return c.json({ role });
+  })
+  .delete("/roles", zValidator("json", deleteRoleSchema), async (c) => {
+    await deleteRole(c.req.valid("json"));
+    return new Response(undefined, { status: 201 });
+  })
+  .post("/categories", zValidator("json", createCategorySchema), async (c) => {
+    const category = await createCategory(c.req.valid("json"));
+    return c.json({ category });
+  })
+  .post("/channels", zValidator("json", createChannelSchema), async (c) => {
+    const channel = await createChannel(c.req.valid("json"));
+    return c.json({ channel });
+  })
+  .delete("/channels", zValidator("json", deleteChannelSchema), async (c) => {
+    await deleteChannel(c.req.valid("json"));
+    return new Response(undefined, { status: 204 });
+  })
   .notFound((c) => c.json({ error: "Not Found" }, 404))
   .onError((err, c) => {
     console.error("Server error:", err);
@@ -438,7 +469,7 @@ const route = app
   });
 
 export default app;
-export type AppType = typeof route;
+export type AppType = typeof app;
 ```
 
 **Available API Endpoints:**
@@ -446,7 +477,9 @@ export type AppType = typeof route;
 - `GET /api/guilds` - List all guilds
 - `POST /api/categories` - Create a category
 - `POST /api/roles` - Create a role
+- `DELETE /api/roles` - Delete a role
 - `POST /api/channels` - Create a channel
+- `DELETE /api/channels` - Delete a channel
 
 ### Environment Variables
 
@@ -472,53 +505,46 @@ bunx wrangler secret put DISCORD_BOT_TOKEN
 # Enter your bot token when prompted
 ```
 
-### API Handler Examples
+### Validation Schemas
 
-`backend/src/handler/healthcheck.ts`:
-```tsx#healthcheck.ts
-import type { Context } from "hono";
+`backend/src/schemas.ts`:
+```tsx#schemas.ts
+import z from "zod";
 
-export const handler = (c: Context) => {
-  return c.json({ status: "ok" });
-};
-```
-
-`backend/src/handler/listGuilds.ts`:
-```tsx#listGuilds.ts
-import type { Context } from "hono";
-import { getGuilds } from "../discord";
-
-export const handler = async (c: Context) => {
-  const guilds = await getGuilds();
-  return c.json(guilds);
-};
-```
-
-`backend/src/handler/createCategory.ts`:
-```tsx#createCategory.ts
-import { zValidator } from "@hono/zod-validator";
-import type { Context } from "hono";
-import { z } from "zod";
-import { createCategory } from "../discord";
-
-const schema = z.object({
+export const createRoleSchema = z.object({
   guildId: z.string().min(1),
   name: z.string().min(1).max(100),
 });
 
-export const validator = zValidator("json", schema);
+export const deleteRoleSchema = z.object({
+  guildId: z.string().min(1),
+  roleId: z.string().min(1),
+});
 
-type input = {
-  in: {
-    json: z.infer<typeof schema>;
-  };
-};
+export const createCategorySchema = z.object({
+  guildId: z.string().min(1),
+  name: z.string().min(1).max(100),
+});
 
-export const handler = async (c: Context<any, any, input>) => {
-  const { guildId, name } = await c.req.json<input["in"]["json"]();
-  const category = await createCategory(guildId, name);
-  return c.json(category);
-};
+export const createChannelSchema = z.object({
+  guildId: z.string().min(1),
+  parentCategoryId: z.string().min(1),
+  name: z.string().min(1).max(100),
+  type: z.enum(["text", "voice"]),
+  writerRoleIds: z.array(z.string()),
+  readerRoleIds: z.array(z.string()),
+});
+
+export const deleteChannelSchema = z.object({
+  guildId: z.string().min(1),
+  channelId: z.string().min(1),
+});
+
+export type CreateRoleData = z.infer<typeof createRoleSchema>;
+export type DeleteRoleData = z.infer<typeof deleteRoleSchema>;
+export type CreateCategoryData = z.infer<typeof createCategorySchema>;
+export type CreateChannelData = z.infer<typeof createChannelSchema>;
+export type DeleteChannelData = z.infer<typeof deleteChannelSchema>;
 ```
 
 ### Discord API Client

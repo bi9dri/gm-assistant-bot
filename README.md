@@ -22,8 +22,8 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 - **API機能**:
   - ギルド一覧取得
   - カテゴリ作成
-  - チャンネル作成
-  - ロール作成
+  - チャンネル作成・削除
+  - ロール作成・削除
   - ヘルスチェック
 
 ## プロジェクト構造
@@ -59,15 +59,10 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 │   └── package.json           # フロントエンド依存関係
 ├── backend/                   # バックエンドAPI
 │   ├── src/
-│   │   ├── index.ts           # Hono アプリケーション
+│   │   ├── index.ts           # Hono アプリケーション (全ルートハンドラー含む)
 │   │   ├── discord.ts         # Discord.js クライアント
-│   │   ├── env.ts             # 環境変数型定義
-│   │   └── handler/           # APIハンドラー
-│   │       ├── healthcheck.ts     # ヘルスチェック
-│   │       ├── listGuilds.ts      # ギルド一覧取得
-│   │       ├── createCategory.ts  # カテゴリ作成
-│   │       ├── createChannel.ts   # チャンネル作成
-│   │       └── createRole.ts      # ロール作成
+│   │   ├── schemas.ts         # Zodバリデーションスキーマ
+│   │   └── env.ts             # 環境変数型定義
 │   ├── wrangler.toml          # Cloudflare Workers設定
 │   ├── .dev.vars              # 開発環境変数 (gitignored)
 │   └── package.json           # バックエンド依存関係
@@ -241,8 +236,8 @@ bun run deploy:backend
 - Discord Bot API連携（discord.js使用）
 - ギルド一覧取得
 - カテゴリ作成
-- チャンネル作成
-- ロール作成
+- チャンネル作成・削除
+- ロール作成・削除
 - ヘルスチェックエンドポイント
 
 **特徴:**
