@@ -479,10 +479,7 @@ SendFileActionでは、File System Access APIを使ってローカルファイ�
 ### バックエンド拡張
 - `backend/src/index.ts` - 新規エンドポイント追加
 - `backend/src/discord.ts` - Discord API機能追加
-- `backend/src/handler/sendMessage.ts` - 新規
-- `backend/src/handler/sendFile.ts` - 新規
-- `backend/src/handler/updatePermissions.ts` - 新規
-- `backend/src/handler/deleteChannel.ts` - 新規
+- `backend/src/schema.ts` - APIのスキーマ追加
 
 ---
 
