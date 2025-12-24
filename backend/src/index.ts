@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import {
+  changeChannelPermissions,
   createCategory,
   createChannel,
   createRole,
@@ -12,6 +13,7 @@ import {
   getGuilds,
 } from "./discord";
 import {
+  changeChannelPermissionsSchema,
   createCategorySchema,
   createChannelSchema,
   createRoleSchema,
@@ -45,6 +47,10 @@ const app = new Hono()
   })
   .delete("/channels", zValidator("json", deleteChannelSchema), async (c) => {
     await deleteChannel(c.req.valid("json"));
+    return new Response(undefined, { status: 204 });
+  })
+  .patch("/channels/permissions", zValidator("json", changeChannelPermissionsSchema), async (c) => {
+    await changeChannelPermissions(c.req.valid("json"));
     return new Response(undefined, { status: 204 });
   })
   .notFound((c) => c.json({ error: "Not Found" }, 404))
