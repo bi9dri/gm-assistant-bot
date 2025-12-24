@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import z from "zod";
 
-const TemplateCardSchema = z.object({
+export const TemplateCardSchema = z.object({
   id: z.int(),
   name: z.string().trim().nonempty(),
   guild: z.object({

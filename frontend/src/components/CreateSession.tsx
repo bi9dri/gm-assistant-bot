@@ -172,7 +172,7 @@ export const CreateSession = ({ onCreate }: Props) => {
     selectedGuildId !== "" && selectedTemplateId !== -1 && sessionName.trim().length > 0;
 
   return (
-    <div className="card lg:w-160 w-full shadow-md">
+    <div className="card lg:w-120 w-full bg-base-200 rounded-xs border-2 border-secondary shadow-md">
       <div className="card-body">
         <h2 className="text-xl">新しいセッションを作成する</h2>
         <fieldset className="fieldset">
