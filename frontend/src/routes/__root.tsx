@@ -1,5 +1,5 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useRouteContext } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
@@ -10,8 +10,20 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
 import { ToastProvider } from "@/toast/ToastProvider";
 
+interface RootContext {
+  layoutMode: 'padded' | 'full-height';
+}
+
 export const Route = createRootRoute({
-  component: () => (
+  component: RootComponent,
+});
+
+function RootComponent() {
+  // ルートコンテキストからレイアウトモードを取得、デフォルトは'padded'
+  const context = useRouteContext({ from: '__root__' }) as RootContext | undefined;
+  const layoutMode = context?.layoutMode ?? 'padded';
+
+  return (
     <ThemeProvider>
       <ToastProvider>
         <div className="drawer lg:drawer-open">
@@ -27,7 +39,7 @@ export const Route = createRootRoute({
               </label>
               <h1 className="px-4">GM Assistant Bot</h1>
             </nav>
-            <main className="p-4">
+            <main className={layoutMode}>
               <Outlet />
             </main>
           </div>
@@ -91,5 +103,5 @@ export const Route = createRootRoute({
         />
       </ToastProvider>
     </ThemeProvider>
-  ),
-});
+  );
+}
