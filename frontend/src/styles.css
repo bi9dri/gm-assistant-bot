@@ -4,14 +4,14 @@
   themes: all;
 }
 
-/* ビューポート高さ制約チェーンを確立 */
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* フルハイトドロワーシステム */
 .drawer {
   height: 100%;
 }
@@ -22,14 +22,12 @@ html, body, #app {
   height: 100%;
 }
 
-/* メインコンテンツエリアが残りのスペースを埋める */
 main {
   flex: 1;
-  min-height: 0; /* スクロール可能なコンテンツを持つflexの子要素に必須 */
+  min-height: 0;
   overflow: auto;
 }
 
-/* フルハイトモードはパディングを削除し、オーバーフローを管理 */
 main.full-height {
   padding: 0;
   display: flex;
@@ -37,7 +35,7 @@ main.full-height {
   overflow: hidden;
 }
 
-/* パディングモード（デフォルト）は標準的なパディングを持つ */
 main.padded {
-  padding: 1rem; /* p-4相当 */
+  padding: 1rem;
+  /* p-4 */
 }

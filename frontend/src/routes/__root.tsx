@@ -11,7 +11,7 @@ import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
 import { ToastProvider } from "@/toast/ToastProvider";
 
 interface RootContext {
-  layoutMode: 'padded' | 'full-height';
+  layoutMode: "padded" | "full-height";
 }
 
 export const Route = createRootRoute({
@@ -19,9 +19,8 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  // ルートコンテキストからレイアウトモードを取得、デフォルトは'padded'
-  const context = useRouteContext({ from: '__root__' }) as RootContext | undefined;
-  const layoutMode = context?.layoutMode ?? 'padded';
+  const context = useRouteContext({ from: "__root__" }) as RootContext | undefined;
+  const layoutMode = context?.layoutMode ?? "padded";
 
   return (
     <ThemeProvider>

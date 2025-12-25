@@ -11,17 +11,22 @@ import {
   Background,
   BackgroundVariant,
 } from "@xyflow/react";
-
+import { useLiveQuery } from "dexie-react-hooks";
 import "@xyflow/react/dist/style.css";
 import { useCallback } from "react";
+
+import { db } from "@/db";
 
 interface Props {
   templateId: number;
 }
 
 export const TemplateEditor = ({ templateId }: Props) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const template = useLiveQuery(() => db.Template.get(templateId));
+  const [nodes, _, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgeChange] = useEdgesState<Edge>([]);
+
+  console.log(template);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((els) => addEdge(params, els)),
