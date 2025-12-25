@@ -14,9 +14,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
     <div className="card">
       <div className="card-body">
         <h5 className="card-title">{name}</h5>
-        <p className="card-text">
-          Last Updated: {updatedAt.toLocaleString()}
-        </p>
+        <p className="card-text">Last Updated: {updatedAt.toLocaleString()}</p>
         <div className="card-actions">
           <Link to="/template/$id" params={{ id: id.toString() }} className="btn btn-primary">
             View Template

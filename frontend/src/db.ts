@@ -11,21 +11,19 @@ export class DB extends Dexie {
   Channel!: Table<z.infer<typeof models.ChannelSchema>, "id">;
   Role!: Table<z.infer<typeof models.RoleSchema>, ["id", "guildId"]>;
   Template!: EntityTable<models.Template, "id", z.infer<typeof models.TemplateInsertSchema>>;
-  TemplateChannel!: EntityTable<models.TemplateChannel, "id">;
   TemplateNode!: EntityTable<models.TemplateNode, "id">;
 
   constructor() {
     super("GmAssistant");
 
     this.version(1).stores({
-      GameSession: "++id, name, guildId, categoryId, *roleIds, createdAt",
+      GameSession: "++id, name, guildId, createdAt",
       SessionNode: "++id, sessionId, description, executedAt",
       Guild: "id, name, icon",
-      Category: "id, name",
-      Channel: "id, name, type, *writerRoleIds, *readerRoleIds",
+      Category: "id, sessionId, name",
+      Channel: "id, sessionId, name, type, *writerRoleIds, *readerRoleIds",
       Role: "[id+guildId], name",
-      Template: "++id, name, *roles, createdAt, updatedAt",
-      TemplateChannel: "++id, templateId, name, type, *writerRoles, *readerRoles",
+      Template: "++id, name, createdAt, updatedAt",
       TemplateNode: "++id, templateId, description",
     });
 
@@ -36,7 +34,6 @@ export class DB extends Dexie {
     this.Channel.mapToClass(models.Channel);
     this.Role.mapToClass(models.Role);
     this.Template.mapToClass(models.Template);
-    this.TemplateChannel.mapToClass(models.TemplateChannel);
     this.TemplateNode.mapToClass(models.TemplateNode);
   }
 }
