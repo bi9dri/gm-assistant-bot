@@ -8,12 +8,12 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 
 ### アプリケーション
 - **フレームワーク**: React + TanStack Router
-- **UIライブラリ**: DaisyUI + Tailwind CSS v4
+- **UIライブラリ**: DaisyUI + Tailwind CSS
 - **開発環境**: Vite (HMR対応)
 - **本番環境**: Cloudflare Workers Static Assets
 - **データ永続化**: Dexie.js (IndexedDB) - ブラウザ内保存
-- **Discord連携**: クライアントサイドからDiscord API v10に直接アクセス
-- **ワークフロー**: @xyflow/react によるノードベースエディタ
+- **Discord連携**: クライアントサイドからDiscord APIに直接アクセス
+- **ワークフロー**: React Flowによるノードベースエディタ
 
 ### 主な機能
 - **ノードベースワークフロー**: TRPG/マーダーミステリーセッション管理のためのワークフローシステム
@@ -25,6 +25,10 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
   - チャンネル作成・削除
   - ロール作成・削除
   - チャンネル権限管理
+  - メッセージ・ファイル送信
+- **進行補助**:
+  - メモ、ガイド
+  - フラグ管理
 
 ## プロジェクト構造
 
@@ -86,7 +90,7 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 - **UIライブラリ**: DaisyUI + Tailwind CSS
 - **ルーティング**: TanStack Router (ファイルベース)
 - **データベース**: Dexie.js (IndexedDB)
-- **ワークフローエディタ**: @xyflow/react
+- **ワークフローエディタ**: React Flow
 - **バリデーション**: Zod
 - **Discord API**: discord-api-types
 
@@ -121,7 +125,7 @@ bun install
 開発サーバーを起動:
 
 ```bash
-bun run dev
+bun dev
 ```
 
 サーバーは http://localhost:3000 で利用可能になります
@@ -131,7 +135,7 @@ bun run dev
 本番用にビルド:
 
 ```bash
-bun run build
+bun build
 ```
 
 出力先: `dist/`
@@ -141,7 +145,7 @@ bun run build
 本番ビルドをローカルでプレビュー:
 
 ```bash
-bun run preview
+bun preview
 ```
 
 サーバーは http://localhost:4173 で利用可能になります
@@ -150,19 +154,19 @@ bun run preview
 
 ```bash
 # Lint
-bun run lint
+bun lint
 
 # Format
-bun run format
+bun format
 
 # 型チェック
-bun run type-check
+bun type-check
 ```
 
 ### テスト
 
 ```bash
-bun run test
+bun test
 ```
 
 ## デプロイ
@@ -170,26 +174,26 @@ bun run test
 Cloudflare Workersにデプロイ:
 
 ```bash
-bun run deploy
+bun deploy
 ```
 
 ## 開発ワークフロー
 
-1. **ローカル開発**: `bun run dev` でVite HMRを使った高速な開発
-2. **ビルド**: `bun run build` で静的ファイルを生成
-3. **プレビュー**: `bun run preview` で本番ビルドをローカルでテスト
-4. **デプロイ**: `bun run deploy` でCloudflare Workersにデプロイ
+1. **ローカル開発**: `bun dev` でVite HMRを使った高速な開発
+2. **ビルド**: `bun build` で静的ファイルを生成
+3. **プレビュー**: `bun preview` で本番ビルドをローカルでテスト
+4. **デプロイ**: `bun deploy` でCloudflare Workersにデプロイ
 
 ### コードの品質管理
-- **リンティング**: `bun run lint`
-- **フォーマット**: `bun run format`
-- **型チェック**: `bun run type-check`
-- **テスト**: `bun run test`
+- **リンティング**: `bun lint`
+- **フォーマット**: `bun format`
+- **型チェック**: `bun type-check`
+- **テスト**: `bun test`
 
 ## 機能
 
 ### ワークフロー管理
-- ノードベースのワークフローエディタ（@xyflow/react使用）
+- ノードベースのワークフローエディタ（React Flow使用）
 - TRPG/マーダーミステリーセッション向けの専用設計
 - テンプレートによる再利用可能なワークフロー
 - セッション実行時の進捗トラッキング
@@ -197,18 +201,21 @@ bun run deploy
 ### Discord連携
 - 複数のDiscord Botトークンを安全に保存
 - ギルド一覧の取得と管理
-- カテゴリ作成（@everyoneの権限をロック）
+- カテゴリ作成
 - テキスト/ボイスチャンネル作成
 - ロールベースのチャンネル権限設定
   - Writerロール: 読み書き可能、スレッド管理など
   - Readerロール: 閲覧のみ、ボイス接続は可能
+  - 権限を自由に設定できるカスタムロールも実装予定
 - ロール作成・削除
 - チャンネル削除
+- メッセージ送信
+- ファイル送信
 
 ### UI/UX
 - TanStack Routerによるファイルベースルーティング
 - テーマ切り替えサポート（DaisyUIの全テーマ対応、LocalStorageに保存）
-- Tailwind CSS v4 + DaisyUIによるレスポンシブデザイン
+- Tailwind CSS + DaisyUIによるレスポンシブデザイン
 - Vite HMRによる高速な開発体験
 - トースト通知機能
 
