@@ -16,7 +16,7 @@ function RouteComponent() {
   const [templateName, setTemplateName] = useState("");
 
   const handleSave = () => {
-    // TODO: Template.create()を使った保存ロジックを実装
+    // TODO: db.Template.add()を使った保存ロジックを実装
     console.log("Saving template:", templateName);
   };
 

@@ -18,9 +18,15 @@ function RouteComponent() {
         新しいテンプレートを作成
       </Link>
       <div className="flex flex-wrap gap-8">
-        {templates?.map((t) => (
-          <TemplateCard key={t.id} id={t.id} name={t.name} updatedAt={t.updatedAt} />
-        ))}
+        {templates && templates.length === 0 ? (
+          <div className="w-full text-center py-16">
+            <p className="text-base-content/30 text-lg">テンプレートが作成されていません</p>
+          </div>
+        ) : (
+          templates?.map((t) => (
+            <TemplateCard key={t.id} id={t.id} name={t.name} updatedAt={t.updatedAt} />
+          ))
+        )}
       </div>
     </>
   );
