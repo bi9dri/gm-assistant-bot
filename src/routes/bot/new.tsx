@@ -36,10 +36,6 @@ function RouteComponent() {
       const client = new DiscordClient(token);
       const fetchedProfile = await client.getProfile();
       setProfile(fetchedProfile);
-      addToast({
-        message: "Botプロファイルを取得しました",
-        status: "success",
-      });
     } catch {
       addToast({
         message: "無効なBot Tokenです",

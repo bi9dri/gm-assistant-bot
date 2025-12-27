@@ -42,7 +42,7 @@ export const BotCard = ({ id, name, icon }: Props) => {
 
   return (
     <>
-      <div className="card">
+      <div className="card card-shadow-md bg-base-200 w-96 rounded-xs border-2 border-primary">
         <div className="card-body">
           <div className="flex items-center gap-4 mb-4">
             <img src={icon} alt={`${name} icon`} className="w-16 h-16 rounded-full" />

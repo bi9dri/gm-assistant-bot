@@ -4,105 +4,114 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 
 ## アーキテクチャ
 
-フロントエンドとバックエンドが分離したモノレポ構成です。
+完全にブラウザで動作するシングルページアプリケーション (SPA) です。
 
-### フロントエンド
+### アプリケーション
 - **フレームワーク**: React + TanStack Router
-- **UIライブラリ**: DaisyUI + Tailwind CSS
+- **UIライブラリ**: DaisyUI + Tailwind CSS v4
 - **開発環境**: Vite (HMR対応)
 - **本番環境**: Cloudflare Workers Static Assets
 - **データ永続化**: Dexie.js (IndexedDB) - ブラウザ内保存
-- **バックエンド連携**: Hono RPC
+- **Discord連携**: クライアントサイドからDiscord API v10に直接アクセス
+- **ワークフロー**: @xyflow/react によるノードベースエディタ
 
-### バックエンド
-- **フレームワーク**: Hono
-- **デプロイ先**: Cloudflare Workers
-- **Discord連携**: discord.js
-- **バリデーション**: Zod (@hono/zod-validator)
-- **API機能**:
+### 主な機能
+- **ノードベースワークフロー**: TRPG/マーダーミステリーセッション管理のためのワークフローシステム
+- **テンプレート**: 再利用可能なワークフローテンプレート
+- **Discord Bot管理**: 複数のBotトークンを保存・管理
+- **Discord連携**:
   - ギルド一覧取得
   - カテゴリ作成
   - チャンネル作成・削除
   - ロール作成・削除
-  - ヘルスチェック
+  - チャンネル権限管理
 
 ## プロジェクト構造
 
 ```
 .
-├── frontend/                  # フロントエンドアプリケーション
-│   ├── src/                   # アプリケーションソースコード
-│   │   ├── routes/            # ファイルベースルーティング (TanStack Router)
-│   │   │   ├── __root.tsx     # ルートレイアウト
-│   │   │   ├── index.tsx      # ホームページ
-│   │   │   ├── session.tsx    # セッション管理
-│   │   │   └── template.tsx   # テンプレート管理
-│   │   ├── components/        # Reactコンポーネント
-│   │   │   └── CreateSession.tsx  # セッション作成フォーム
-│   │   ├── models/            # Dexie.js モデルとスキーマ
-│   │   │   ├── gameSession.ts # ゲームセッションモデル
-│   │   │   └── template.ts    # テンプレートモデル
-│   │   ├── theme/             # テーマ管理
-│   │   │   ├── ThemeProvider.tsx  # テーマプロバイダー
-│   │   │   ├── ThemeSwichMenu.tsx # テーマ切り替えメニュー
-│   │   │   └── ThemeIcon.tsx      # テーマアイコン
-│   │   ├── toast/             # トースト通知
-│   │   │   └── ToastProvider.tsx  # トーストプロバイダー
-│   │   ├── db.ts              # Dexie.js データベース設定
-│   │   ├── api.ts             # Backend API クライアント
-│   │   ├── main.tsx           # エントリーポイント
-│   │   └── styles.css         # Tailwind CSS v4 + DaisyUI
-│   ├── public/                # 静的アセット
-│   ├── index.html             # HTML エントリーポイント
-│   ├── vite.config.ts         # Vite設定
-│   ├── wrangler.toml          # Cloudflare Workers設定
-│   └── package.json           # フロントエンド依存関係
-├── backend/                   # バックエンドAPI
-│   ├── src/
-│   │   ├── index.ts           # Hono アプリケーション (全ルートハンドラー含む)
-│   │   ├── discord.ts         # Discord.js クライアント
-│   │   ├── schemas.ts         # Zodバリデーションスキーマ
-│   │   └── env.ts             # 環境変数型定義
-│   ├── wrangler.toml          # Cloudflare Workers設定
-│   ├── .dev.vars              # 開発環境変数 (gitignored)
-│   └── package.json           # バックエンド依存関係
-└── package.json               # Workspaceルート
+├── src/                       # アプリケーションソースコード
+│   ├── routes/                # ファイルベースルーティング (TanStack Router)
+│   │   ├── __root.tsx         # ルートレイアウト
+│   │   ├── index.tsx          # ホームページ
+│   │   ├── session.tsx        # セッション管理
+│   │   ├── bot/               # Discord Bot管理
+│   │   │   ├── index.tsx      # Bot一覧
+│   │   │   └── new.tsx        # Bot登録
+│   │   └── template/          # テンプレート管理
+│   │       ├── index.tsx      # テンプレート一覧
+│   │       ├── new.tsx        # テンプレート作成
+│   │       └── $id.tsx        # テンプレートエディタ
+│   ├── components/            # Reactコンポーネント
+│   │   ├── CreateSession.tsx  # セッション作成フォーム
+│   │   ├── TemplateCard.tsx   # テンプレートカード
+│   │   ├── TemplateEditor.tsx # ワークフローエディタ
+│   │   ├── BotCard.tsx        # Botカード
+│   │   └── EditDiscordProfileForm.tsx # Botプロフィール編集
+│   ├── models/                # Dexie.js モデルとスキーマ
+│   │   ├── DiscordBot.ts      # Discord Botモデル
+│   │   ├── GameSession.ts     # ゲームセッションモデル
+│   │   ├── SessionNode.ts     # セッションワークフローノード
+│   │   ├── Guild.ts           # Discordギルドモデル
+│   │   ├── Category.ts        # Discordカテゴリモデル
+│   │   ├── Channel.ts         # Discordチャンネルモデル
+│   │   ├── Role.ts            # Discordロールモデル
+│   │   ├── Template.ts        # テンプレートモデル
+│   │   └── TemplateNode.ts    # テンプレートワークフローノード
+│   ├── theme/                 # テーマ管理
+│   │   ├── ThemeProvider.tsx  # テーマプロバイダー
+│   │   ├── ThemeSwichMenu.tsx # テーマ切り替えメニュー
+│   │   └── ThemeIcon.tsx      # テーマアイコン
+│   ├── toast/                 # トースト通知
+│   │   └── ToastProvider.tsx  # トーストプロバイダー
+│   ├── db.ts                  # Dexie.js データベース設定
+│   ├── discord.ts             # Discord API クライアント
+│   ├── main.tsx               # エントリーポイント
+│   └── styles.css             # Tailwind CSS v4 + DaisyUI
+├── public/                    # 静的アセット
+├── docs/                      # ドキュメント
+│   └── node-workflow-system.md # ワークフローシステム設計書
+├── index.html                 # HTML エントリーポイント
+├── vite.config.ts             # Vite設定
+├── wrangler.toml              # Cloudflare Workers設定
+├── tsconfig.json              # TypeScript設定
+├── package.json               # 依存関係とスクリプト
+├── CLAUDE.md                  # AI assistant向け説明書
+└── README.md                  # プロジェクトドキュメント
 ```
 
 ## 技術スタック
 
-### フロントエンド
+### コアライブラリ
 - **フレームワーク**: React
 - **UIライブラリ**: DaisyUI + Tailwind CSS
 - **ルーティング**: TanStack Router (ファイルベース)
 - **データベース**: Dexie.js (IndexedDB)
+- **ワークフローエディタ**: @xyflow/react
 - **バリデーション**: Zod
-- **ビルドツール**: Vite
-- **テスト**: Bun test
-- **バックエンド連携**: Hono RPC
+- **Discord API**: discord-api-types
 
-### バックエンド
-- **フレームワーク**: Hono
-- **Discord連携**: discord.js
-- **バリデーション**: Zod (@hono/zod-validator)
-- **型定義**: @cloudflare/workers-types
-
-### 共通ツール
+### 開発ツール
 - **ランタイム**: Bun
-- **デプロイ**: Cloudflare Workers (Static Assets + API)
+- **ビルドツール**: Vite
+- **テスト**: Vitest
 - **リンティング**: oxlint
 - **フォーマット**: oxfmt
 - **型チェック**: TypeScript + oxlint-tsgolint
+
+### デプロイ
+- **ホスティング**: Cloudflare Workers (Static Assets)
+- **デプロイツール**: Wrangler
 
 ## はじめに
 
 ### 前提条件
 
-- [Bun](https://bun.sh/)
+- [Bun](https://bun.sh/) 最新版
 
 ### インストール
 
-ワークスペース全体の依存関係をインストール:
+依存関係をインストール:
 
 ```bash
 bun install
@@ -110,66 +119,45 @@ bun install
 
 ### 開発
 
-**フロントエンド開発サーバー:**
+開発サーバーを起動:
+
 ```bash
-bun run dev:frontend
-# または
-cd frontend && bun run dev
+bun run dev
 ```
+
 サーバーは http://localhost:3000 で利用可能になります
-
-**バックエンドAPI開発サーバー:**
-```bash
-bun run dev:backend
-# または
-cd backend && bun run preview
-```
-APIは http://localhost:8787 で利用可能になります
-
-**Discord Bot Token設定（バックエンド用）:**
-```bash
-cd backend
-# .dev.varsファイルを作成
-echo "DISCORD_BOT_TOKEN=your_bot_token_here" > .dev.vars
-cp .dev.vars .env
-```
 
 ### ビルド
 
-**フロントエンド:**
-```bash
-bun run build:frontend
-```
-出力先: `frontend/dist/`
+本番用にビルド:
 
-**バックエンド:**
 ```bash
-bun run build:backend
+bun run build
 ```
-型チェックとフォーマットを実行します
+
+出力先: `dist/`
 
 ### プレビュー
 
-**フロントエンド:**
+本番ビルドをローカルでプレビュー:
+
 ```bash
-cd frontend && bun run preview
+bun run preview
 ```
+
 サーバーは http://localhost:4173 で利用可能になります
 
-### リンティング
+### リンティングとフォーマット
 
 ```bash
-# すべてLint
+# Lint
 bun run lint
 
-# すべてフォーマット
+# Format
 bun run format
 
-# 型チェック (frontend)
-cd frontend && bun run type-check
-
-# 型チェック (backend)
-cd backend && bun run type-check
+# 型チェック
+bun run type-check
 ```
 
 ### テスト
@@ -180,70 +168,55 @@ bun run test
 
 ## デプロイ
 
-### バックエンドAPI (初回のみ)
-
-Discord Bot Tokenを設定:
+Cloudflare Workersにデプロイ:
 
 ```bash
-cd backend
-wrangler secret put DISCORD_BOT_TOKEN
-# プロンプトでBot Tokenを入力
-```
-
-### デプロイコマンド
-
-**フロントエンド:**
-```bash
-bun run deploy:frontend
-```
-
-**バックエンドAPI:**
-```bash
-bun run deploy:backend
+bun run deploy
 ```
 
 ## 開発ワークフロー
 
-### フロントエンド
-1. **ローカル開発**: `bun run dev:frontend` でVite HMRを使った高速な開発
-2. **ビルド**: `bun run build:frontend` で静的ファイルを生成
-3. **プレビュー**: `cd frontend && bun run preview` で本番ビルドをローカルでテスト
-4. **デプロイ**: `bun run deploy:frontend` でCloudflare Workersにデプロイ
+1. **ローカル開発**: `bun run dev` でVite HMRを使った高速な開発
+2. **ビルド**: `bun run build` で静的ファイルを生成
+3. **プレビュー**: `bun run preview` で本番ビルドをローカルでテスト
+4. **デプロイ**: `bun run deploy` でCloudflare Workersにデプロイ
 
-### バックエンド
-1. **ローカル開発**: `bun run dev:backend` でAPIサーバーを起動
-2. **ビルド**: `bun run build:backend` で型チェックとフォーマット
-3. **デプロイ**: `bun run deploy:backend` でCloudflare Workersにデプロイ
-
-### まとめて実行
-- **リンティング**: `bun run lint` （全ワークスペース）
-- **フォーマット**: `bun run format` （全ワークスペース）
-- **型チェック**: `bun run type-check` （全ワークスペース）
+### コードの品質管理
+- **リンティング**: `bun run lint`
+- **フォーマット**: `bun run format`
+- **型チェック**: `bun run type-check`
+- **テスト**: `bun run test`
 
 ## 機能
 
-### フロントエンド機能
+### ワークフロー管理
+- ノードベースのワークフローエディタ（@xyflow/react使用）
+- TRPG/マーダーミステリーセッション向けの専用設計
+- テンプレートによる再利用可能なワークフロー
+- セッション実行時の進捗トラッキング
+
+### Discord連携
+- 複数のDiscord Botトークンを安全に保存
+- ギルド一覧の取得と管理
+- カテゴリ作成（@everyoneの権限をロック）
+- テキスト/ボイスチャンネル作成
+- ロールベースのチャンネル権限設定
+  - Writerロール: 読み書き可能、スレッド管理など
+  - Readerロール: 閲覧のみ、ボイス接続は可能
+- ロール作成・削除
+- チャンネル削除
+
+### UI/UX
 - TanStack Routerによるファイルベースルーティング
 - テーマ切り替えサポート（DaisyUIの全テーマ対応、LocalStorageに保存）
-- Tailwind CSS + DaisyUIによるレスポンシブデザイン
+- Tailwind CSS v4 + DaisyUIによるレスポンシブデザイン
 - Vite HMRによる高速な開発体験
-- Dexie.js（IndexedDB）でのデータ永続化
-  - ゲームセッション管理
-  - テンプレート管理（ロール・チャンネル構成の保存）
 - トースト通知機能
 
-### バックエンドAPI機能
-- Discord Bot API連携（discord.js使用）
-- ギルド一覧取得
-- カテゴリ作成
-- チャンネル作成・削除
-- ロール作成・削除
-- ヘルスチェックエンドポイント
-
-**特徴:**
-- バックエンドサーバー不要でデータを永続化
-- IndexedDBによる大容量データの保存が可能
-- Zodによる型安全なバリデーション
+### データ管理
+- Dexie.js（IndexedDB）によるクライアントサイドデータ永続化
+- バックエンドサーバー不要
+- 型安全なZodバリデーション
 - インポート・エクスポート機能（実装予定）
 
 ## テーマのカスタマイズ
