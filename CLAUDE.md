@@ -423,8 +423,7 @@ const channel = await client.createChannel({
 │   │   ├── CreateSession.tsx  # Session creation form
 │   │   ├── TemplateCard.tsx   # Template card component
 │   │   ├── TemplateEditor.tsx # Template workflow editor
-│   │   ├── BotCard.tsx        # Bot card component
-│   │   └── EditDiscordProfileForm.tsx # Bot profile edit form
+│   │   └── BotCard.tsx        # Bot card component
 │   ├── theme/                 # Theme management
 │   │   ├── index.ts           # Theme exports
 │   │   ├── ThemeProvider.tsx  # Theme context provider

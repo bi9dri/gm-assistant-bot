@@ -46,8 +46,7 @@ GameMaster's Assistantは、TRPGやマーダーミステリーのセッション
 │   │   ├── CreateSession.tsx  # セッション作成フォーム
 │   │   ├── TemplateCard.tsx   # テンプレートカード
 │   │   ├── TemplateEditor.tsx # ワークフローエディタ
-│   │   ├── BotCard.tsx        # Botカード
-│   │   └── EditDiscordProfileForm.tsx # Botプロフィール編集
+│   │   └── BotCard.tsx        # Botカード
 │   ├── models/                # Dexie.js モデルとスキーマ
 │   │   ├── DiscordBot.ts      # Discord Botモデル
 │   │   ├── GameSession.ts     # ゲームセッションモデル
