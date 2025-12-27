@@ -3,6 +3,7 @@ import { Outlet, createRootRoute, useRouteContext } from "@tanstack/react-router
 import { Link } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
+import { FaDiscord } from "react-icons/fa";
 import { SiSessionize } from "react-icons/si";
 
 import { ThemeIcon } from "@/theme/ThemeIcon";
@@ -51,6 +52,16 @@ function RootComponent() {
             ></label>
             <aside className="flex min-h-full bg-base-200 flex-col items-start is-drawer-close:w-14 is-drawer-open:w-64">
               <ul className="menu w-full grow">
+                <li>
+                  <Link
+                    to="/bot"
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right py-4"
+                    data-tip="Discord Bot"
+                  >
+                    <FaDiscord size="20" />
+                    <span className="is-drawer-close:hidden">Discord Bot</span>
+                  </Link>
+                </li>
                 <li>
                   <Link
                     to="/session"

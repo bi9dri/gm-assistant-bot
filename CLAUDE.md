@@ -1,5 +1,11 @@
 # Project Instructions for AI Assistant
 
+## Language
+
+- **ユーザとの対話は日本語で行う** - All interactions with users should be in Japanese
+- コード内のコメントやドキュメントは英語でも可
+- エラーメッセージや技術的な説明は必要に応じて英語を含めても良い
+
 ## General Guidelines
 
 ### Shell Commands
