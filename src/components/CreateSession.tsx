@@ -4,7 +4,6 @@ import { type MouseEvent, useEffect, useState } from "react";
 
 import type { GuildSchema } from "@/models";
 
-import api from "@/api";
 import { db } from "@/db";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -22,11 +21,10 @@ export const CreateSession = ({ onCreate }: Props) => {
 
   useEffect(() => {
     void (async () => {
-      const gres = await api.guilds.$get();
-      if (gres.ok) {
-        const data = await gres.json();
-        setGuilds(data.guilds);
-      }
+      // list discord bots
+
+      // get guilds from discord api
+      setGuilds([]);
 
       const tres = await db.Template.toArray();
       setTemplates(tres.map((t) => ({ id: t.id, name: t.name })) || []);
