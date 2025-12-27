@@ -4,6 +4,7 @@ import z from "zod";
 import * as models from "@/models";
 
 export class DB extends Dexie {
+  DiscordBot!: Table<z.infer<typeof models.DiscordBotSchema>, "id">;
   GameSession!: EntityTable<z.infer<typeof models.GameSessionSchema>, "id">;
   SessionNode!: EntityTable<z.infer<typeof models.SessionNodeSchema>, "id">;
   Guild!: Table<z.infer<typeof models.GuildSchema>, "id">;
@@ -17,6 +18,7 @@ export class DB extends Dexie {
     super("GmAssistant");
 
     this.version(1).stores({
+      DiscordBot: "id, name, token, icon",
       GameSession: "++id, name, guildId, createdAt",
       SessionNode: "++id, sessionId, description, executedAt",
       Guild: "id, name, icon",
@@ -27,6 +29,7 @@ export class DB extends Dexie {
       TemplateNode: "++id, templateId, description",
     });
 
+    this.DiscordBot.mapToClass(models.DiscordBot);
     this.GameSession.mapToClass(models.GameSession);
     this.SessionNode.mapToClass(models.SessionNode);
     this.Guild.mapToClass(models.Guild);

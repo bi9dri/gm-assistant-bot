@@ -6,6 +6,7 @@ import {
   Routes,
   type RESTAPIGuildCreateRole,
   type RESTGetAPICurrentUserGuildsResult,
+  type RESTGetAPIUserResult,
   type RESTPatchAPIChannelJSONBody,
   type RESTPostAPIGuildChannelJSONBody,
   type RESTPostAPIGuildChannelResult,
@@ -89,12 +90,21 @@ export class DiscordClient {
     this.rest = new REST({ version: "10" }).setToken(token);
   }
 
+  async getProfile() {
+    const user = (await this.rest.get(Routes.user("@me"))) as RESTGetAPIUserResult;
+    return {
+      id: user.id,
+      name: user.username,
+      icon: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp`,
+    };
+  }
+
   async getGuilds() {
     const guilds = (await this.rest.get(Routes.userGuilds())) as RESTGetAPICurrentUserGuildsResult;
     return guilds.map((g) => ({
       id: g.id,
       name: g.name,
-      icon: `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.avif`,
+      icon: `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.webp`,
     }));
   }
 
