@@ -20,14 +20,10 @@ function RouteComponent() {
       <div className="flex flex-wrap gap-8">
         {bots && bots.length === 0 ? (
           <div className="w-full text-center py-16">
-            <p className="text-base-content/30 text-lg">
-              Discord botが登録されていません
-            </p>
+            <p className="text-base-content/30 text-lg">Discord botが登録されていません</p>
           </div>
         ) : (
-          bots?.map((bot) => (
-            <BotCard key={bot.id} id={bot.id} name={bot.name} icon={bot.icon} />
-          ))
+          bots?.map((bot) => <BotCard key={bot.id} id={bot.id} name={bot.name} icon={bot.icon} />)
         )}
       </div>
     </>

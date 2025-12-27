@@ -1,89 +1,162 @@
 import type z from "zod";
 
+import { useLiveQuery } from "dexie-react-hooks";
 import { type MouseEvent, useEffect, useState } from "react";
 
-import type { GuildSchema } from "@/models";
-
 import { db } from "@/db";
+import { DiscordClient } from "@/discord";
+import { type GuildSchema } from "@/models";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {
   onCreate?: (created: {}) => Promise<void>;
+  onCancel?: () => void;
 }
 
-export const CreateSession = ({ onCreate }: Props) => {
+export const CreateSession = ({ onCreate, onCancel }: Props) => {
+  const bots = useLiveQuery(() => db.DiscordBot.toArray(), []);
+  const templates = useLiveQuery(() => db.Template.toArray(), []);
   const { addToast } = useToast();
+  const [selectedBotId, setSelectedBotId] = useState("");
+  const [isLoadingGuilds, setIsLoadingGuilds] = useState(false);
   const [guilds, setGuilds] = useState<z.infer<typeof GuildSchema>[]>([]);
   const [selectedGuildId, setSelectedGuildId] = useState("");
-  const [templates, setTemplates] = useState<{ id: number; name: string }[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number>(-1);
   const [sessionName, setSessionName] = useState("");
 
   useEffect(() => {
-    void (async () => {
-      // list discord bots
-
-      // get guilds from discord api
+    if (!selectedBotId) {
       setGuilds([]);
+      return;
+    }
 
-      const tres = await db.Template.toArray();
-      setTemplates(tres.map((t) => ({ id: t.id, name: t.name })) || []);
+    void (async () => {
+      try {
+        setIsLoadingGuilds(true);
+
+        const bot = await db.DiscordBot.get(selectedBotId);
+        if (!bot) {
+          addToast({ message: "Botが見つかりません", status: "error" });
+          setGuilds([]);
+          return;
+        }
+        const client = new DiscordClient(bot.token);
+        const fetchedGuilds = await client.getGuilds();
+        setGuilds(fetchedGuilds);
+        setIsLoadingGuilds(false);
+      } catch (error) {
+        addToast({
+          message: error instanceof Error ? error.message : "Guildの取得に失敗しました",
+          status: "error",
+        });
+        setGuilds([]);
+      }
     })();
-  }, []);
+  }, [selectedBotId, addToast]);
 
   const handleCreate = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const template = await db.Template.get(selectedTemplateId);
-    if (!template) {
+    try {
+      const template = await db.Template.get(selectedTemplateId);
+      if (!template) {
+        addToast({
+          message: "テンプレートの取得に失敗しました",
+          status: "error",
+        });
+        return;
+      }
+
+      const newSessionId = await db.GameSession.add({
+        name: sessionName,
+        guildId: selectedGuildId,
+        createdAt: new Date(),
+      });
+
       addToast({
-        message: "テンプレートの取得に失敗しました",
+        message: `セッション「${sessionName}」を作成しました。`,
+        status: "success",
+        durationSeconds: 5,
+      });
+
+      if (onCreate) {
+        await onCreate({ id: newSessionId });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        addToast({
+          message: error.message,
+          status: "error",
+        });
+        return;
+      }
+      addToast({
+        message: "セッションの作成に失敗しました",
         status: "error",
       });
-      return;
-    }
-
-    const newSessionId = await db.GameSession.add({
-      name: sessionName,
-      guildId: selectedGuildId,
-      createdAt: new Date(),
-    });
-
-    addToast({
-      message: `セッション「${sessionName}」を作成しました。`,
-      status: "success",
-      durationSeconds: 5,
-    });
-
-    if (onCreate) {
-      await onCreate({ id: newSessionId });
     }
   };
 
   const valid =
-    selectedGuildId !== "" && selectedTemplateId !== -1 && sessionName.trim().length > 0;
+    selectedBotId !== "" &&
+    selectedGuildId !== "" &&
+    selectedTemplateId !== -1 &&
+    sessionName.trim().length > 0;
 
   return (
     <div className="card lg:w-120 w-full bg-base-200 rounded-xs border-2 border-secondary shadow-md">
       <div className="card-body">
         <h2 className="text-xl">新しいセッションを作成する</h2>
         <fieldset className="fieldset">
-          <legend className="fieldset-legend">Discordサーバ</legend>
+          <legend className="fieldset-legend">Discord Bot</legend>
           <select
             className="select"
-            value={selectedGuildId}
-            onChange={(e) => setSelectedGuildId(e.target.value)}
+            value={selectedBotId}
+            onChange={(e) => setSelectedBotId(e.target.value)}
+            disabled={bots?.length === 0}
           >
             <option value="" disabled>
-              サーバを選択してください
+              Botを選択してください
             </option>
-            {guilds.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
+            {bots?.map((bot) => (
+              <option key={bot.id} value={bot.id}>
+                {bot.name}
               </option>
             ))}
           </select>
         </fieldset>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Discordサーバ</legend>
+          {isLoadingGuilds ? (
+            <div className="skeleton h-12 w-full"></div>
+          ) : (
+            <select
+              className="select"
+              value={selectedGuildId}
+              onChange={(e) => setSelectedGuildId(e.target.value)}
+              disabled={!selectedBotId || guilds.length === 0}
+            >
+              <option value="" disabled>
+                サーバを選択してください
+              </option>
+              {guilds.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </fieldset>
+        {selectedGuildId && guilds.find((g) => g.id === selectedGuildId) && (
+          <div className="flex items-center gap-2 mt-2 p-2 bg-base-300 rounded">
+            <img
+              src={guilds.find((g) => g.id === selectedGuildId)?.icon}
+              alt="Guild icon"
+              className="w-8 h-8 rounded"
+            />
+            <span>{guilds.find((g) => g.id === selectedGuildId)?.name}</span>
+          </div>
+        )}
         <fieldset className="fieldset">
           <legend className="fieldset-legend">テンプレート</legend>
           <select
@@ -94,7 +167,7 @@ export const CreateSession = ({ onCreate }: Props) => {
             <option value={-1} disabled>
               テンプレートを選択してください
             </option>
-            {templates.map((t) => (
+            {templates?.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
               </option>
@@ -112,6 +185,11 @@ export const CreateSession = ({ onCreate }: Props) => {
           />
         </fieldset>
         <div className="card-actions justify-end">
+          {onCancel && (
+            <button type="button" className="btn" onClick={onCancel}>
+              キャンセル
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-primary"
