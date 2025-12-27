@@ -70,7 +70,9 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const newSessionId = await db.GameSession.add({
         name: sessionName,
         guildId: selectedGuildId,
+        reactFlowData: JSON.stringify({ nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } }),
         createdAt: new Date(),
+        lastUsedAt: new Date(),
       });
 
       addToast({

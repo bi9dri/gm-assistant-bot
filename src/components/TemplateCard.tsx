@@ -19,10 +19,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      await db.transaction("rw", [db.Template, db.TemplateNode], async () => {
-        await db.TemplateNode.where("templateId").equals(id).delete();
-        await db.Template.delete(id);
-      });
+      await db.Template.delete(id);
 
       const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
       checkbox.checked = false;
