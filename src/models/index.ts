@@ -5,5 +5,5 @@ export { Category, type CategorySchema } from "./Category";
 export { Channel, type ChannelSchema } from "./Channel";
 export { DiscordBot, type DiscordBotSchema } from "./DiscordBot";
 export { Role, type RoleSchema } from "./Role";
-export { Template, type TemplateSchema, type TemplateInsertSchema } from "./Template";
+export { Template, type TemplateSchema } from "./Template";
 export { TemplateNode, type TemplateNodeSchema } from "./TemplateNode";

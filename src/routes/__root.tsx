@@ -2,8 +2,8 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { Outlet, createRootRoute, useRouteContext } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { FaDiscord } from "react-icons/fa";
+import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { SiSessionize } from "react-icons/si";
 
 import { ThemeIcon } from "@/theme/ThemeIcon";

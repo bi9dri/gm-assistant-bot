@@ -4,14 +4,14 @@ import z from "zod";
 import * as models from "@/models";
 
 export class DB extends Dexie {
-  DiscordBot!: Table<z.infer<typeof models.DiscordBotSchema>, "id">;
+  DiscordBot!: Table<z.infer<typeof models.DiscordBotSchema>, string>;
   GameSession!: EntityTable<z.infer<typeof models.GameSessionSchema>, "id">;
   SessionNode!: EntityTable<z.infer<typeof models.SessionNodeSchema>, "id">;
-  Guild!: Table<z.infer<typeof models.GuildSchema>, "id">;
-  Category!: Table<z.infer<typeof models.CategorySchema>, "id">;
-  Channel!: Table<z.infer<typeof models.ChannelSchema>, "id">;
-  Role!: Table<z.infer<typeof models.RoleSchema>, ["id", "guildId"]>;
-  Template!: EntityTable<models.Template, "id", z.infer<typeof models.TemplateInsertSchema>>;
+  Guild!: Table<z.infer<typeof models.GuildSchema>, string>;
+  Category!: Table<z.infer<typeof models.CategorySchema>, string>;
+  Channel!: Table<z.infer<typeof models.ChannelSchema>, string>;
+  Role!: Table<z.infer<typeof models.RoleSchema>, string>;
+  Template!: EntityTable<models.Template, "id">;
   TemplateNode!: EntityTable<models.TemplateNode, "id">;
 
   constructor() {

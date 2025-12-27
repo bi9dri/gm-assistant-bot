@@ -13,8 +13,6 @@ export const TemplateSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const TemplateInsertSchema = TemplateSchema.omit({ id: true, nodes: true });
-
 export class Template extends Entity<DB> {
   readonly id!: number;
   name!: string;
