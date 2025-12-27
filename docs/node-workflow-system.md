@@ -30,7 +30,7 @@ TRPG/マーダーミステリーセッション管理のための、ノードベ
 
 ### 1.1 基底Actionクラスと各種Actionクラスの作成
 
-**ファイル**: `frontend/src/models/actions/Action.ts`
+**ファイル**: `src/models/actions/Action.ts`
 
 ```typescript
 // 基底クラス
@@ -68,7 +68,7 @@ export type TemplateAction =
 
 **個別Actionクラス**:
 
-各Actionクラスは専用ファイルで実装します（`frontend/src/models/actions/*.ts`）：
+各Actionクラスは専用ファイルで実装します（`src/models/actions/*.ts`）：
 
 - `CreateChannelAction` - チャンネル作成（自動実行可能）
 - `DeleteChannelAction` - チャンネル削除（自動実行可能）
@@ -201,7 +201,7 @@ export class NoOperationAction extends Action {
 
 ### 1.2 TemplateNodeモデルの拡張
 
-**ファイル**: `frontend/src/models/TemplateNode.ts`
+**ファイル**: `src/models/TemplateNode.ts`
 
 **新規フィールド**:
 - `nodeKey: string` - テンプレート内で一意な識別子
@@ -228,7 +228,7 @@ export class NoOperationAction extends Action {
 
 ### 1.3 SessionNodeモデルの簡略化
 
-**ファイル**: `frontend/src/models/SessionNode.ts`
+**ファイル**: `src/models/SessionNode.ts`
 
 **フィールド**:
 - `templateNodeKey: string` - TemplateNode.nodeKeyへの参照
@@ -247,7 +247,7 @@ export class NoOperationAction extends Action {
 
 ### 1.4 GameSessionモデルの拡張
 
-**ファイル**: `frontend/src/models/GameSession.ts`
+**ファイル**: `src/models/GameSession.ts`
 
 **新規フィールド**:
 - `templateId: number`
@@ -267,7 +267,7 @@ export class NoOperationAction extends Action {
 
 ### 1.5 データベーススキーマ更新
 
-**ファイル**: `frontend/src/db.ts`
+**ファイル**: `src/db.ts`
 
 ```typescript
 db.version(3).stores({
@@ -356,7 +356,7 @@ async processAutoExecutionChain(): Promise<void> {
 
 ## Phase 3: アクション実行コンテキストと共通型
 
-**ファイル**: `frontend/src/models/actions/types.ts`
+**ファイル**: `src/models/actions/types.ts`
 
 ```typescript
 export type ActionExecutionContext = {
@@ -394,7 +394,7 @@ SendFileActionでは、File System Access APIを使ってローカルファイ�
 
 ---
 
-## Phase 5: バックエンドAPI拡張
+## Phase 5: バックエンドAPI拡張 (deprecated)
 
 各Actionの実行に必要な新規エンドポイントを追加します。
 
@@ -416,13 +416,13 @@ SendFileActionでは、File System Access APIを使ってローカルファイ�
 データモデルとCRUD機能を優先し、UIは必要最小限に留めます。
 
 **必要なUI**:
-- TemplateNodeリスト表示・追加・編集フォーム（`frontend/src/routes/template/$id.tsx`）
-- セッション実行UI（`frontend/src/routes/session/$id.tsx`）
+- TemplateNodeリスト表示・追加・編集フォーム（`src/routes/template/$id.tsx`）
+- セッション実行UI（`src/routes/session/$id.tsx`）
   - 現在ノード表示
   - 次ノード候補リスト
   - ノード実行ボタン
   - セッション状態ビューア（フラグ一覧）
-- アクション表示モーダル（`frontend/src/components/ActionDisplayModal.tsx`）
+- アクション表示モーダル（`src/components/ActionDisplayModal.tsx`）
   - NoOperationActionのメモ表示（displayTypeに応じたアイコン・色分け）
   - 他のアクションの実行確認・結果表示
 
@@ -444,7 +444,7 @@ SendFileActionでは、File System Access APIを使ってローカルファイ�
 2. SetFlagAction（状態管理の基礎）
 3. NoOperationAction（UI表示の基礎、確認ポイント）
 
-### Step 3: バックエンドAPI
+### Step 3: バックエンドAPI (deprecated)
 1. メッセージ送信エンドポイント
 2. 権限変更エンドポイント
 3. チャンネル削除エンドポイント
@@ -459,24 +459,24 @@ SendFileActionでは、File System Access APIを使ってローカルファイ�
 ## 重要なファイル一覧
 
 ### 新規作成
-- `frontend/src/models/actions/Action.ts` - 基底Actionクラスと型定義（memoフィールド含む）
-- `frontend/src/models/actions/CreateChannelAction.ts`
-- `frontend/src/models/actions/DeleteChannelAction.ts`
-- `frontend/src/models/actions/ChangePermissionsAction.ts`
-- `frontend/src/models/actions/SendMessageAction.ts`
-- `frontend/src/models/actions/SendFileAction.ts`
-- `frontend/src/models/actions/SetFlagAction.ts`
-- `frontend/src/models/actions/NoOperationAction.ts` - 何もしないアクション
-- `frontend/src/models/actions/types.ts` - 実行コンテキストと結果の型
-- `frontend/src/components/ActionDisplayModal.tsx` - アクション実行時の表示（NoOperationActionのメモ表示など）
+- `src/models/actions/Action.ts` - 基底Actionクラスと型定義（memoフィールド含む）
+- `src/models/actions/CreateChannelAction.ts`
+- `src/models/actions/DeleteChannelAction.ts`
+- `src/models/actions/ChangePermissionsAction.ts`
+- `src/models/actions/SendMessageAction.ts`
+- `src/models/actions/SendFileAction.ts`
+- `src/models/actions/SetFlagAction.ts`
+- `src/models/actions/NoOperationAction.ts` - 何もしないアクション
+- `src/models/actions/types.ts` - 実行コンテキストと結果の型
+- `src/components/ActionDisplayModal.tsx` - アクション実行時の表示（NoOperationActionのメモ表示など）
 
 ### 大幅変更
-- `frontend/src/models/TemplateNode.ts` - action, nextNodeCandidates追加、条件評価実装
-- `frontend/src/models/SessionNode.ts` - executedAtベースに簡略化
-- `frontend/src/models/GameSession.ts` - state, ノード実行機能追加
-- `frontend/src/db.ts` - スキーマ更新とマイグレーション
+- `src/models/TemplateNode.ts` - action, nextNodeCandidates追加、条件評価実装
+- `src/models/SessionNode.ts` - executedAtベースに簡略化
+- `src/models/GameSession.ts` - state, ノード実行機能追加
+- `src/db.ts` - スキーマ更新とマイグレーション
 
-### バックエンド拡張
+### バックエンド拡張 (deprecated)
 - `backend/src/index.ts` - 新規エンドポイント追加
 - `backend/src/discord.ts` - Discord API機能追加
 - `backend/src/schema.ts` - APIのスキーマ追加
