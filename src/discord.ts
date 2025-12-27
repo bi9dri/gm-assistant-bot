@@ -2,16 +2,11 @@ import {
   ChannelType,
   OverwriteType,
   PermissionFlagsBits,
-  REST,
-  Routes,
-  type RESTAPIGuildCreateRole,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
-  type RESTPatchAPIChannelJSONBody,
-  type RESTPostAPIGuildChannelJSONBody,
   type RESTPostAPIGuildChannelResult,
-  type RESTPostAPIGuildRoleJSONBody,
-} from "discord.js";
+  type RESTPostAPIGuildRoleResult,
+} from "discord-api-types/v10";
 import z from "zod";
 
 export const createRoleSchema = z.object({
@@ -84,14 +79,59 @@ const writerPermission =
   PermissionFlagsBits.BypassSlowmode;
 
 export class DiscordClient {
-  private readonly rest: REST;
+  private readonly token: string;
+  private readonly baseUrl = "https://discord.com/api/v10";
 
   constructor(token: string) {
-    this.rest = new REST({ version: "10" }).setToken(token);
+    this.token = token;
+  }
+
+  private async request<T>(
+    method: "GET" | "POST" | "PATCH" | "DELETE",
+    endpoint: string,
+    body?: unknown,
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+
+    const options: RequestInit = {
+      method,
+      headers: {
+        Authorization: `Bot ${this.token}`,
+        "Content-Type": "application/json",
+      },
+    };
+
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      let errorMessage = `${response.status} ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage += `: ${errorData.message}`;
+        }
+      } catch {
+        // JSONパースエラーは無視
+      }
+
+      throw new Error(`Discord API Error: ${errorMessage}`);
+    }
+
+    // DELETEは204 No Contentを返す
+    if (response.status === 204 || method === "DELETE") {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
   }
 
   async getProfile() {
-    const user = (await this.rest.get(Routes.user("@me"))) as RESTGetAPIUserResult;
+    const user = await this.request<RESTGetAPIUserResult>("GET", "/users/@me");
+
     return {
       id: user.id,
       name: user.username,
@@ -100,7 +140,11 @@ export class DiscordClient {
   }
 
   async getGuilds() {
-    const guilds = (await this.rest.get(Routes.userGuilds())) as RESTGetAPICurrentUserGuildsResult;
+    const guilds = await this.request<RESTGetAPICurrentUserGuildsResult>(
+      "GET",
+      "/users/@me/guilds",
+    );
+
     return guilds.map((g) => ({
       id: g.id,
       name: g.name,
@@ -109,12 +153,14 @@ export class DiscordClient {
   }
 
   async createRole(data: z.infer<typeof createRoleSchema>) {
-    const role = (await this.rest.post(Routes.guildRoles(data.guildId), {
-      body: {
+    const role = await this.request<RESTPostAPIGuildRoleResult>(
+      "POST",
+      `/guilds/${data.guildId}/roles`,
+      {
         name: data.name,
         mentionable: true,
-      } as RESTPostAPIGuildRoleJSONBody,
-    })) as RESTAPIGuildCreateRole;
+      },
+    );
 
     return {
       id: role.id.toString(),
@@ -123,25 +169,25 @@ export class DiscordClient {
   }
 
   async deleteRole(data: z.infer<typeof deleteRoleSchema>) {
-    await this.rest.delete(Routes.guildRole(data.guildId, data.roleId));
+    await this.request<void>("DELETE", `/guilds/${data.guildId}/roles/${data.roleId}`);
   }
 
   async createCategory(data: z.infer<typeof createCategorySchema>) {
-    const category = (await this.rest.post(Routes.guildChannels(data.guildId), {
-      body: {
-        guild_id: data.guildId,
+    const category = await this.request<RESTPostAPIGuildChannelResult>(
+      "POST",
+      `/guilds/${data.guildId}/channels`,
+      {
         type: ChannelType.GuildCategory,
         name: data.name,
         permission_overwrites: [
           {
-            // @everyone role
             id: data.guildId,
             type: OverwriteType.Role,
             deny: allPermission.toString(),
           },
         ],
-      } as RESTPostAPIGuildChannelJSONBody,
-    })) as RESTPostAPIGuildChannelResult;
+      },
+    );
 
     return {
       id: category.id,
@@ -150,9 +196,10 @@ export class DiscordClient {
   }
 
   async createChannel(data: z.infer<typeof createChannelSchema>) {
-    const channel = (await this.rest.post(Routes.guildChannels(data.guildId), {
-      body: {
-        guild_id: data.guildId,
+    const channel = await this.request<RESTPostAPIGuildChannelResult>(
+      "POST",
+      `/guilds/${data.guildId}/channels`,
+      {
         type: data.type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
         name: data.name,
         parent_id: data.parentCategoryId,
@@ -168,8 +215,8 @@ export class DiscordClient {
             allow: readerPermission.toString(),
           })),
         ],
-      } as RESTPostAPIGuildChannelJSONBody,
-    })) as RESTPostAPIGuildChannelResult;
+      },
+    );
 
     return {
       id: channel.id,
@@ -178,65 +225,23 @@ export class DiscordClient {
   }
 
   async changeChannelPermissions(data: z.infer<typeof changeChannelPermissionsSchema>) {
-    await this.rest.patch(Routes.channel(data.channelId), {
-      body: {
-        permission_overwrites: [
-          ...data.writerRoleIds.map((r) => ({
-            id: r,
-            type: OverwriteType.Role,
-            allow: writerPermission.toString(),
-          })),
-          ...data.readerRoleIds.map((r) => ({
-            id: r,
-            type: OverwriteType.Role,
-            allow: readerPermission.toString(),
-          })),
-        ],
-      } as RESTPatchAPIChannelJSONBody,
+    await this.request<void>("PATCH", `/channels/${data.channelId}`, {
+      permission_overwrites: [
+        ...data.writerRoleIds.map((r) => ({
+          id: r,
+          type: OverwriteType.Role,
+          allow: writerPermission.toString(),
+        })),
+        ...data.readerRoleIds.map((r) => ({
+          id: r,
+          type: OverwriteType.Role,
+          allow: readerPermission.toString(),
+        })),
+      ],
     });
   }
 
   async deleteChannel(data: z.infer<typeof deleteChannelSchema>) {
-    await this.rest.delete(Routes.channel(data.channelId));
+    await this.request<void>("DELETE", `/channels/${data.channelId}`);
   }
 }
-
-// // Channel-specific permissions (Text & Voice channels)
-// const channelPermissions =
-//   PermissionFlagsBits.ViewChannel |
-//   PermissionFlagsBits.ManageChannels |
-//   PermissionFlagsBits.ManageWebhooks |
-//   PermissionFlagsBits.CreateInstantInvite |
-//   // Text channel permissions
-//   PermissionFlagsBits.SendMessages |
-//   PermissionFlagsBits.SendMessagesInThreads |
-//   PermissionFlagsBits.CreatePublicThreads |
-//   PermissionFlagsBits.CreatePrivateThreads |
-//   PermissionFlagsBits.EmbedLinks |
-//   PermissionFlagsBits.AttachFiles |
-//   PermissionFlagsBits.AddReactions |
-//   PermissionFlagsBits.UseExternalEmojis |
-//   PermissionFlagsBits.UseExternalStickers |
-//   PermissionFlagsBits.MentionEveryone |
-//   PermissionFlagsBits.ManageMessages |
-//   PermissionFlagsBits.ManageThreads |
-//   PermissionFlagsBits.ReadMessageHistory |
-//   PermissionFlagsBits.SendTTSMessages |
-//   PermissionFlagsBits.SendVoiceMessages |
-//   PermissionFlagsBits.PinMessages |
-//   PermissionFlagsBits.UseApplicationCommands |
-//   PermissionFlagsBits.BypassSlowmode |
-//   // Voice channel permissions
-//   PermissionFlagsBits.Connect |
-//   PermissionFlagsBits.Speak |
-//   PermissionFlagsBits.Stream |
-//   PermissionFlagsBits.UseEmbeddedActivities |
-//   PermissionFlagsBits.UseSoundboard |
-//   PermissionFlagsBits.UseExternalSounds |
-//   PermissionFlagsBits.UseVAD |
-//   PermissionFlagsBits.PrioritySpeaker |
-//   PermissionFlagsBits.MuteMembers |
-//   PermissionFlagsBits.DeafenMembers |
-//   PermissionFlagsBits.MoveMembers |
-//   PermissionFlagsBits.RequestToSpeak |
-//   PermissionFlagsBits.ManageEvents;
