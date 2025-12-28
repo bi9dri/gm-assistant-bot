@@ -67,6 +67,14 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         return;
       }
 
+      const existingGuild = await db.Guild.get(selectedGuildId);
+      if (!existingGuild) {
+        const selectedGuild = guilds.find((g) => g.id === selectedGuildId);
+        if (selectedGuild) {
+          await db.Guild.add(selectedGuild);
+        }
+      }
+
       const newSessionId = await db.GameSession.add({
         name: sessionName,
         guildId: selectedGuildId,

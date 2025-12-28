@@ -9,6 +9,41 @@ import {
 } from "discord-api-types/v10";
 import z from "zod";
 
+/**
+ * guild.idをハッシュ化してデフォルトアバターインデックス(0-5)を決定
+ * 同じguildは常に同じアバターを返す
+ */
+function getDefaultAvatarIndex(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) % 6;
+}
+
+/**
+ * guild.iconがnull/undefinedの場合、デフォルトアバターURLを返す
+ */
+function getGuildIconUrl(guildId: string, iconHash: string | null): string {
+  if (!iconHash) {
+    const avatarIndex = getDefaultAvatarIndex(guildId);
+    return `https://cdn.discordapp.com/embed/avatars/${avatarIndex}.png`;
+  }
+  return `https://cdn.discordapp.com/icons/${guildId}/${iconHash}.webp`;
+}
+
+/**
+ * user.avatarがnull/undefinedの場合、デフォルトアバターURLを返す
+ */
+function getUserAvatarUrl(userId: string, avatarHash: string | null): string {
+  if (!avatarHash) {
+    const avatarIndex = getDefaultAvatarIndex(userId);
+    return `https://cdn.discordapp.com/embed/avatars/${avatarIndex}.png`;
+  }
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.webp`;
+}
+
 export const createRoleSchema = z.object({
   guildId: z.string().nonempty().trim(),
   name: z.string().nonempty().trim(),
@@ -114,14 +149,11 @@ export class DiscordClient {
         if (errorData.message) {
           errorMessage += `: ${errorData.message}`;
         }
-      } catch {
-        // JSONパースエラーは無視
-      }
+      } catch {}
 
       throw new Error(`Discord API Error: ${errorMessage}`);
     }
 
-    // DELETEは204 No Contentを返す
     if (response.status === 204 || method === "DELETE") {
       return undefined as T;
     }
@@ -135,7 +167,7 @@ export class DiscordClient {
     return {
       id: user.id,
       name: user.username,
-      icon: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp`,
+      icon: getUserAvatarUrl(user.id, user.avatar),
     };
   }
 
@@ -148,7 +180,7 @@ export class DiscordClient {
     return guilds.map((g) => ({
       id: g.id,
       name: g.name,
-      icon: `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.webp`,
+      icon: getGuildIconUrl(g.id, g.icon),
     }));
   }
 

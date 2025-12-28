@@ -10,14 +10,16 @@ export const SessionCardSchema = z.object({
   id: z.number(),
   name: z.string().trim().nonempty(),
   guildId: z.string().trim().nonempty(),
-  createdAt: z.date(),
+  lastUsedAt: z.date(),
 });
 
 type Props = z.infer<typeof SessionCardSchema>;
 
-export const SessionCard = ({ id, name, guildId, createdAt }: Props) => {
+export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
   const { addToast } = useToast();
   const guild = useLiveQuery(() => db.Guild.get(guildId));
+
+  console.log("guild", guild);
 
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -50,22 +52,18 @@ export const SessionCard = ({ id, name, guildId, createdAt }: Props) => {
         <div className="card-body">
           <h5 className="card-title">{name}</h5>
 
-          {guild ? (
-            <div className="flex items-center gap-2 mb-2">
-              <img src={guild.icon} alt={guild.name} className="w-8 h-8 rounded" />
-              <span className="text-sm">{guild.name}</span>
-            </div>
-          ) : (
-            <p className="text-sm opacity-50">Guild ID: {guildId}</p>
-          )}
+          <div className="flex items-center gap-2 mb-2">
+            <img src={guild?.icon} alt={guild?.name} className="w-8 h-8 rounded" />
+            <span className="text-sm">{guild?.name}</span>
+          </div>
 
-          <p className="text-sm opacity-70">作成日時: {createdAt.toLocaleString("ja-JP")}</p>
+          <p className="text-sm opacity-70">最終使用日時: {lastUsedAt.toLocaleString("ja-JP")}</p>
 
           <div className="card-actions justify-end">
             <Link
               to="/session/$id"
               params={{ id: id.toString() }}
-              className="btn btn-primary btn-sm"
+              className="btn btn-primary"
             >
               詳細を見る
             </Link>

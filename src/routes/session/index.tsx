@@ -30,7 +30,7 @@ function RouteComponent() {
               id={session.id}
               name={session.name}
               guildId={session.guildId}
-              createdAt={session.createdAt}
+              lastUsedAt={session.lastUsedAt}
             />
           ))
         )}
