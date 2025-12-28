@@ -24,7 +24,7 @@ export class DB extends Dexie {
 
     this.version(1).stores({
       DiscordBot: "id, name, token, icon",
-      GameSession: "++id, name, guildId, gameFlags, reactFlowData, createdAt, lastUsedAt",
+      GameSession: "++id, name, guildId, botId, gameFlags, reactFlowData, createdAt, lastUsedAt",
       Guild: "id, name, icon",
       Category: "id, sessionId, name",
       Channel: "id, sessionId, name, type, *writerRoleIds, *readerRoleIds",

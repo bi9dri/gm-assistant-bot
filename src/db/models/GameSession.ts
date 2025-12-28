@@ -16,6 +16,7 @@ export class GameSession extends Entity<DB> {
   readonly id!: number;
   name!: string;
   readonly guildId!: string;
+  readonly botId!: string;
   gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
   readonly createdAt!: Date;

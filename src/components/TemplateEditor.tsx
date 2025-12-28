@@ -15,13 +15,19 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
+import type { DiscordBotData } from "@/db";
+
 import { createNodeTypes } from "@/components/Node";
+import { NodeExecutionContext } from "@/components/Node/NodeExecutionContext";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
   nodes: Node[];
   edges: Edge[];
   viewport?: Viewport;
+  mode?: "edit" | "execute";
+  guildId?: string;
+  bot?: DiscordBotData;
 }
 
 interface ContextMenu {
@@ -32,7 +38,7 @@ interface ContextMenu {
   bottom?: number;
 }
 
-const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
+const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
   const {
     nodes: storeNodes,
     edges: storeEdges,
@@ -50,7 +56,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
 
   const { setViewport: rfSetViewport } = useReactFlow();
 
-  const nodeTypes = useMemo(() => createNodeTypes("edit"), []);
+  const nodeTypes = useMemo(() => createNodeTypes(mode), [mode]);
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
@@ -262,9 +268,21 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
 };
 
 export const TemplateEditor = (props: Props) => {
-  return (
+  const { mode, guildId, bot } = props;
+
+  const content = (
     <ReactFlowProvider>
       <TemplateEditorContent {...props} />
     </ReactFlowProvider>
   );
+
+  if (mode === "execute" && guildId && bot) {
+    return (
+      <NodeExecutionContext.Provider value={{ guildId, bot }}>
+        {content}
+      </NodeExecutionContext.Provider>
+    );
+  }
+
+  return content;
 };

@@ -78,6 +78,7 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const newSessionId = await db.GameSession.add({
         name: sessionName,
         guildId: selectedGuildId,
+        botId: selectedBotId,
         gameFlags: template.gameFlags,
         reactFlowData: template.reactFlowData,
         createdAt: new Date(),

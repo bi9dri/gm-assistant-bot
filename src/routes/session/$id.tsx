@@ -25,14 +25,16 @@ function RouteComponent() {
   const data = useLiveQuery(async () => {
     const session = await GameSession.getById(Number(id));
     if (!session) {
-      return { session: null, guild: undefined };
+      return { session: null, guild: undefined, bot: undefined };
     }
     const guild = await db.Guild.get(session.guildId);
-    return { session, guild };
+    const bot = await db.DiscordBot.get(session.botId);
+    return { session, guild, bot };
   }, [id]);
 
   const session = data?.session;
   const guild = data?.guild;
+  const bot = data?.bot;
 
   const [sessionName, setSessionName] = useState("");
   const [previousSessionId, setPreviousSessionId] = useState<number | null>(null);
@@ -101,24 +103,6 @@ function RouteComponent() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 px-4 py-3 bg-base-200 border-b border-base-300">
-        <div className="flex items-center gap-2">
-          {guild ? (
-            <>
-              <img
-                src={guild.icon}
-                alt={guild.name}
-                className="w-8 h-8 rounded"
-              />
-              <span className="text-sm font-medium">{guild.name}</span>
-            </>
-          ) : (
-            <>
-              <div className="skeleton w-8 h-8 rounded shrink-0"></div>
-              <div className="skeleton h-4 w-32"></div>
-            </>
-          )}
-        </div>
-
         <input
           type="text"
           placeholder="セッション名を入力"
@@ -130,6 +114,36 @@ function RouteComponent() {
         <button onClick={handleSave} disabled={!sessionName.trim()} className="btn btn-primary">
           保存
         </button>
+
+        <div className="flex-1" />
+
+        <div className="flex items-center gap-2">
+          {guild ? (
+            <>
+              <img src={guild.icon} alt={guild.name} className="w-8 h-8 rounded" />
+              <span className="text-sm font-medium">{guild.name}</span>
+            </>
+          ) : (
+            <>
+              <div className="skeleton w-8 h-8 rounded shrink-0"></div>
+              <div className="skeleton h-4 w-24"></div>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {bot ? (
+            <>
+              <img src={bot.icon} alt={bot.name} className="w-8 h-8 rounded-full" />
+              <span className="text-sm font-medium">{bot.name}</span>
+            </>
+          ) : (
+            <>
+              <div className="skeleton w-8 h-8 rounded-full shrink-0"></div>
+              <div className="skeleton h-4 w-24"></div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0">
@@ -137,6 +151,9 @@ function RouteComponent() {
           nodes={reactFlowData.nodes}
           edges={reactFlowData.edges}
           viewport={reactFlowData.viewport}
+          mode="execute"
+          guildId={session.guildId}
+          bot={bot}
         />
       </div>
     </div>

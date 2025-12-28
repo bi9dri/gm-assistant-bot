@@ -5,37 +5,37 @@ import z from "zod";
 // ========================================
 
 export const DiscordBotSchema = z.object({
-  id: z.string().trim().min(1),
-  name: z.string().trim().min(1),
-  token: z.string().trim().min(1),
-  icon: z.string().url(),
+  id: z.string().nonempty().trim(),
+  name: z.string().nonempty().trim(),
+  token: z.string().nonempty().trim(),
+  icon: z.url(),
 });
 
 export const GuildSchema = z.object({
-  id: z.string().trim().min(1),
-  name: z.string().trim().min(1),
-  icon: z.string().url().optional(),
+  id: z.string().nonempty().trim(),
+  name: z.string().nonempty().trim(),
+  icon: z.url().optional(),
 });
 
 export const CategorySchema = z.object({
-  id: z.string().trim().min(1),
+  id: z.string().nonempty().trim(),
   sessionId: z.number().int(),
-  name: z.string().trim().min(1),
+  name: z.string().nonempty().trim(),
 });
 
 export const ChannelSchema = z.object({
-  id: z.string().trim().min(1),
+  id: z.string().nonempty().trim(),
   sessionId: z.number().int(),
-  name: z.string().trim().min(1),
+  name: z.string().nonempty().trim(),
   type: z.enum(["text", "voice"]),
   writerRoleIds: z.array(z.string()),
   readerRoleIds: z.array(z.string()),
 });
 
 export const RoleSchema = z.object({
-  id: z.string().trim().min(1),
-  guildId: z.string().trim().min(1),
-  name: z.string().trim().min(1),
+  id: z.string().nonempty().trim(),
+  guildId: z.string().nonempty().trim(),
+  name: z.string().nonempty().trim(),
 });
 
 // ========================================
@@ -68,8 +68,9 @@ export const defaultReactFlowData: ReactFlowData = {
 
 export const GameSessionSchema = z.object({
   id: z.number().int(),
-  name: z.string().trim().min(1),
-  guildId: z.string().trim().min(1),
+  name: z.string().nonempty().trim(),
+  guildId: z.string().nonempty().trim(),
+  botId: z.string().nonempty().trim(),
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
   createdAt: z.date(),
@@ -78,7 +79,7 @@ export const GameSessionSchema = z.object({
 
 export const TemplateSchema = z.object({
   id: z.number().int(),
-  name: z.string().trim().min(1),
+  name: z.string().nonempty().trim(),
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
   createdAt: z.date(),
@@ -91,7 +92,7 @@ export const TemplateSchema = z.object({
 
 export const TemplateExportSchema = z.object({
   version: z.literal(1),
-  name: z.string().trim().min(1),
+  name: z.string().nonempty().trim(),
   gameFlags: GameFlagsSchema,
   reactFlowData: ReactFlowDataSchema,
 });
