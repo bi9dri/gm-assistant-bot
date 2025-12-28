@@ -17,12 +17,12 @@ export class DB extends Dexie {
 
     this.version(1).stores({
       DiscordBot: "id, name, token, icon",
-      GameSession: "++id, name, guildId, reactFlowData, createdAt, lastUsedAt",
+      GameSession: "++id, name, guildId, gameFlags, reactFlowData, createdAt, lastUsedAt",
       Guild: "id, name, icon",
       Category: "id, sessionId, name",
       Channel: "id, sessionId, name, type, *writerRoleIds, *readerRoleIds",
       Role: "[id+guildId], name",
-      Template: "++id, name, reactFlowData, createdAt, updatedAt",
+      Template: "++id, name, gameFlags, reactFlowData, createdAt, updatedAt",
     });
 
     this.DiscordBot.mapToClass(models.DiscordBot);

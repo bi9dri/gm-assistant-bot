@@ -3,6 +3,9 @@ import z from "zod";
 
 import { db, DB } from "@/db";
 
+export const GameFlagsSchema = z.record(z.string(), z.any());
+export type GameFlags = z.infer<typeof GameFlagsSchema>;
+
 export const ReactFlowDataSchema = z.object({
   nodes: z.array(z.any()),
   edges: z.array(z.any()),
@@ -12,9 +15,7 @@ export const ReactFlowDataSchema = z.object({
     zoom: z.number(),
   }),
 });
-
 export type ReactFlowData = z.infer<typeof ReactFlowDataSchema>;
-
 const defaultReactFlowData: ReactFlowData = {
   nodes: [],
   edges: [],
@@ -24,6 +25,7 @@ const defaultReactFlowData: ReactFlowData = {
 export const TemplateSchema = z.object({
   id: z.int(),
   name: z.string().trim().nonempty(),
+  gameFlags: z.string().default(JSON.stringify({})),
   reactFlowData: z.string().default(JSON.stringify(defaultReactFlowData)),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -32,6 +34,7 @@ export const TemplateSchema = z.object({
 export class Template extends Entity<DB> {
   readonly id!: number;
   name!: string;
+  gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
   readonly createdAt!: Date;
   updatedAt!: Date;
@@ -39,6 +42,7 @@ export class Template extends Entity<DB> {
   static async create(name: string): Promise<Template> {
     const id = await db.Template.add({
       name: name.trim(),
+      gameFlags: JSON.stringify({}),
       reactFlowData: JSON.stringify(defaultReactFlowData),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -59,13 +63,18 @@ export class Template extends Entity<DB> {
     return db.Template.toArray();
   }
 
-  async update(name?: string, reactFlowData?: ReactFlowData): Promise<void> {
+  async update(name?: string, gameFlags?: GameFlags, reactFlowData?: ReactFlowData): Promise<void> {
     const updateData: Partial<z.infer<typeof TemplateSchema>> = {
       updatedAt: new Date(),
     };
 
     if (name !== undefined) {
       updateData.name = name.trim();
+    }
+
+    if (gameFlags !== undefined) {
+      GameFlagsSchema.parse(gameFlags);
+      updateData.gameFlags = JSON.stringify(gameFlags);
     }
 
     if (reactFlowData !== undefined) {
@@ -78,6 +87,9 @@ export class Template extends Entity<DB> {
     if (name !== undefined) {
       this.name = name.trim();
     }
+    if (gameFlags !== undefined) {
+      this.gameFlags = JSON.stringify(gameFlags);
+    }
     if (reactFlowData !== undefined) {
       this.reactFlowData = JSON.stringify(reactFlowData);
     }
@@ -88,6 +100,16 @@ export class Template extends Entity<DB> {
 
   static async delete(id: number): Promise<void> {
     await db.Template.delete(id);
+  }
+
+  getParsedGameFlags(): GameFlags {
+    try {
+      const parsed = JSON.parse(this.gameFlags);
+      return GameFlagsSchema.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse gameFlags:", error);
+      return {};
+    }
   }
 
   getParsedReactFlowData(): ReactFlowData {
