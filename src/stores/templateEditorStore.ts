@@ -10,6 +10,19 @@ export type CreateRoleNodeData = z.infer<typeof DataSchema>;
 
 export type FlowNode = Node<CreateRoleNodeData, "CreateRole">;
 
+// Helper function: Generate next ID with sequential numbering
+const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
+  const regex = new RegExp(`^${nodeType}-(\\d+)$`);
+  const maxNumber = nodes
+    .map((node) => {
+      const match = node.id.match(regex);
+      return match ? Number.parseInt(match[1], 10) : 0;
+    })
+    .reduce((max, num) => Math.max(max, num), 0);
+
+  return `${nodeType}-${maxNumber + 1}`;
+};
+
 interface TemplateEditorState {
   nodes: FlowNode[];
   edges: Edge[];
@@ -23,6 +36,8 @@ interface TemplateEditorActions {
   onConnect: (connection: Connection) => void;
   updateNodeData: (nodeId: string, data: Partial<CreateRoleNodeData>) => void;
   addNode: (type: "CreateRole", position: { x: number; y: number }) => void;
+  duplicateNode: (nodeId: string) => void;
+  deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
   initialize: (nodes: FlowNode[], edges: Edge[], viewport?: Viewport) => void;
   reset: () => void;
@@ -64,14 +79,44 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   },
 
   addNode: (type, position) => {
+    const id = generateNextId(get().nodes, type);
     const newNode: FlowNode = {
-      id: `${type}-${Date.now()}`,
+      id,
       type,
       position,
       data: { roles: [""] },
     };
     set({
       nodes: [...get().nodes, newNode],
+    });
+  },
+
+  duplicateNode: (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    const id = generateNextId(get().nodes, node.type);
+    const newNode: FlowNode = {
+      ...node,
+      id,
+      position: {
+        x: node.position.x + 50,
+        y: node.position.y + 50,
+      },
+      data: structuredClone(node.data),
+      selected: false,
+      dragging: false,
+    };
+
+    set({
+      nodes: [...get().nodes, newNode],
+    });
+  },
+
+  deleteNode: (nodeId) => {
+    set({
+      nodes: get().nodes.filter((n) => n.id !== nodeId),
+      edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
     });
   },
 

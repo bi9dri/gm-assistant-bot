@@ -24,6 +24,14 @@ interface Props {
   viewport?: Viewport;
 }
 
+interface ContextMenu {
+  nodeId: string;
+  top?: number;
+  left?: number;
+  right?: number;
+  bottom?: number;
+}
+
 const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
   const {
     nodes: storeNodes,
@@ -34,6 +42,8 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
     onEdgesChange,
     onConnect,
     addNode,
+    duplicateNode,
+    deleteNode,
     setViewport,
     initialize,
   } = useTemplateEditorStore();
@@ -43,6 +53,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
   const nodeTypes = useMemo(() => createNodeTypes("edit"), []);
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
 
   // Reconnect成功フラグ（何もない場所にドロップされた場合にEdge削除を判定）
   const edgeReconnectSuccessful = useRef(true);
@@ -102,6 +113,59 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
     setSelectedNodeType(null);
   }, [selectedNodeType, addNode]);
 
+  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+
+    const pane = document.querySelector(".react-flow__pane") as HTMLElement;
+    if (!pane) return;
+
+    const { top, left, width, height } = pane.getBoundingClientRect();
+    const menuWidth = 192; // w-48
+    const menuHeight = 100; // estimated height
+
+    setContextMenu({
+      nodeId: node.id,
+      top: event.clientY - top > height - menuHeight - 20 ? undefined : event.clientY - top,
+      left: event.clientX - left > width - menuWidth - 20 ? undefined : event.clientX - left,
+      right:
+        event.clientX - left > width - menuWidth - 20 ? width - (event.clientX - left) : undefined,
+      bottom:
+        event.clientY - top > height - menuHeight - 20 ? height - (event.clientY - top) : undefined,
+    });
+  }, []);
+
+  const handlePaneClick = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const handleDuplicate = useCallback(() => {
+    if (contextMenu) {
+      duplicateNode(contextMenu.nodeId);
+      setContextMenu(null);
+    }
+  }, [contextMenu, duplicateNode]);
+
+  const handleDelete = useCallback(() => {
+    if (contextMenu) {
+      deleteNode(contextMenu.nodeId);
+      setContextMenu(null);
+    }
+  }, [contextMenu, deleteNode]);
+
+  // Close context menu on Escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [contextMenu]);
+
   return (
     <div className="w-full h-full">
       <ReactFlow
@@ -116,6 +180,8 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
         onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onMoveEnd={handleMoveEnd}
+        onNodeContextMenu={handleNodeContextMenu}
+        onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
         snapToGrid
         fitView
@@ -166,6 +232,31 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
           キャンセル
         </label>
       </div>
+
+      {contextMenu && (
+        <div
+          className="absolute z-50 bg-base-100 shadow-lg rounded-xs border border-base-300"
+          style={{
+            top: contextMenu.top !== undefined ? `${contextMenu.top}px` : undefined,
+            left: contextMenu.left !== undefined ? `${contextMenu.left}px` : undefined,
+            right: contextMenu.right !== undefined ? `${contextMenu.right}px` : undefined,
+            bottom: contextMenu.bottom !== undefined ? `${contextMenu.bottom}px` : undefined,
+          }}
+        >
+          <ul className="menu p-2 w-48">
+            <li>
+              <button type="button" onClick={handleDuplicate}>
+                複製
+              </button>
+            </li>
+            <li>
+              <button type="button" onClick={handleDelete}>
+                削除
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
