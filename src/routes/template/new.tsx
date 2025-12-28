@@ -20,11 +20,20 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
+  // マウント時にストアをリセット
+  const [mounted, setMounted] = useState(false);
+  if (!mounted) {
+    useTemplateEditorStore.getState().reset();
+    setMounted(true);
+  }
+
   const handleSave = async () => {
     try {
       const { nodes, edges, viewport } = useTemplateEditorStore.getState();
       const template = await Template.create(templateName);
-      await template.update(undefined, { nodes, edges, viewport });
+      await template.update({
+        reactFlowData: { nodes, edges, viewport },
+      });
 
       addToast({
         message: `テンプレート「${templateName}」を作成しました`,

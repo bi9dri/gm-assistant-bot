@@ -1,6 +1,7 @@
 import {
   type Edge,
   ReactFlow,
+  ReactFlowProvider,
   type Node,
   type Connection,
   type Viewport,
@@ -23,11 +24,12 @@ interface Props {
   viewport?: Viewport;
 }
 
-export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
+const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
   const {
     nodes: storeNodes,
     edges: storeEdges,
     viewport: storeViewport,
+    initialized,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -44,8 +46,10 @@ export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
   const edgeReconnectSuccessful = useRef(true);
 
   useEffect(() => {
-    initialize(nodes as FlowNode[], edges, viewport);
-  }, [nodes, edges, viewport, initialize]);
+    if (!initialized) {
+      initialize(nodes as FlowNode[], edges, viewport);
+    }
+  }, [initialized, initialize]);
 
   useEffect(() => {
     if (storeViewport) {
@@ -68,7 +72,7 @@ export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
     (oldEdge: Edge, newConnection: Connection) => {
       edgeReconnectSuccessful.current = true;
       const updatedEdges = reconnectEdge(oldEdge, newConnection, storeEdges);
-      useTemplateEditorStore.setState({ edges: updatedEdges, hasUnsavedChanges: true });
+      useTemplateEditorStore.setState({ edges: updatedEdges });
     },
     [storeEdges],
   );
@@ -78,7 +82,6 @@ export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
       // 何もない場所にドロップされた場合、Edgeを削除
       useTemplateEditorStore.setState((state) => ({
         edges: state.edges.filter((e) => e.id !== edge.id),
-        hasUnsavedChanges: true,
       }));
     }
     edgeReconnectSuccessful.current = true;
@@ -162,5 +165,13 @@ export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
         </label>
       </div>
     </div>
+  );
+};
+
+export const TemplateEditor = (props: Props) => {
+  return (
+    <ReactFlowProvider>
+      <TemplateEditorContent {...props} />
+    </ReactFlowProvider>
   );
 };

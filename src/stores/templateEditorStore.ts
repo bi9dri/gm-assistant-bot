@@ -14,7 +14,7 @@ interface TemplateEditorState {
   nodes: FlowNode[];
   edges: Edge[];
   viewport: Viewport;
-  hasUnsavedChanges: boolean;
+  initialized: boolean;
 }
 
 interface TemplateEditorActions {
@@ -35,26 +35,23 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   nodes: [],
   edges: [],
   viewport: { x: 0, y: 0, zoom: 1 },
-  hasUnsavedChanges: false,
+  initialized: false,
 
   onNodesChange: (changes) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes) as FlowNode[],
-      hasUnsavedChanges: true,
     });
   },
 
   onEdgesChange: (changes) => {
     set({
       edges: applyEdgeChanges(changes, get().edges),
-      hasUnsavedChanges: true,
     });
   },
 
   onConnect: (connection) => {
     set({
       edges: addEdge(connection, get().edges),
-      hasUnsavedChanges: true,
     });
   },
 
@@ -63,7 +60,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       nodes: get().nodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node,
       ),
-      hasUnsavedChanges: true,
     });
   },
 
@@ -76,15 +72,11 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     };
     set({
       nodes: [...get().nodes, newNode],
-      hasUnsavedChanges: true,
     });
   },
 
   setViewport: (viewport) => {
-    set({
-      viewport,
-      hasUnsavedChanges: true,
-    });
+    set({ viewport });
   },
 
   initialize: (nodes, edges, viewport) => {
@@ -92,7 +84,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       nodes,
       edges,
       viewport: viewport ?? { x: 0, y: 0, zoom: 1 },
-      hasUnsavedChanges: false,
+      initialized: true,
     });
   },
 
@@ -101,7 +93,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       nodes: [],
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
-      hasUnsavedChanges: false,
+      initialized: false,
     });
   },
 }));

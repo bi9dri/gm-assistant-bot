@@ -24,13 +24,20 @@ function RouteComponent() {
   const template = useLiveQuery(() => Template.getById(Number(id)));
 
   const [templateName, setTemplateName] = useState("");
-  const hasUnsavedChanges = useTemplateEditorStore((state) => state.hasUnsavedChanges);
+  const [previousTemplateId, setPreviousTemplateId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (template) {
+    const currentId = Number(id);
+    if (template && previousTemplateId !== currentId) {
+      // テンプレートが新しく読み込まれた場合、storeをリセット
+      useTemplateEditorStore.getState().reset();
+      setPreviousTemplateId(currentId);
+      setTemplateName(template.name);
+    } else if (template && previousTemplateId === currentId) {
+      // 同じテンプレートで、templateオブジェクトが更新された場合のみ名前を同期
       setTemplateName(template.name);
     }
-  }, [template]);
+  }, [template, id, previousTemplateId]);
 
   const handleSave = async () => {
     if (!template) {
@@ -39,14 +46,15 @@ function RouteComponent() {
 
     try {
       const { nodes, edges, viewport } = useTemplateEditorStore.getState();
-      await template.update(templateName, { nodes, edges, viewport });
+      await template.update({
+        name: templateName,
+        reactFlowData: { nodes, edges, viewport },
+      });
 
       addToast({
         message: "テンプレートを保存しました",
         durationSeconds: 5,
       });
-
-      useTemplateEditorStore.setState({ hasUnsavedChanges: false });
     } catch (error) {
       console.error("Failed to save template:", error);
       addToast({
@@ -93,12 +101,11 @@ function RouteComponent() {
         />
         <button
           onClick={handleSave}
-          disabled={!templateName.trim() || !hasUnsavedChanges}
+          disabled={!templateName.trim()}
           className="btn btn-primary"
         >
           保存
         </button>
-        {hasUnsavedChanges && <span className="text-warning">未保存の変更があります</span>}
       </div>
 
       <div className="flex-1 min-h-0">

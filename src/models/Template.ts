@@ -63,7 +63,13 @@ export class Template extends Entity<DB> {
     return db.Template.toArray();
   }
 
-  async update(name?: string, gameFlags?: GameFlags, reactFlowData?: ReactFlowData): Promise<void> {
+  async update(options: {
+    name?: string;
+    gameFlags?: GameFlags;
+    reactFlowData?: ReactFlowData;
+  }): Promise<void> {
+    const { name, gameFlags, reactFlowData } = options;
+
     const updateData: Partial<z.infer<typeof TemplateSchema>> = {
       updatedAt: new Date(),
     };
