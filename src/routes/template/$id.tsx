@@ -99,11 +99,7 @@ function RouteComponent() {
           onChange={(e) => setTemplateName(e.target.value)}
           className="input input-bordered flex-1 max-w-md"
         />
-        <button
-          onClick={handleSave}
-          disabled={!templateName.trim()}
-          className="btn btn-primary"
-        >
+        <button onClick={handleSave} disabled={!templateName.trim()} className="btn btn-primary">
           保存
         </button>
       </div>
