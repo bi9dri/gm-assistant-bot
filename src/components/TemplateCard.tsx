@@ -51,7 +51,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
             最終更新: {updatedAt ? updatedAt.toLocaleString("ja-JP") : "未更新"}
           </p>
           <div className="card-actions justify-end">
-            <Link to="/template/$id" params={{ id: id.toString() }} className="btn btn-primary btn">
+            <Link to="/template/$id" params={{ id: id.toString() }} className="btn btn-primary">
               編集
             </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">

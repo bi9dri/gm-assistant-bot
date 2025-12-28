@@ -29,12 +29,10 @@ function RouteComponent() {
   useEffect(() => {
     const currentId = Number(id);
     if (template && previousTemplateId !== currentId) {
-      // テンプレートが新しく読み込まれた場合、storeをリセット
       useTemplateEditorStore.getState().reset();
       setPreviousTemplateId(currentId);
       setTemplateName(template.name);
     } else if (template && previousTemplateId === currentId) {
-      // 同じテンプレートで、templateオブジェクトが更新された場合のみ名前を同期
       setTemplateName(template.name);
     }
   }, [template, id, previousTemplateId]);
