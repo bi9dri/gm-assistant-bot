@@ -22,8 +22,17 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const session = useLiveQuery(() => GameSession.getById(Number(id)));
-  const guild = useLiveQuery(() => (session ? db.Guild.get(session.guildId) : undefined));
+  const data = useLiveQuery(async () => {
+    const session = await GameSession.getById(Number(id));
+    if (!session) {
+      return { session: null, guild: undefined };
+    }
+    const guild = await db.Guild.get(session.guildId);
+    return { session, guild };
+  }, [id]);
+
+  const session = data?.session;
+  const guild = data?.guild;
 
   const [sessionName, setSessionName] = useState("");
   const [previousSessionId, setPreviousSessionId] = useState<number | null>(null);
@@ -93,12 +102,21 @@ function RouteComponent() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 px-4 py-3 bg-base-200 border-b border-base-300">
         <div className="flex items-center gap-2">
-          <img
-            src={guild?.icon}
-            alt={guild?.name || "Discord Server"}
-            className="w-8 h-8 rounded"
-          />
-          <span className="text-sm font-medium">{guild?.name || "読み込み中..."}</span>
+          {guild ? (
+            <>
+              <img
+                src={guild.icon}
+                alt={guild.name}
+                className="w-8 h-8 rounded"
+              />
+              <span className="text-sm font-medium">{guild.name}</span>
+            </>
+          ) : (
+            <>
+              <div className="skeleton w-8 h-8 rounded shrink-0"></div>
+              <div className="skeleton h-4 w-32"></div>
+            </>
+          )}
         </div>
 
         <input
