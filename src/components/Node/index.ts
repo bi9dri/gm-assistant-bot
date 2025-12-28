@@ -1,5 +1,2 @@
-import { CreateRoleNode } from "./CreateRoleNode";
-
-export const NodeTypes = {
-  CreateRole: CreateRoleNode,
-};
+export { CreateRoleNode } from "./CreateRoleNode";
+export { createNodeTypes } from "./node-wrapper";

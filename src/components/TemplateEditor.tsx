@@ -13,9 +13,9 @@ import {
   Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
-import { NodeTypes } from "@/components/Node";
+import { createNodeTypes } from "@/components/Node";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
@@ -39,6 +39,8 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
   } = useTemplateEditorStore();
 
   const { setViewport: rfSetViewport } = useReactFlow();
+
+  const nodeTypes = useMemo(() => createNodeTypes("edit"), []);
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
 
@@ -106,7 +108,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport }: Props) => {
         proOptions={{ hideAttribution: true }}
         nodes={storeNodes}
         edges={storeEdges}
-        nodeTypes={NodeTypes}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

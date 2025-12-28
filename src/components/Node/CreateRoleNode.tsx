@@ -15,9 +15,13 @@ import {
 export const DataSchema = z.object({
   roles: z.array(z.string().nonempty().trim()),
 });
-type CreateRoleNode = Node<z.infer<typeof DataSchema>, "CreateRole">;
+type CreateRoleNodeData = Node<z.infer<typeof DataSchema>, "CreateRole">;
 
-export const CreateRoleNode = ({ id, data }: NodeProps<CreateRoleNode>) => {
+export const CreateRoleNode = ({
+  id,
+  data,
+  mode = "edit",
+}: NodeProps<CreateRoleNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
 
   const handleRoleChange = (index: number, newValue: string) => {
@@ -63,11 +67,13 @@ export const CreateRoleNode = ({ id, data }: NodeProps<CreateRoleNode>) => {
           ロールを追加
         </button>
       </BaseNodeContent>
-      <BaseNodeFooter>
-        <button type="button" className="btn btn-primary">
-          作成
-        </button>
-      </BaseNodeFooter>
+      {mode === "execute" && (
+        <BaseNodeFooter>
+          <button type="button" className="btn btn-primary">
+            作成
+          </button>
+        </BaseNodeFooter>
+      )}
       <BaseHandle id="target-1" type="target" position={Position.Top} />
       <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>
