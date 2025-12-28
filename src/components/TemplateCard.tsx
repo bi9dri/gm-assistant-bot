@@ -22,7 +22,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
       await db.Template.delete(id);
 
       const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
-      checkbox.checked = false;
+      if (checkbox) checkbox.checked = false;
       addToast({
         message: "テンプレートを削除しました",
         durationSeconds: 10,
@@ -54,9 +54,9 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
             <Link
               to="/template/$id"
               params={{ id: id.toString() }}
-              className="btn btn-primary btn-sm"
+              className="btn btn-primary btn"
             >
-              詳細を見る
+              編集
             </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">
               削除

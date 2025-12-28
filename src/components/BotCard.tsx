@@ -20,7 +20,7 @@ export const BotCard = ({ id, name, icon }: Props) => {
     try {
       await db.DiscordBot.delete(id);
       const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
-      checkbox.checked = false;
+      if (checkbox) checkbox.checked = false;
       addToast({
         message: "Botを削除しました",
         durationSeconds: 10,
