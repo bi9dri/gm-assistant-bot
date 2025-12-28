@@ -5,7 +5,7 @@ import z from "zod";
 
 import { TemplateCard } from "@/components/TemplateCard";
 import { db } from "@/db";
-import { Template } from "@/models";
+import { Template } from "@/db";
 import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/template/")({

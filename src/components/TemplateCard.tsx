@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import React from "react";
 import z from "zod";
 
-import { db } from "@/db";
+import { db, Template } from "@/db";
 import { useToast } from "@/toast/ToastProvider";
 
 export const TemplateCardSchema = z.object({
@@ -19,7 +19,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
   const handleExport = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const template = await db.Template.get(id);
+      const template = (await db.Template.get(id)) as Template | undefined;
       if (!template) {
         throw new Error("テンプレートが見つかりません");
       }

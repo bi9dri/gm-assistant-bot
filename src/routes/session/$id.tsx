@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState, useEffect } from "react";
 
 import { TemplateEditor } from "@/components/TemplateEditor";
-import { GameSession } from "@/models";
+import { GameSession } from "@/db";
 import { db } from "@/db";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
@@ -23,9 +23,7 @@ function RouteComponent() {
   const { addToast } = useToast();
 
   const session = useLiveQuery(() => GameSession.getById(Number(id)));
-  const guild = useLiveQuery(() =>
-    session ? db.Guild.get(session.guildId) : undefined
-  );
+  const guild = useLiveQuery(() => (session ? db.Guild.get(session.guildId) : undefined));
 
   const [sessionName, setSessionName] = useState("");
   const [previousSessionId, setPreviousSessionId] = useState<number | null>(null);
@@ -111,11 +109,7 @@ function RouteComponent() {
           className="input input-bordered flex-1 max-w-md"
         />
 
-        <button
-          onClick={handleSave}
-          disabled={!sessionName.trim()}
-          className="btn btn-primary"
-        >
+        <button onClick={handleSave} disabled={!sessionName.trim()} className="btn btn-primary">
           保存
         </button>
       </div>

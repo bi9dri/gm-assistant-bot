@@ -1,43 +1,18 @@
 import { Entity } from "dexie";
-import z from "zod";
 
-import { db, DB } from "@/db";
+import type { DB } from "../database";
 
-export const GameFlagsSchema = z.record(z.string(), z.any());
-export type GameFlags = z.infer<typeof GameFlagsSchema>;
-
-export const ReactFlowDataSchema = z.object({
-  nodes: z.array(z.any()),
-  edges: z.array(z.any()),
-  viewport: z.object({
-    x: z.number(),
-    y: z.number(),
-    zoom: z.number(),
-  }),
-});
-export type ReactFlowData = z.infer<typeof ReactFlowDataSchema>;
-const defaultReactFlowData: ReactFlowData = {
-  nodes: [],
-  edges: [],
-  viewport: { x: 0, y: 0, zoom: 1 },
-};
-
-export const TemplateSchema = z.object({
-  id: z.int(),
-  name: z.string().trim().nonempty(),
-  gameFlags: z.string().default(JSON.stringify({})),
-  reactFlowData: z.string().default(JSON.stringify(defaultReactFlowData)),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-export const TemplateExportSchema = z.object({
-  version: z.literal(1),
-  name: z.string().trim().nonempty(),
-  gameFlags: GameFlagsSchema,
-  reactFlowData: ReactFlowDataSchema,
-});
-export type TemplateExport = z.infer<typeof TemplateExportSchema>;
+import { db } from "../instance";
+import {
+  GameFlagsSchema,
+  ReactFlowDataSchema,
+  TemplateExportSchema,
+  defaultReactFlowData,
+  type GameFlags,
+  type ReactFlowData,
+  type TemplateData,
+  type TemplateExport,
+} from "../schemas";
 
 export class Template extends Entity<DB> {
   readonly id!: number;
@@ -60,15 +35,15 @@ export class Template extends Entity<DB> {
     if (!template) {
       throw new Error("Failed to create template");
     }
-    return template;
+    return template as Template;
   }
 
   static async getById(id: number): Promise<Template | undefined> {
-    return db.Template.get(id);
+    return db.Template.get(id) as Promise<Template | undefined>;
   }
 
   static async getAll(): Promise<Template[]> {
-    return db.Template.toArray();
+    return db.Template.toArray() as unknown as Promise<Template[]>;
   }
 
   async update(options: {
@@ -78,7 +53,7 @@ export class Template extends Entity<DB> {
   }): Promise<void> {
     const { name, gameFlags, reactFlowData } = options;
 
-    const updateData: Partial<z.infer<typeof TemplateSchema>> = {
+    const updateData: Partial<TemplateData> = {
       updatedAt: new Date(),
     };
 

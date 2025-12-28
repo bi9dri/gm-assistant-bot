@@ -16,7 +16,7 @@ import z from "zod";
 function getDefaultAvatarIndex(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
-    hash = ((hash << 5) - hash) + id.charCodeAt(i);
+    hash = (hash << 5) - hash + id.charCodeAt(i);
     hash = hash & hash;
   }
   return Math.abs(hash) % 6;

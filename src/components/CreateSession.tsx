@@ -4,8 +4,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { type MouseEvent, useEffect, useState } from "react";
 
 import { db } from "@/db";
+import { type GuildSchema } from "@/db";
 import { DiscordClient } from "@/discord";
-import { type GuildSchema } from "@/models";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {

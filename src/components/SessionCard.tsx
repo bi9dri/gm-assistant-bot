@@ -58,11 +58,7 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
           <p className="text-sm opacity-70">最終使用日時: {lastUsedAt.toLocaleString("ja-JP")}</p>
 
           <div className="card-actions justify-end">
-            <Link
-              to="/session/$id"
-              params={{ id: id.toString() }}
-              className="btn btn-primary"
-            >
+            <Link to="/session/$id" params={{ id: id.toString() }} className="btn btn-primary">
               詳細を見る
             </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">

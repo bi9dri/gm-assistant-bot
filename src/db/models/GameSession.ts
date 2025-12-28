@@ -1,29 +1,16 @@
 import { Entity } from "dexie";
-import z from "zod";
 
-import { db, type DB } from "@/db";
+import type { DB } from "../database";
+
+import { db } from "../instance";
 import {
   GameFlagsSchema,
   ReactFlowDataSchema,
+  defaultReactFlowData,
   type GameFlags,
+  type GameSessionData,
   type ReactFlowData,
-} from "./Template";
-
-export const GameSessionSchema = z.object({
-  id: z.int(),
-  name: z.string().trim().nonempty(),
-  guildId: z.string().trim().nonempty(),
-  gameFlags: z.string(),
-  reactFlowData: z.string(),
-  createdAt: z.date(),
-  lastUsedAt: z.date(),
-});
-
-const defaultReactFlowData: ReactFlowData = {
-  nodes: [],
-  edges: [],
-  viewport: { x: 0, y: 0, zoom: 1 },
-};
+} from "../schemas";
 
 export class GameSession extends Entity<DB> {
   readonly id!: number;
@@ -35,7 +22,7 @@ export class GameSession extends Entity<DB> {
   lastUsedAt!: Date;
 
   static async getById(id: number): Promise<GameSession | undefined> {
-    return db.GameSession.get(id);
+    return db.GameSession.get(id) as Promise<GameSession | undefined>;
   }
 
   async update(options: {
@@ -45,7 +32,7 @@ export class GameSession extends Entity<DB> {
   }): Promise<void> {
     const { name, gameFlags, reactFlowData } = options;
 
-    const updateData: Partial<z.infer<typeof GameSessionSchema>> = {
+    const updateData: Partial<GameSessionData> = {
       lastUsedAt: new Date(),
     };
 

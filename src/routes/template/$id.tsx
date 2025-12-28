@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState, useEffect } from "react";
 
 import { TemplateEditor } from "@/components/TemplateEditor";
-import { Template } from "@/models";
+import { Template } from "@/db";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
