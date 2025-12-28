@@ -31,6 +31,14 @@ export const TemplateSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const TemplateExportSchema = z.object({
+  version: z.literal(1),
+  name: z.string().trim().nonempty(),
+  gameFlags: GameFlagsSchema,
+  reactFlowData: ReactFlowDataSchema,
+});
+export type TemplateExport = z.infer<typeof TemplateExportSchema>;
+
 export class Template extends Entity<DB> {
   readonly id!: number;
   name!: string;
@@ -126,5 +134,30 @@ export class Template extends Entity<DB> {
       console.error("Failed to parse reactFlowData:", error);
       return defaultReactFlowData;
     }
+  }
+
+  export(): TemplateExport {
+    return {
+      version: 1,
+      name: this.name,
+      gameFlags: this.getParsedGameFlags(),
+      reactFlowData: this.getParsedReactFlowData(),
+    };
+  }
+
+  static async import(data: unknown): Promise<Template> {
+    const validated = TemplateExportSchema.parse(data);
+
+    if (validated.version !== 1) {
+      throw new Error("サポートされていないバージョンです");
+    }
+
+    const template = await Template.create(validated.name);
+    await template.update({
+      gameFlags: validated.gameFlags,
+      reactFlowData: validated.reactFlowData,
+    });
+
+    return template;
   }
 }

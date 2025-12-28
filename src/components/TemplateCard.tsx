@@ -16,6 +16,47 @@ type Props = z.infer<typeof TemplateCardSchema>;
 export const TemplateCard = ({ id, name, updatedAt }: Props) => {
   const { addToast } = useToast();
 
+  const handleExport = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    try {
+      const template = await db.Template.get(id);
+      if (!template) {
+        throw new Error("テンプレートが見つかりません");
+      }
+
+      const exportData = template.export();
+      const jsonString = JSON.stringify(exportData);
+      const blob = new Blob([jsonString], { type: "application/json" });
+
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .split(".")[0]
+        .replace("T", "-");
+      const filename = `template-${name}-${timestamp}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      addToast({
+        message: `テンプレート「${name}」をエクスポートしました`,
+        durationSeconds: 5,
+      });
+    } catch (error) {
+      console.error("Export failed:", error);
+      addToast({
+        message: "エクスポートに失敗しました",
+        status: "error",
+      });
+    }
+  };
+
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
@@ -54,6 +95,9 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
             <Link to="/template/$id" params={{ id: id.toString() }} className="btn btn-primary">
               編集
             </Link>
+            <button onClick={handleExport} className="btn btn-info">
+              エクスポート
+            </button>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">
               削除
             </label>

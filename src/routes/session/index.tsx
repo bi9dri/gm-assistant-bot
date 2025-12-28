@@ -9,7 +9,7 @@ export const Route = createFileRoute("/session/")({
 });
 
 function RouteComponent() {
-  const sessions = useLiveQuery(() => db.GameSession.toArray());
+  const sessions = useLiveQuery(() => db.GameSession.orderBy("lastUsedAt").reverse().toArray());
 
   return (
     <>
