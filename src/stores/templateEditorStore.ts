@@ -1,11 +1,4 @@
-import type {
-  Node,
-  Edge,
-  NodeChange,
-  EdgeChange,
-  Connection,
-  Viewport,
-} from "@xyflow/react";
+import type { Node, Edge, NodeChange, EdgeChange, Connection, Viewport } from "@xyflow/react";
 import type { z } from "zod";
 
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
