@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { TemplateEditor } from "@/components/TemplateEditor";
+import { Template } from "@/models";
+import { useTemplateEditorStore } from "@/stores/templateEditorStore";
+import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/template/new")({
   component: RouteComponent,
@@ -14,10 +17,28 @@ export const Route = createFileRoute("/template/new")({
 
 function RouteComponent() {
   const [templateName, setTemplateName] = useState("");
+  const navigate = useNavigate();
+  const { addToast } = useToast();
 
-  const handleSave = () => {
-    // TODO: db.Template.add()を使った保存ロジックを実装
-    console.log("Saving template:", templateName);
+  const handleSave = async () => {
+    try {
+      const { nodes, edges, viewport } = useTemplateEditorStore.getState();
+      const template = await Template.create(templateName);
+      await template.update(undefined, { nodes, edges, viewport });
+
+      addToast({
+        message: `テンプレート「${templateName}」を作成しました`,
+        durationSeconds: 5,
+      });
+
+      void navigate({ to: "/template/$id", params: { id: template.id.toString() } });
+    } catch (error) {
+      console.error("Failed to save template:", error);
+      addToast({
+        message: "テンプレートの保存に失敗しました",
+        status: "error",
+      });
+    }
   };
 
   return (

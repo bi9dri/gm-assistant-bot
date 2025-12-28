@@ -1,4 +1,11 @@
-import type { Node, Edge, NodeChange, EdgeChange, Connection } from "@xyflow/react";
+import type {
+  Node,
+  Edge,
+  NodeChange,
+  EdgeChange,
+  Connection,
+  Viewport,
+} from "@xyflow/react";
 import type { z } from "zod";
 
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
@@ -6,16 +13,14 @@ import { create } from "zustand";
 
 import type { DataSchema } from "@/components/Node/CreateRoleNode";
 
-// CreateRoleNodeのデータ型
 export type CreateRoleNodeData = z.infer<typeof DataSchema>;
 
-// React Flowノード型（カスタムノードタイプ付き）
 export type FlowNode = Node<CreateRoleNodeData, "CreateRole">;
 
-// ストア型定義
 interface TemplateEditorState {
   nodes: FlowNode[];
   edges: Edge[];
+  viewport: Viewport;
   hasUnsavedChanges: boolean;
 }
 
@@ -25,7 +30,8 @@ interface TemplateEditorActions {
   onConnect: (connection: Connection) => void;
   updateNodeData: (nodeId: string, data: Partial<CreateRoleNodeData>) => void;
   addNode: (type: "CreateRole", position: { x: number; y: number }) => void;
-  initialize: (nodes: FlowNode[], edges: Edge[]) => void;
+  setViewport: (viewport: Viewport) => void;
+  initialize: (nodes: FlowNode[], edges: Edge[], viewport?: Viewport) => void;
   reset: () => void;
 }
 
@@ -35,6 +41,7 @@ export type TemplateEditorStore = TemplateEditorState & TemplateEditorActions;
 export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => ({
   nodes: [],
   edges: [],
+  viewport: { x: 0, y: 0, zoom: 1 },
   hasUnsavedChanges: false,
 
   onNodesChange: (changes) => {
@@ -72,7 +79,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       id: `${type}-${Date.now()}`,
       type,
       position,
-      data: { roles: [""] }, // CreateRoleNodeのデフォルト値
+      data: { roles: [""] },
     };
     set({
       nodes: [...get().nodes, newNode],
@@ -80,15 +87,28 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     });
   },
 
-  initialize: (nodes, edges) => {
+  setViewport: (viewport) => {
+    set({
+      viewport,
+      hasUnsavedChanges: true,
+    });
+  },
+
+  initialize: (nodes, edges, viewport) => {
     set({
       nodes,
       edges,
+      viewport: viewport ?? { x: 0, y: 0, zoom: 1 },
       hasUnsavedChanges: false,
     });
   },
 
   reset: () => {
-    set({ nodes: [], edges: [], hasUnsavedChanges: false });
+    set({
+      nodes: [],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      hasUnsavedChanges: false,
+    });
   },
 }));

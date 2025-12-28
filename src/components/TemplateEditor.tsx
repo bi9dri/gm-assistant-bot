@@ -3,7 +3,9 @@ import {
   ReactFlow,
   type Node,
   type Connection,
+  type Viewport,
   reconnectEdge,
+  useReactFlow,
   Controls,
   Background,
   BackgroundVariant,
@@ -18,18 +20,23 @@ import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorSt
 interface Props {
   nodes: Node[];
   edges: Edge[];
+  viewport?: Viewport;
 }
 
-export const TemplateEditor = ({ nodes, edges }: Props) => {
+export const TemplateEditor = ({ nodes, edges, viewport }: Props) => {
   const {
     nodes: storeNodes,
     edges: storeEdges,
+    viewport: storeViewport,
     onNodesChange,
     onEdgesChange,
     onConnect,
     addNode,
+    setViewport,
     initialize,
   } = useTemplateEditorStore();
+
+  const { setViewport: rfSetViewport } = useReactFlow();
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
 
@@ -37,8 +44,21 @@ export const TemplateEditor = ({ nodes, edges }: Props) => {
   const edgeReconnectSuccessful = useRef(true);
 
   useEffect(() => {
-    initialize(nodes as FlowNode[], edges);
-  }, [nodes, edges, initialize]);
+    initialize(nodes as FlowNode[], edges, viewport);
+  }, [nodes, edges, viewport, initialize]);
+
+  useEffect(() => {
+    if (storeViewport) {
+      void rfSetViewport(storeViewport, { duration: 0 });
+    }
+  }, [storeViewport, rfSetViewport]);
+
+  const handleMoveEnd = useCallback(
+    (_event: unknown, viewport: Viewport) => {
+      setViewport(viewport);
+    },
+    [setViewport],
+  );
 
   const onReconnectStart = useCallback(() => {
     edgeReconnectSuccessful.current = false;
@@ -90,6 +110,8 @@ export const TemplateEditor = ({ nodes, edges }: Props) => {
         onReconnectStart={onReconnectStart}
         onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
+        onMoveEnd={handleMoveEnd}
+        defaultViewport={storeViewport}
         snapToGrid
         fitView
       >
