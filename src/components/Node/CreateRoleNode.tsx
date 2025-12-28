@@ -1,10 +1,10 @@
-import type { Node, NodeProps } from "@xyflow/react";
-
+import { Position, type Node, type NodeProps } from "@xyflow/react";
 import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
 import {
+  BaseHandle,
   BaseNode,
   BaseNodeContent,
   BaseNodeFooter,
@@ -36,7 +36,7 @@ export const CreateRoleNode = ({ id, data }: NodeProps<CreateRoleNode>) => {
   };
 
   return (
-    <BaseNode>
+    <BaseNode className="bg-base-300">
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
@@ -68,6 +68,8 @@ export const CreateRoleNode = ({ id, data }: NodeProps<CreateRoleNode>) => {
           作成
         </button>
       </BaseNodeFooter>
+      <BaseHandle id="target-1" type="target" position={Position.Top} />
+      <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>
   );
 };

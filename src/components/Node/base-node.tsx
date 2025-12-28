@@ -2,6 +2,7 @@
 // Copyright (c) 2019-2025 webkid GmbH
 import type { ComponentProps } from "react";
 
+import { Handle, type HandleProps } from "@xyflow/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -77,5 +78,56 @@ export function BaseNodeFooter({ className, ...props }: ComponentProps<"div">) {
       className={cn("flex flex-col items-center gap-y-2 border-t px-3 pt-2 pb-3", className)}
       {...props}
     />
+  );
+}
+
+export type BaseHandleProps = HandleProps;
+
+export function BaseHandle({ className, children, ...props }: ComponentProps<typeof Handle>) {
+  return (
+    <Handle
+      {...props}
+      className={cn(
+        "dark:border-secondary dark:bg-secondary rounded-full border border-slate-300 bg-slate-100 transition",
+        className,
+      )}
+      style={{ width: "11px", height: "11px" }}
+    >
+      {children}
+    </Handle>
+  );
+}
+
+const flexDirections = {
+  top: "flex-col",
+  right: "flex-row-reverse justify-end",
+  bottom: "flex-col-reverse justify-end",
+  left: "flex-row",
+};
+
+export function LabeledHandle({
+  className,
+  labelClassName,
+  handleClassName,
+  title,
+  position,
+  ...props
+}: HandleProps &
+  ComponentProps<"div"> & {
+    title: string;
+    handleClassName?: string;
+    labelClassName?: string;
+  }) {
+  const { ref, ...handleProps } = props;
+
+  return (
+    <div
+      title={title}
+      className={cn("relative flex items-center", flexDirections[position], className)}
+      ref={ref}
+    >
+      <BaseHandle position={position} className={handleClassName} {...handleProps} />
+      <label className={cn("text-foreground px-3", labelClassName)}>{title}</label>
+    </div>
   );
 }

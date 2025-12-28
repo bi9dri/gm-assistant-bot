@@ -10,7 +10,7 @@ import {
   Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { NodeTypes } from "@/components/Node";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
@@ -33,29 +33,45 @@ export const TemplateEditor = ({ nodes, edges }: Props) => {
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
 
-  // propsからストアを初期化
+  // Reconnect成功フラグ（何もない場所にドロップされた場合にEdge削除を判定）
+  const edgeReconnectSuccessful = useRef(true);
+
   useEffect(() => {
     initialize(nodes as FlowNode[], edges);
   }, [nodes, edges, initialize]);
 
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false;
+  }, []);
+
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
+      edgeReconnectSuccessful.current = true;
       const updatedEdges = reconnectEdge(oldEdge, newConnection, storeEdges);
       useTemplateEditorStore.setState({ edges: updatedEdges, hasUnsavedChanges: true });
     },
     [storeEdges],
   );
 
+  const onReconnectEnd = useCallback((_: unknown, edge: Edge) => {
+    if (!edgeReconnectSuccessful.current) {
+      // 何もない場所にドロップされた場合、Edgeを削除
+      useTemplateEditorStore.setState((state) => ({
+        edges: state.edges.filter((e) => e.id !== edge.id),
+        hasUnsavedChanges: true,
+      }));
+    }
+    edgeReconnectSuccessful.current = true;
+  }, []);
+
   const handleAddNode = useCallback(() => {
     if (!selectedNodeType) return;
 
-    // 画面中央にノード追加
     const position = { x: 250, y: 250 };
     if (selectedNodeType === "CreateRole") {
       addNode("CreateRole", position);
     }
 
-    // モーダルを閉じる
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
     if (modal) modal.checked = false;
     setSelectedNodeType(null);
@@ -71,7 +87,9 @@ export const TemplateEditor = ({ nodes, edges }: Props) => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onReconnectStart={onReconnectStart}
         onReconnect={onReconnect}
+        onReconnectEnd={onReconnectEnd}
         snapToGrid
         fitView
       >
