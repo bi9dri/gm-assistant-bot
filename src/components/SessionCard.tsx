@@ -19,8 +19,6 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
   const { addToast } = useToast();
   const guild = useLiveQuery(() => db.Guild.get(guildId));
 
-  console.log("guild", guild);
-
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
