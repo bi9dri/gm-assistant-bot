@@ -1,7 +1,9 @@
+import { REST } from "@discordjs/rest";
 import {
   ChannelType,
   OverwriteType,
   PermissionFlagsBits,
+  Routes,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
   type RESTPostAPIGuildChannelResult,
@@ -16,8 +18,6 @@ import type {
   DeleteChannelData,
   DeleteRoleData,
 } from "./schemas";
-
-const DISCORD_API_BASE = "https://discord.com/api/v10";
 
 /**
  * guild.idをハッシュ化してデフォルトアバターインデックス(0-5)を決定
@@ -88,41 +88,13 @@ const writerPermission =
   PermissionFlagsBits.PinMessages |
   PermissionFlagsBits.BypassSlowmode;
 
-async function discordRequest<T>(
-  token: string,
-  method: "GET" | "POST" | "PATCH" | "DELETE",
-  endpoint: string,
-  body?: unknown,
-): Promise<T> {
-  const response = await fetch(`${DISCORD_API_BASE}${endpoint}`, {
-    method,
-    headers: {
-      Authorization: `Bot ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    let errorMessage = `${response.status} ${response.statusText}`;
-    try {
-      const errorData = (await response.json()) as { message?: string };
-      if (errorData.message) {
-        errorMessage += `: ${errorData.message}`;
-      }
-    } catch {}
-    throw new Error(`Discord API Error: ${errorMessage}`);
-  }
-
-  if (response.status === 204 || method === "DELETE") {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
+function createRestClient(token: string): REST {
+  return new REST({ version: "10" }).setToken(token);
 }
 
 export async function getProfile(token: string) {
-  const user = await discordRequest<RESTGetAPIUserResult>(token, "GET", "/users/@me");
+  const rest = createRestClient(token);
+  const user = (await rest.get(Routes.user())) as RESTGetAPIUserResult;
   return {
     id: user.id,
     name: user.username,
@@ -131,11 +103,8 @@ export async function getProfile(token: string) {
 }
 
 export async function getGuilds(token: string) {
-  const guilds = await discordRequest<RESTGetAPICurrentUserGuildsResult>(
-    token,
-    "GET",
-    "/users/@me/guilds",
-  );
+  const rest = createRestClient(token);
+  const guilds = (await rest.get(Routes.userGuilds())) as RESTGetAPICurrentUserGuildsResult;
   return guilds.map((g) => ({
     id: g.id,
     name: g.name,
@@ -144,15 +113,13 @@ export async function getGuilds(token: string) {
 }
 
 export async function createRole(token: string, data: CreateRoleData) {
-  const role = await discordRequest<RESTPostAPIGuildRoleResult>(
-    token,
-    "POST",
-    `/guilds/${data.guildId}/roles`,
-    {
+  const rest = createRestClient(token);
+  const role = (await rest.post(Routes.guildRoles(data.guildId), {
+    body: {
       name: data.name,
       mentionable: true,
     },
-  );
+  })) as RESTPostAPIGuildRoleResult;
   return {
     id: role.id.toString(),
     name: role.name || "",
@@ -160,15 +127,14 @@ export async function createRole(token: string, data: CreateRoleData) {
 }
 
 export async function deleteRole(token: string, data: DeleteRoleData) {
-  await discordRequest<void>(token, "DELETE", `/guilds/${data.guildId}/roles/${data.roleId}`);
+  const rest = createRestClient(token);
+  await rest.delete(Routes.guildRole(data.guildId, data.roleId));
 }
 
 export async function createCategory(token: string, data: CreateCategoryData) {
-  const category = await discordRequest<RESTPostAPIGuildChannelResult>(
-    token,
-    "POST",
-    `/guilds/${data.guildId}/channels`,
-    {
+  const rest = createRestClient(token);
+  const category = (await rest.post(Routes.guildChannels(data.guildId), {
+    body: {
       type: ChannelType.GuildCategory,
       name: data.name,
       permission_overwrites: [
@@ -179,7 +145,7 @@ export async function createCategory(token: string, data: CreateCategoryData) {
         },
       ],
     },
-  );
+  })) as RESTPostAPIGuildChannelResult;
   return {
     id: category.id,
     name: category.name || "",
@@ -187,11 +153,9 @@ export async function createCategory(token: string, data: CreateCategoryData) {
 }
 
 export async function createChannel(token: string, data: CreateChannelData) {
-  const channel = await discordRequest<RESTPostAPIGuildChannelResult>(
-    token,
-    "POST",
-    `/guilds/${data.guildId}/channels`,
-    {
+  const rest = createRestClient(token);
+  const channel = (await rest.post(Routes.guildChannels(data.guildId), {
+    body: {
       type: data.type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
       name: data.name,
       parent_id: data.parentCategoryId,
@@ -208,7 +172,7 @@ export async function createChannel(token: string, data: CreateChannelData) {
         })),
       ],
     },
-  );
+  })) as RESTPostAPIGuildChannelResult;
   return {
     id: channel.id,
     name: channel.name || "",
@@ -216,22 +180,26 @@ export async function createChannel(token: string, data: CreateChannelData) {
 }
 
 export async function changeChannelPermissions(token: string, data: ChangeChannelPermissionsData) {
-  await discordRequest<void>(token, "PATCH", `/channels/${data.channelId}`, {
-    permission_overwrites: [
-      ...data.writerRoleIds.map((r) => ({
-        id: r,
-        type: OverwriteType.Role,
-        allow: writerPermission.toString(),
-      })),
-      ...data.readerRoleIds.map((r) => ({
-        id: r,
-        type: OverwriteType.Role,
-        allow: readerPermission.toString(),
-      })),
-    ],
+  const rest = createRestClient(token);
+  await rest.patch(Routes.channel(data.channelId), {
+    body: {
+      permission_overwrites: [
+        ...data.writerRoleIds.map((r) => ({
+          id: r,
+          type: OverwriteType.Role,
+          allow: writerPermission.toString(),
+        })),
+        ...data.readerRoleIds.map((r) => ({
+          id: r,
+          type: OverwriteType.Role,
+          allow: readerPermission.toString(),
+        })),
+      ],
+    },
   });
 }
 
 export async function deleteChannel(token: string, data: DeleteChannelData) {
-  await discordRequest<void>(token, "DELETE", `/channels/${data.channelId}`);
+  const rest = createRestClient(token);
+  await rest.delete(Routes.channel(data.channelId));
 }

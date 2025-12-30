@@ -12,9 +12,9 @@
     "deploy": "bunx --bun wrangler deploy"
   },
   "dependencies": {
+    "@discordjs/rest": "2.6.0",
     "@hono/zod-validator": "0.7.5",
     "discord-api-types": "0.38.37",
-    "discord.js": "14.25.1",
     "hono": "4.11.1",
     "zod": "4.2.1"
   },

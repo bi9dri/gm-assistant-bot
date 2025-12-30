@@ -1,3 +1,4 @@
+import { DiscordAPIError, RateLimitError } from "@discordjs/rest";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -92,6 +93,16 @@ const app = new Hono<{ Variables: Variables }>()
   .notFound((c) => c.json({ error: "Not Found" }, 404))
   .onError((err, c) => {
     console.error("Server error:", err);
+
+    if (err instanceof DiscordAPIError) {
+      const status = err.status as 400 | 401 | 403 | 404 | 500;
+      return c.json({ error: err.message, code: err.code }, status);
+    }
+
+    if (err instanceof RateLimitError) {
+      return c.json({ error: "Rate limited", retryAfter: err.retryAfter }, 429);
+    }
+
     return c.json({ error: err.message || "Internal Server Error" }, 500);
   });
 
