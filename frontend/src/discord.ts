@@ -2,6 +2,22 @@ import z from "zod";
 
 import api, { BOT_TOKEN_HEADER } from "./api";
 
+/**
+ * Extract error message from unknown error object.
+ * https://kentcdodds.com/blog/get-a-catch-block-error-message-with-typescript
+ */
+function getErrorMessage(error: unknown, fallback: string | number): string {
+  if (
+    error !== null &&
+    typeof error === "object" &&
+    "error" in error &&
+    typeof (error as Record<string, unknown>).error === "string"
+  ) {
+    return (error as Record<string, unknown>).error as string;
+  }
+  return String(fallback);
+}
+
 export const createRoleSchema = z.object({
   guildId: z.string().nonempty().trim(),
   name: z.string().nonempty().trim(),
@@ -52,7 +68,7 @@ export class DiscordClient {
     const res = await api.profile.$get({}, { headers: this.headers() });
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to get profile: ${"error" in error ? error.error : res.status}`);
+      throw new Error(`Failed to get profile: ${getErrorMessage(error, res.status)}`);
     }
     const data = await res.json();
     return data.profile;
@@ -62,7 +78,7 @@ export class DiscordClient {
     const res = await api.guilds.$get({}, { headers: this.headers() });
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to get guilds: ${"error" in error ? error.error : res.status}`);
+      throw new Error(`Failed to get guilds: ${getErrorMessage(error, res.status)}`);
     }
     const data = await res.json();
     return data.guilds;
@@ -72,7 +88,7 @@ export class DiscordClient {
     const res = await api.roles.$post({ json: data }, { headers: this.headers() });
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to create role: ${"error" in error ? error.error : res.status}`);
+      throw new Error(`Failed to create role: ${getErrorMessage(error, res.status)}`);
     }
     const result = await res.json();
     return result.role;
@@ -89,7 +105,7 @@ export class DiscordClient {
     const res = await api.categories.$post({ json: data }, { headers: this.headers() });
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to create category: ${"error" in error ? error.error : res.status}`);
+      throw new Error(`Failed to create category: ${getErrorMessage(error, res.status)}`);
     }
     const result = await res.json();
     return result.category;
@@ -99,7 +115,7 @@ export class DiscordClient {
     const res = await api.channels.$post({ json: data }, { headers: this.headers() });
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to create channel: ${"error" in error ? error.error : res.status}`);
+      throw new Error(`Failed to create channel: ${getErrorMessage(error, res.status)}`);
     }
     const result = await res.json();
     return result.channel;
