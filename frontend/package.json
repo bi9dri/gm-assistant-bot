@@ -1,0 +1,53 @@
+{
+  "name": "gm-assistant-bot-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "bunx --bun oxlint && bunx --bun oxfmt --check ./src",
+    "format": "bunx --bun oxlint --fix && bunx --bun oxfmt --write ./src",
+    "type-check": "bunx --bun oxlint --type-aware --type-check",
+    "dev": "bunx --bun vite --port 3000",
+    "build": "bunx --bun vite build && tsc",
+    "preview": "bunx --bun vite preview",
+    "deploy": "bun run build && wrangler deploy",
+    "test": "bunx --bun vitest run"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "4.1.18",
+    "@tanstack/react-devtools": "0.8.4",
+    "@tanstack/react-router": "1.141.0",
+    "@tanstack/react-router-devtools": "1.141.0",
+    "@tanstack/router-plugin": "1.141.0",
+    "@xyflow/react": "12.10.0",
+    "clsx": "2.1.1",
+    "daisyui": "5.5.13",
+    "dexie": "4.2.1",
+    "dexie-react-hooks": "4.2.0",
+    "discord-api-types": "0.38.37",
+    "hono": "4.11.1",
+    "nanoid": "5.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-icons": "5.5.0",
+    "tailwind-merge": "3.4.0",
+    "tailwindcss": "4.1.18",
+    "zod": "4.2.1",
+    "zustand": "5.0.9"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20251212.0",
+    "@types/bun": "1.3.4",
+    "@tanstack/devtools-vite": "0.3.12",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/react": "16.3.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.2",
+    "jsdom": "27.3.0",
+    "vite": "7.2.7",
+    "vitest": "4.0.15"
+  },
+  "peerDependencies": {
+    "typescript": "5.9.3"
+  }
+}
