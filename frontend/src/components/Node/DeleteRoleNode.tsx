@@ -14,10 +14,12 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  cn,
 } from "./base-node";
+import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
-export const DataSchema = z.object({
+export const DataSchema = BaseNodeDataSchema.extend({
   deleteAll: z.boolean(),
   selectedRoleIds: z.array(z.string()),
 });
@@ -98,6 +100,9 @@ export const DeleteRoleNode = ({
         status: "success",
         durationSeconds: 5,
       });
+      if (successCount === targetRoles.length) {
+        updateNodeData(id, { executedAt: new Date() });
+      }
       // Refresh roles list
       void db.Role.where("sessionId").equals(executionContext.sessionId).toArray().then(setRoles);
     }
@@ -106,7 +111,7 @@ export const DeleteRoleNode = ({
   const isExecuteMode = mode === "execute";
 
   return (
-    <BaseNode className="bg-base-300">
+    <BaseNode width={NODE_TYPE_WIDTHS.DeleteRole} className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}>
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを削除する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
@@ -166,7 +171,7 @@ export const DeleteRoleNode = ({
             type="button"
             className="btn btn-error"
             onClick={handleDeleteRoles}
-            disabled={isLoading || (!data.deleteAll && data.selectedRoleIds.length === 0)}
+            disabled={isLoading || !!data.executedAt || (!data.deleteAll && data.selectedRoleIds.length === 0)}
           >
             {isLoading && <span className="loading loading-spinner loading-sm"></span>}
             削除

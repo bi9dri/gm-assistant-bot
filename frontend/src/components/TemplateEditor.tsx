@@ -6,7 +6,6 @@ import {
   type Connection,
   type Viewport,
   reconnectEdge,
-  useReactFlow,
   Controls,
   Background,
   BackgroundVariant,
@@ -55,8 +54,6 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     initialize,
   } = useTemplateEditorStore();
 
-  const { setViewport: rfSetViewport } = useReactFlow();
-
   const nodeTypes = useMemo(() => createNodeTypes(mode), [mode]);
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
@@ -70,12 +67,6 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
       initialize(nodes as FlowNode[], edges, viewport);
     }
   }, [initialized, initialize]);
-
-  useEffect(() => {
-    if (storeViewport) {
-      void rfSetViewport(storeViewport, { duration: 0 });
-    }
-  }, [storeViewport, rfSetViewport]);
 
   const handleMoveEnd = useCallback(
     (_event: unknown, viewport: Viewport) => {
@@ -190,8 +181,6 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
         onNodeContextMenu={handleNodeContextMenu}
         onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
-        snapToGrid
-        fitView
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} />

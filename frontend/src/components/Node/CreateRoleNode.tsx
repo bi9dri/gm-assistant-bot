@@ -14,10 +14,12 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  cn,
 } from "./base-node";
+import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
-export const DataSchema = z.object({
+export const DataSchema = BaseNodeDataSchema.extend({
   roles: z.array(z.string().nonempty().trim()),
 });
 type CreateRoleNodeData = Node<z.infer<typeof DataSchema>, "CreateRole">;
@@ -91,13 +93,16 @@ export const CreateRoleNode = ({
         status: "success",
         durationSeconds: 5,
       });
+      if (successCount === validRoles.length) {
+        updateNodeData(id, { executedAt: new Date() });
+      }
     }
   };
 
   const isExecuteMode = mode === "execute";
 
   return (
-    <BaseNode className="bg-base-300">
+    <BaseNode width={NODE_TYPE_WIDTHS.CreateRole} className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}>
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
@@ -147,7 +152,7 @@ export const CreateRoleNode = ({
             type="button"
             className="btn btn-primary"
             onClick={handleCreateRoles}
-            disabled={isLoading}
+            disabled={isLoading || !!data.executedAt}
           >
             {isLoading && <span className="loading loading-spinner loading-sm"></span>}
             作成

@@ -6,9 +6,15 @@ import { Handle, type HandleProps } from "@xyflow/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+import type { NodeWidth } from "./base-schema";
 
-export function BaseNode({ className, ...props }: ComponentProps<"div">) {
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+
+interface BaseNodeProps extends ComponentProps<"div"> {
+  width?: NodeWidth | number;
+}
+
+export function BaseNode({ className, width, style, ...props }: BaseNodeProps) {
   return (
     <div
       className={cn(
@@ -23,6 +29,7 @@ export function BaseNode({ className, ...props }: ComponentProps<"div">) {
         "[.react-flow\\_\\_node.selected_&]:shadow-lg",
         className,
       )}
+      style={width ? { width: `${width}px`, ...style } : style}
       tabIndex={0}
       {...props}
     />
