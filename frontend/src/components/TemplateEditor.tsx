@@ -102,7 +102,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!selectedNodeType) return;
 
     const position = { x: 250, y: 250 };
-    if (selectedNodeType === "CreateRole" || selectedNodeType === "DeleteRole") {
+    if (selectedNodeType === "CreateCategory" || selectedNodeType === "CreateRole" || selectedNodeType === "DeleteRole") {
       addNode(selectedNodeType, position);
     }
 
@@ -196,6 +196,19 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
         <div className="modal-box rounded-xs">
           <h3 className="text-lg font-bold">ノードを追加する</h3>
           <div className="flex flex-wrap gap-4 mt-4">
+            <label className="card cursor-pointer">
+              <div className="card-body">
+                <input
+                  type="radio"
+                  name="nodeType"
+                  value="CreateCategory"
+                  checked={selectedNodeType === "CreateCategory"}
+                  onChange={(e) => setSelectedNodeType(e.target.value)}
+                  className="radio"
+                />
+                <span className="ml-2">カテゴリを作成する</span>
+              </div>
+            </label>
             <label className="card cursor-pointer">
               <div className="card-body">
                 <input

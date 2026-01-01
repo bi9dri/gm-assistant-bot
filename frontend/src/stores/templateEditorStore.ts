@@ -4,13 +4,16 @@ import type { z } from "zod";
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { create } from "zustand";
 
+import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
+export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
 export type FlowNode =
+  | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateRoleNodeData, "CreateRole">
   | Node<DeleteRoleNodeData, "DeleteRole">;
 
@@ -38,8 +41,8 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<CreateRoleNodeData | DeleteRoleNodeData>) => void;
-  addNode: (type: "CreateRole" | "DeleteRole", position: { x: number; y: number }) => void;
+  updateNodeData: (nodeId: string, data: Partial<CreateCategoryNodeData | CreateRoleNodeData | DeleteRoleNodeData>) => void;
+  addNode: (type: "CreateCategory" | "CreateRole" | "DeleteRole", position: { x: number; y: number }) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -86,7 +89,14 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     const id = generateNextId(get().nodes, type);
     let newNode: FlowNode;
 
-    if (type === "CreateRole") {
+    if (type === "CreateCategory") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { categoryName: "" },
+      };
+    } else if (type === "CreateRole") {
       newNode = {
         id,
         type,
