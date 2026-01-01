@@ -4,6 +4,7 @@ import type { DiscordBotData } from "@/db";
 
 interface NodeExecutionContextValue {
   guildId: string;
+  sessionId: number;
   bot: DiscordBotData;
 }
 

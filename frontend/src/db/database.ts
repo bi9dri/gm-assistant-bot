@@ -28,7 +28,7 @@ export class DB extends Dexie {
       Guild: "id, name, icon",
       Category: "id, sessionId, name",
       Channel: "id, sessionId, name, type, *writerRoleIds, *readerRoleIds",
-      Role: "[id+guildId], name",
+      Role: "[id+guildId], sessionId, name",
       Template: "++id, name, gameFlags, reactFlowData, createdAt, updatedAt",
     });
   }

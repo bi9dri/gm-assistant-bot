@@ -55,7 +55,7 @@ export const CreateRoleNode = ({
       return;
     }
 
-    const { guildId, bot } = executionContext;
+    const { guildId, sessionId, bot } = executionContext;
     const validRoles = data.roles.filter((role) => role.trim() !== "");
 
     if (validRoles.length === 0) {
@@ -73,7 +73,7 @@ export const CreateRoleNode = ({
       setProgress({ current: i + 1, total: validRoles.length });
       try {
         const role = await client.createRole({ guildId, name: validRoles[i] });
-        await db.Role.add({ id: role.id, guildId, name: role.name });
+        await db.Role.add({ id: role.id, guildId, sessionId, name: role.name });
         successCount++;
       } catch {
         addToast({

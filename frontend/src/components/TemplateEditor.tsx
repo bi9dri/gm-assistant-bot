@@ -27,6 +27,7 @@ interface Props {
   viewport?: Viewport;
   mode?: "edit" | "execute";
   guildId?: string;
+  sessionId?: number;
   bot?: DiscordBotData;
 }
 
@@ -110,8 +111,8 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!selectedNodeType) return;
 
     const position = { x: 250, y: 250 };
-    if (selectedNodeType === "CreateRole") {
-      addNode("CreateRole", position);
+    if (selectedNodeType === "CreateRole" || selectedNodeType === "DeleteRole") {
+      addNode(selectedNodeType, position);
     }
 
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
@@ -219,6 +220,19 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
                 <span className="ml-2">ロールを作成する</span>
               </div>
             </label>
+            <label className="card cursor-pointer">
+              <div className="card-body">
+                <input
+                  type="radio"
+                  name="nodeType"
+                  value="DeleteRole"
+                  checked={selectedNodeType === "DeleteRole"}
+                  onChange={(e) => setSelectedNodeType(e.target.value)}
+                  className="radio"
+                />
+                <span className="ml-2">ロールを削除する</span>
+              </div>
+            </label>
           </div>
           <div className="modal-action">
             <button
@@ -268,7 +282,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
 };
 
 export const TemplateEditor = (props: Props) => {
-  const { mode, guildId, bot } = props;
+  const { mode, guildId, sessionId, bot } = props;
 
   const content = (
     <ReactFlowProvider>
@@ -276,9 +290,9 @@ export const TemplateEditor = (props: Props) => {
     </ReactFlowProvider>
   );
 
-  if (mode === "execute" && guildId && bot) {
+  if (mode === "execute" && guildId && sessionId && bot) {
     return (
-      <NodeExecutionContext.Provider value={{ guildId, bot }}>
+      <NodeExecutionContext.Provider value={{ guildId, sessionId, bot }}>
         {content}
       </NodeExecutionContext.Provider>
     );

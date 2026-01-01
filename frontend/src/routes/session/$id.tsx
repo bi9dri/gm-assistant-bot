@@ -153,6 +153,7 @@ function RouteComponent() {
           viewport={reactFlowData.viewport}
           mode="execute"
           guildId={session.guildId}
+          sessionId={session.id}
           bot={bot}
         />
       </div>

@@ -35,6 +35,7 @@ export const ChannelSchema = z.object({
 export const RoleSchema = z.object({
   id: z.string().nonempty().trim(),
   guildId: z.string().nonempty().trim(),
+  sessionId: z.number().int().optional(),
   name: z.string().nonempty().trim(),
 });
 

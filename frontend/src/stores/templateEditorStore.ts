@@ -4,11 +4,15 @@ import type { z } from "zod";
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { create } from "zustand";
 
-import type { DataSchema } from "@/components/Node/CreateRoleNode";
+import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
+import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
-export type CreateRoleNodeData = z.infer<typeof DataSchema>;
+export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
+export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
-export type FlowNode = Node<CreateRoleNodeData, "CreateRole">;
+export type FlowNode =
+  | Node<CreateRoleNodeData, "CreateRole">
+  | Node<DeleteRoleNodeData, "DeleteRole">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -34,8 +38,8 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<CreateRoleNodeData>) => void;
-  addNode: (type: "CreateRole", position: { x: number; y: number }) => void;
+  updateNodeData: (nodeId: string, data: Partial<CreateRoleNodeData | DeleteRoleNodeData>) => void;
+  addNode: (type: "CreateRole" | "DeleteRole", position: { x: number; y: number }) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -73,19 +77,31 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   updateNodeData: (nodeId, newData) => {
     set({
       nodes: get().nodes.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node,
+        node.id === nodeId ? ({ ...node, data: { ...node.data, ...newData } } as FlowNode) : node,
       ),
     });
   },
 
   addNode: (type, position) => {
     const id = generateNextId(get().nodes, type);
-    const newNode: FlowNode = {
-      id,
-      type,
-      position,
-      data: { roles: [""] },
-    };
+    let newNode: FlowNode;
+
+    if (type === "CreateRole") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { roles: [""] },
+      };
+    } else {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { deleteAll: false, selectedRoleIds: [] },
+      };
+    }
+
     set({
       nodes: [...get().nodes, newNode],
     });
@@ -96,7 +112,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     if (!node) return;
 
     const id = generateNextId(get().nodes, node.type);
-    const newNode: FlowNode = {
+    const newNode = {
       ...node,
       id,
       position: {
@@ -106,7 +122,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       data: structuredClone(node.data),
       selected: false,
       dragging: false,
-    };
+    } as FlowNode;
 
     set({
       nodes: [...get().nodes, newNode],
