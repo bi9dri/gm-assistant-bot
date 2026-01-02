@@ -6,6 +6,7 @@ import { CreateCategoryNode } from "./CreateCategoryNode";
 import { CreateChannelNode } from "./CreateChannelNode";
 import { CreateRoleNode } from "./CreateRoleNode";
 import { DeleteCategoryNode } from "./DeleteCategoryNode";
+import { DeleteChannelNode } from "./DeleteChannelNode";
 import { DeleteRoleNode } from "./DeleteRoleNode";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
@@ -29,6 +30,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <CreateChannelNode {...props} mode={mode} />
   );
 
+  const DeleteChannelWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <DeleteChannelNode {...props} mode={mode} />
+  );
+
   const AddRoleToRoleMembersWithMode: ComponentType<NodeProps<any>> = (props) => (
     <AddRoleToRoleMembersNode {...props} mode={mode} />
   );
@@ -39,6 +44,7 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     DeleteRole: DeleteRoleWithMode,
     DeleteCategory: DeleteCategoryWithMode,
     CreateChannel: CreateChannelWithMode,
+    DeleteChannel: DeleteChannelWithMode,
     AddRoleToRoleMembers: AddRoleToRoleMembersWithMode,
   } as NodeTypes;
 }

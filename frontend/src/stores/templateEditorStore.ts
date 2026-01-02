@@ -9,6 +9,7 @@ import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/C
 import type { DataSchema as CreateChannelDataSchema } from "@/components/Node/CreateChannelNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
 import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
+import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
@@ -16,6 +17,7 @@ export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
 export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
+export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
 export type FlowNode =
@@ -24,6 +26,7 @@ export type FlowNode =
   | Node<CreateChannelNodeData, "CreateChannel">
   | Node<CreateRoleNodeData, "CreateRole">
   | Node<DeleteCategoryNodeData, "DeleteCategory">
+  | Node<DeleteChannelNodeData, "DeleteChannel">
   | Node<DeleteRoleNodeData, "DeleteRole">;
 
 // Helper function: Generate next ID with sequential numbering
@@ -50,8 +53,8 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<AddRoleToRoleMembersNodeData | CreateCategoryNodeData | CreateChannelNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteRoleNodeData>) => void;
-  addNode: (type: "AddRoleToRoleMembers" | "CreateCategory" | "CreateChannel" | "CreateRole" | "DeleteCategory" | "DeleteRole", position: { x: number; y: number }) => void;
+  updateNodeData: (nodeId: string, data: Partial<AddRoleToRoleMembersNodeData | CreateCategoryNodeData | CreateChannelNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteChannelNodeData | DeleteRoleNodeData>) => void;
+  addNode: (type: "AddRoleToRoleMembers" | "CreateCategory" | "CreateChannel" | "CreateRole" | "DeleteCategory" | "DeleteChannel" | "DeleteRole", position: { x: number; y: number }) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -132,6 +135,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { deleteAll: false, selectedRoleIds: [] },
+      };
+    } else if (type === "DeleteChannel") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { channelNames: [""] },
       };
     } else {
       newNode = {
