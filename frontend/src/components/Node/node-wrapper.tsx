@@ -2,6 +2,7 @@ import type { NodeProps, NodeTypes } from "@xyflow/react";
 import type { ComponentType } from "react";
 
 import { AddRoleToRoleMembersNode } from "./AddRoleToRoleMembersNode";
+import { ChangeChannelPermissionNode } from "./ChangeChannelPermissionNode";
 import { CreateCategoryNode } from "./CreateCategoryNode";
 import { CreateChannelNode } from "./CreateChannelNode";
 import { CreateRoleNode } from "./CreateRoleNode";
@@ -34,6 +35,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <DeleteChannelNode {...props} mode={mode} />
   );
 
+  const ChangeChannelPermissionWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <ChangeChannelPermissionNode {...props} mode={mode} />
+  );
+
   const AddRoleToRoleMembersWithMode: ComponentType<NodeProps<any>> = (props) => (
     <AddRoleToRoleMembersNode {...props} mode={mode} />
   );
@@ -45,6 +50,7 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     DeleteCategory: DeleteCategoryWithMode,
     CreateChannel: CreateChannelWithMode,
     DeleteChannel: DeleteChannelWithMode,
+    ChangeChannelPermission: ChangeChannelPermissionWithMode,
     AddRoleToRoleMembers: AddRoleToRoleMembersWithMode,
   } as NodeTypes;
 }

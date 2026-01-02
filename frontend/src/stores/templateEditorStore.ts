@@ -5,6 +5,7 @@ import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { create } from "zustand";
 
 import type { DataSchema as AddRoleToRoleMembersDataSchema } from "@/components/Node/AddRoleToRoleMembersNode";
+import type { DataSchema as ChangeChannelPermissionDataSchema } from "@/components/Node/ChangeChannelPermissionNode";
 import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
 import type { DataSchema as CreateChannelDataSchema } from "@/components/Node/CreateChannelNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
@@ -13,6 +14,7 @@ import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/De
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
+export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
 export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
@@ -22,6 +24,7 @@ export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
+  | Node<ChangeChannelPermissionNodeData, "ChangeChannelPermission">
   | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateChannelNodeData, "CreateChannel">
   | Node<CreateRoleNodeData, "CreateRole">
@@ -57,6 +60,7 @@ interface TemplateEditorActions {
     nodeId: string,
     data: Partial<
       | AddRoleToRoleMembersNodeData
+      | ChangeChannelPermissionNodeData
       | CreateCategoryNodeData
       | CreateChannelNodeData
       | CreateRoleNodeData
@@ -68,6 +72,7 @@ interface TemplateEditorActions {
   addNode: (
     type:
       | "AddRoleToRoleMembers"
+      | "ChangeChannelPermission"
       | "CreateCategory"
       | "CreateChannel"
       | "CreateRole"
@@ -163,6 +168,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { channelNames: [""] },
+      };
+    } else if (type === "ChangeChannelPermission") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { channelName: "", rolePermissions: [] },
       };
     } else {
       newNode = {

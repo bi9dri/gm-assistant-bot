@@ -46,6 +46,7 @@ const NODE_TYPE_OPTIONS = [
   { type: "DeleteCategory", label: "カテゴリを削除する" },
   { type: "CreateChannel", label: "チャンネルを作成する" },
   { type: "DeleteChannel", label: "チャンネルを削除する" },
+  { type: "ChangeChannelPermission", label: "チャンネル権限を変更する" },
 ] as const;
 
 const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
