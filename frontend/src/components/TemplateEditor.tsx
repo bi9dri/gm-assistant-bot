@@ -38,6 +38,16 @@ interface ContextMenu {
   bottom?: number;
 }
 
+const NODE_TYPE_OPTIONS = [
+  { type: "CreateRole", label: "ロールを作成する" },
+  { type: "DeleteRole", label: "ロールを削除する" },
+  { type: "AddRoleToRoleMembers", label: "ロールメンバーにロールを付与" },
+  { type: "CreateCategory", label: "カテゴリを作成する" },
+  { type: "DeleteCategory", label: "カテゴリを削除する" },
+  { type: "CreateChannel", label: "チャンネルを作成する" },
+  { type: "DeleteChannel", label: "チャンネルを削除する" },
+] as const;
+
 const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
   const {
     nodes: storeNodes,
@@ -102,16 +112,9 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!selectedNodeType) return;
 
     const position = { x: 250, y: 250 };
-    if (
-      selectedNodeType === "AddRoleToRoleMembers" ||
-      selectedNodeType === "CreateCategory" ||
-      selectedNodeType === "CreateChannel" ||
-      selectedNodeType === "CreateRole" ||
-      selectedNodeType === "DeleteCategory" ||
-      selectedNodeType === "DeleteChannel" ||
-      selectedNodeType === "DeleteRole"
-    ) {
-      addNode(selectedNodeType, position);
+    const validType = NODE_TYPE_OPTIONS.find((opt) => opt.type === selectedNodeType);
+    if (validType) {
+      addNode(validType.type, position);
     }
 
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
@@ -203,98 +206,27 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
       <div className="modal" role="dialog">
         <div className="modal-box rounded-xs">
           <h3 className="text-lg font-bold">ノードを追加する</h3>
-          <div className="flex flex-wrap gap-4 mt-4">
-            <label className="card cursor-pointer">
-              <div className="card-body">
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            {NODE_TYPE_OPTIONS.map(({ type, label }) => (
+              <label
+                key={type}
+                className={`rounded-box border-2 cursor-pointer transition-colors flex items-center justify-center min-h-20 p-4 ${
+                  selectedNodeType === type
+                    ? "bg-primary/10 border-primary"
+                    : "bg-base-200 border-transparent hover:border-base-300"
+                }`}
+              >
                 <input
                   type="radio"
                   name="nodeType"
-                  value="CreateCategory"
-                  checked={selectedNodeType === "CreateCategory"}
+                  value={type}
+                  checked={selectedNodeType === type}
                   onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
+                  className="hidden"
                 />
-                <span className="ml-2">カテゴリを作成する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="CreateChannel"
-                  checked={selectedNodeType === "CreateChannel"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">チャンネルを作成する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="CreateRole"
-                  checked={selectedNodeType === "CreateRole"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">ロールを作成する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="DeleteRole"
-                  checked={selectedNodeType === "DeleteRole"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">ロールを削除する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="DeleteCategory"
-                  checked={selectedNodeType === "DeleteCategory"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">カテゴリを削除する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="DeleteChannel"
-                  checked={selectedNodeType === "DeleteChannel"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">チャンネルを削除する</span>
-              </div>
-            </label>
-            <label className="card cursor-pointer">
-              <div className="card-body">
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value="AddRoleToRoleMembers"
-                  checked={selectedNodeType === "AddRoleToRoleMembers"}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="radio"
-                />
-                <span className="ml-2">ロールメンバーにロールを付与</span>
-              </div>
-            </label>
+                <span className="font-medium text-center">{label}</span>
+              </label>
+            ))}
           </div>
           <div className="modal-action">
             <button
