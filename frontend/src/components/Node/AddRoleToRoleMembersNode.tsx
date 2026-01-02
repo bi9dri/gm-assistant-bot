@@ -71,14 +71,20 @@ export const AddRoleToRoleMembersNode = ({
 
       const memberRole = roles.find((role) => role.name === memberRoleName);
       if (!memberRole) {
-        addToast({ message: `ロール「${memberRoleName}」がセッション内に存在しません`, status: "error" });
+        addToast({
+          message: `ロール「${memberRoleName}」がセッション内に存在しません`,
+          status: "error",
+        });
         setIsLoading(false);
         return;
       }
 
       const addRole = roles.find((role) => role.name === addRoleName);
       if (!addRole) {
-        addToast({ message: `ロール「${addRoleName}」がセッション内に存在しません`, status: "error" });
+        addToast({
+          message: `ロール「${addRoleName}」がセッション内に存在しません`,
+          status: "error",
+        });
         setIsLoading(false);
         return;
       }

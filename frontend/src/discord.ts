@@ -142,7 +142,10 @@ export class DiscordClient {
   }
 
   async addRoleToRoleMembers(data: z.infer<typeof addRoleToRoleMembersSchema>) {
-    const res = await api.roles.addRoleToRoleMembers.$post({ json: data }, { headers: this.headers() });
+    const res = await api.roles.addRoleToRoleMembers.$post(
+      { json: data },
+      { headers: this.headers() },
+    );
     if (!res.ok) {
       const error = await res.json();
       throw new Error(`Failed to add role to role members: ${getErrorMessage(error, res.status)}`);

@@ -147,20 +147,32 @@ export const DeleteChannelNode = ({
               disabled={isLoading}
             />
             {!isExecuteMode && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleRemoveChannelName(index)}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => handleRemoveChannelName(index)}
+              >
                 削除
               </button>
             )}
           </div>
         ))}
         {!isExecuteMode && (
-          <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddChannelName}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm mt-2"
+            onClick={handleAddChannelName}
+          >
             チャンネルを追加
           </button>
         )}
         {isLoading && (
           <div className="mt-2">
-            <progress className="progress progress-primary w-full" value={progress.current} max={progress.total} />
+            <progress
+              className="progress progress-primary w-full"
+              value={progress.current}
+              max={progress.total}
+            />
             <p className="text-sm text-center mt-1">
               {progress.current} / {progress.total}
             </p>

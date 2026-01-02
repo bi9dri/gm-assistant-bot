@@ -53,8 +53,29 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<AddRoleToRoleMembersNodeData | CreateCategoryNodeData | CreateChannelNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteChannelNodeData | DeleteRoleNodeData>) => void;
-  addNode: (type: "AddRoleToRoleMembers" | "CreateCategory" | "CreateChannel" | "CreateRole" | "DeleteCategory" | "DeleteChannel" | "DeleteRole", position: { x: number; y: number }) => void;
+  updateNodeData: (
+    nodeId: string,
+    data: Partial<
+      | AddRoleToRoleMembersNodeData
+      | CreateCategoryNodeData
+      | CreateChannelNodeData
+      | CreateRoleNodeData
+      | DeleteCategoryNodeData
+      | DeleteChannelNodeData
+      | DeleteRoleNodeData
+    >,
+  ) => void;
+  addNode: (
+    type:
+      | "AddRoleToRoleMembers"
+      | "CreateCategory"
+      | "CreateChannel"
+      | "CreateRole"
+      | "DeleteCategory"
+      | "DeleteChannel"
+      | "DeleteRole",
+    position: { x: number; y: number },
+  ) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;

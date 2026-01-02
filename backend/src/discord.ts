@@ -4,7 +4,6 @@ import {
   OverwriteType,
   PermissionFlagsBits,
   RESTGetAPIGuildMemberResult,
-  RESTGetAPIGuildRoleResult,
   Routes,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
@@ -207,12 +206,9 @@ export async function deleteChannel(token: string, data: DeleteChannelData) {
   await rest.delete(Routes.channel(data.channelId));
 }
 
-export async function addRoleToRoleMembers(
-  token: string,
-  data: AddRoleToRoleMembersData,
-) {
+export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMembersData) {
   const rest = createRestClient(token);
-  
+
   // 指定されたロールを持つメンバーを取得
   const membersWithRole = [];
   let after: string | undefined = undefined;
@@ -222,10 +218,9 @@ export async function addRoleToRoleMembers(
     if (after) {
       query.append("after", after);
     }
-    const members = (await rest.get(
-      Routes.guildMembers(data.guildId),
-      { query },
-    )) as RESTGetAPIGuildMemberResult[];
+    const members = (await rest.get(Routes.guildMembers(data.guildId), {
+      query,
+    })) as RESTGetAPIGuildMemberResult[];
     if (members.length === 0) break;
     for (const member of members) {
       if (member.roles.includes(data.memberRoleId)) {

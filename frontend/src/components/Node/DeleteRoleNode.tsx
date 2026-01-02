@@ -180,14 +180,22 @@ export const DeleteRoleNode = ({
                   disabled={isLoading}
                 />
                 {!isExecuteMode && (
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleRemoveRoleName(index)}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => handleRemoveRoleName(index)}
+                  >
                     削除
                   </button>
                 )}
               </div>
             ))}
             {!isExecuteMode && (
-              <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddRoleName}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm mt-2"
+                onClick={handleAddRoleName}
+              >
                 ロールを追加
               </button>
             )}
@@ -196,7 +204,11 @@ export const DeleteRoleNode = ({
 
         {isLoading && (
           <div className="mt-2">
-            <progress className="progress progress-primary w-full" value={progress.current} max={progress.total} />
+            <progress
+              className="progress progress-primary w-full"
+              value={progress.current}
+              max={progress.total}
+            />
             <p className="text-sm text-center mt-1">
               {progress.current} / {progress.total}
             </p>

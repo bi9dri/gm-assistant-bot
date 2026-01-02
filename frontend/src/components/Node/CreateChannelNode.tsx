@@ -57,7 +57,11 @@ export const CreateChannelNode = ({
     }
   }, [executionContext]);
 
-  const handleChannelChange = (index: number, field: keyof ChannelItem, value: ChannelItem[keyof ChannelItem]) => {
+  const handleChannelChange = (
+    index: number,
+    field: keyof ChannelItem,
+    value: ChannelItem[keyof ChannelItem],
+  ) => {
     const updatedChannels = [...data.channels];
     updatedChannels[index] = { ...updatedChannels[index], [field]: value };
     updateNodeData(id, { channels: updatedChannels });
@@ -109,7 +113,10 @@ export const CreateChannelNode = ({
     // Check if category exists
     const category = await db.Category.where("sessionId").equals(sessionId).first();
     if (!category) {
-      addToast({ message: "カテゴリが存在しません。先にカテゴリを作成してください。", status: "error" });
+      addToast({
+        message: "カテゴリが存在しません。先にカテゴリを作成してください。",
+        status: "error",
+      });
       return;
     }
 
@@ -222,7 +229,10 @@ export const CreateChannelNode = ({
       <BaseNodeContent>
         <div className="space-y-4">
           {data.channels.map((channel, channelIndex) => (
-            <div key={`${id}-channel-${channelIndex}`} className="border border-base-content/20 rounded-lg p-3">
+            <div
+              key={`${id}-channel-${channelIndex}`}
+              className="border border-base-content/20 rounded-lg p-3"
+            >
               <div className="flex gap-2 items-center mb-2">
                 <input
                   type="text"
@@ -238,7 +248,9 @@ export const CreateChannelNode = ({
                     type="checkbox"
                     className="toggle toggle-sm"
                     checked={channel.type === "voice"}
-                    onChange={(e) => handleChannelChange(channelIndex, "type", e.target.checked ? "voice" : "text")}
+                    onChange={(e) =>
+                      handleChannelChange(channelIndex, "type", e.target.checked ? "voice" : "text")
+                    }
                     disabled={isLoading}
                   />
                   <span className="text-xs">ボイス</span>
@@ -257,12 +269,22 @@ export const CreateChannelNode = ({
               <div className="mt-2 space-y-1">
                 <p className="text-xs font-semibold">ロール権限</p>
                 {channel.rolePermissions.map((perm, roleIndex) => (
-                  <div key={`${id}-channel-${channelIndex}-role-${roleIndex}`} className="flex gap-2 items-center">
+                  <div
+                    key={`${id}-channel-${channelIndex}-role-${roleIndex}`}
+                    className="flex gap-2 items-center"
+                  >
                     <input
                       type="text"
                       className="input input-bordered input-xs flex-1"
                       value={perm.roleName}
-                      onChange={(e) => handleRolePermissionChange(channelIndex, roleIndex, "roleName", e.target.value)}
+                      onChange={(e) =>
+                        handleRolePermissionChange(
+                          channelIndex,
+                          roleIndex,
+                          "roleName",
+                          e.target.value,
+                        )
+                      }
                       placeholder="ロール名"
                       disabled={isLoading}
                     />
@@ -272,7 +294,14 @@ export const CreateChannelNode = ({
                         type="checkbox"
                         className="toggle toggle-xs"
                         checked={perm.canWrite}
-                        onChange={(e) => handleRolePermissionChange(channelIndex, roleIndex, "canWrite", e.target.checked)}
+                        onChange={(e) =>
+                          handleRolePermissionChange(
+                            channelIndex,
+                            roleIndex,
+                            "canWrite",
+                            e.target.checked,
+                          )
+                        }
                         disabled={isLoading}
                       />
                       <span className="text-xs">書き込み</span>
@@ -307,13 +336,22 @@ export const CreateChannelNode = ({
           ))}
         </div>
 
-        <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddChannel} disabled={isLoading}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm mt-2"
+          onClick={handleAddChannel}
+          disabled={isLoading}
+        >
           チャンネルを追加
         </button>
 
         {isLoading && (
           <div className="mt-2">
-            <progress className="progress progress-primary w-full" value={progress.current} max={progress.total} />
+            <progress
+              className="progress progress-primary w-full"
+              value={progress.current}
+              max={progress.total}
+            />
             <p className="text-sm text-center mt-1">
               {progress.current} / {progress.total}
             </p>

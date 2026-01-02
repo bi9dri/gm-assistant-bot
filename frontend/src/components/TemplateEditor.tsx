@@ -102,7 +102,15 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!selectedNodeType) return;
 
     const position = { x: 250, y: 250 };
-    if (selectedNodeType === "AddRoleToRoleMembers" || selectedNodeType === "CreateCategory" || selectedNodeType === "CreateChannel" || selectedNodeType === "CreateRole" || selectedNodeType === "DeleteCategory" || selectedNodeType === "DeleteChannel" || selectedNodeType === "DeleteRole") {
+    if (
+      selectedNodeType === "AddRoleToRoleMembers" ||
+      selectedNodeType === "CreateCategory" ||
+      selectedNodeType === "CreateChannel" ||
+      selectedNodeType === "CreateRole" ||
+      selectedNodeType === "DeleteCategory" ||
+      selectedNodeType === "DeleteChannel" ||
+      selectedNodeType === "DeleteRole"
+    ) {
       addNode(selectedNodeType, position);
     }
 

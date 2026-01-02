@@ -11,7 +11,7 @@ import type { NodeWidth } from "./base-schema";
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 interface BaseNodeProps extends ComponentProps<"div"> {
-  width?: NodeWidth | number;
+  width?: NodeWidth;
 }
 
 export function BaseNode({ className, width, style, ...props }: BaseNodeProps) {

@@ -38,8 +38,14 @@ export const DeleteCategoryNode = ({
 
   useEffect(() => {
     if (executionContext) {
-      void db.Category.where("sessionId").equals(executionContext.sessionId).toArray().then(setCategories);
-      void db.Channel.where("sessionId").equals(executionContext.sessionId).toArray().then(setChannels);
+      void db.Category.where("sessionId")
+        .equals(executionContext.sessionId)
+        .toArray()
+        .then(setCategories);
+      void db.Channel.where("sessionId")
+        .equals(executionContext.sessionId)
+        .toArray()
+        .then(setChannels);
     }
   }, [executionContext]);
 
@@ -109,8 +115,14 @@ export const DeleteCategoryNode = ({
         updateNodeData(id, { executedAt: new Date() });
       }
       // Refresh data
-      void db.Category.where("sessionId").equals(executionContext.sessionId).toArray().then(setCategories);
-      void db.Channel.where("sessionId").equals(executionContext.sessionId).toArray().then(setChannels);
+      void db.Category.where("sessionId")
+        .equals(executionContext.sessionId)
+        .toArray()
+        .then(setCategories);
+      void db.Channel.where("sessionId")
+        .equals(executionContext.sessionId)
+        .toArray()
+        .then(setChannels);
     }
   };
 
@@ -118,7 +130,10 @@ export const DeleteCategoryNode = ({
   const totalItems = channels.length + categories.length;
 
   return (
-    <BaseNode width={NODE_TYPE_WIDTHS.DeleteCategory} className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}>
+    <BaseNode
+      width={NODE_TYPE_WIDTHS.DeleteCategory}
+      className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
+    >
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>カテゴリを削除する</BaseNodeHeaderTitle>
       </BaseNodeHeader>

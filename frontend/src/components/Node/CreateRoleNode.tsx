@@ -102,7 +102,10 @@ export const CreateRoleNode = ({
   const isExecuteMode = mode === "execute";
 
   return (
-    <BaseNode width={NODE_TYPE_WIDTHS.CreateRole} className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}>
+    <BaseNode
+      width={NODE_TYPE_WIDTHS.CreateRole}
+      className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
+    >
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>

@@ -73,10 +73,14 @@ const app = new Hono<{ Variables: Variables }>()
     await deleteRole(c.get("botToken"), c.req.valid("json"));
     return c.body(null, 204);
   })
-  .post("/roles/addRoleToRoleMembers", zValidator("json", addRoleToRoleMembersSchema), async (c) => {
-    await addRoleToRoleMembers(c.get("botToken"), c.req.valid("json"));
-    return c.body(null, 204);
-  })
+  .post(
+    "/roles/addRoleToRoleMembers",
+    zValidator("json", addRoleToRoleMembersSchema),
+    async (c) => {
+      await addRoleToRoleMembers(c.get("botToken"), c.req.valid("json"));
+      return c.body(null, 204);
+    },
+  )
 
   .post("/categories", zValidator("json", createCategorySchema), async (c) => {
     const category = await createCategory(c.get("botToken"), c.req.valid("json"));
