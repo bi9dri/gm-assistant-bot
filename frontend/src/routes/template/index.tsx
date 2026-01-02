@@ -5,7 +5,7 @@ import z from "zod";
 
 import { TemplateCard } from "@/components/TemplateCard";
 import { db } from "@/db";
-import { Template } from "@/db";
+import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/template/")({
@@ -26,16 +26,8 @@ function RouteComponent() {
     if (!file) return;
 
     try {
-      const text = await file.text();
-
-      let data: unknown;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("不正なJSONファイルです");
-      }
-
-      const template = await Template.import(data);
+      const fileSystem = new FileSystem();
+      const template = await fileSystem.loadTemplate(file);
 
       addToast({
         message: `テンプレート「${template.name}」をインポートしました`,
@@ -72,7 +64,7 @@ function RouteComponent() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="application/json,.json"
+        accept="application/zip"
         onChange={handleFileChange}
         className="hidden"
       />

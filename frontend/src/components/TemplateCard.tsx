@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import React from "react";
 import z from "zod";
 
-import { db, Template } from "@/db";
+import { db } from "@/db";
+import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
 export const TemplateCardSchema = z.object({
@@ -19,22 +20,9 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
   const handleExport = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const template = (await db.Template.get(id)) as Template | undefined;
-      if (!template) {
-        throw new Error("テンプレートが見つかりません");
-      }
-
-      const exportData = template.export();
-      const jsonString = JSON.stringify(exportData);
-      const blob = new Blob([jsonString], { type: "application/json" });
-
-      const timestamp = new Date()
-        .toISOString()
-        .replace(/[-:]/g, "")
-        .split(".")[0]
-        .replace("T", "-");
-      const filename = `template-${name}-${timestamp}.json`;
-
+      const fileSystem = new FileSystem();
+      const blob = await fileSystem.saveTemplate(id);
+      const filename = `${name}_template.zip`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -61,6 +49,8 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
     e.preventDefault();
     try {
       await db.Template.delete(id);
+      const fileSystem = new FileSystem();
+      await fileSystem.clearTemplateFiles(id);
 
       const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
       if (checkbox) checkbox.checked = false;

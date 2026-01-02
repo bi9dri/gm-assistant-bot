@@ -11,7 +11,6 @@ try {
   if (storedTheme && THEMES.includes(storedTheme as THEME)) {
     initialTheme = storedTheme as THEME;
   }
-  console.log("Initial theme:", initialTheme);
 } catch {
   // ignore
 }
