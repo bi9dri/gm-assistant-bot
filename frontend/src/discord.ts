@@ -59,6 +59,12 @@ export const addRoleToRoleMembersSchema = z.object({
   addRoleId: z.string().nonempty().trim(),
 });
 
+export const sendMessageSchema = z.object({
+  channelId: z.string().nonempty().trim(),
+  content: z.string().nonempty().trim(),
+  files: z.array(z.file()).max(4).optional(),
+});
+
 export class DiscordClient {
   private readonly token: string;
 
@@ -149,6 +155,14 @@ export class DiscordClient {
     if (!res.ok) {
       const error = await res.json();
       throw new Error(`Failed to add role to role members: ${getErrorMessage(error, res.status)}`);
+    }
+  }
+
+  async sendMessage(data: z.infer<typeof sendMessageSchema>) {
+    const res = await api.messages.$post({ form: data }, { headers: this.headers() });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to send message: ${getErrorMessage(error, res.status)}`);
     }
   }
 }

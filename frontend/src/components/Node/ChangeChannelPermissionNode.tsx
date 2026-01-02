@@ -28,10 +28,7 @@ export const DataSchema = BaseNodeDataSchema.extend({
   channelName: z.string().trim(),
   rolePermissions: z.array(RolePermissionSchema),
 });
-type ChangeChannelPermissionNodeData = Node<
-  z.infer<typeof DataSchema>,
-  "ChangeChannelPermission"
->;
+type ChangeChannelPermissionNodeData = Node<z.infer<typeof DataSchema>, "ChangeChannelPermission">;
 
 type RolePermission = z.infer<typeof RolePermissionSchema>;
 
@@ -214,17 +211,16 @@ export const ChangeChannelPermissionNode = ({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <span>既存の権限はすべて上書きされます。指定しなかったロールの権限は削除されます。</span>
+            <span>
+              既存の権限はすべて上書きされます。指定しなかったロールの権限は削除されます。
+            </span>
           </div>
 
           {/* Role permissions */}
           <div className="space-y-1">
             <p className="text-xs font-semibold">ロール権限</p>
             {data.rolePermissions.map((perm, roleIndex) => (
-              <div
-                key={`${id}-role-${roleIndex}`}
-                className="flex gap-2 items-center"
-              >
+              <div key={`${id}-role-${roleIndex}`} className="flex gap-2 items-center">
                 <input
                   type="text"
                   className="input input-bordered input-xs flex-1"
@@ -274,9 +270,7 @@ export const ChangeChannelPermissionNode = ({
               {channels.length > 0 && (
                 <p>利用可能なチャンネル: {channels.map((c) => c.name).join(", ")}</p>
               )}
-              {roles.length > 0 && (
-                <p>利用可能なロール: {roles.map((r) => r.name).join(", ")}</p>
-              )}
+              {roles.length > 0 && <p>利用可能なロール: {roles.map((r) => r.name).join(", ")}</p>}
             </div>
           )}
         </div>

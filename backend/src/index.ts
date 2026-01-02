@@ -14,6 +14,7 @@ import {
   deleteRole,
   getGuilds,
   getProfile,
+  sendMessage,
 } from "./discord";
 import {
   addRoleToRoleMembersSchema,
@@ -24,6 +25,7 @@ import {
   createRoleSchema,
   deleteChannelSchema,
   deleteRoleSchema,
+  sendMessageSchema,
 } from "./schemas";
 
 type Variables = {
@@ -97,6 +99,11 @@ const app = new Hono<{ Variables: Variables }>()
   })
   .patch("/channels/permissions", zValidator("json", changeChannelPermissionsSchema), async (c) => {
     await changeChannelPermissions(c.get("botToken"), c.req.valid("json"));
+    return c.body(null, 204);
+  })
+
+  .post("/messages", zValidator("form", sendMessageSchema), async (c) => {
+    await sendMessage(c.get("botToken"), c.req.valid("form"));
     return c.body(null, 204);
   })
 

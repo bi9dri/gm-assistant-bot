@@ -43,6 +43,12 @@ export const addRoleToRoleMembersSchema = z.object({
   addRoleId: z.string().nonempty().trim(),
 });
 
+export const sendMessageSchema = z.object({
+  channelId: z.string().nonempty().trim(),
+  content: z.string().nonempty().trim(),
+  files: z.array(z.file()).max(4).optional(),
+});
+
 export type CreateRoleData = z.infer<typeof createRoleSchema>;
 export type DeleteRoleData = z.infer<typeof deleteRoleSchema>;
 export type CreateCategoryData = z.infer<typeof createCategorySchema>;
@@ -50,3 +56,4 @@ export type CreateChannelData = z.infer<typeof createChannelSchema>;
 export type ChangeChannelPermissionsData = z.infer<typeof changeChannelPermissionsSchema>;
 export type DeleteChannelData = z.infer<typeof deleteChannelSchema>;
 export type AddRoleToRoleMembersData = z.infer<typeof addRoleToRoleMembersSchema>;
+export type SendMessageData = z.infer<typeof sendMessageSchema>;

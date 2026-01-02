@@ -1,4 +1,4 @@
-import { REST } from "@discordjs/rest";
+import { RawFile, REST } from "@discordjs/rest";
 import {
   ChannelType,
   OverwriteType,
@@ -19,6 +19,7 @@ import type {
   CreateRoleData,
   DeleteChannelData,
   DeleteRoleData,
+  SendMessageData,
 } from "./schemas";
 
 /**
@@ -234,4 +235,25 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
   for (const memberId of membersWithRole) {
     await rest.put(Routes.guildMemberRole(data.guildId, memberId, data.addRoleId));
   }
+}
+
+export async function sendMessage(token: string, data: SendMessageData) {
+  const rest = createRestClient(token);
+
+  const rawFiles = await Promise.all((data.files || []).map((file) => fileToRawFile(file)));
+
+  await rest.post(Routes.channelMessages(data.channelId), {
+    body: {
+      content: data.content,
+    },
+    files: rawFiles ? rawFiles : undefined,
+  });
+}
+
+async function fileToRawFile(file: File): Promise<RawFile> {
+  return {
+    contentType: file.type,
+    data: await file.bytes(),
+    name: file.name,
+  };
 }
