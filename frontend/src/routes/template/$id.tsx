@@ -104,6 +104,7 @@ function RouteComponent() {
 
       <div className="flex-1 min-h-0">
         <TemplateEditor
+          templateId={Number(id)}
           nodes={reactFlowData.nodes}
           edges={reactFlowData.edges}
           viewport={reactFlowData.viewport}

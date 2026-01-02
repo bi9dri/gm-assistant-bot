@@ -12,6 +12,7 @@ import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/Creat
 import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
 import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
+import type { DataSchema as SendMessageDataSchema } from "@/components/Node/SendMessageNode";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
@@ -21,6 +22,7 @@ export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
 export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
+export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
@@ -30,7 +32,8 @@ export type FlowNode =
   | Node<CreateRoleNodeData, "CreateRole">
   | Node<DeleteCategoryNodeData, "DeleteCategory">
   | Node<DeleteChannelNodeData, "DeleteChannel">
-  | Node<DeleteRoleNodeData, "DeleteRole">;
+  | Node<DeleteRoleNodeData, "DeleteRole">
+  | Node<SendMessageNodeData, "SendMessage">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -67,6 +70,7 @@ interface TemplateEditorActions {
       | DeleteCategoryNodeData
       | DeleteChannelNodeData
       | DeleteRoleNodeData
+      | SendMessageNodeData
     >,
   ) => void;
   addNode: (
@@ -78,7 +82,8 @@ interface TemplateEditorActions {
       | "CreateRole"
       | "DeleteCategory"
       | "DeleteChannel"
-      | "DeleteRole",
+      | "DeleteRole"
+      | "SendMessage",
     position: { x: number; y: number },
   ) => void;
   duplicateNode: (nodeId: string) => void;
@@ -175,6 +180,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { channelName: "", rolePermissions: [] },
+      };
+    } else if (type === "SendMessage") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { channelName: "", content: "", attachments: [] },
       };
     } else {
       newNode = {

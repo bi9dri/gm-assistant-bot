@@ -1,10 +1,10 @@
-import { RawFile, REST } from "@discordjs/rest";
+import { REST, type RawFile } from "@discordjs/rest";
 import {
   ChannelType,
   OverwriteType,
   PermissionFlagsBits,
-  RESTGetAPIGuildMemberResult,
   Routes,
+  type RESTGetAPIGuildMemberResult,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
   type RESTPostAPIGuildChannelResult,

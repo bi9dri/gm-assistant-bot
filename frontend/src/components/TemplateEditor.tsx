@@ -18,6 +18,7 @@ import type { DiscordBotData } from "@/db";
 
 import { createNodeTypes } from "@/components/Node";
 import { NodeExecutionContext } from "@/components/Node/NodeExecutionContext";
+import { TemplateEditorContext } from "@/components/Node/TemplateEditorContext";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
   edges: Edge[];
   viewport?: Viewport;
   mode?: "edit" | "execute";
+  templateId?: number;
   guildId?: string;
   sessionId?: number;
   bot?: DiscordBotData;
@@ -47,6 +49,7 @@ const NODE_TYPE_OPTIONS = [
   { type: "CreateChannel", label: "チャンネルを作成する" },
   { type: "DeleteChannel", label: "チャンネルを削除する" },
   { type: "ChangeChannelPermission", label: "チャンネル権限を変更する" },
+  { type: "SendMessage", label: "メッセージを送信する" },
 ] as const;
 
 const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
@@ -277,7 +280,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
 };
 
 export const TemplateEditor = (props: Props) => {
-  const { mode, guildId, sessionId, bot } = props;
+  const { mode, templateId, guildId, sessionId, bot } = props;
 
   const content = (
     <ReactFlowProvider>
@@ -285,13 +288,22 @@ export const TemplateEditor = (props: Props) => {
     </ReactFlowProvider>
   );
 
+  // Wrap with TemplateEditorContext when templateId is available
+  const withTemplateContext = templateId ? (
+    <TemplateEditorContext.Provider value={{ templateId }}>
+      {content}
+    </TemplateEditorContext.Provider>
+  ) : (
+    content
+  );
+
   if (mode === "execute" && guildId && sessionId && bot) {
     return (
       <NodeExecutionContext.Provider value={{ guildId, sessionId, bot }}>
-        {content}
+        {withTemplateContext}
       </NodeExecutionContext.Provider>
     );
   }
 
-  return content;
+  return withTemplateContext;
 };

@@ -21,7 +21,7 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
     e.preventDefault();
     try {
       const fileSystem = new FileSystem();
-      const blob = await fileSystem.saveTemplate(id);
+      const blob = await fileSystem.exportTemplate(id);
       const filename = `${name}_template.zip`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

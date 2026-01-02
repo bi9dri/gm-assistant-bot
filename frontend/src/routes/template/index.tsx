@@ -27,7 +27,7 @@ function RouteComponent() {
 
     try {
       const fileSystem = new FileSystem();
-      const template = await fileSystem.loadTemplate(file);
+      const template = await fileSystem.importTemplate(file);
 
       addToast({
         message: `テンプレート「${template.name}」をインポートしました`,

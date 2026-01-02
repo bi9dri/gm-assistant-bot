@@ -16,7 +16,7 @@ export class FileSystem {
     }
   }
 
-  async saveTemplate(templateId: number) {
+  async exportTemplate(templateId: number) {
     const template = (await db.Template.get(templateId)) as Template | undefined;
     if (!template) {
       throw new Error("テンプレートが見つかりません");
@@ -70,7 +70,7 @@ export class FileSystem {
     return zipFileWriter.getData();
   }
 
-  async loadTemplate(zipFile: File) {
+  async importTemplate(zipFile: File) {
     const zipFileReader = new BlobReader(zipFile);
     const zipReader = new ZipReader(zipFileReader);
 
@@ -125,6 +125,68 @@ export class FileSystem {
         return;
       }
       throw e;
+    }
+  }
+
+  async writeFile(path: string, data: Blob | string) {
+    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
+    let dir = await navigator.storage.getDirectory();
+    const segments = path.split("/").filter((seg) => seg.length > 0);
+    while (segments.length > 1) {
+      const dirName = segments.shift() as string;
+      if (dirName.length === 0) {
+        continue;
+      }
+      dir = await dir.getDirectoryHandle(dirName, { create: true });
+    }
+
+    const fileName = segments.shift() as string;
+    const handle = await dir.getFileHandle(fileName, { create: true });
+    const w = await handle.createWritable();
+    await w.write(data);
+    await w.close();
+  }
+
+  async readFile(path: string) {
+    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
+    let dir = await navigator.storage.getDirectory();
+    const segments = path.split("/").filter((seg) => seg.length > 0);
+    while (segments.length > 1) {
+      const dirName = segments.shift() as string;
+      if (dirName.length === 0) {
+        continue;
+      }
+      dir = await dir.getDirectoryHandle(dirName);
+    }
+
+    const fileName = segments.shift() as string;
+    const handle = await dir.getFileHandle(fileName);
+    const file = await handle.getFile();
+    return file;
+  }
+
+  async deleteFile(path: string) {
+    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
+    let dir = await navigator.storage.getDirectory();
+    const segments = path.split("/").filter((seg) => seg.length > 0);
+    while (segments.length > 1) {
+      const dirName = segments.shift() as string;
+      if (dirName.length === 0) {
+        continue;
+      }
+      dir = await dir.getDirectoryHandle(dirName);
+    }
+
+    const fileName = segments.shift() as string;
+    await dir.removeEntry(fileName);
+  }
+
+  async fileExists(path: string) {
+    try {
+      await this.readFile(path);
+      return true;
+    } catch {
+      return false;
     }
   }
 }
