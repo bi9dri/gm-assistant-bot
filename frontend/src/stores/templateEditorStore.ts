@@ -4,12 +4,14 @@ import type { z } from "zod";
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { create } from "zustand";
 
+import type { DataSchema as AddRoleToRoleMembersDataSchema } from "@/components/Node/AddRoleToRoleMembersNode";
 import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
 import type { DataSchema as CreateChannelDataSchema } from "@/components/Node/CreateChannelNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
 import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
+export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
@@ -17,6 +19,7 @@ export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
 export type FlowNode =
+  | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
   | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateChannelNodeData, "CreateChannel">
   | Node<CreateRoleNodeData, "CreateRole">
@@ -47,8 +50,8 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<CreateCategoryNodeData | CreateChannelNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteRoleNodeData>) => void;
-  addNode: (type: "CreateCategory" | "CreateChannel" | "CreateRole" | "DeleteCategory" | "DeleteRole", position: { x: number; y: number }) => void;
+  updateNodeData: (nodeId: string, data: Partial<AddRoleToRoleMembersNodeData | CreateCategoryNodeData | CreateChannelNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteRoleNodeData>) => void;
+  addNode: (type: "AddRoleToRoleMembers" | "CreateCategory" | "CreateChannel" | "CreateRole" | "DeleteCategory" | "DeleteRole", position: { x: number; y: number }) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -123,12 +126,19 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         position,
         data: {},
       };
-    } else {
+    } else if (type === "DeleteRole") {
       newNode = {
         id,
         type,
         position,
         data: { deleteAll: false, selectedRoleIds: [] },
+      };
+    } else {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { memberRoleName: "", addRoleName: "" },
       };
     }
 

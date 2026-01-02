@@ -1,3 +1,4 @@
+export { AddRoleToRoleMembersNode } from "./AddRoleToRoleMembersNode";
 export { CreateCategoryNode } from "./CreateCategoryNode";
 export { CreateChannelNode } from "./CreateChannelNode";
 export { CreateRoleNode } from "./CreateRoleNode";

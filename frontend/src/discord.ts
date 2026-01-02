@@ -53,6 +53,12 @@ export const deleteChannelSchema = z.object({
   channelId: z.string().nonempty().trim(),
 });
 
+export const addRoleToRoleMembersSchema = z.object({
+  guildId: z.string().nonempty().trim(),
+  memberRoleId: z.string().nonempty().trim(),
+  addRoleId: z.string().nonempty().trim(),
+});
+
 export class DiscordClient {
   private readonly token: string;
 
@@ -132,6 +138,14 @@ export class DiscordClient {
     const res = await api.channels.$delete({ json: data }, { headers: this.headers() });
     if (!res.ok) {
       throw new Error(`Failed to delete channel: ${res.status}`);
+    }
+  }
+
+  async addRoleToRoleMembers(data: z.infer<typeof addRoleToRoleMembersSchema>) {
+    const res = await api.roles.addRoleToRoleMembers.$post({ json: data }, { headers: this.headers() });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to add role to role members: ${getErrorMessage(error, res.status)}`);
     }
   }
 }
