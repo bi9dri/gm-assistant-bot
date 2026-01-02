@@ -102,7 +102,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!selectedNodeType) return;
 
     const position = { x: 250, y: 250 };
-    if (selectedNodeType === "CreateCategory" || selectedNodeType === "CreateRole" || selectedNodeType === "DeleteCategory" || selectedNodeType === "DeleteRole") {
+    if (selectedNodeType === "CreateCategory" || selectedNodeType === "CreateChannel" || selectedNodeType === "CreateRole" || selectedNodeType === "DeleteCategory" || selectedNodeType === "DeleteRole") {
       addNode(selectedNodeType, position);
     }
 
@@ -207,6 +207,19 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
                   className="radio"
                 />
                 <span className="ml-2">カテゴリを作成する</span>
+              </div>
+            </label>
+            <label className="card cursor-pointer">
+              <div className="card-body">
+                <input
+                  type="radio"
+                  name="nodeType"
+                  value="CreateChannel"
+                  checked={selectedNodeType === "CreateChannel"}
+                  onChange={(e) => setSelectedNodeType(e.target.value)}
+                  className="radio"
+                />
+                <span className="ml-2">チャンネルを作成する</span>
               </div>
             </label>
             <label className="card cursor-pointer">

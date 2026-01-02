@@ -2,6 +2,7 @@ import type { NodeProps, NodeTypes } from "@xyflow/react";
 import type { ComponentType } from "react";
 
 import { CreateCategoryNode } from "./CreateCategoryNode";
+import { CreateChannelNode } from "./CreateChannelNode";
 import { CreateRoleNode } from "./CreateRoleNode";
 import { DeleteCategoryNode } from "./DeleteCategoryNode";
 import { DeleteRoleNode } from "./DeleteRoleNode";
@@ -23,10 +24,15 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <DeleteCategoryNode {...props} mode={mode} />
   );
 
+  const CreateChannelWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <CreateChannelNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
     DeleteRole: DeleteRoleWithMode,
     DeleteCategory: DeleteCategoryWithMode,
+    CreateChannel: CreateChannelWithMode,
   } as NodeTypes;
 }
