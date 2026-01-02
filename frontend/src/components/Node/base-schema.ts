@@ -20,6 +20,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   CreateRole: NODE_WIDTHS.md,
   DeleteRole: NODE_WIDTHS.md,
   CreateCategory: NODE_WIDTHS.md,
+  DeleteCategory: NODE_WIDTHS.md,
 } as const;
 
 export const DEFAULT_NODE_WIDTH = NODE_WIDTHS.md;

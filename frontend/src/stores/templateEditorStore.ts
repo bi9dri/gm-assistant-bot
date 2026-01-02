@@ -6,15 +6,18 @@ import { create } from "zustand";
 
 import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
+import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 
 export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
+export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 
 export type FlowNode =
   | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateRoleNodeData, "CreateRole">
+  | Node<DeleteCategoryNodeData, "DeleteCategory">
   | Node<DeleteRoleNodeData, "DeleteRole">;
 
 // Helper function: Generate next ID with sequential numbering
@@ -41,8 +44,8 @@ interface TemplateEditorActions {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  updateNodeData: (nodeId: string, data: Partial<CreateCategoryNodeData | CreateRoleNodeData | DeleteRoleNodeData>) => void;
-  addNode: (type: "CreateCategory" | "CreateRole" | "DeleteRole", position: { x: number; y: number }) => void;
+  updateNodeData: (nodeId: string, data: Partial<CreateCategoryNodeData | CreateRoleNodeData | DeleteCategoryNodeData | DeleteRoleNodeData>) => void;
+  addNode: (type: "CreateCategory" | "CreateRole" | "DeleteCategory" | "DeleteRole", position: { x: number; y: number }) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -102,6 +105,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { roles: [""] },
+      };
+    } else if (type === "DeleteCategory") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {},
       };
     } else {
       newNode = {
