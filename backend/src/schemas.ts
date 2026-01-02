@@ -46,7 +46,9 @@ export const addRoleToRoleMembersSchema = z.object({
 export const sendMessageSchema = z.object({
   channelId: z.string().nonempty().trim(),
   content: z.string().nonempty().trim(),
-  files: z.array(z.file()).max(4).optional(),
+  files: z
+    .union([z.instanceof(File), z.array(z.instanceof(File)).max(4)])
+    .optional(),
 });
 
 export type CreateRoleData = z.infer<typeof createRoleSchema>;

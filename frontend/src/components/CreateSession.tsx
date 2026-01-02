@@ -6,7 +6,27 @@ import { type MouseEvent, useEffect, useState } from "react";
 import { db } from "@/db";
 import { type GuildSchema } from "@/db";
 import { DiscordClient } from "@/discord";
+import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
+
+const convertFilePaths = (
+  reactFlowData: string,
+  templateId: number,
+  sessionId: number,
+): string => {
+  const data = JSON.parse(reactFlowData);
+  for (const node of data.nodes) {
+    if (node.data?.attachments) {
+      node.data.attachments = node.data.attachments.map(
+        (a: { filePath: string; fileName: string; fileSize: number }) => ({
+          ...a,
+          filePath: a.filePath.replace(`template/${templateId}/`, `session/${sessionId}/`),
+        }),
+      );
+    }
+  }
+  return JSON.stringify(data);
+};
 
 interface Props {
   onCreate?: (created: {}) => Promise<void>;
@@ -83,6 +103,19 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         reactFlowData: template.reactFlowData,
         createdAt: new Date(),
         lastUsedAt: new Date(),
+      });
+
+      // Copy files from template to session and update file paths
+      const fileSystem = new FileSystem();
+      await fileSystem.copyTemplateFilesToSession(selectedTemplateId, newSessionId);
+
+      const convertedReactFlowData = convertFilePaths(
+        template.reactFlowData,
+        selectedTemplateId,
+        newSessionId,
+      );
+      await db.GameSession.update(newSessionId, {
+        reactFlowData: convertedReactFlowData,
       });
 
       addToast({

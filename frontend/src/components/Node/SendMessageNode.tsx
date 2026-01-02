@@ -44,14 +44,28 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const saveFileToOPFS = async (templateId: number, file: File): Promise<string> => {
+const saveFileToOPFS = async (
+  file: File,
+  options: { templateId?: number; sessionId?: number },
+): Promise<string> => {
+  const { templateId, sessionId } = options;
   const fs = new FileSystem();
-  let basePath = `template/${templateId}/${file.name}`;
+
+  let baseDir: string;
+  if (sessionId !== undefined) {
+    baseDir = `session/${sessionId}`;
+  } else if (templateId !== undefined) {
+    baseDir = `template/${templateId}`;
+  } else {
+    throw new Error("templateIdまたはsessionIdが必要です");
+  }
+
+  let basePath = `${baseDir}/${file.name}`;
 
   // If file exists, create a random subdirectory
   if (await fs.fileExists(basePath)) {
     const randomDir = crypto.randomUUID().slice(0, 8);
-    basePath = `template/${templateId}/${randomDir}/${file.name}`;
+    basePath = `${baseDir}/${randomDir}/${file.name}`;
   }
 
   await fs.writeFile(basePath, file);
@@ -99,8 +113,10 @@ export const SendMessageNode = ({
     if (!files || files.length === 0) return;
 
     const templateId = templateEditorContext?.templateId;
-    if (!templateId) {
-      addToast({ message: "テンプレートIDが取得できません", status: "error" });
+    const sessionId = executionContext?.sessionId;
+
+    if (!templateId && !sessionId) {
+      addToast({ message: "テンプレートIDまたはセッションIDが取得できません", status: "error" });
       return;
     }
 
@@ -115,7 +131,7 @@ export const SendMessageNode = ({
 
     for (const file of filesToAdd) {
       try {
-        const filePath = await saveFileToOPFS(templateId, file);
+        const filePath = await saveFileToOPFS(file, { templateId, sessionId });
         newAttachments.push({
           fileName: file.name,
           filePath,

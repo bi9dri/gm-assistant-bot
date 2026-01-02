@@ -240,13 +240,20 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
 export async function sendMessage(token: string, data: SendMessageData) {
   const rest = createRestClient(token);
 
-  const rawFiles = await Promise.all((data.files || []).map((file) => fileToRawFile(file)));
+  // files を配列に正規化（単一 File または File[] の両方に対応）
+  const filesArray = data.files
+    ? Array.isArray(data.files)
+      ? data.files
+      : [data.files]
+    : [];
+
+  const rawFiles = await Promise.all(filesArray.map((file) => fileToRawFile(file)));
 
   await rest.post(Routes.channelMessages(data.channelId), {
     body: {
       content: data.content,
     },
-    files: rawFiles ? rawFiles : undefined,
+    files: rawFiles.length > 0 ? rawFiles : undefined,
   });
 }
 

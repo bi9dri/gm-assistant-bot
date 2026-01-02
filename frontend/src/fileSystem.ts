@@ -189,4 +189,52 @@ export class FileSystem {
       return false;
     }
   }
+
+  async clearSessionFiles(sessionId: number) {
+    const root = await navigator.storage.getDirectory();
+    try {
+      const sd = await root.getDirectoryHandle("session");
+      await sd.removeEntry(`${sessionId}`, { recursive: true });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "NotFoundError") {
+        return;
+      }
+      throw e;
+    }
+  }
+
+  async copyTemplateFilesToSession(templateId: number, sessionId: number) {
+    const root = await navigator.storage.getDirectory();
+
+    let sourceDir: FileSystemDirectoryHandle;
+    try {
+      const td = await root.getDirectoryHandle("template");
+      sourceDir = await td.getDirectoryHandle(`${templateId}`);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "NotFoundError") {
+        return; // No files in template
+      }
+      throw e;
+    }
+
+    const sd = await root.getDirectoryHandle("session", { create: true });
+    const destDir = await sd.getDirectoryHandle(`${sessionId}`, { create: true });
+
+    await this.copyDirectory(sourceDir, destDir);
+  }
+
+  private async copyDirectory(source: FileSystemDirectoryHandle, dest: FileSystemDirectoryHandle) {
+    for await (const handle of source.values()) {
+      if (handle.kind === "file") {
+        const file = await (handle as FileSystemFileHandle).getFile();
+        const destHandle = await dest.getFileHandle(handle.name, { create: true });
+        const w = await destHandle.createWritable();
+        await w.write(file);
+        await w.close();
+      } else {
+        const subDir = await dest.getDirectoryHandle(handle.name, { create: true });
+        await this.copyDirectory(handle as FileSystemDirectoryHandle, subDir);
+      }
+    }
+  }
 }

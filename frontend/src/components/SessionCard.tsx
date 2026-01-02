@@ -4,6 +4,7 @@ import React from "react";
 import z from "zod";
 
 import { db } from "@/db";
+import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
 export const SessionCardSchema = z.object({
@@ -23,6 +24,9 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
     e.preventDefault();
     try {
       await db.GameSession.delete(id);
+      const fileSystem = new FileSystem();
+      await fileSystem.clearSessionFiles(id);
+
       const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
       checkbox.checked = false;
       addToast({

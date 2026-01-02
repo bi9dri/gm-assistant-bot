@@ -102,8 +102,14 @@ const app = new Hono<{ Variables: Variables }>()
     return c.body(null, 204);
   })
 
-  .post("/messages", zValidator("form", sendMessageSchema), async (c) => {
-    await sendMessage(c.get("botToken"), c.req.valid("form"));
+  .post("/messages", async (c) => {
+    const body = await c.req.parseBody({ all: true });
+    const data = sendMessageSchema.parse({
+      channelId: body.channelId,
+      content: body.content,
+      files: body.files,
+    });
+    await sendMessage(c.get("botToken"), data);
     return c.body(null, 204);
   })
 
