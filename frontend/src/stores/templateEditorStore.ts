@@ -134,7 +134,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { deleteAll: false, selectedRoleIds: [] },
+        data: { deleteAll: false, roleNames: [""] },
       };
     } else if (type === "DeleteChannel") {
       newNode = {

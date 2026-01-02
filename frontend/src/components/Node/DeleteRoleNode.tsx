@@ -1,5 +1,5 @@
 import { Position, type Node, type NodeProps } from "@xyflow/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import z from "zod";
 
 import { db, type RoleData } from "@/db";
@@ -21,7 +21,7 @@ import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   deleteAll: z.boolean(),
-  selectedRoleIds: z.array(z.string()),
+  roleNames: z.array(z.string().trim()),
 });
 type DeleteRoleNodeData = Node<z.infer<typeof DataSchema>, "DeleteRole">;
 
@@ -34,25 +34,26 @@ export const DeleteRoleNode = ({
   const executionContext = useNodeExecutionOptional();
   const { addToast } = useToast();
 
-  const [roles, setRoles] = useState<RoleData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  useEffect(() => {
-    if (executionContext) {
-      void db.Role.where("sessionId").equals(executionContext.sessionId).toArray().then(setRoles);
-    }
-  }, [executionContext]);
-
   const handleDeleteAllChange = (checked: boolean) => {
-    updateNodeData(id, { deleteAll: checked, selectedRoleIds: [] });
+    updateNodeData(id, { deleteAll: checked });
   };
 
-  const handleRoleToggle = (roleId: string) => {
-    const newSelectedIds = data.selectedRoleIds.includes(roleId)
-      ? data.selectedRoleIds.filter((id) => id !== roleId)
-      : [...data.selectedRoleIds, roleId];
-    updateNodeData(id, { selectedRoleIds: newSelectedIds });
+  const handleRoleNameChange = (index: number, newValue: string) => {
+    const updatedNames = [...data.roleNames];
+    updatedNames[index] = newValue;
+    updateNodeData(id, { roleNames: updatedNames });
+  };
+
+  const handleAddRoleName = () => {
+    updateNodeData(id, { roleNames: [...data.roleNames, ""] });
+  };
+
+  const handleRemoveRoleName = (index: number) => {
+    const updatedNames = data.roleNames.filter((_, i) => i !== index);
+    updateNodeData(id, { roleNames: updatedNames });
   };
 
   const handleDeleteRoles = async () => {
@@ -61,14 +62,50 @@ export const DeleteRoleNode = ({
       return;
     }
 
-    const { guildId, bot } = executionContext;
-    const targetRoles = data.deleteAll
-      ? roles
-      : roles.filter((r) => data.selectedRoleIds.includes(r.id));
+    const { guildId, sessionId, bot } = executionContext;
 
-    if (targetRoles.length === 0) {
-      addToast({ message: "削除するロールがありません", status: "warning" });
-      return;
+    // Get session roles from DB
+    const sessionRoles = await db.Role.where("sessionId").equals(sessionId).toArray();
+
+    let targetRoles: RoleData[];
+
+    if (data.deleteAll) {
+      // Delete all roles in session
+      if (sessionRoles.length === 0) {
+        addToast({ message: "削除するロールがありません", status: "warning" });
+        return;
+      }
+      targetRoles = sessionRoles;
+    } else {
+      // Delete by name match
+      const validNames = data.roleNames.filter((name) => name.trim() !== "");
+
+      if (validNames.length === 0) {
+        addToast({ message: "ロール名を入力してください", status: "warning" });
+        return;
+      }
+
+      // Find roles by exact name match
+      const notFoundNames: string[] = [];
+      targetRoles = [];
+
+      for (const name of validNames) {
+        const found = sessionRoles.find((r) => r.name === name);
+        if (!found) {
+          notFoundNames.push(name);
+        } else {
+          targetRoles.push(found);
+        }
+      }
+
+      // If any role is not found, show error and abort
+      if (notFoundNames.length > 0) {
+        addToast({
+          message: `ロールが見つかりません: ${notFoundNames.join(", ")}`,
+          status: "error",
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -103,15 +140,16 @@ export const DeleteRoleNode = ({
       if (successCount === targetRoles.length) {
         updateNodeData(id, { executedAt: new Date() });
       }
-      // Refresh roles list
-      void db.Role.where("sessionId").equals(executionContext.sessionId).toArray().then(setRoles);
     }
   };
 
   const isExecuteMode = mode === "execute";
 
   return (
-    <BaseNode width={NODE_TYPE_WIDTHS.DeleteRole} className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}>
+    <BaseNode
+      width={NODE_TYPE_WIDTHS.DeleteRole}
+      className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
+    >
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを削除する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
@@ -130,35 +168,35 @@ export const DeleteRoleNode = ({
         </div>
 
         {!data.deleteAll && (
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {roles.length === 0 ? (
-              <p className="text-sm text-base-content/60">
-                {isExecuteMode ? "削除可能なロールがありません" : "実行モードで表示されます"}
-              </p>
-            ) : (
-              roles.map((role) => (
-                <label key={role.id} className="label cursor-pointer justify-start gap-2 py-1">
-                  <input
-                    type="checkbox"
-                    className="checkbox checkbox-sm"
-                    checked={data.selectedRoleIds.includes(role.id)}
-                    onChange={() => handleRoleToggle(role.id)}
-                    disabled={isLoading}
-                  />
-                  <span className="label-text">{role.name}</span>
-                </label>
-              ))
+          <>
+            {data.roleNames.map((name, index) => (
+              <div key={`${id}-role-${index}`} className="flex gap-2 items-center mb-2">
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={name}
+                  onChange={(evt) => handleRoleNameChange(index, evt.target.value)}
+                  placeholder="ロール名を入力"
+                  disabled={isLoading}
+                />
+                {!isExecuteMode && (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleRemoveRoleName(index)}>
+                    削除
+                  </button>
+                )}
+              </div>
+            ))}
+            {!isExecuteMode && (
+              <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddRoleName}>
+                ロールを追加
+              </button>
             )}
-          </div>
+          </>
         )}
 
         {isLoading && (
           <div className="mt-2">
-            <progress
-              className="progress progress-primary w-full"
-              value={progress.current}
-              max={progress.total}
-            />
+            <progress className="progress progress-primary w-full" value={progress.current} max={progress.total} />
             <p className="text-sm text-center mt-1">
               {progress.current} / {progress.total}
             </p>
@@ -171,7 +209,7 @@ export const DeleteRoleNode = ({
             type="button"
             className="btn btn-error"
             onClick={handleDeleteRoles}
-            disabled={isLoading || !!data.executedAt || (!data.deleteAll && data.selectedRoleIds.length === 0)}
+            disabled={isLoading || !!data.executedAt}
           >
             {isLoading && <span className="loading loading-spinner loading-sm"></span>}
             削除
