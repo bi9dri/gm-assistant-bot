@@ -37,9 +37,16 @@ export const deleteChannelSchema = z.object({
   channelId: z.string().nonempty().trim(),
 });
 
+export const addRoleToRoleMembersSchema = z.object({
+  guildId: z.string().nonempty().trim(),
+  memberRoleId: z.string().nonempty().trim(),
+  addRoleId: z.string().nonempty().trim(),
+});
+
 export type CreateRoleData = z.infer<typeof createRoleSchema>;
 export type DeleteRoleData = z.infer<typeof deleteRoleSchema>;
 export type CreateCategoryData = z.infer<typeof createCategorySchema>;
 export type CreateChannelData = z.infer<typeof createChannelSchema>;
 export type ChangeChannelPermissionsData = z.infer<typeof changeChannelPermissionsSchema>;
 export type DeleteChannelData = z.infer<typeof deleteChannelSchema>;
+export type AddRoleToRoleMembersData = z.infer<typeof addRoleToRoleMembersSchema>;

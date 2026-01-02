@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import {
+  addRoleToRoleMembers,
   changeChannelPermissions,
   createCategory,
   createChannel,
@@ -15,6 +16,7 @@ import {
   getProfile,
 } from "./discord";
 import {
+  addRoleToRoleMembersSchema,
   BOT_TOKEN_HEADER,
   changeChannelPermissionsSchema,
   createCategorySchema,
@@ -69,6 +71,10 @@ const app = new Hono<{ Variables: Variables }>()
   })
   .delete("/roles", zValidator("json", deleteRoleSchema), async (c) => {
     await deleteRole(c.get("botToken"), c.req.valid("json"));
+    return c.body(null, 204);
+  })
+  .post("/roles/addRoleToRoleMembers", zValidator("json", addRoleToRoleMembersSchema), async (c) => {
+    await addRoleToRoleMembers(c.get("botToken"), c.req.valid("json"));
     return c.body(null, 204);
   })
 

@@ -3,6 +3,8 @@ import {
   ChannelType,
   OverwriteType,
   PermissionFlagsBits,
+  RESTGetAPIGuildMemberResult,
+  RESTGetAPIGuildRoleResult,
   Routes,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
@@ -11,6 +13,7 @@ import {
 } from "discord-api-types/v10";
 
 import type {
+  AddRoleToRoleMembersData,
   ChangeChannelPermissionsData,
   CreateCategoryData,
   CreateChannelData,
@@ -202,4 +205,38 @@ export async function changeChannelPermissions(token: string, data: ChangeChanne
 export async function deleteChannel(token: string, data: DeleteChannelData) {
   const rest = createRestClient(token);
   await rest.delete(Routes.channel(data.channelId));
+}
+
+export async function addRoleToRoleMembers(
+  token: string,
+  data: AddRoleToRoleMembersData,
+) {
+  const rest = createRestClient(token);
+  
+  // 指定されたロールを持つメンバーを取得
+  const membersWithRole = [];
+  let after: string | undefined = undefined;
+  while (true) {
+    const query = new URLSearchParams();
+    query.append("limit", "1000");
+    if (after) {
+      query.append("after", after);
+    }
+    const members = (await rest.get(
+      Routes.guildMembers(data.guildId),
+      { query },
+    )) as RESTGetAPIGuildMemberResult[];
+    if (members.length === 0) break;
+    for (const member of members) {
+      if (member.roles.includes(data.memberRoleId)) {
+        membersWithRole.push(member.user.id);
+      }
+    }
+    after = members[members.length - 1].user.id;
+  }
+
+  // メンバーにロールを追加
+  for (const memberId of membersWithRole) {
+    await rest.put(Routes.guildMemberRole(data.guildId, memberId, data.addRoleId));
+  }
 }
