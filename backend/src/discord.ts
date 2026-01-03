@@ -241,11 +241,7 @@ export async function sendMessage(token: string, data: SendMessageData) {
   const rest = createRestClient(token);
 
   // files を配列に正規化（単一 File または File[] の両方に対応）
-  const filesArray = data.files
-    ? Array.isArray(data.files)
-      ? data.files
-      : [data.files]
-    : [];
+  const filesArray = data.files ? (Array.isArray(data.files) ? data.files : [data.files]) : [];
 
   const rawFiles = await Promise.all(filesArray.map((file) => fileToRawFile(file)));
 

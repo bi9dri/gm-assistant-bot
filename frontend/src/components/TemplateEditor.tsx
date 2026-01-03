@@ -80,7 +80,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     if (!initialized) {
       initialize(nodes as FlowNode[], edges, viewport);
     }
-  }, [initialized, initialize]);
+  }, [initialized, initialize, nodes, edges, viewport]);
 
   const handleMoveEnd = useCallback(
     (_event: unknown, viewport: Viewport) => {

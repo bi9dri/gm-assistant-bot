@@ -9,11 +9,7 @@ import { DiscordClient } from "@/discord";
 import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
-const convertFilePaths = (
-  reactFlowData: string,
-  templateId: number,
-  sessionId: number,
-): string => {
+const convertFilePaths = (reactFlowData: string, templateId: number, sessionId: number): string => {
   const data = JSON.parse(reactFlowData);
   for (const node of data.nodes) {
     if (node.data?.attachments) {
