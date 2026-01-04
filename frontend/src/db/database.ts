@@ -1,5 +1,12 @@
 import Dexie, { type EntityTable, type Table } from "dexie";
 
+// Set up fake-indexeddb for test environment (bun test sets NODE_ENV=test)
+if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
+  const { indexedDB, IDBKeyRange } = await import("fake-indexeddb");
+  Dexie.dependencies.indexedDB = indexedDB;
+  Dexie.dependencies.IDBKeyRange = IDBKeyRange;
+}
+
 import type {
   CategoryData,
   ChannelData,
