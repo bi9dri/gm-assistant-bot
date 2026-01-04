@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 
 import { FileSystem } from "./fileSystem";
 
-// Enhanced OPFS mock with actual file storage
+// 実際のファイルストレージを持つ拡張OPFSモック
 class MockFileSystemStorage {
   private files = new Map<string, Blob>();
   private directories = new Set<string>();
@@ -21,7 +21,7 @@ class MockFileSystemStorage {
     const blob = data instanceof Blob ? data : new Blob([data]);
     this.files.set(path, blob);
 
-    // Ensure parent directories exist
+    // 親ディレクトリが存在することを確認
     const parts = path.split("/").filter(Boolean);
     let current = "";
     for (let i = 0; i < parts.length - 1; i++) {
@@ -64,7 +64,7 @@ class MockFileSystemStorage {
 
 const mockStorage = new MockFileSystemStorage();
 
-// Create mock file system handles
+// モックファイルシステムハンドルを作成
 const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
   const name = path.split("/").filter(Boolean).pop() || "root";
 
@@ -96,13 +96,13 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
     removeEntry: mock(async (name: string) => {
       const entryPath = `${path}/${name}`;
       mockStorage.deleteFile(entryPath);
-      // Also remove files in subdirectories
+      // サブディレクトリ内のファイルも削除
       for (const filePath of mockStorage.getFilesInDirectory(entryPath)) {
         mockStorage.deleteFile(filePath);
       }
     }),
     resolve: mock(async (_handle: FileSystemHandle) => {
-      // Return path segments relative to this directory
+      // このディレクトリからの相対パスセグメントを返す
       return [name];
     }),
     keys: mock(async function* () {}),
@@ -148,7 +148,7 @@ const createMockFileHandle = (path: string): FileSystemFileHandle => {
   } as unknown as FileSystemFileHandle;
 };
 
-// Override navigator.storage.getDirectory mock
+// navigator.storage.getDirectoryモックをオーバーライド
 Object.defineProperty(globalThis, "navigator", {
   value: {
     storage: {
@@ -169,7 +169,7 @@ describe("FileSystem", () => {
   });
 
   describe("constructor", () => {
-    test("throws error when File System API is not available", () => {
+    test("File System APIが利用できない場合はエラーをスローする", () => {
       const originalNavigator = globalThis.navigator;
 
       Object.defineProperty(globalThis, "navigator", {
@@ -189,7 +189,7 @@ describe("FileSystem", () => {
   });
 
   describe("writeFile / readFile", () => {
-    test("writes and reads file with same content", async () => {
+    test("同じ内容でファイルを書き込みと読み込みができる", async () => {
       const content = "Hello, World!";
       await fs.writeFile("/test/file.txt", content);
 
@@ -199,7 +199,7 @@ describe("FileSystem", () => {
       expect(text).toBe(content);
     });
 
-    test("writes and reads blob data", async () => {
+    test("Blobデータを書き込みと読み込みができる", async () => {
       const blob = new Blob(["Binary data"], { type: "application/octet-stream" });
       await fs.writeFile("/data.bin", blob);
 
@@ -208,7 +208,7 @@ describe("FileSystem", () => {
       expect(await file.text()).toBe("Binary data");
     });
 
-    test("handles nested paths", async () => {
+    test("ネストされたパスを処理できる", async () => {
       await fs.writeFile("/template/1/data.json", '{"key": "value"}');
 
       const file = await fs.readFile("/template/1/data.json");
@@ -219,7 +219,7 @@ describe("FileSystem", () => {
   });
 
   describe("deleteFile", () => {
-    test("deletes existing file", async () => {
+    test("既存のファイルを削除する", async () => {
       await fs.writeFile("/to-delete.txt", "content");
       expect(await fs.fileExists("/to-delete.txt")).toBe(true);
 
@@ -230,19 +230,19 @@ describe("FileSystem", () => {
   });
 
   describe("fileExists", () => {
-    test("returns true for existing file", async () => {
+    test("既存のファイルに対してtrueを返す", async () => {
       await fs.writeFile("/exists.txt", "content");
 
       expect(await fs.fileExists("/exists.txt")).toBe(true);
     });
 
-    test("returns false for non-existing file", async () => {
+    test("存在しないファイルに対してfalseを返す", async () => {
       expect(await fs.fileExists("/does-not-exist.txt")).toBe(false);
     });
   });
 
   describe("clearTemplateFiles", () => {
-    test("clears template files for given templateId", async () => {
+    test("指定されたtemplateIdのテンプレートファイルをクリアする", async () => {
       await fs.writeFile("/template/1/file1.txt", "content1");
       await fs.writeFile("/template/1/file2.txt", "content2");
 
@@ -252,13 +252,13 @@ describe("FileSystem", () => {
       expect(await fs.fileExists("/template/1/file2.txt")).toBe(false);
     });
 
-    test("does not throw when template directory does not exist", async () => {
+    test("テンプレートディレクトリが存在しない場合はエラーをスローしない", async () => {
       expect(fs.clearTemplateFiles(999)).resolves.toBeUndefined();
     });
   });
 
   describe("clearSessionFiles", () => {
-    test("clears session files for given sessionId", async () => {
+    test("指定されたsessionIdのセッションファイルをクリアする", async () => {
       await fs.writeFile("/session/1/file1.txt", "content1");
 
       await fs.clearSessionFiles(1);
@@ -266,16 +266,16 @@ describe("FileSystem", () => {
       expect(await fs.fileExists("/session/1/file1.txt")).toBe(false);
     });
 
-    test("does not throw when session directory does not exist", async () => {
+    test("セッションディレクトリが存在しない場合はエラーをスローしない", async () => {
       expect(fs.clearSessionFiles(999)).resolves.toBeUndefined();
     });
   });
 
   describe("exportTemplate", () => {
-    // ZIP export is complex and requires proper mock of OPFS walking
-    // These tests are better suited for e2e testing
+    // ZIPエクスポートは複雑でOPFSウォーキングの適切なモックが必要
+    // これらのテストはe2eテストに適している
 
-    test("throws error when template not found", async () => {
+    test("テンプレートが見つからない場合はエラーをスローする", async () => {
       expect(fs.exportTemplate(999)).rejects.toThrow("テンプレートが見つかりません");
     });
   });

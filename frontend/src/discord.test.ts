@@ -2,7 +2,7 @@ import { describe, test, expect, mock, beforeEach } from "bun:test";
 
 import { DiscordClient } from "./discord";
 
-// Mock response type for API calls
+// APIコール用のモックレスポンス型
 type MockResponse = Promise<{
   ok: boolean;
   status?: number;
@@ -12,7 +12,7 @@ type MockResponse = Promise<{
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createMock = (fn: () => MockResponse) => mock(fn) as any;
 
-// Mock the api module
+// apiモジュールをモック
 const mockApi = {
   profile: {
     $get: createMock(() =>
@@ -67,7 +67,7 @@ const mockApi = {
   },
 };
 
-// Mock the api module import
+// apiモジュールのインポートをモック
 await mock.module("./api", () => ({
   default: mockApi,
   BOT_TOKEN_HEADER: "X-Discord-Bot-Token",
@@ -79,7 +79,7 @@ describe("DiscordClient", () => {
   beforeEach(() => {
     client = new DiscordClient("test-token");
 
-    // Reset all mocks
+    // すべてのモックをリセット
     for (const key of Object.keys(mockApi)) {
       const endpoint = mockApi[key as keyof typeof mockApi];
       if (typeof endpoint === "object") {
@@ -100,8 +100,8 @@ describe("DiscordClient", () => {
     }
   });
 
-  describe("getErrorMessage (via error responses)", () => {
-    test('extracts error message from { error: "message" }', async () => {
+  describe("getErrorMessage（エラーレスポンス経由）", () => {
+    test('{ error: "message" }からエラーメッセージを抽出する', async () => {
       mockApi.profile.$get.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -113,7 +113,7 @@ describe("DiscordClient", () => {
       expect(client.getProfile()).rejects.toThrow("Invalid token");
     });
 
-    test("uses status code when error is not a string", async () => {
+    test("エラーが文字列でない場合はステータスコードを使用する", async () => {
       mockApi.profile.$get.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -125,7 +125,7 @@ describe("DiscordClient", () => {
       expect(client.getProfile()).rejects.toThrow("404");
     });
 
-    test("uses status code when error property is missing", async () => {
+    test("エラープロパティがない場合はステータスコードを使用する", async () => {
       mockApi.profile.$get.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -139,7 +139,7 @@ describe("DiscordClient", () => {
   });
 
   describe("getProfile", () => {
-    test("returns profile on success", async () => {
+    test("成功時にプロフィールを返す", async () => {
       mockApi.profile.$get.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -152,7 +152,7 @@ describe("DiscordClient", () => {
       expect(profile).toEqual(expect.objectContaining({ id: "bot123", username: "MyBot" }));
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.profile.$get.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -166,7 +166,7 @@ describe("DiscordClient", () => {
   });
 
   describe("getGuilds", () => {
-    test("returns guilds on success", async () => {
+    test("成功時にギルド一覧を返す", async () => {
       mockApi.guilds.$get.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -186,7 +186,7 @@ describe("DiscordClient", () => {
       expect(guilds[0].name).toBe("Guild 1");
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.guilds.$get.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -200,7 +200,7 @@ describe("DiscordClient", () => {
   });
 
   describe("createRole", () => {
-    test("returns created role on success", async () => {
+    test("成功時に作成されたロールを返す", async () => {
       mockApi.roles.$post.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -213,7 +213,7 @@ describe("DiscordClient", () => {
       expect(role).toEqual({ id: "role123", name: "Admin" });
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.roles.$post.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -229,7 +229,7 @@ describe("DiscordClient", () => {
   });
 
   describe("deleteRole", () => {
-    test("succeeds without returning data", async () => {
+    test("成功時はデータを返さずに完了する", async () => {
       mockApi.roles.$delete.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -239,7 +239,7 @@ describe("DiscordClient", () => {
       expect(client.deleteRole({ guildId: "guild1", roleId: "role1" })).resolves.toBeUndefined();
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.roles.$delete.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -254,7 +254,7 @@ describe("DiscordClient", () => {
   });
 
   describe("createCategory", () => {
-    test("returns created category on success", async () => {
+    test("成功時に作成されたカテゴリを返す", async () => {
       mockApi.categories.$post.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -267,7 +267,7 @@ describe("DiscordClient", () => {
       expect(category).toEqual({ id: "cat123", name: "Game" });
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.categories.$post.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -283,7 +283,7 @@ describe("DiscordClient", () => {
   });
 
   describe("createChannel", () => {
-    test("returns created channel on success", async () => {
+    test("成功時に作成されたチャンネルを返す", async () => {
       mockApi.channels.$post.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -303,7 +303,7 @@ describe("DiscordClient", () => {
       expect(channel).toEqual({ id: "ch123", name: "general" });
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.channels.$post.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -326,7 +326,7 @@ describe("DiscordClient", () => {
   });
 
   describe("changeChannelPermissions", () => {
-    test("succeeds without returning data", async () => {
+    test("成功時はデータを返さずに完了する", async () => {
       mockApi.channels.permissions.$patch.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -342,7 +342,7 @@ describe("DiscordClient", () => {
       ).resolves.toBeUndefined();
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.channels.permissions.$patch.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -361,7 +361,7 @@ describe("DiscordClient", () => {
   });
 
   describe("deleteChannel", () => {
-    test("succeeds without returning data", async () => {
+    test("成功時はデータを返さずに完了する", async () => {
       mockApi.channels.$delete.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -373,7 +373,7 @@ describe("DiscordClient", () => {
       ).resolves.toBeUndefined();
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.channels.$delete.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -388,7 +388,7 @@ describe("DiscordClient", () => {
   });
 
   describe("addRoleToRoleMembers", () => {
-    test("succeeds without returning data", async () => {
+    test("成功時はデータを返さずに完了する", async () => {
       mockApi.roles.addRoleToRoleMembers.$post.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -404,7 +404,7 @@ describe("DiscordClient", () => {
       ).resolves.toBeUndefined();
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.roles.addRoleToRoleMembers.$post.mockImplementation(() =>
         Promise.resolve({
           ok: false,
@@ -424,7 +424,7 @@ describe("DiscordClient", () => {
   });
 
   describe("sendMessage", () => {
-    test("succeeds without returning data", async () => {
+    test("成功時はデータを返さずに完了する", async () => {
       mockApi.messages.$post.mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -439,7 +439,7 @@ describe("DiscordClient", () => {
       ).resolves.toBeUndefined();
     });
 
-    test("throws error on failure", async () => {
+    test("失敗時にエラーをスローする", async () => {
       mockApi.messages.$post.mockImplementation(() =>
         Promise.resolve({
           ok: false,

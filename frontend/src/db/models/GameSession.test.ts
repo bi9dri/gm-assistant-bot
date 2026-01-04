@@ -4,7 +4,7 @@ import { db } from "../instance";
 import { defaultReactFlowData } from "../schemas";
 import { GameSession } from "./GameSession";
 
-// Helper to create a test session
+// テストセッションを作成するヘルパー
 async function createTestSession(name = "Test Session"): Promise<GameSession> {
   const id = await db.GameSession.add({
     name,
@@ -27,11 +27,11 @@ describe("GameSession", () => {
   // Tables are cleared in test/unit.setup.ts afterEach
 
   describe("update", () => {
-    test("always updates lastUsedAt", async () => {
+    test("lastUsedAtを常に更新する", async () => {
       const session = await createTestSession();
       const originalLastUsedAt = session.lastUsedAt;
 
-      // Wait a bit to ensure time difference
+      // 時間差を確保するために少し待機
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       await session.update({ name: "Updated Name" });
@@ -39,7 +39,7 @@ describe("GameSession", () => {
       expect(session.lastUsedAt.getTime()).toBeGreaterThan(originalLastUsedAt.getTime());
     });
 
-    test("updates name only, preserving other fields", async () => {
+    test("名前のみを更新し、他のフィールドは保持する", async () => {
       const session = await createTestSession("Original");
       const originalGameFlags = session.gameFlags;
       const originalReactFlowData = session.reactFlowData;
@@ -51,7 +51,7 @@ describe("GameSession", () => {
       expect(session.reactFlowData).toBe(originalReactFlowData);
     });
 
-    test("updates gameFlags with Zod validation", async () => {
+    test("gameFlagsをZodバリデーション付きで更新する", async () => {
       const session = await createTestSession();
 
       await session.update({ gameFlags: { key1: "value1", key2: 123 } });
@@ -59,7 +59,7 @@ describe("GameSession", () => {
       expect(session.getParsedGameFlags()).toEqual({ key1: "value1", key2: 123 });
     });
 
-    test("updates reactFlowData with JSON encoding", async () => {
+    test("reactFlowDataをJSONエンコードして更新する", async () => {
       const session = await createTestSession();
       const newReactFlowData = {
         nodes: [{ id: "1", type: "test", position: { x: 0, y: 0 }, data: {} }],
@@ -72,10 +72,10 @@ describe("GameSession", () => {
       expect(session.getParsedReactFlowData()).toEqual(newReactFlowData);
     });
 
-    test("throws error when reactFlowData validation fails", async () => {
+    test("reactFlowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const session = await createTestSession();
 
-      // Invalid reactFlowData (missing required fields)
+      // 無効なreactFlowData（必須フィールドが欠落）
       const invalidData = { nodes: [] } as unknown as Parameters<
         typeof session.update
       >[0]["reactFlowData"];
@@ -83,7 +83,7 @@ describe("GameSession", () => {
       expect(session.update({ reactFlowData: invalidData })).rejects.toThrow();
     });
 
-    test("trims name when updating", async () => {
+    test("更新時に名前をトリムする", async () => {
       const session = await createTestSession();
 
       await session.update({ name: "  Trimmed Name  " });
@@ -93,7 +93,7 @@ describe("GameSession", () => {
   });
 
   describe("getParsedGameFlags", () => {
-    test("parses valid JSON successfully", async () => {
+    test("有効なJSONを正常にパースする", async () => {
       const session = await createTestSession();
       await session.update({ gameFlags: { flag1: true, flag2: "test" } });
 
@@ -102,10 +102,10 @@ describe("GameSession", () => {
       expect(parsed).toEqual({ flag1: true, flag2: "test" });
     });
 
-    test("returns empty object for invalid JSON", async () => {
+    test("無効なJSONの場合は空オブジェクトを返す", async () => {
       const session = await createTestSession();
 
-      // Manually set invalid JSON
+      // 無効なJSONを手動で設定
       session.gameFlags = "invalid json {";
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -117,7 +117,7 @@ describe("GameSession", () => {
   });
 
   describe("getParsedReactFlowData", () => {
-    test("parses valid JSON successfully", async () => {
+    test("有効なJSONを正常にパースする", async () => {
       const session = await createTestSession();
       const reactFlowData = {
         nodes: [{ id: "node1" }],
@@ -131,10 +131,10 @@ describe("GameSession", () => {
       expect(parsed).toEqual(reactFlowData);
     });
 
-    test("returns defaultReactFlowData for invalid JSON", async () => {
+    test("無効なJSONの場合はdefaultReactFlowDataを返す", async () => {
       const session = await createTestSession();
 
-      // Manually set invalid JSON
+      // 無効なJSONを手動で設定
       session.reactFlowData = "not valid json";
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -144,10 +144,10 @@ describe("GameSession", () => {
       expect(parsed).toEqual(defaultReactFlowData);
     });
 
-    test("returns defaultReactFlowData when validation fails", async () => {
+    test("バリデーションが失敗した場合はdefaultReactFlowDataを返す", async () => {
       const session = await createTestSession();
 
-      // Set JSON that parses but fails Zod validation
+      // パースは成功するがZodバリデーションが失敗するJSONを設定
       session.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});

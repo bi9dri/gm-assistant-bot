@@ -10,7 +10,7 @@ describe("templateEditorStore", () => {
   describe("addNode", () => {
     const position = { x: 100, y: 200 };
 
-    test("CreateCategory node has correct initial data", () => {
+    test("CreateCategoryノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("CreateCategory", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -19,7 +19,7 @@ describe("templateEditorStore", () => {
       expect(node.position).toEqual(position);
     });
 
-    test("CreateRole node has correct initial data", () => {
+    test("CreateRoleノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -27,7 +27,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ roles: [""] });
     });
 
-    test("CreateChannel node has correct initial data", () => {
+    test("CreateChannelノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("CreateChannel", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -35,7 +35,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ channels: [] });
     });
 
-    test("DeleteCategory node has correct initial data", () => {
+    test("DeleteCategoryノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("DeleteCategory", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -43,7 +43,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({});
     });
 
-    test("DeleteRole node has correct initial data", () => {
+    test("DeleteRoleノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("DeleteRole", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -51,7 +51,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ deleteAll: false, roleNames: [""] });
     });
 
-    test("DeleteChannel node has correct initial data", () => {
+    test("DeleteChannelノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("DeleteChannel", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -59,7 +59,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ channelNames: [""] });
     });
 
-    test("ChangeChannelPermission node has correct initial data", () => {
+    test("ChangeChannelPermissionノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("ChangeChannelPermission", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -67,7 +67,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ channelName: "", rolePermissions: [] });
     });
 
-    test("SendMessage node has correct initial data", () => {
+    test("SendMessageノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("SendMessage", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -75,7 +75,7 @@ describe("templateEditorStore", () => {
       expect(node.data).toEqual({ channelName: "", content: "", attachments: [] });
     });
 
-    test("AddRoleToRoleMembers node has correct initial data", () => {
+    test("AddRoleToRoleMembersノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("AddRoleToRoleMembers", position);
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -85,7 +85,7 @@ describe("templateEditorStore", () => {
   });
 
   describe("duplicateNode", () => {
-    test("duplicates node with deep copy of data", () => {
+    test("ノードをディープコピーで複製する", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
 
       const originalNode = useTemplateEditorStore.getState().nodes[0];
@@ -103,11 +103,11 @@ describe("templateEditorStore", () => {
       expect(duplicatedNode.type).toBe(originalNode.type);
       expect(duplicatedNode.data).toEqual({ roles: ["Role1", "Role2"] });
 
-      // Verify deep copy (not reference)
+      // ディープコピーであることを確認（参照ではない）
       expect(duplicatedNode.data).not.toBe(originalNode.data);
     });
 
-    test("duplicates node with position offset +50, +50", () => {
+    test("複製されたノードの位置は+50, +50オフセットされる", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 200 });
 
       const originalNode = useTemplateEditorStore.getState().nodes[0];
@@ -117,7 +117,7 @@ describe("templateEditorStore", () => {
       expect(duplicatedNode.position).toEqual({ x: 150, y: 250 });
     });
 
-    test("duplicated node has selected: false and dragging: false", () => {
+    test("複製されたノードはselected: falseおよびdragging: falseを持つ", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
 
       const originalNode = useTemplateEditorStore.getState().nodes[0];
@@ -128,7 +128,7 @@ describe("templateEditorStore", () => {
       expect(duplicatedNode.dragging).toBe(false);
     });
 
-    test("does nothing when node not found", () => {
+    test("ノードが見つからない場合は何もしない", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
 
       useTemplateEditorStore.getState().duplicateNode("non-existent-id");
@@ -138,7 +138,7 @@ describe("templateEditorStore", () => {
   });
 
   describe("deleteNode", () => {
-    test("deletes node from nodes array", () => {
+    test("ノード配列からノードを削除する", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
       useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
 
@@ -150,7 +150,7 @@ describe("templateEditorStore", () => {
       expect(nodes[0].type).toBe("CreateChannel");
     });
 
-    test("deletes related edges when source node is deleted", () => {
+    test("ソースノードが削除されたとき関連するエッジも削除される", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
       useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
 
@@ -172,7 +172,7 @@ describe("templateEditorStore", () => {
       expect(useTemplateEditorStore.getState().edges.length).toBe(0);
     });
 
-    test("deletes related edges when target node is deleted", () => {
+    test("ターゲットノードが削除されたとき関連するエッジも削除される", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
       useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
 
@@ -196,7 +196,7 @@ describe("templateEditorStore", () => {
   });
 
   describe("updateNodeData", () => {
-    test("updates node data with merge", () => {
+    test("ノードデータをマージして更新する", () => {
       useTemplateEditorStore.getState().addNode("ChangeChannelPermission", { x: 100, y: 100 });
 
       const node = useTemplateEditorStore.getState().nodes[0];
@@ -209,7 +209,7 @@ describe("templateEditorStore", () => {
       });
     });
 
-    test("does not affect other nodes", () => {
+    test("他のノードに影響しない", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 200, y: 200 });
 

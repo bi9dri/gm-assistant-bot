@@ -7,7 +7,7 @@ describe("Template", () => {
   // Tables are cleared in test/unit.setup.ts afterEach
 
   describe("update", () => {
-    test("updates name only, preserving other fields", async () => {
+    test("名前のみを更新し、他のフィールドは保持する", async () => {
       const template = await Template.create("Original Name");
       const originalGameFlags = template.gameFlags;
       const originalReactFlowData = template.reactFlowData;
@@ -19,7 +19,7 @@ describe("Template", () => {
       expect(template.reactFlowData).toBe(originalReactFlowData);
     });
 
-    test("updates gameFlags with Zod validation", async () => {
+    test("gameFlagsをZodバリデーション付きで更新する", async () => {
       const template = await Template.create("Test");
 
       await template.update({ gameFlags: { key1: "value1", key2: 123 } });
@@ -27,7 +27,7 @@ describe("Template", () => {
       expect(template.getParsedGameFlags()).toEqual({ key1: "value1", key2: 123 });
     });
 
-    test("updates reactFlowData with JSON encoding", async () => {
+    test("reactFlowDataをJSONエンコードして更新する", async () => {
       const template = await Template.create("Test");
       const newReactFlowData = {
         nodes: [{ id: "1", type: "test", position: { x: 0, y: 0 }, data: {} }],
@@ -40,10 +40,10 @@ describe("Template", () => {
       expect(template.getParsedReactFlowData()).toEqual(newReactFlowData);
     });
 
-    test("throws error when reactFlowData validation fails", async () => {
+    test("reactFlowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const template = await Template.create("Test");
 
-      // Invalid reactFlowData (missing required fields)
+      // 無効なreactFlowData（必須フィールドが欠落）
       const invalidData = { nodes: [] } as unknown as Parameters<
         typeof template.update
       >[0]["reactFlowData"];
@@ -51,11 +51,11 @@ describe("Template", () => {
       expect(template.update({ reactFlowData: invalidData })).rejects.toThrow();
     });
 
-    test("updates updatedAt timestamp", async () => {
+    test("updatedAtタイムスタンプを更新する", async () => {
       const template = await Template.create("Test");
       const originalUpdatedAt = template.updatedAt;
 
-      // Wait a bit to ensure time difference
+      // 時間差を確保するために少し待機
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       await template.update({ name: "Updated" });
@@ -65,7 +65,7 @@ describe("Template", () => {
   });
 
   describe("getParsedGameFlags", () => {
-    test("parses valid JSON successfully", async () => {
+    test("有効なJSONを正常にパースする", async () => {
       const template = await Template.create("Test");
       await template.update({ gameFlags: { flag1: true, flag2: "test" } });
 
@@ -74,10 +74,10 @@ describe("Template", () => {
       expect(parsed).toEqual({ flag1: true, flag2: "test" });
     });
 
-    test("returns empty object for invalid JSON", async () => {
+    test("無効なJSONの場合は空オブジェクトを返す", async () => {
       const template = await Template.create("Test");
 
-      // Manually set invalid JSON
+      // 無効なJSONを手動で設定
       template.gameFlags = "invalid json {";
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -89,7 +89,7 @@ describe("Template", () => {
   });
 
   describe("getParsedReactFlowData", () => {
-    test("parses valid JSON successfully", async () => {
+    test("有効なJSONを正常にパースする", async () => {
       const template = await Template.create("Test");
       const reactFlowData = {
         nodes: [{ id: "node1" }],
@@ -103,10 +103,10 @@ describe("Template", () => {
       expect(parsed).toEqual(reactFlowData);
     });
 
-    test("returns defaultReactFlowData for invalid JSON", async () => {
+    test("無効なJSONの場合はdefaultReactFlowDataを返す", async () => {
       const template = await Template.create("Test");
 
-      // Manually set invalid JSON
+      // 無効なJSONを手動で設定
       template.reactFlowData = "not valid json";
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -116,10 +116,10 @@ describe("Template", () => {
       expect(parsed).toEqual(defaultReactFlowData);
     });
 
-    test("returns defaultReactFlowData when validation fails", async () => {
+    test("バリデーションが失敗した場合はdefaultReactFlowDataを返す", async () => {
       const template = await Template.create("Test");
 
-      // Set JSON that parses but fails Zod validation
+      // パースは成功するがZodバリデーションが失敗するJSONを設定
       template.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
@@ -131,7 +131,7 @@ describe("Template", () => {
   });
 
   describe("import", () => {
-    test("imports valid template with version 1", async () => {
+    test("バージョン1の有効なテンプレートをインポートする", async () => {
       const exportData = {
         version: 1,
         name: "Imported Template",
@@ -149,7 +149,7 @@ describe("Template", () => {
       expect(template.getParsedGameFlags()).toEqual({ key: "value" });
     });
 
-    test("throws error for unsupported version", async () => {
+    test("サポートされていないバージョンの場合はエラーをスローする", async () => {
       const exportData = {
         version: 2,
         name: "Test",
@@ -160,16 +160,16 @@ describe("Template", () => {
       expect(Template.import(exportData)).rejects.toThrow();
     });
 
-    test("throws Zod error for invalid schema", async () => {
+    test("無効なスキーマの場合はZodエラーをスローする", async () => {
       const invalidData = {
         version: 1,
-        // Missing required fields
+        // 必須フィールドが欠落
       };
 
       expect(Template.import(invalidData)).rejects.toThrow();
     });
 
-    test("throws error when name is empty", async () => {
+    test("名前が空の場合はエラーをスローする", async () => {
       const exportData = {
         version: 1,
         name: "",
@@ -182,7 +182,7 @@ describe("Template", () => {
   });
 
   describe("export", () => {
-    test("exports template with parsed data", async () => {
+    test("パースされたデータを含むテンプレートをエクスポートする", async () => {
       const template = await Template.create("Export Test");
       await template.update({
         gameFlags: { exported: true },
