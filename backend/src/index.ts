@@ -32,23 +32,9 @@ type Variables = {
   botToken: string;
 };
 
-const app = new Hono<{ Variables: Variables }>()
-  .basePath("/api")
-  .use(
-    "*",
-    cors({
-      origin: ["http://localhost:3000", "https://gm-assistant-bot.pages.dev"],
-      allowHeaders: ["Content-Type", BOT_TOKEN_HEADER],
-      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    }),
-  )
-  .use("*", logger())
-
-  // Health check (no auth required)
-  .get("/health", (c) => c.json({ status: "ok" as const }))
-
+const api = new Hono<{ Variables: Variables }>()
   // Bot token middleware for authenticated endpoints
-  .use("/*", async (c, next) => {
+  .use("*", async (c, next) => {
     const token = c.req.header(BOT_TOKEN_HEADER);
     if (!token) {
       return c.json({ error: "Bot token is required" }, 401);
@@ -102,17 +88,23 @@ const app = new Hono<{ Variables: Variables }>()
     return c.body(null, 204);
   })
 
-  .post("/messages", async (c) => {
-    const body = await c.req.parseBody({ all: true });
-    const data = sendMessageSchema.parse({
-      channelId: body.channelId,
-      content: body.content,
-      files: body.files,
-    });
-    await sendMessage(c.get("botToken"), data);
+  .post("/messages", zValidator("form", sendMessageSchema), async (c) => {
+    await sendMessage(c.get("botToken"), c.req.valid("form"));
     return c.body(null, 204);
-  })
+  });
 
+const app = new Hono()
+  .use(
+    "*",
+    cors({
+      origin: ["http://localhost:3000", "https://gm-assistant-bot.pages.dev"],
+      allowHeaders: ["Content-Type", BOT_TOKEN_HEADER],
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    }),
+  )
+  .use("*", logger())
+  .get("/health", (c) => c.json({ status: "ok" as const }))
+  .route("/api", api)
   .notFound((c) => c.json({ error: "Not Found" }, 404))
   .onError((err, c) => {
     console.error("Server error:", err);

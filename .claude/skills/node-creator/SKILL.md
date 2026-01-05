@@ -26,7 +26,7 @@ import { useState } from "react";
 import z from "zod";
 
 import { db } from "@/db";
-import { DiscordClient } from "@/discord";
+import { ApiClient } from "@/api";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -81,7 +81,7 @@ export const {NodeName}Node = ({
     }
 
     setIsLoading(true);
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
 
     try {
       // Call Discord API and save to DB
@@ -250,7 +250,7 @@ interface NodeExecutionContextValue {
 
 ## Discord Client Methods
 
-Available in `@/discord`:
+Available in `@/api`:
 - `createRole({ guildId, name })`
 - `deleteRole({ guildId, roleId })`
 - `createCategory({ guildId, name })`

@@ -2,8 +2,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useEffect, useState, useRef } from "react";
 import z from "zod";
 
+import { ApiClient } from "@/api";
 import { db, type ChannelData } from "@/db";
-import { DiscordClient } from "@/discord";
 import { FileSystem } from "@/fileSystem";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
@@ -222,7 +222,7 @@ export const SendMessageNode = ({
       }
     }
 
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
 
     try {
       await client.sendMessage({

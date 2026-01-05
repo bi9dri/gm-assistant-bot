@@ -2,8 +2,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useState } from "react";
 import z from "zod";
 
+import { ApiClient } from "@/api";
 import { db, type RoleData } from "@/db";
-import { DiscordClient } from "@/discord";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -111,7 +111,7 @@ export const DeleteRoleNode = ({
     setIsLoading(true);
     setProgress({ current: 0, total: targetRoles.length });
 
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
     let successCount = 0;
 
     for (let i = 0; i < targetRoles.length; i++) {

@@ -3,9 +3,9 @@ import type z from "zod";
 import { useLiveQuery } from "dexie-react-hooks";
 import { type MouseEvent, useEffect, useState } from "react";
 
+import { ApiClient } from "@/api";
 import { db } from "@/db";
 import { type GuildSchema } from "@/db";
-import { DiscordClient } from "@/discord";
 import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -56,7 +56,7 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
           setGuilds([]);
           return;
         }
-        const client = new DiscordClient(bot.token);
+        const client = new ApiClient(bot.token);
         const fetchedGuilds = await client.getGuilds();
         setGuilds(fetchedGuilds);
         setIsLoadingGuilds(false);

@@ -1,7 +1,7 @@
 import { type MouseEvent, useState } from "react";
 
+import { ApiClient } from "@/api";
 import { db } from "@/db";
-import { DiscordClient } from "@/discord";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {
@@ -32,7 +32,7 @@ export const CreateBot = ({ onCreate, onCancel }: Props) => {
 
     setIsValidating(true);
     try {
-      const client = new DiscordClient(token);
+      const client = new ApiClient(token);
       const fetchedProfile = await client.getProfile();
       setProfile(fetchedProfile);
     } catch {

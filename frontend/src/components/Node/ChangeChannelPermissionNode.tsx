@@ -2,8 +2,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useEffect, useState } from "react";
 import z from "zod";
 
+import { ApiClient } from "@/api";
 import { db, type ChannelData, type RoleData } from "@/db";
-import { DiscordClient } from "@/discord";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -143,7 +143,7 @@ export const ChangeChannelPermissionNode = ({
       }
     }
 
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
 
     try {
       await client.changeChannelPermissions({

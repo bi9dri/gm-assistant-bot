@@ -1,6 +1,6 @@
 import { describe, test, expect, mock, beforeEach } from "bun:test";
 
-import { DiscordClient } from "./discord";
+import { ApiClient } from "./api";
 
 // APIコール用のモックレスポンス型
 type MockResponse = Promise<{
@@ -73,11 +73,11 @@ await mock.module("./api", () => ({
   BOT_TOKEN_HEADER: "X-Discord-Bot-Token",
 }));
 
-describe("DiscordClient", () => {
-  let client: DiscordClient;
+describe("ApiClient", () => {
+  let client: ApiClient;
 
   beforeEach(() => {
-    client = new DiscordClient("test-token");
+    client = new ApiClient("test-token");
 
     // すべてのモックをリセット
     for (const key of Object.keys(mockApi)) {

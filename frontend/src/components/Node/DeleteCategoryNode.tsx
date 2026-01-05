@@ -2,8 +2,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useEffect, useState } from "react";
 import z from "zod";
 
+import { ApiClient } from "@/api";
 import { db, type CategoryData, type ChannelData } from "@/db";
-import { DiscordClient } from "@/discord";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -67,7 +67,7 @@ export const DeleteCategoryNode = ({
     const totalItems = channels.length + categories.length;
     setProgress({ current: 0, total: totalItems });
 
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
     let successCount = 0;
     let currentProgress = 0;
 

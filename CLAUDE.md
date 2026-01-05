@@ -46,7 +46,7 @@ This is a single-page application (SPA) project with client-side Discord integra
 - **Discord Integration**: Direct client-side Discord API integration using Bot Token
 
 ### Discord Integration
-- **Client**: Custom DiscordClient class (`src/discord.ts`)
+- **Client**: Custom ApiClient class (`src/discord.ts`)
 - **Authentication**: Discord Bot Token stored in IndexedDB
 - **API**: Direct REST API calls to Discord API v10
 - **Features**:
@@ -276,7 +276,7 @@ The app integrates with Discord API directly from the browser using a custom cli
 import { ChannelType, OverwriteType, PermissionFlagsBits } from "discord-api-types/v10";
 import z from "zod";
 
-export class DiscordClient {
+export class ApiClient {
   private readonly token: string;
   private readonly baseUrl = "https://discord.com/api/v10";
 
@@ -355,11 +355,11 @@ export class DiscordClient {
 **Usage example:**
 ```tsx
 import { DiscordBot } from "@/models";
-import { DiscordClient } from "@/discord";
+import { ApiClient } from "@/api";
 
 // Get bot from IndexedDB
 const bot = await DiscordBot.getById("bot-id");
-const client = new DiscordClient(bot.token);
+const client = new ApiClient(bot.token);
 
 // List guilds
 const guilds = await client.getGuilds();

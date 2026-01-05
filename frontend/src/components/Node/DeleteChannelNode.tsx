@@ -2,8 +2,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useState } from "react";
 import z from "zod";
 
+import { ApiClient } from "@/api";
 import { db, type ChannelData } from "@/db";
-import { DiscordClient } from "@/discord";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -93,7 +93,7 @@ export const DeleteChannelNode = ({
     setIsLoading(true);
     setProgress({ current: 0, total: targetChannels.length });
 
-    const client = new DiscordClient(bot.token);
+    const client = new ApiClient(bot.token);
     let successCount = 0;
 
     for (let i = 0; i < targetChannels.length; i++) {
