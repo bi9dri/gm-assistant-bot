@@ -138,24 +138,63 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     setSelectedNodeType(null);
   }, [selectedNodeType, addNode, screenToFlowPosition]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
 
-    const pane = document.querySelector(".react-flow__pane") as HTMLElement;
-    if (!pane) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const { top, left, width, height } = pane.getBoundingClientRect();
+    const { top, left, width, height } = container.getBoundingClientRect();
     const menuWidth = 192; // w-48
     const menuHeight = 100; // estimated height
+    const padding = 20;
+
+    // Calculate click position relative to pane
+    const clickX = event.clientX - left;
+    const clickY = event.clientY - top;
+
+    // Check available space in each direction
+    const hasSpaceRight = clickX + menuWidth + padding <= width;
+    const hasSpaceBottom = clickY + menuHeight + padding <= height;
+    const hasSpaceLeft = clickX - menuWidth - padding >= 0;
+    const hasSpaceTop = clickY - menuHeight - padding >= 0;
+
+    // Determine menu position based on priority: bottom-right → top-right → bottom-left → top-left
+    let menuTop: number | undefined;
+    let menuLeft: number | undefined;
+    let menuRight: number | undefined;
+    let menuBottom: number | undefined;
+
+    if (hasSpaceRight && hasSpaceBottom) {
+      // Bottom-right (default)
+      menuTop = clickY;
+      menuLeft = clickX;
+    } else if (hasSpaceRight && hasSpaceTop) {
+      // Top-right
+      menuBottom = height - clickY;
+      menuLeft = clickX;
+    } else if (hasSpaceLeft && hasSpaceBottom) {
+      // Bottom-left
+      menuTop = clickY;
+      menuRight = width - clickX;
+    } else if (hasSpaceLeft && hasSpaceTop) {
+      // Top-left
+      menuBottom = height - clickY;
+      menuRight = width - clickX;
+    } else {
+      // Fallback: position at click point (may overflow)
+      menuTop = clickY;
+      menuLeft = clickX;
+    }
 
     setContextMenu({
       nodeId: node.id,
-      top: event.clientY - top > height - menuHeight - 20 ? undefined : event.clientY - top,
-      left: event.clientX - left > width - menuWidth - 20 ? undefined : event.clientX - left,
-      right:
-        event.clientX - left > width - menuWidth - 20 ? width - (event.clientX - left) : undefined,
-      bottom:
-        event.clientY - top > height - menuHeight - 20 ? height - (event.clientY - top) : undefined,
+      top: menuTop,
+      left: menuLeft,
+      right: menuRight,
+      bottom: menuBottom,
     });
   }, []);
 
@@ -192,7 +231,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
   }, [contextMenu]);
 
   return (
-    <div className="w-full h-full">
+    <div ref={containerRef} className="relative w-full h-full">
       <ReactFlow
         proOptions={{ hideAttribution: true }}
         nodes={storeNodes}
