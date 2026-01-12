@@ -114,7 +114,7 @@ export const CreateRoleNode = ({
           <div key={`${id}-role-${index}`} className="flex gap-2 items-center mb-2">
             <input
               type="text"
-              className="input input-bordered w-full"
+              className="nodrag input input-bordered w-full"
               value={role}
               onChange={(evt) => handleRoleChange(index, evt.target.value)}
               placeholder="ロール名を入力"
@@ -123,7 +123,7 @@ export const CreateRoleNode = ({
             {!isExecuteMode && (
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="nodrag btn btn-ghost btn-sm"
                 onClick={() => handleRemoveRole(index)}
               >
                 削除
@@ -132,7 +132,11 @@ export const CreateRoleNode = ({
           </div>
         ))}
         {!isExecuteMode && (
-          <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddRole}>
+          <button
+            type="button"
+            className="nodrag btn btn-ghost btn-sm mt-2"
+            onClick={handleAddRole}
+          >
             ロールを追加
           </button>
         )}
@@ -153,7 +157,7 @@ export const CreateRoleNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleCreateRoles}
             disabled={isLoading || !!data.executedAt}
           >

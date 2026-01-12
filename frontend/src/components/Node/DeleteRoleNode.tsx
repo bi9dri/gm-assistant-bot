@@ -155,7 +155,7 @@ export const DeleteRoleNode = ({
       </BaseNodeHeader>
       <BaseNodeContent>
         <div className="form-control mb-2">
-          <label className="label cursor-pointer justify-start gap-2">
+          <label className="nodrag label cursor-pointer justify-start gap-2">
             <input
               type="checkbox"
               className="checkbox"
@@ -173,7 +173,7 @@ export const DeleteRoleNode = ({
               <div key={`${id}-role-${index}`} className="flex gap-2 items-center mb-2">
                 <input
                   type="text"
-                  className="input input-bordered w-full"
+                  className="nodrag input input-bordered w-full"
                   value={name}
                   onChange={(evt) => handleRoleNameChange(index, evt.target.value)}
                   placeholder="ロール名を入力"
@@ -182,7 +182,7 @@ export const DeleteRoleNode = ({
                 {!isExecuteMode && (
                   <button
                     type="button"
-                    className="btn btn-ghost btn-sm"
+                    className="nodrag btn btn-ghost btn-sm"
                     onClick={() => handleRemoveRoleName(index)}
                   >
                     削除
@@ -193,7 +193,7 @@ export const DeleteRoleNode = ({
             {!isExecuteMode && (
               <button
                 type="button"
-                className="btn btn-ghost btn-sm mt-2"
+                className="nodrag btn btn-ghost btn-sm mt-2"
                 onClick={handleAddRoleName}
               >
                 ロールを追加
@@ -219,7 +219,7 @@ export const DeleteRoleNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-error"
+            className="nodrag btn btn-error"
             onClick={handleDeleteRoles}
             disabled={isLoading || !!data.executedAt}
           >

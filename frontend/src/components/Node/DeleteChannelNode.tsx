@@ -140,7 +140,7 @@ export const DeleteChannelNode = ({
           <div key={`${id}-channel-${index}`} className="flex gap-2 items-center mb-2">
             <input
               type="text"
-              className="input input-bordered w-full"
+              className="nodrag input input-bordered w-full"
               value={name}
               onChange={(evt) => handleChannelNameChange(index, evt.target.value)}
               placeholder="チャンネル名を入力"
@@ -149,7 +149,7 @@ export const DeleteChannelNode = ({
             {!isExecuteMode && (
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="nodrag btn btn-ghost btn-sm"
                 onClick={() => handleRemoveChannelName(index)}
               >
                 削除
@@ -160,7 +160,7 @@ export const DeleteChannelNode = ({
         {!isExecuteMode && (
           <button
             type="button"
-            className="btn btn-ghost btn-sm mt-2"
+            className="nodrag btn btn-ghost btn-sm mt-2"
             onClick={handleAddChannelName}
           >
             チャンネルを追加
@@ -183,7 +183,7 @@ export const DeleteChannelNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-error"
+            className="nodrag btn btn-error"
             onClick={handleDeleteChannels}
             disabled={isLoading || !!data.executedAt}
           >
