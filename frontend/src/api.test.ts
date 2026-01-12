@@ -69,7 +69,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      await expect(client.getProfile()).rejects.toThrow("Invalid token");
+      expect(client.getProfile()).rejects.toThrow("Invalid token");
     });
 
     test("エラーが文字列でない場合はステータスコードを使用する", async () => {
@@ -83,7 +83,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      await expect(client.getProfile()).rejects.toThrow("404");
+      expect(client.getProfile()).rejects.toThrow("404");
     });
 
     test("エラープロパティがない場合はステータスコードを使用する", async () => {
@@ -97,7 +97,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      await expect(client.getProfile()).rejects.toThrow("500");
+      expect(client.getProfile()).rejects.toThrow("500");
     });
   });
 });
