@@ -90,7 +90,7 @@ export const CreateCategoryNode = ({
       <BaseNodeContent>
         <input
           type="text"
-          className="input input-bordered w-full"
+          className="nodrag input input-bordered w-full"
           value={data.categoryName}
           onChange={(evt) => handleCategoryNameChange(evt.target.value)}
           placeholder="カテゴリ名を入力"
@@ -101,7 +101,7 @@ export const CreateCategoryNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleCreateCategory}
             disabled={isLoading || !!data.executedAt}
           >

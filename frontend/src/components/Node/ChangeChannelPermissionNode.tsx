@@ -189,7 +189,7 @@ export const ChangeChannelPermissionNode = ({
           {/* Channel name input */}
           <input
             type="text"
-            className="input input-bordered input-sm w-full"
+            className="nodrag input input-bordered input-sm w-full"
             value={data.channelName}
             onChange={(evt) => handleChannelNameChange(evt.target.value)}
             placeholder="チャンネル名"
@@ -223,7 +223,7 @@ export const ChangeChannelPermissionNode = ({
               <div key={`${id}-role-${roleIndex}`} className="flex gap-2 items-center">
                 <input
                   type="text"
-                  className="input input-bordered input-xs flex-1"
+                  className="nodrag input input-bordered input-xs flex-1"
                   value={perm.roleName}
                   onChange={(e) =>
                     handleRolePermissionChange(roleIndex, "roleName", e.target.value)
@@ -231,7 +231,7 @@ export const ChangeChannelPermissionNode = ({
                   placeholder="ロール名"
                   disabled={isLoading}
                 />
-                <label className="flex items-center gap-1 cursor-pointer">
+                <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">読み取り</span>
                   <input
                     type="checkbox"
@@ -246,7 +246,7 @@ export const ChangeChannelPermissionNode = ({
                 </label>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-xs"
+                  className="nodrag btn btn-ghost btn-xs"
                   onClick={() => handleRemoveRolePermission(roleIndex)}
                   disabled={isLoading}
                 >
@@ -256,7 +256,7 @@ export const ChangeChannelPermissionNode = ({
             ))}
             <button
               type="button"
-              className="btn btn-ghost btn-xs"
+              className="nodrag btn btn-ghost btn-xs"
               onClick={handleAddRolePermission}
               disabled={isLoading}
             >
@@ -279,7 +279,7 @@ export const ChangeChannelPermissionNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleChangePermissions}
             disabled={isLoading || !!data.executedAt}
           >

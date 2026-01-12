@@ -265,7 +265,7 @@ export const SendMessageNode = ({
             <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
             <input
               type="text"
-              className="input input-bordered input-sm w-full"
+              className="nodrag input input-bordered input-sm w-full"
               value={data.channelName}
               onChange={(e) => handleChannelNameChange(e.target.value)}
               placeholder="チャンネル名"
@@ -277,7 +277,7 @@ export const SendMessageNode = ({
           <div>
             <label className="text-xs font-semibold mb-1 block">メッセージ</label>
             <textarea
-              className="textarea textarea-bordered w-full h-24"
+              className="nodrag textarea textarea-bordered w-full h-24"
               value={data.content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="メッセージを入力"
@@ -313,7 +313,7 @@ export const SendMessageNode = ({
                     )}
                     <button
                       type="button"
-                      className="btn btn-ghost btn-xs"
+                      className="nodrag btn btn-ghost btn-xs"
                       onClick={() => handleFileRemove(index)}
                       disabled={isLoading}
                     >
@@ -344,7 +344,7 @@ export const SendMessageNode = ({
                 />
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="nodrag btn btn-ghost btn-sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
                 >
@@ -367,7 +367,7 @@ export const SendMessageNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleSendMessage}
             disabled={isLoading || !!data.executedAt}
           >

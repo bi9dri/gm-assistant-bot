@@ -236,13 +236,13 @@ export const CreateChannelNode = ({
               <div className="flex gap-2 items-center mb-2">
                 <input
                   type="text"
-                  className="input input-bordered input-sm flex-1"
+                  className="nodrag input input-bordered input-sm flex-1"
                   value={channel.name}
                   onChange={(evt) => handleChannelChange(channelIndex, "name", evt.target.value)}
                   placeholder="チャンネル名"
                   disabled={isLoading}
                 />
-                <label className="flex items-center gap-1 cursor-pointer">
+                <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">テキスト</span>
                   <input
                     type="checkbox"
@@ -257,7 +257,7 @@ export const CreateChannelNode = ({
                 </label>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="nodrag btn btn-ghost btn-sm"
                   onClick={() => handleRemoveChannel(channelIndex)}
                   disabled={isLoading}
                 >
@@ -275,7 +275,7 @@ export const CreateChannelNode = ({
                   >
                     <input
                       type="text"
-                      className="input input-bordered input-xs flex-1"
+                      className="nodrag input input-bordered input-xs flex-1"
                       value={perm.roleName}
                       onChange={(e) =>
                         handleRolePermissionChange(
@@ -288,7 +288,7 @@ export const CreateChannelNode = ({
                       placeholder="ロール名"
                       disabled={isLoading}
                     />
-                    <label className="flex items-center gap-1 cursor-pointer">
+                    <label className="nodrag flex items-center gap-1 cursor-pointer">
                       <span className="text-xs">読み取り</span>
                       <input
                         type="checkbox"
@@ -308,7 +308,7 @@ export const CreateChannelNode = ({
                     </label>
                     <button
                       type="button"
-                      className="btn btn-ghost btn-xs"
+                      className="nodrag btn btn-ghost btn-xs"
                       onClick={() => handleRemoveRolePermission(channelIndex, roleIndex)}
                       disabled={isLoading}
                     >
@@ -318,7 +318,7 @@ export const CreateChannelNode = ({
                 ))}
                 <button
                   type="button"
-                  className="btn btn-ghost btn-xs"
+                  className="nodrag btn btn-ghost btn-xs"
                   onClick={() => handleAddRolePermission(channelIndex)}
                   disabled={isLoading}
                 >
@@ -338,7 +338,7 @@ export const CreateChannelNode = ({
 
         <button
           type="button"
-          className="btn btn-ghost btn-sm mt-2"
+          className="nodrag btn btn-ghost btn-sm mt-2"
           onClick={handleAddChannel}
           disabled={isLoading}
         >
@@ -362,7 +362,7 @@ export const CreateChannelNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleCreateChannels}
             disabled={isLoading || !!data.executedAt}
           >

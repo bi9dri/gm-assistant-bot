@@ -129,7 +129,7 @@ export const AddRoleToRoleMembersNode = ({
           </label>
           <input
             type="text"
-            className="input input-bordered w-full"
+            className="nodrag input input-bordered w-full"
             value={data.memberRoleName}
             onChange={(evt) => handleMemberRoleNameChange(evt.target.value)}
             placeholder="例: プレイヤー"
@@ -142,7 +142,7 @@ export const AddRoleToRoleMembersNode = ({
           </label>
           <input
             type="text"
-            className="input input-bordered w-full"
+            className="nodrag input input-bordered w-full"
             value={data.addRoleName}
             onChange={(evt) => handleAddRoleNameChange(evt.target.value)}
             placeholder="例: 参加者"
@@ -154,7 +154,7 @@ export const AddRoleToRoleMembersNode = ({
         <BaseNodeFooter>
           <button
             type="button"
-            className="btn btn-primary"
+            className="nodrag btn btn-primary"
             onClick={handleExecute}
             disabled={isLoading || !!data.executedAt}
           >
