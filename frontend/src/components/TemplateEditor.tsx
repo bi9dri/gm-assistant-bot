@@ -10,6 +10,7 @@ import {
   Background,
   BackgroundVariant,
   Panel,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
@@ -68,6 +69,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     initialize,
   } = useTemplateEditorStore();
 
+  const { screenToFlowPosition } = useReactFlow();
   const nodeTypes = useMemo(() => createNodeTypes(mode), [mode]);
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
@@ -115,7 +117,17 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
   const handleAddNode = useCallback(() => {
     if (!selectedNodeType) return;
 
-    const position = { x: 250, y: 250 };
+    // Get the center of the current viewport
+    const pane = document.querySelector(".react-flow__pane") as HTMLElement;
+    if (!pane) return;
+
+    const { width, height } = pane.getBoundingClientRect();
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // Convert screen position to flow position
+    const position = screenToFlowPosition({ x: centerX, y: centerY });
+
     const validType = NODE_TYPE_OPTIONS.find((opt) => opt.type === selectedNodeType);
     if (validType) {
       addNode(validType.type, position);
@@ -124,7 +136,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
     if (modal) modal.checked = false;
     setSelectedNodeType(null);
-  }, [selectedNodeType, addNode]);
+  }, [selectedNodeType, addNode, screenToFlowPosition]);
 
   const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
