@@ -28,11 +28,46 @@ const AttachmentSchema = z.object({
   fileSize: z.number(),
 });
 
-export const DataSchema = BaseNodeDataSchema.extend({
-  channelName: z.string().trim(),
-  content: z.string(),
+const MessageBlockSchema = z.object({
+  content: z.string().max(2000),
   attachments: z.array(AttachmentSchema).max(4).default([]),
 });
+
+// Legacy data migration: convert old format (content, attachments) to new format (messages)
+const LegacyDataSchema = z.object({
+  content: z.string().optional(),
+  attachments: z.array(AttachmentSchema).optional(),
+});
+
+export const DataSchema = BaseNodeDataSchema.extend({
+  channelName: z.string().trim(),
+  messages: z
+    .array(MessageBlockSchema)
+    .min(1)
+    .default([{ content: "", attachments: [] }]),
+});
+
+// Helper to migrate legacy data
+export const migrateData = (data: unknown): z.infer<typeof DataSchema> => {
+  const parsed = data as Record<string, unknown>;
+
+  // If already has messages array, validate and return
+  if (Array.isArray(parsed.messages)) {
+    return DataSchema.parse(data);
+  }
+
+  // Migrate from legacy format
+  const legacy = LegacyDataSchema.parse(data);
+  return DataSchema.parse({
+    ...parsed,
+    messages: [
+      {
+        content: legacy.content ?? "",
+        attachments: legacy.attachments ?? [],
+      },
+    ],
+  });
+};
 
 type SendMessageNodeData = Node<z.infer<typeof DataSchema>, "SendMessage">;
 type Attachment = z.infer<typeof AttachmentSchema>;
@@ -75,20 +110,23 @@ const saveFileToOPFS = async (
 
 export const SendMessageNode = ({
   id,
-  data,
+  data: rawData,
   mode = "edit",
 }: NodeProps<SendMessageNodeData> & { mode?: "edit" | "execute" }) => {
+  // Migrate legacy data format if needed
+  const data = migrateData(rawData);
+
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
   const templateEditorContext = useTemplateEditorContextOptional();
   const executionContext = useNodeExecutionOptional();
   const { addToast } = useToast();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const dragCounterRef = useRef(0);
+  const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
+  const dragCounterRefs = useRef<Map<number, number>>(new Map());
 
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   // Get channel list in execute mode
   useEffect(() => {
@@ -105,14 +143,40 @@ export const SendMessageNode = ({
     updateNodeData(id, { channelName: value });
   };
 
-  // Message content change handler
-  const handleContentChange = (value: string) => {
-    updateNodeData(id, { content: value });
+  // Message content change handler for a specific message block
+  const handleContentChange = (messageIndex: number, value: string) => {
+    const newMessages = [...data.messages];
+    newMessages[messageIndex] = { ...newMessages[messageIndex], content: value };
+    updateNodeData(id, { messages: newMessages });
   };
 
-  // Common file processing logic
+  // Add new message block
+  const handleAddMessageBlock = () => {
+    const newMessages = [...data.messages, { content: "", attachments: [] }];
+    updateNodeData(id, { messages: newMessages });
+  };
+
+  // Remove message block
+  const handleRemoveMessageBlock = (messageIndex: number) => {
+    if (data.messages.length <= 1) {
+      addToast({ message: "最低1つのメッセージが必要です", status: "warning" });
+      return;
+    }
+
+    // Delete associated files from OPFS
+    const message = data.messages[messageIndex];
+    const fs = new FileSystem();
+    for (const attachment of message.attachments) {
+      void fs.deleteFile(attachment.filePath).catch(() => {});
+    }
+
+    const newMessages = data.messages.filter((_, i) => i !== messageIndex);
+    updateNodeData(id, { messages: newMessages });
+  };
+
+  // Common file processing logic for a specific message block
   const processFiles = useCallback(
-    async (files: File[]) => {
+    async (messageIndex: number, files: File[]) => {
       const templateId = templateEditorContext?.templateId;
       const sessionId = executionContext?.sessionId;
 
@@ -121,7 +185,8 @@ export const SendMessageNode = ({
         return;
       }
 
-      const remainingSlots = 4 - data.attachments.length;
+      const currentAttachments = data.messages[messageIndex].attachments;
+      const remainingSlots = 4 - currentAttachments.length;
       if (remainingSlots <= 0) {
         addToast({ message: "添付ファイルは最大4つまでです", status: "warning" });
         return;
@@ -153,24 +218,31 @@ export const SendMessageNode = ({
       }
 
       if (newAttachments.length > 0) {
-        updateNodeData(id, {
-          attachments: [...data.attachments, ...newAttachments],
-        });
+        const newMessages = [...data.messages];
+        newMessages[messageIndex] = {
+          ...newMessages[messageIndex],
+          attachments: [...currentAttachments, ...newAttachments],
+        };
+        updateNodeData(id, { messages: newMessages });
       }
     },
-    [templateEditorContext, executionContext, data.attachments, id, updateNodeData, addToast],
+    [templateEditorContext, executionContext, data.messages, id, updateNodeData, addToast],
   );
 
   // File add handler (from input element)
-  const handleFileAdd = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileAdd = async (
+    messageIndex: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    await processFiles(Array.from(files));
+    await processFiles(messageIndex, Array.from(files));
 
     // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    const inputRef = fileInputRefs.current.get(messageIndex);
+    if (inputRef) {
+      inputRef.value = "";
     }
   };
 
@@ -180,41 +252,43 @@ export const SendMessageNode = ({
     e.stopPropagation();
   };
 
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragEnter = (messageIndex: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    dragCounterRef.current++;
+    const counter = (dragCounterRefs.current.get(messageIndex) ?? 0) + 1;
+    dragCounterRefs.current.set(messageIndex, counter);
 
     if (e.dataTransfer.types.includes("Files")) {
-      setIsDragging(true);
+      setDraggingIndex(messageIndex);
     }
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (messageIndex: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    dragCounterRef.current--;
+    const counter = (dragCounterRefs.current.get(messageIndex) ?? 1) - 1;
+    dragCounterRefs.current.set(messageIndex, counter);
 
-    if (dragCounterRef.current === 0) {
-      setIsDragging(false);
+    if (counter === 0) {
+      setDraggingIndex(null);
     }
   };
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (messageIndex: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    dragCounterRef.current = 0;
-    setIsDragging(false);
+    dragCounterRefs.current.set(messageIndex, 0);
+    setDraggingIndex(null);
 
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
 
-    await processFiles(Array.from(files));
+    await processFiles(messageIndex, Array.from(files));
   };
 
-  // File remove handler
-  const handleFileRemove = async (index: number) => {
-    const attachment = data.attachments[index];
+  // File remove handler for a specific message block
+  const handleFileRemove = async (messageIndex: number, fileIndex: number) => {
+    const attachment = data.messages[messageIndex].attachments[fileIndex];
     const fs = new FileSystem();
 
     try {
@@ -224,8 +298,12 @@ export const SendMessageNode = ({
       // Don't show error if file doesn't exist
     }
 
-    const newAttachments = data.attachments.filter((_, i) => i !== index);
-    updateNodeData(id, { attachments: newAttachments });
+    const newMessages = [...data.messages];
+    newMessages[messageIndex] = {
+      ...newMessages[messageIndex],
+      attachments: newMessages[messageIndex].attachments.filter((_, i) => i !== fileIndex),
+    };
+    updateNodeData(id, { messages: newMessages });
   };
 
   // Send message handler
@@ -243,7 +321,11 @@ export const SendMessageNode = ({
       return;
     }
 
-    if (data.content.trim() === "" && data.attachments.length === 0) {
+    // Check if there's at least one message with content or attachments
+    const hasValidMessage = data.messages.some(
+      (m) => m.content.trim() !== "" || m.attachments.length > 0,
+    );
+    if (!hasValidMessage) {
       addToast({ message: "メッセージまたはファイルを指定してください", status: "warning" });
       return;
     }
@@ -260,33 +342,40 @@ export const SendMessageNode = ({
 
     setIsLoading(true);
 
-    // Read files from OPFS
-    const fs = new FileSystem();
-    const files: File[] = [];
-
-    for (const attachment of data.attachments) {
-      try {
-        const file = await fs.readFile(attachment.filePath);
-        files.push(file);
-      } catch (error) {
-        console.error("Failed to read file:", error);
-        addToast({
-          message: `ファイル「${attachment.fileName}」の読み込みに失敗しました`,
-          status: "error",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-
     const client = new ApiClient(bot.token);
+    const fs = new FileSystem();
 
     try {
-      await client.sendMessage({
-        channelId: channel.id,
-        content: data.content,
-        files: files.length > 0 ? files : undefined,
-      });
+      // Send each message block sequentially
+      for (const message of data.messages) {
+        // Skip empty messages
+        if (message.content.trim() === "" && message.attachments.length === 0) {
+          continue;
+        }
+
+        // Read files from OPFS for this message
+        const files: File[] = [];
+        for (const attachment of message.attachments) {
+          try {
+            const file = await fs.readFile(attachment.filePath);
+            files.push(file);
+          } catch (error) {
+            console.error("Failed to read file:", error);
+            addToast({
+              message: `ファイル「${attachment.fileName}」の読み込みに失敗しました`,
+              status: "error",
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        await client.sendMessage({
+          channelId: channel.id,
+          content: message.content,
+          files: files.length > 0 ? files : undefined,
+        });
+      }
 
       addToast({
         message: "メッセージを送信しました",
@@ -331,117 +420,160 @@ export const SendMessageNode = ({
             />
           </div>
 
-          {/* Message input */}
-          <div>
-            <label className="text-xs font-semibold mb-1 block">メッセージ</label>
-            <textarea
-              className="nodrag textarea textarea-bordered w-full h-24"
-              value={data.content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              placeholder="メッセージを入力"
-              disabled={isLoading || isExecuted}
-            />
-          </div>
-
-          {/* Attachments */}
-          <div>
-            <label className="text-xs font-semibold mb-1 block">
-              添付ファイル ({data.attachments.length}/4)
-            </label>
-
-            {/* File list */}
-            {data.attachments.length > 0 && (
-              <div className="space-y-1 mb-2">
-                {data.attachments.map((attachment, index) => (
-                  <div
-                    key={`${id}-attachment-${index}`}
-                    className="flex items-center gap-2 bg-base-200 rounded px-2 py-1"
-                  >
-                    <span className="text-sm truncate flex-1">{attachment.fileName}</span>
-                    <span className="text-xs text-base-content/60">
-                      {formatFileSize(attachment.fileSize)}
-                    </span>
-                    {attachment.fileSize > FILE_SIZE_WARNING_THRESHOLD && (
-                      <span
-                        className="text-warning text-xs"
-                        title="このファイルは1MBを超えています。圧縮などでサイズを最適化することをお勧めします"
-                      >
-                        ⚠
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      className="nodrag btn btn-ghost btn-xs"
-                      onClick={() => handleFileRemove(index)}
-                      disabled={isLoading || isExecuted}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* File size warning message */}
-            {data.attachments.some((a) => a.fileSize > FILE_SIZE_WARNING_THRESHOLD) && (
-              <p className="text-xs text-warning mb-2">
-                1MBを超えるファイルがあります。圧縮などでサイズを最適化することをお勧めします。
-              </p>
-            )}
-
-            {/* Drop zone / Add file */}
-            {data.attachments.length < 4 ? (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileAdd}
-                  disabled={isLoading || isExecuted}
-                />
-                <div
-                  className={cn(
-                    "nodrag",
-                    "flex flex-col items-center justify-center gap-1",
-                    "rounded-lg border-2 p-4 cursor-pointer",
-                    "transition-all duration-200",
-                    isDragging
-                      ? "border-primary bg-primary/10 border-solid"
-                      : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
-                    (isLoading || isExecuted) &&
-                      "opacity-50 pointer-events-none cursor-not-allowed",
-                  )}
-                  onDragOver={handleDragOver}
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => !isLoading && !isExecuted && fileInputRef.current?.click()}
-                >
-                  {isDragging ? (
-                    <>
-                      <LuDownload className="w-6 h-6 text-primary" />
-                      <span className="text-sm text-primary font-medium">ファイルをドロップ</span>
-                      <span className="text-xs text-primary/70">
-                        あと{4 - data.attachments.length}個追加できます
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <LuUpload className="w-5 h-5 text-base-content/60" />
-                      <span className="text-sm text-base-content/60">
-                        ファイルをドロップまたはクリックして追加
-                      </span>
-                    </>
-                  )}
+          {/* Message blocks */}
+          {data.messages.map((message, messageIndex) => (
+            <div
+              key={`${id}-message-${messageIndex}`}
+              className="border border-base-content/20 rounded-lg p-3 space-y-2"
+            >
+              {/* Message header with delete button */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-base-content/60">
+                    {message.content.length}/2000
+                  </span>
                 </div>
-              </>
-            ) : (
-              <p className="text-xs text-base-content/60 text-center py-2">
-                添付ファイルは最大4つまでです
-              </p>
-            )}
-          </div>
+                {data.messages.length > 1 && (
+                  <button
+                    type="button"
+                    className="nodrag btn btn-ghost btn-xs"
+                    onClick={() => handleRemoveMessageBlock(messageIndex)}
+                    disabled={isLoading || isExecuted}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Message input */}
+              <textarea
+                className="nodrag textarea textarea-bordered w-full h-24"
+                value={message.content}
+                onChange={(e) => handleContentChange(messageIndex, e.target.value)}
+                placeholder="メッセージを入力"
+                maxLength={2000}
+                disabled={isLoading || isExecuted}
+              />
+
+              {/* Attachments for this message */}
+              <div>
+                <label className="text-xs font-semibold mb-1 block">
+                  添付ファイル ({message.attachments.length}/4)
+                </label>
+
+                {/* File list */}
+                {message.attachments.length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {message.attachments.map((attachment, fileIndex) => (
+                      <div
+                        key={`${id}-message-${messageIndex}-attachment-${fileIndex}`}
+                        className="flex items-center gap-2 bg-base-200 rounded px-2 py-1"
+                      >
+                        <span className="text-sm truncate flex-1">{attachment.fileName}</span>
+                        <span className="text-xs text-base-content/60">
+                          {formatFileSize(attachment.fileSize)}
+                        </span>
+                        {attachment.fileSize > FILE_SIZE_WARNING_THRESHOLD && (
+                          <span
+                            className="text-warning text-xs"
+                            title="このファイルは1MBを超えています。圧縮などでサイズを最適化することをお勧めします"
+                          >
+                            !
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="nodrag btn btn-ghost btn-xs"
+                          onClick={() => handleFileRemove(messageIndex, fileIndex)}
+                          disabled={isLoading || isExecuted}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* File size warning message */}
+                {message.attachments.some((a) => a.fileSize > FILE_SIZE_WARNING_THRESHOLD) && (
+                  <p className="text-xs text-warning mb-2">
+                    1MBを超えるファイルがあります。圧縮などでサイズを最適化することをお勧めします。
+                  </p>
+                )}
+
+                {/* Drop zone / Add file */}
+                {message.attachments.length < 4 ? (
+                  <>
+                    <input
+                      ref={(el) => {
+                        if (el) fileInputRefs.current.set(messageIndex, el);
+                      }}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleFileAdd(messageIndex, e)}
+                      disabled={isLoading || isExecuted}
+                    />
+                    <div
+                      className={cn(
+                        "nodrag",
+                        "flex flex-col items-center justify-center gap-1",
+                        "rounded-lg border-2 p-4 cursor-pointer",
+                        "transition-all duration-200",
+                        draggingIndex === messageIndex
+                          ? "border-primary bg-primary/10 border-solid"
+                          : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
+                        (isLoading || isExecuted) &&
+                          "opacity-50 pointer-events-none cursor-not-allowed",
+                      )}
+                      onDragOver={handleDragOver}
+                      onDragEnter={(e) => handleDragEnter(messageIndex, e)}
+                      onDragLeave={(e) => handleDragLeave(messageIndex, e)}
+                      onDrop={(e) => handleDrop(messageIndex, e)}
+                      onClick={() =>
+                        !isLoading &&
+                        !isExecuted &&
+                        fileInputRefs.current.get(messageIndex)?.click()
+                      }
+                    >
+                      {draggingIndex === messageIndex ? (
+                        <>
+                          <LuDownload className="w-6 h-6 text-primary" />
+                          <span className="text-sm text-primary font-medium">
+                            ファイルをドロップ
+                          </span>
+                          <span className="text-xs text-primary/70">
+                            あと{4 - message.attachments.length}個追加できます
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <LuUpload className="w-5 h-5 text-base-content/60" />
+                          <span className="text-sm text-base-content/60">
+                            ファイルをドロップまたはクリックして追加
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-base-content/60 text-center py-2">
+                    添付ファイルは最大4つまでです
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Add message block button */}
+          <button
+            type="button"
+            className="nodrag btn btn-outline btn-sm w-full"
+            onClick={handleAddMessageBlock}
+            disabled={isLoading || isExecuted}
+          >
+            + メッセージを追加
+          </button>
 
           {/* Available channels display (execute mode) */}
           {isExecuteMode && channels.length > 0 && (

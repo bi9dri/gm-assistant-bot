@@ -186,7 +186,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { channelName: "", content: "", attachments: [] },
+        data: { channelName: "", messages: [{ content: "", attachments: [] }] },
       };
     } else {
       newNode = {

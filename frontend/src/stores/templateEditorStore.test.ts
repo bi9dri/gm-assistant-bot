@@ -72,7 +72,10 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("SendMessage");
-      expect(node.data).toEqual({ channelName: "", content: "", attachments: [] });
+      expect(node.data).toEqual({
+        channelName: "",
+        messages: [{ content: "", attachments: [] }],
+      });
     });
 
     test("AddRoleToRoleMembersノードは正しい初期データを持つ", () => {
