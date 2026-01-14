@@ -19,7 +19,7 @@
         "@discordjs/rest": "2.6.0",
         "@hono/zod-validator": "0.7.6",
         "discord-api-types": "0.38.37",
-        "hono": "4.11.3",
+        "hono": "4.11.4",
         "zod": "4.2.1",
       },
       "devDependencies": {
@@ -45,7 +45,7 @@
         "dexie": "4.2.1",
         "dexie-react-hooks": "4.2.0",
         "discord-api-types": "0.38.37",
-        "hono": "4.11.3",
+        "hono": "4.11.4",
         "nanoid": "5.1.6",
         "react": "19.2.3",
         "react-dom": "19.2.3",
@@ -658,7 +658,7 @@
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
 
-    "hono": ["hono@4.11.3", "", {}, "sha512-PmQi306+M/ct/m5s66Hrg+adPnkD5jiO6IjA7WhWw0gSBSo1EcRegwuI1deZ+wd5pzCGynCcn2DprnE4/yEV4w=="],
+    "hono": ["hono@4.11.4", "", {}, "sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA=="],
 
     "html-encoding-sniffer": ["html-encoding-sniffer@6.0.0", "", { "dependencies": { "@exodus/bytes": "^1.6.0" } }, "sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg=="],
 
