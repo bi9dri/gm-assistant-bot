@@ -16,7 +16,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 const RolePermissionSchema = z.object({
@@ -184,7 +184,7 @@ export const ChangeChannelPermissionNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>チャンネル権限を変更する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
           {/* Channel name input */}
           <input

@@ -16,7 +16,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -135,7 +135,7 @@ export const DeleteChannelNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>チャンネルを削除する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {data.channelNames.map((name, index) => (
           <div key={`${id}-channel-${index}`} className="flex gap-2 items-center mb-2">
             <input

@@ -16,7 +16,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -109,7 +109,7 @@ export const CreateRoleNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {data.roles.map((role, index) => (
           <div key={`${id}-role-${index}`} className="flex gap-2 items-center mb-2">
             <input

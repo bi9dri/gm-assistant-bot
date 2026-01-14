@@ -29,3 +29,12 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
 } as const;
 
 export const DEFAULT_NODE_WIDTH = NODE_WIDTHS.md;
+
+// Node content height constants for scrollable areas
+export const NODE_CONTENT_HEIGHTS = {
+  sm: 200, // Small nodes
+  md: 300, // Standard nodes
+  lg: 400, // Large/complex nodes
+} as const;
+
+export type NodeContentHeight = (typeof NODE_CONTENT_HEIGHTS)[keyof typeof NODE_CONTENT_HEIGHTS];

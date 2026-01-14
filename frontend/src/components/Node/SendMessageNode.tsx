@@ -18,7 +18,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 import { useTemplateEditorContextOptional } from "./TemplateEditorContext";
 
@@ -315,7 +315,7 @@ export const SendMessageNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>メッセージを送信する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
           {/* Channel name input */}
           <div>
