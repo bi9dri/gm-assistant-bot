@@ -16,7 +16,7 @@
     "@hono/zod-validator": "0.7.6",
     "discord-api-types": "0.38.37",
     "hono": "4.11.4",
-    "zod": "4.2.1"
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251212.0",
