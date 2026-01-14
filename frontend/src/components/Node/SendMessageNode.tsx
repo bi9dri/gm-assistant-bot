@@ -1,5 +1,6 @@
 import { Position, type Node, type NodeProps } from "@xyflow/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { LuUpload, LuDownload } from "react-icons/lu";
 import z from "zod";
 
 import { ApiClient } from "@/api";
@@ -83,9 +84,11 @@ export const SendMessageNode = ({
   const { addToast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Get channel list in execute mode
   useEffect(() => {
@@ -107,52 +110,106 @@ export const SendMessageNode = ({
     updateNodeData(id, { content: value });
   };
 
-  // File add handler
+  // Common file processing logic
+  const processFiles = useCallback(
+    async (files: File[]) => {
+      const templateId = templateEditorContext?.templateId;
+      const sessionId = executionContext?.sessionId;
+
+      if (!templateId && !sessionId) {
+        addToast({ message: "テンプレートIDまたはセッションIDが取得できません", status: "error" });
+        return;
+      }
+
+      const remainingSlots = 4 - data.attachments.length;
+      if (remainingSlots <= 0) {
+        addToast({ message: "添付ファイルは最大4つまでです", status: "warning" });
+        return;
+      }
+
+      const filesToAdd = files.slice(0, remainingSlots);
+
+      if (files.length > remainingSlots) {
+        addToast({
+          message: `${files.length - remainingSlots}個のファイルは追加できませんでした（上限: 4個）`,
+          status: "warning",
+        });
+      }
+
+      const newAttachments: Attachment[] = [];
+
+      for (const file of filesToAdd) {
+        try {
+          const filePath = await saveFileToOPFS(file, { templateId, sessionId });
+          newAttachments.push({
+            fileName: file.name,
+            filePath,
+            fileSize: file.size,
+          });
+        } catch (error) {
+          console.error("Failed to write file:", error);
+          addToast({ message: `ファイル「${file.name}」の保存に失敗しました`, status: "error" });
+        }
+      }
+
+      if (newAttachments.length > 0) {
+        updateNodeData(id, {
+          attachments: [...data.attachments, ...newAttachments],
+        });
+      }
+    },
+    [templateEditorContext, executionContext, data.attachments, id, updateNodeData, addToast],
+  );
+
+  // File add handler (from input element)
   const handleFileAdd = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    const templateId = templateEditorContext?.templateId;
-    const sessionId = executionContext?.sessionId;
-
-    if (!templateId && !sessionId) {
-      addToast({ message: "テンプレートIDまたはセッションIDが取得できません", status: "error" });
-      return;
-    }
-
-    const remainingSlots = 4 - data.attachments.length;
-    if (remainingSlots <= 0) {
-      addToast({ message: "添付ファイルは最大4つまでです", status: "warning" });
-      return;
-    }
-
-    const filesToAdd = Array.from(files).slice(0, remainingSlots);
-    const newAttachments: Attachment[] = [];
-
-    for (const file of filesToAdd) {
-      try {
-        const filePath = await saveFileToOPFS(file, { templateId, sessionId });
-        newAttachments.push({
-          fileName: file.name,
-          filePath,
-          fileSize: file.size,
-        });
-      } catch (error) {
-        console.error("Failed to write file:", error);
-        addToast({ message: `ファイル「${file.name}」の保存に失敗しました`, status: "error" });
-      }
-    }
-
-    if (newAttachments.length > 0) {
-      updateNodeData(id, {
-        attachments: [...data.attachments, ...newAttachments],
-      });
-    }
+    await processFiles(Array.from(files));
 
     // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    await processFiles(Array.from(files));
   };
 
   // File remove handler
@@ -331,8 +388,8 @@ export const SendMessageNode = ({
               </p>
             )}
 
-            {/* Add file button */}
-            {data.attachments.length < 4 && (
+            {/* Drop zone / Add file */}
+            {data.attachments.length < 4 ? (
               <>
                 <input
                   ref={fileInputRef}
@@ -342,15 +399,45 @@ export const SendMessageNode = ({
                   onChange={handleFileAdd}
                   disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  className="nodrag btn btn-ghost btn-sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
+                <div
+                  className={cn(
+                    "nodrag",
+                    "flex flex-col items-center justify-center gap-1",
+                    "rounded-lg border-2 p-4 cursor-pointer",
+                    "transition-all duration-200",
+                    isDragging
+                      ? "border-primary bg-primary/10 border-solid"
+                      : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
+                    isLoading && "opacity-50 pointer-events-none",
+                  )}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => !isLoading && fileInputRef.current?.click()}
                 >
-                  + ファイルを追加
-                </button>
+                  {isDragging ? (
+                    <>
+                      <LuDownload className="w-6 h-6 text-primary" />
+                      <span className="text-sm text-primary font-medium">ファイルをドロップ</span>
+                      <span className="text-xs text-primary/70">
+                        あと{4 - data.attachments.length}個追加できます
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <LuUpload className="w-5 h-5 text-base-content/60" />
+                      <span className="text-sm text-base-content/60">
+                        ファイルをドロップまたはクリックして追加
+                      </span>
+                    </>
+                  )}
+                </div>
               </>
+            ) : (
+              <p className="text-xs text-base-content/60 text-center py-2">
+                添付ファイルは最大4つまでです
+              </p>
             )}
           </div>
 
