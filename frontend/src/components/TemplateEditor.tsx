@@ -41,17 +41,37 @@ interface ContextMenu {
   bottom?: number;
 }
 
-const NODE_TYPE_OPTIONS = [
-  { type: "CreateRole", label: "ロールを作成する" },
-  { type: "DeleteRole", label: "ロールを削除する" },
-  { type: "AddRoleToRoleMembers", label: "ロールメンバーにロールを付与" },
-  { type: "CreateCategory", label: "カテゴリを作成する" },
-  { type: "DeleteCategory", label: "カテゴリを削除する" },
-  { type: "CreateChannel", label: "チャンネルを作成する" },
-  { type: "DeleteChannel", label: "チャンネルを削除する" },
-  { type: "ChangeChannelPermission", label: "チャンネル権限を変更する" },
-  { type: "SendMessage", label: "メッセージを送信する" },
+const NODE_CATEGORIES = [
+  {
+    category: "ロール",
+    nodes: [
+      { type: "CreateRole", label: "ロールを作成する" },
+      { type: "DeleteRole", label: "ロールを削除する" },
+      { type: "AddRoleToRoleMembers", label: "ロールメンバーにロールを付与" },
+    ],
+  },
+  {
+    category: "カテゴリ",
+    nodes: [
+      { type: "CreateCategory", label: "カテゴリを作成する" },
+      { type: "DeleteCategory", label: "カテゴリを削除する" },
+    ],
+  },
+  {
+    category: "チャンネル",
+    nodes: [
+      { type: "CreateChannel", label: "チャンネルを作成する" },
+      { type: "DeleteChannel", label: "チャンネルを削除する" },
+      { type: "ChangeChannelPermission", label: "チャンネル権限を変更する" },
+    ],
+  },
+  {
+    category: "メッセージ",
+    nodes: [{ type: "SendMessage", label: "メッセージを送信する" }],
+  },
 ] as const;
+
+type NodeType = (typeof NODE_CATEGORIES)[number]["nodes"][number]["type"];
 
 const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
   const {
@@ -128,10 +148,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     // Convert screen position to flow position
     const position = screenToFlowPosition({ x: centerX, y: centerY });
 
-    const validType = NODE_TYPE_OPTIONS.find((opt) => opt.type === selectedNodeType);
-    if (validType) {
-      addNode(validType.type, position);
-    }
+    addNode(selectedNodeType as NodeType, position);
 
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
     if (modal) modal.checked = false;
@@ -262,26 +279,39 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
       <div className="modal" role="dialog">
         <div className="modal-box rounded-xs">
           <h3 className="text-lg font-bold">ノードを追加する</h3>
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            {NODE_TYPE_OPTIONS.map(({ type, label }) => (
-              <label
-                key={type}
-                className={`rounded-box border-2 cursor-pointer transition-colors flex items-center justify-center min-h-20 p-4 ${
-                  selectedNodeType === type
-                    ? "bg-primary/10 border-primary"
-                    : "bg-base-200 border-transparent hover:border-base-300"
-                }`}
+          <div className="join join-vertical w-full mt-4">
+            {NODE_CATEGORIES.map(({ category, nodes }) => (
+              <div
+                key={category}
+                className="collapse collapse-arrow join-item border-base-300 border"
               >
-                <input
-                  type="radio"
-                  name="nodeType"
-                  value={type}
-                  checked={selectedNodeType === type}
-                  onChange={(e) => setSelectedNodeType(e.target.value)}
-                  className="hidden"
-                />
-                <span className="font-medium text-center">{label}</span>
-              </label>
+                <input type="radio" name="nodeCategory" />
+                <div className="collapse-title font-medium">{category}</div>
+                <div className="collapse-content">
+                  <div className="flex flex-col gap-2 pt-2">
+                    {nodes.map(({ type, label }) => (
+                      <label
+                        key={type}
+                        className={`rounded-box border-2 cursor-pointer transition-colors flex items-center p-3 ${
+                          selectedNodeType === type
+                            ? "bg-primary/10 border-primary"
+                            : "bg-base-200 border-transparent hover:border-base-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="nodeType"
+                          value={type}
+                          checked={selectedNodeType === type}
+                          onChange={(e) => setSelectedNodeType(e.target.value)}
+                          className="hidden"
+                        />
+                        <span className="font-medium">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
           <div className="modal-action">
