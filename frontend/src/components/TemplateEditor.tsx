@@ -268,7 +268,6 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
         onNodeContextMenu={handleNodeContextMenu}
         onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
-        snapToGrid
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} />
