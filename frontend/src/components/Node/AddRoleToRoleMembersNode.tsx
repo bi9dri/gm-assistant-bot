@@ -113,6 +113,7 @@ export const AddRoleToRoleMembersNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -133,7 +134,7 @@ export const AddRoleToRoleMembersNode = ({
             value={data.memberRoleName}
             onChange={(evt) => handleMemberRoleNameChange(evt.target.value)}
             placeholder="例: プレイヤー"
-            disabled={isLoading}
+            disabled={isLoading || isExecuted}
           />
         </div>
         <div>
@@ -146,7 +147,7 @@ export const AddRoleToRoleMembersNode = ({
             value={data.addRoleName}
             onChange={(evt) => handleAddRoleNameChange(evt.target.value)}
             placeholder="例: 参加者"
-            disabled={isLoading}
+            disabled={isLoading || isExecuted}
           />
         </div>
       </BaseNodeContent>

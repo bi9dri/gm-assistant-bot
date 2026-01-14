@@ -78,6 +78,7 @@ export const CreateCategoryNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -94,7 +95,7 @@ export const CreateCategoryNode = ({
           value={data.categoryName}
           onChange={(evt) => handleCategoryNameChange(evt.target.value)}
           placeholder="カテゴリ名を入力"
-          disabled={isLoading}
+          disabled={isLoading || isExecuted}
         />
       </BaseNodeContent>
       {isExecuteMode && (

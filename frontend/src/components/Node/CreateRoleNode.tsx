@@ -100,6 +100,7 @@ export const CreateRoleNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -118,7 +119,7 @@ export const CreateRoleNode = ({
               value={role}
               onChange={(evt) => handleRoleChange(index, evt.target.value)}
               placeholder="ロール名を入力"
-              disabled={isLoading}
+              disabled={isLoading || isExecuted}
             />
             {!isExecuteMode && (
               <button

@@ -175,6 +175,7 @@ export const ChangeChannelPermissionNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -193,7 +194,7 @@ export const ChangeChannelPermissionNode = ({
             value={data.channelName}
             onChange={(evt) => handleChannelNameChange(evt.target.value)}
             placeholder="チャンネル名"
-            disabled={isLoading}
+            disabled={isLoading || isExecuted}
           />
 
           {/* Warning message */}
@@ -229,7 +230,7 @@ export const ChangeChannelPermissionNode = ({
                     handleRolePermissionChange(roleIndex, "roleName", e.target.value)
                   }
                   placeholder="ロール名"
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 />
                 <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">読み取り</span>
@@ -240,7 +241,7 @@ export const ChangeChannelPermissionNode = ({
                     onChange={(e) =>
                       handleRolePermissionChange(roleIndex, "canWrite", e.target.checked)
                     }
-                    disabled={isLoading}
+                    disabled={isLoading || isExecuted}
                   />
                   <span className="text-xs">書き込み</span>
                 </label>
@@ -248,7 +249,7 @@ export const ChangeChannelPermissionNode = ({
                   type="button"
                   className="nodrag btn btn-ghost btn-xs"
                   onClick={() => handleRemoveRolePermission(roleIndex)}
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 >
                   x
                 </button>
@@ -258,7 +259,7 @@ export const ChangeChannelPermissionNode = ({
               type="button"
               className="nodrag btn btn-ghost btn-xs"
               onClick={handleAddRolePermission}
-              disabled={isLoading}
+              disabled={isLoading || isExecuted}
             >
               + ロールを追加
             </button>

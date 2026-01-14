@@ -126,6 +126,7 @@ export const DeleteChannelNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -144,7 +145,7 @@ export const DeleteChannelNode = ({
               value={name}
               onChange={(evt) => handleChannelNameChange(index, evt.target.value)}
               placeholder="チャンネル名を入力"
-              disabled={isLoading}
+              disabled={isLoading || isExecuted}
             />
             {!isExecuteMode && (
               <button

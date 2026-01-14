@@ -217,6 +217,7 @@ export const CreateChannelNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -240,7 +241,7 @@ export const CreateChannelNode = ({
                   value={channel.name}
                   onChange={(evt) => handleChannelChange(channelIndex, "name", evt.target.value)}
                   placeholder="チャンネル名"
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 />
                 <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">テキスト</span>
@@ -251,7 +252,7 @@ export const CreateChannelNode = ({
                     onChange={(e) =>
                       handleChannelChange(channelIndex, "type", e.target.checked ? "voice" : "text")
                     }
-                    disabled={isLoading}
+                    disabled={isLoading || isExecuted}
                   />
                   <span className="text-xs">ボイス</span>
                 </label>
@@ -259,7 +260,7 @@ export const CreateChannelNode = ({
                   type="button"
                   className="nodrag btn btn-ghost btn-sm"
                   onClick={() => handleRemoveChannel(channelIndex)}
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 >
                   削除
                 </button>
@@ -286,7 +287,7 @@ export const CreateChannelNode = ({
                         )
                       }
                       placeholder="ロール名"
-                      disabled={isLoading}
+                      disabled={isLoading || isExecuted}
                     />
                     <label className="nodrag flex items-center gap-1 cursor-pointer">
                       <span className="text-xs">読み取り</span>
@@ -302,7 +303,7 @@ export const CreateChannelNode = ({
                             e.target.checked,
                           )
                         }
-                        disabled={isLoading}
+                        disabled={isLoading || isExecuted}
                       />
                       <span className="text-xs">書き込み</span>
                     </label>
@@ -310,7 +311,7 @@ export const CreateChannelNode = ({
                       type="button"
                       className="nodrag btn btn-ghost btn-xs"
                       onClick={() => handleRemoveRolePermission(channelIndex, roleIndex)}
-                      disabled={isLoading}
+                      disabled={isLoading || isExecuted}
                     >
                       ×
                     </button>
@@ -320,7 +321,7 @@ export const CreateChannelNode = ({
                   type="button"
                   className="nodrag btn btn-ghost btn-xs"
                   onClick={() => handleAddRolePermission(channelIndex)}
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 >
                   + ロールを追加
                 </button>
@@ -340,7 +341,7 @@ export const CreateChannelNode = ({
           type="button"
           className="nodrag btn btn-ghost btn-sm mt-2"
           onClick={handleAddChannel}
-          disabled={isLoading}
+          disabled={isLoading || isExecuted}
         >
           チャンネルを追加
         </button>

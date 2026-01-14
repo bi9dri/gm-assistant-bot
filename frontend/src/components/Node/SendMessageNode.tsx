@@ -306,6 +306,7 @@ export const SendMessageNode = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   return (
     <BaseNode
@@ -326,7 +327,7 @@ export const SendMessageNode = ({
               value={data.channelName}
               onChange={(e) => handleChannelNameChange(e.target.value)}
               placeholder="チャンネル名"
-              disabled={isLoading}
+              disabled={isLoading || isExecuted}
             />
           </div>
 
@@ -338,7 +339,7 @@ export const SendMessageNode = ({
               value={data.content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="メッセージを入力"
-              disabled={isLoading}
+              disabled={isLoading || isExecuted}
             />
           </div>
 
@@ -372,7 +373,7 @@ export const SendMessageNode = ({
                       type="button"
                       className="nodrag btn btn-ghost btn-xs"
                       onClick={() => handleFileRemove(index)}
-                      disabled={isLoading}
+                      disabled={isLoading || isExecuted}
                     >
                       ×
                     </button>
@@ -397,7 +398,7 @@ export const SendMessageNode = ({
                   multiple
                   className="hidden"
                   onChange={handleFileAdd}
-                  disabled={isLoading}
+                  disabled={isLoading || isExecuted}
                 />
                 <div
                   className={cn(
@@ -408,13 +409,14 @@ export const SendMessageNode = ({
                     isDragging
                       ? "border-primary bg-primary/10 border-solid"
                       : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
-                    isLoading && "opacity-50 pointer-events-none",
+                    (isLoading || isExecuted) &&
+                      "opacity-50 pointer-events-none cursor-not-allowed",
                   )}
                   onDragOver={handleDragOver}
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={() => !isLoading && fileInputRef.current?.click()}
+                  onClick={() => !isLoading && !isExecuted && fileInputRef.current?.click()}
                 >
                   {isDragging ? (
                     <>
