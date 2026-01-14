@@ -43,6 +43,10 @@ interface ContextMenu {
 
 const NODE_CATEGORIES = [
   {
+    category: "ブループリント",
+    nodes: [{ type: "Blueprint", label: "マーダーミステリー基本セット" }],
+  },
+  {
     category: "ロール",
     nodes: [
       { type: "CreateRole", label: "ロールを作成する" },
@@ -264,7 +268,6 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
         onNodeContextMenu={handleNodeContextMenu}
         onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
-        snapToGrid
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} />
