@@ -16,7 +16,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 const RolePermissionSchema = z.object({
@@ -226,7 +226,7 @@ export const CreateChannelNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>チャンネルを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
         <div className="space-y-4">
           {data.channels.map((channel, channelIndex) => (
             <div

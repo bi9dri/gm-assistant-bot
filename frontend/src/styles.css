@@ -39,3 +39,21 @@ main.padded {
   padding: 1rem;
   /* p-4 */
 }
+
+/* Scrollable node content scrollbar styling */
+[data-slot="base-node-content"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-slot="base-node-content"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="base-node-content"]::-webkit-scrollbar-thumb {
+  background-color: oklch(var(--bc) / 0.3);
+  border-radius: 3px;
+}
+
+[data-slot="base-node-content"]::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(var(--bc) / 0.5);
+}

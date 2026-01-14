@@ -68,11 +68,16 @@ export function BaseNodeHeaderTitle({ className, ...props }: ComponentProps<"h3"
   );
 }
 
-export function BaseNodeContent({ className, ...props }: ComponentProps<"div">) {
+interface BaseNodeContentProps extends ComponentProps<"div"> {
+  maxHeight?: number;
+}
+
+export function BaseNodeContent({ className, maxHeight, ...props }: BaseNodeContentProps) {
   return (
     <div
       data-slot="base-node-content"
-      className={cn("flex flex-col gap-y-2 p-3", className)}
+      className={cn("flex flex-col gap-y-2 p-3", maxHeight && "overflow-y-auto nowheel", className)}
+      style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}
       {...props}
     />
   );

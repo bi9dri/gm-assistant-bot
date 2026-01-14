@@ -16,7 +16,7 @@ import {
   BaseNodeHeaderTitle,
   cn,
 } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -153,7 +153,7 @@ export const DeleteRoleNode = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ロールを削除する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.sm}>
         <div className="form-control mb-2">
           <label className="nodrag label cursor-pointer justify-start gap-2">
             <input
