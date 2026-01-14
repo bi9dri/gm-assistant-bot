@@ -43,6 +43,10 @@ interface ContextMenu {
 
 const NODE_CATEGORIES = [
   {
+    category: "ブループリント",
+    nodes: [{ type: "Blueprint", label: "マーダーミステリー基本セット" }],
+  },
+  {
     category: "ロール",
     nodes: [
       { type: "CreateRole", label: "ロールを作成する" },

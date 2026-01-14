@@ -2,6 +2,7 @@ import type { NodeProps, NodeTypes } from "@xyflow/react";
 import type { ComponentType } from "react";
 
 import { AddRoleToRoleMembersNode } from "./AddRoleToRoleMembersNode";
+import { BlueprintNode } from "./BlueprintNode";
 import { ChangeChannelPermissionNode } from "./ChangeChannelPermissionNode";
 import { CreateCategoryNode } from "./CreateCategoryNode";
 import { CreateChannelNode } from "./CreateChannelNode";
@@ -48,6 +49,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <SendMessageNode {...props} mode={mode} />
   );
 
+  const BlueprintWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <BlueprintNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -58,5 +63,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     ChangeChannelPermission: ChangeChannelPermissionWithMode,
     AddRoleToRoleMembers: AddRoleToRoleMembersWithMode,
     SendMessage: SendMessageWithMode,
+    Blueprint: BlueprintWithMode,
   } as NodeTypes;
 }
