@@ -27,6 +27,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   AddRoleToRoleMembers: NODE_WIDTHS.md,
   SendMessage: NODE_WIDTHS.lg,
   Blueprint: NODE_WIDTHS.lg,
+  SetGameFlag: NODE_WIDTHS.md,
 } as const;
 
 export const DEFAULT_NODE_WIDTH = NODE_WIDTHS.md;

@@ -6,6 +6,7 @@ export { CreateRoleNode } from "./CreateRoleNode";
 export { DeleteCategoryNode } from "./DeleteCategoryNode";
 export { DeleteChannelNode } from "./DeleteChannelNode";
 export { SendMessageNode } from "./SendMessageNode";
+export { SetGameFlagNode } from "./SetGameFlagNode";
 export { createNodeTypes } from "./node-wrapper";
 export {
   NodeExecutionContext,

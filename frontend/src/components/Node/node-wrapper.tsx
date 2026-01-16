@@ -11,6 +11,7 @@ import { DeleteCategoryNode } from "./DeleteCategoryNode";
 import { DeleteChannelNode } from "./DeleteChannelNode";
 import { DeleteRoleNode } from "./DeleteRoleNode";
 import { SendMessageNode } from "./SendMessageNode";
+import { SetGameFlagNode } from "./SetGameFlagNode";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
   const CreateCategoryWithMode: ComponentType<NodeProps<any>> = (props) => (
@@ -53,6 +54,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <BlueprintNode {...props} mode={mode} />
   );
 
+  const SetGameFlagWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <SetGameFlagNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -64,5 +69,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     AddRoleToRoleMembers: AddRoleToRoleMembersWithMode,
     SendMessage: SendMessageWithMode,
     Blueprint: BlueprintWithMode,
+    SetGameFlag: SetGameFlagWithMode,
   } as NodeTypes;
 }
