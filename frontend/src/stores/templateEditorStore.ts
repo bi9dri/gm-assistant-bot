@@ -14,6 +14,7 @@ import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/D
 import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 import type { DataSchema as SendMessageDataSchema } from "@/components/Node/SendMessageNode";
+import type { DataSchema as SetGameFlagDataSchema } from "@/components/Node/SetGameFlagNode";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
@@ -25,6 +26,7 @@ export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
+export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
@@ -36,7 +38,8 @@ export type FlowNode =
   | Node<DeleteCategoryNodeData, "DeleteCategory">
   | Node<DeleteChannelNodeData, "DeleteChannel">
   | Node<DeleteRoleNodeData, "DeleteRole">
-  | Node<SendMessageNodeData, "SendMessage">;
+  | Node<SendMessageNodeData, "SendMessage">
+  | Node<SetGameFlagNodeData, "SetGameFlag">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -75,6 +78,7 @@ interface TemplateEditorActions {
       | DeleteChannelNodeData
       | DeleteRoleNodeData
       | SendMessageNodeData
+      | SetGameFlagNodeData
     >,
   ) => void;
   addNode: (
@@ -88,7 +92,8 @@ interface TemplateEditorActions {
       | "DeleteCategory"
       | "DeleteChannel"
       | "DeleteRole"
-      | "SendMessage",
+      | "SendMessage"
+      | "SetGameFlag",
     position: { x: number; y: number },
   ) => void;
   expandBlueprint: (nodeId: string) => void;
@@ -207,6 +212,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
             sharedTextChannels: [],
           },
         },
+      };
+    } else if (type === "SetGameFlag") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { flagKey: "", flagValue: "" },
       };
     } else {
       newNode = {
