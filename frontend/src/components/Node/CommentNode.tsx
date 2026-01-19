@@ -1,10 +1,9 @@
-import { Position, type Node, type NodeProps } from "@xyflow/react";
+import type { Node, NodeProps } from "@xyflow/react";
 import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
 import {
-  BaseHandle,
   BaseNode,
   BaseNodeContent,
   BaseNodeHeader,
@@ -46,8 +45,6 @@ export const CommentNode = ({
           placeholder="ワークフローの補足情報を入力..."
         />
       </BaseNodeContent>
-      <BaseHandle id="target-1" type="target" position={Position.Top} />
-      <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>
   );
 };
