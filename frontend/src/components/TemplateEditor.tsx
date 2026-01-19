@@ -47,6 +47,10 @@ const NODE_CATEGORIES = [
     nodes: [{ type: "Blueprint", label: "マーダーミステリー基本セット" }],
   },
   {
+    category: "整理",
+    nodes: [{ type: "LabeledGroup", label: "グループ" }],
+  },
+  {
     category: "ロール",
     nodes: [
       { type: "CreateRole", label: "ロールを作成する" },
