@@ -20,6 +20,7 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
+import { ResourceSelector } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   channelNames: z.array(z.string().trim()),
@@ -141,14 +142,16 @@ export const DeleteChannelNode = ({
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {data.channelNames.map((name, index) => (
           <div key={`${id}-channel-${index}`} className="flex gap-2 items-center mb-2">
-            <input
-              type="text"
-              className="nodrag input input-bordered w-full"
-              value={name}
-              onChange={(evt) => handleChannelNameChange(index, evt.target.value)}
-              placeholder="チャンネル名を入力"
-              disabled={isExecuteMode || isLoading || isExecuted}
-            />
+            <div className="flex-1">
+              <ResourceSelector
+                nodeId={id}
+                resourceType="channel"
+                value={name}
+                onChange={(newName) => handleChannelNameChange(index, newName)}
+                placeholder="チャンネル名を入力"
+                disabled={isExecuteMode || isLoading || isExecuted}
+              />
+            </div>
             {!isExecuteMode && (
               <button
                 type="button"

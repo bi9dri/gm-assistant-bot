@@ -20,6 +20,7 @@ import {
 } from "../base";
 import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "../base";
 import { useNodeExecutionOptional, useTemplateEditorContextOptional } from "../contexts";
+import { ResourceSelector } from "../utils";
 
 const AttachmentSchema = z.object({
   fileName: z.string(),
@@ -409,13 +410,14 @@ export const SendMessageNode = ({
           {/* Channel name input */}
           <div>
             <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
-            <input
-              type="text"
-              className="nodrag input input-bordered input-sm w-full"
+            <ResourceSelector
+              nodeId={id}
+              resourceType="channel"
               value={data.channelName}
-              onChange={(e) => handleChannelNameChange(e.target.value)}
+              onChange={handleChannelNameChange}
               placeholder="チャンネル名"
               disabled={isExecuteMode || isLoading || isExecuted}
+              channelTypeFilter="text"
             />
           </div>
 
