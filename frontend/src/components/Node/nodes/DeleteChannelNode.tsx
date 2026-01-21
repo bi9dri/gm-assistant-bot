@@ -15,9 +15,11 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+  BaseNodeDataSchema,
+  NODE_CONTENT_HEIGHTS,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { useNodeExecutionOptional } from "../contexts";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   channelNames: z.array(z.string().trim()),

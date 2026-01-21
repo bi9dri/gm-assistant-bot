@@ -15,16 +15,17 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+  BaseNodeDataSchema,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { useNodeExecutionOptional } from "../contexts";
 import {
   DynamicValueSchema,
   defaultDynamicValue,
   resolveDynamicValue,
   type DynamicValue,
-} from "./DynamicValue";
-import { DynamicValueInput } from "./DynamicValueInput";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+  DynamicValueInput,
+} from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   categoryName: DynamicValueSchema,

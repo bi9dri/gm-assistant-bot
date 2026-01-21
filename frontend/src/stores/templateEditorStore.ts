@@ -4,22 +4,23 @@ import type { z } from "zod";
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { create } from "zustand";
 
-import type { DataSchema as AddRoleToRoleMembersDataSchema } from "@/components/Node/AddRoleToRoleMembersNode";
-import type { DataSchema as BlueprintDataSchema } from "@/components/Node/BlueprintNode";
-import type { DataSchema as ChangeChannelPermissionDataSchema } from "@/components/Node/ChangeChannelPermissionNode";
-import type { DataSchema as CommentDataSchema } from "@/components/Node/CommentNode";
-import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
-import type { DataSchema as CreateChannelDataSchema } from "@/components/Node/CreateChannelNode";
-import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
-import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
-import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
-import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
-import type { DataSchema as LabeledGroupDataSchema } from "@/components/Node/LabeledGroupNode";
-import type { DataSchema as RecordCombinationDataSchema } from "@/components/Node/RecordCombinationNode";
-import type { DataSchema as SendMessageDataSchema } from "@/components/Node/SendMessageNode";
-import type { DataSchema as SetGameFlagDataSchema } from "@/components/Node/SetGameFlagNode";
-
-import { LABELED_GROUP_DEFAULTS } from "@/components/Node/base-schema";
+import {
+  type AddRoleToRoleMembersDataSchema,
+  type BlueprintDataSchema,
+  type ChangeChannelPermissionDataSchema,
+  type CommentDataSchema,
+  type CreateCategoryDataSchema,
+  type CreateChannelDataSchema,
+  type CreateRoleDataSchema,
+  type DeleteCategoryDataSchema,
+  type DeleteChannelDataSchema,
+  type DeleteRoleDataSchema,
+  type LabeledGroupDataSchema,
+  type RecordCombinationDataSchema,
+  type SendMessageDataSchema,
+  type SetGameFlagDataSchema,
+  LABELED_GROUP_DEFAULTS,
+} from "@/components/Node";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;

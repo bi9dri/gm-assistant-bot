@@ -27,8 +27,8 @@
  * - ラジオボタンやチェックボックスで代替できる場合（そちらの方がシンプル）
  */
 
-import { createPortal } from "react-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 
 interface Option {
   id: string;
@@ -133,18 +133,8 @@ export function PortaledSelect({
         className={`nodrag btn btn-sm justify-between ${className}`}
       >
         <span className="truncate">{selectedLabel || placeholder}</span>
-        <svg
-          className="w-4 h-4 shrink-0"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
@@ -183,16 +173,14 @@ export function PortaledSelect({
                   >
                     {opt.label || "(未入力)"}
                     {opt.isDisabled && opt.disabledReason && (
-                      <span className="text-xs opacity-70">
-                        ({opt.disabledReason})
-                      </span>
+                      <span className="text-xs opacity-70">({opt.disabledReason})</span>
                     )}
                   </button>
                 </li>
               ))}
             </ul>
           </>,
-          document.body
+          document.body,
         )}
     </>
   );

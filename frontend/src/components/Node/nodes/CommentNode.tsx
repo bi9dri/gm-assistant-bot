@@ -4,8 +4,14 @@ import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
-import { BaseNode, BaseNodeContent, BaseNodeHeader, BaseNodeHeaderTitle } from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import {
+  BaseNode,
+  BaseNodeContent,
+  BaseNodeHeader,
+  BaseNodeHeaderTitle,
+  BaseNodeDataSchema,
+  NODE_TYPE_WIDTHS,
+} from "../base";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   comment: z.string(),
