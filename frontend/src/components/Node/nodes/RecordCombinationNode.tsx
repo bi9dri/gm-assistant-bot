@@ -12,9 +12,11 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
-import { PortaledSelect } from "./PortaledSelect";
+  BaseNodeDataSchema,
+  NODE_CONTENT_HEIGHTS,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { PortaledSelect } from "../utils";
 
 // ============================================================
 // Schema Definitions
@@ -667,7 +669,6 @@ export const RecordCombinationNode = ({
           <div className="text-xs text-base-content/50">{data.recordedPairs.length}件記録済み</div>
         </BaseNodeFooter>
       )}
-
     </BaseNode>
   );
 };

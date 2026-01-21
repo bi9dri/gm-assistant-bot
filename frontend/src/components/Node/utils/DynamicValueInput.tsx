@@ -1,6 +1,6 @@
 import type { DynamicValue } from "./DynamicValue";
 
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+import { useNodeExecutionOptional } from "../contexts";
 
 interface DynamicValueInputProps {
   value: DynamicValue;

@@ -1,20 +1,22 @@
 import type { NodeProps, NodeTypes } from "@xyflow/react";
 import type { ComponentType } from "react";
 
-import { AddRoleToRoleMembersNode } from "./AddRoleToRoleMembersNode";
-import { BlueprintNode } from "./BlueprintNode";
-import { ChangeChannelPermissionNode } from "./ChangeChannelPermissionNode";
-import { CommentNode } from "./CommentNode";
-import { CreateCategoryNode } from "./CreateCategoryNode";
-import { CreateChannelNode } from "./CreateChannelNode";
-import { CreateRoleNode } from "./CreateRoleNode";
-import { DeleteCategoryNode } from "./DeleteCategoryNode";
-import { DeleteChannelNode } from "./DeleteChannelNode";
-import { DeleteRoleNode } from "./DeleteRoleNode";
-import { LabeledGroupNode } from "./LabeledGroupNode";
-import { RecordCombinationNode } from "./RecordCombinationNode";
-import { SendMessageNode } from "./SendMessageNode";
-import { SetGameFlagNode } from "./SetGameFlagNode";
+import {
+  AddRoleToRoleMembersNode,
+  BlueprintNode,
+  ChangeChannelPermissionNode,
+  CommentNode,
+  CreateCategoryNode,
+  CreateChannelNode,
+  CreateRoleNode,
+  DeleteCategoryNode,
+  DeleteChannelNode,
+  DeleteRoleNode,
+  LabeledGroupNode,
+  RecordCombinationNode,
+  SendMessageNode,
+  SetGameFlagNode,
+} from "../nodes";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
   const CreateCategoryWithMode: ComponentType<NodeProps<any>> = (props) => (

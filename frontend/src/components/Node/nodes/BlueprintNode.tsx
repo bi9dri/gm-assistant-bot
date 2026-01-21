@@ -10,8 +10,10 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
+  BaseNodeDataSchema,
+  NODE_CONTENT_HEIGHTS,
+  NODE_TYPE_WIDTHS,
+} from "../base";
 
 const BlueprintParameterSchema = z.object({
   characterNames: z.array(z.string().trim()),

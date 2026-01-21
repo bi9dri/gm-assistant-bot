@@ -15,9 +15,10 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+  BaseNodeDataSchema,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { useNodeExecutionOptional } from "../contexts";
 
 export const DataSchema = BaseNodeDataSchema.extend({});
 type DeleteCategoryNodeData = Node<z.infer<typeof DataSchema>, "DeleteCategory">;

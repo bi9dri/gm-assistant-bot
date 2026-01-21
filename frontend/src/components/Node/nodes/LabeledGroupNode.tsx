@@ -5,8 +5,7 @@ import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
-import { BaseNode, cn } from "./base-node";
-import { BaseNodeDataSchema, LABELED_GROUP_DEFAULTS } from "./base-schema";
+import { BaseNode, cn, BaseNodeDataSchema, LABELED_GROUP_DEFAULTS } from "../base";
 
 // Available background colors for LabeledGroupNode
 export const GROUP_BG_COLORS = [

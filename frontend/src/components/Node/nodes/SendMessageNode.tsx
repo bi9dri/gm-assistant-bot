@@ -17,10 +17,9 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
-import { useTemplateEditorContextOptional } from "./TemplateEditorContext";
+} from "../base";
+import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "../base";
+import { useNodeExecutionOptional, useTemplateEditorContextOptional } from "../contexts";
 
 const AttachmentSchema = z.object({
   fileName: z.string(),
