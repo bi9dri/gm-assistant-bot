@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { LuPanelRight } from "react-icons/lu";
 
 import { TemplateEditor } from "@/components/TemplateEditor";
 import { GameSession } from "@/db";
@@ -38,6 +39,7 @@ function RouteComponent() {
 
   const [sessionName, setSessionName] = useState("");
   const [previousSessionId, setPreviousSessionId] = useState<number | null>(null);
+  const [showResourcePanel, setShowResourcePanel] = useState(false);
 
   useEffect(() => {
     const currentId = Number(id);
@@ -117,6 +119,16 @@ function RouteComponent() {
 
         <div className="flex-1" />
 
+        <div className="tooltip tooltip-bottom" data-tip="リソースパネル">
+          <button
+            onClick={() => setShowResourcePanel(!showResourcePanel)}
+            className="btn btn-ghost btn-square"
+            aria-label="リソースパネルを開く"
+          >
+            <LuPanelRight size={20} />
+          </button>
+        </div>
+
         <div className="flex items-center gap-2">
           {guild ? (
             <>
@@ -155,6 +167,8 @@ function RouteComponent() {
           guildId={session.guildId}
           sessionId={session.id}
           bot={bot}
+          showResourcePanel={showResourcePanel}
+          onToggleResourcePanel={() => setShowResourcePanel(!showResourcePanel)}
         />
       </div>
     </div>
