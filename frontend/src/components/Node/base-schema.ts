@@ -30,6 +30,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   SetGameFlag: NODE_WIDTHS.md,
   LabeledGroup: NODE_WIDTHS.xl,
   Comment: NODE_WIDTHS.md,
+  RecordCombination: NODE_WIDTHS.lg,
 } as const;
 
 // LabeledGroup node default dimensions

@@ -12,6 +12,7 @@ import { DeleteCategoryNode } from "./DeleteCategoryNode";
 import { DeleteChannelNode } from "./DeleteChannelNode";
 import { DeleteRoleNode } from "./DeleteRoleNode";
 import { LabeledGroupNode } from "./LabeledGroupNode";
+import { RecordCombinationNode } from "./RecordCombinationNode";
 import { SendMessageNode } from "./SendMessageNode";
 import { SetGameFlagNode } from "./SetGameFlagNode";
 
@@ -68,6 +69,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <CommentNode {...props} mode={mode} />
   );
 
+  const RecordCombinationWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <RecordCombinationNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -82,5 +87,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     SetGameFlag: SetGameFlagWithMode,
     LabeledGroup: LabeledGroupWithMode,
     Comment: CommentWithMode,
+    RecordCombination: RecordCombinationWithMode,
   } as NodeTypes;
 }
