@@ -9,7 +9,7 @@ npm dependency packagesのアップデートをして
 root directoryで `bun run ncu` を実行し、アップデート対象を洗い出す
 
 ```bash
-fish -c "bun run ncu"
+bun run ncu
 ```
 
 ## 2. リリースノート・変更履歴の確認
@@ -50,22 +50,21 @@ RELEASES, RELEASE NOTE, CHANGELOG などのファイル名などを検索する
 
 ```bash
 # Root
-fish -c "bun install パッケージ名@バージョン"
+bun install パッケージ名@バージョン
 
 # Backend
-fish -c "bun install --filter "backend" パッケージ名@バージョン"
+bun install --filter "backend" パッケージ名@バージョン
 
 # Frontend
-cd frontend
-fish -c "bun install --filter "frontend" パッケージ名@バージョン"
+bun install --filter "frontend" パッケージ名@バージョン
 ```
 
 ### 3-3. 型チェック・テストの実行
 root directoryで実行
 
 ```bash
-fish -c "bun run type-check"
-fish -c "bun run test"
+bun run type-check
+bun run test
 ```
 
 問題があれば該当パッケージのアップデートを戻す
@@ -118,10 +117,10 @@ Grep: "\.(refine|superRefine|transform|preprocess)\("
 
 ```bash
 # ブランチ作成
-fish -c "git checkout -b update-dependencies-safe-updates"
+git checkout -b update-dependencies-safe-updates
 
 # アップデートしたファイルをステージング
-fish -c "git add backend/package.json frontend/package.json bun.lock"
+git add backend/package.json frontend/package.json bun.lock
 
 # コミット
 git commit -m "chore: Update npm dependencies (safe updates)

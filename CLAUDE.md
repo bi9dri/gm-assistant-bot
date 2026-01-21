@@ -8,9 +8,6 @@
 
 ## General Guidelines
 
-### Shell Commands
-- **Always use fish shell** for all commands: `fish -c "command"`
-
 ### Runtime and Package Manager
 - Default to using **Bun** instead of Node.js
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
@@ -89,41 +86,41 @@ This is a single-page application (SPA) project with client-side Discord integra
 
 ## Development Commands
 
-All commands should be run from the repository root:
+All commands should be run from the `frontend` directory:
 
 ```bash
 # Start development server with Vite HMR (port 3000)
-fish -c "bun run dev"
+bun run dev
 
 # Build for production
-fish -c "bun run build"
+bun run build
 
 # Preview production build locally
-fish -c "bun run preview"
+bun run preview
 
 # Deploy to Cloudflare Workers
-fish -c "bun run deploy"
+bun run deploy
 
 # Lint all code
-fish -c "bun run lint"
+bun run lint
 
 # Format all code
-fish -c "bun run format"
+bun run format
 
 # Type check all code
-fish -c "bun run type-check"
+bun run type-check
 
 # Run tests
-fish -c "bun run test"
+bun run test
 ```
 
 ## Development Workflow
 
 **重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
 
-1. `fish -c "bun run type-check"` - 型エラーがないことを確認
-2. `fish -c "bun run format"` - コードをフォーマット
-3. `fish -c "bun run lint"` - lint エラーがないことを確認
+1. `bun run type-check` - 型エラーがないことを確認
+2. `bun run format` - コードをフォーマット
+3. `bun run lint` - lint エラーがないことを確認
 
 すべてのコマンドが成功するまで、実装は完了とみなさない。
 
