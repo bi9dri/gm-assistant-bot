@@ -31,6 +31,7 @@ interface Props {
   templateId?: number;
   guildId?: string;
   sessionId?: number;
+  sessionName?: string;
   bot?: DiscordBotData;
   showResourcePanel?: boolean;
   onToggleResourcePanel?: () => void;
@@ -488,7 +489,7 @@ const TemplateEditorContent = ({
 };
 
 export const TemplateEditor = (props: Props) => {
-  const { mode, templateId, guildId, sessionId, bot } = props;
+  const { mode, templateId, guildId, sessionId, sessionName, bot } = props;
 
   const content = (
     <ReactFlowProvider>
@@ -505,9 +506,9 @@ export const TemplateEditor = (props: Props) => {
     content
   );
 
-  if (mode === "execute" && guildId && sessionId && bot) {
+  if (mode === "execute" && guildId && sessionId && sessionName && bot) {
     return (
-      <NodeExecutionContext.Provider value={{ guildId, sessionId, bot }}>
+      <NodeExecutionContext.Provider value={{ guildId, sessionId, sessionName, bot }}>
         {withTemplateContext}
       </NodeExecutionContext.Provider>
     );

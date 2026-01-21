@@ -15,7 +15,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("CreateCategory");
-      expect(node.data).toEqual({ categoryName: "" });
+      expect(node.data).toEqual({ categoryName: { type: "literal", value: "" } });
       expect(node.position).toEqual(position);
     });
 

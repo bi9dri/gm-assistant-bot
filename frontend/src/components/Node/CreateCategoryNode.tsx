@@ -17,16 +17,41 @@ import {
   cn,
 } from "./base-node";
 import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
+import {
+  DynamicValueSchema,
+  defaultDynamicValue,
+  resolveDynamicValue,
+  type DynamicValue,
+} from "./DynamicValue";
+import { DynamicValueInput } from "./DynamicValueInput";
 import { useNodeExecutionOptional } from "./NodeExecutionContext";
 
 export const DataSchema = BaseNodeDataSchema.extend({
-  categoryName: z.string().trim(),
+  categoryName: DynamicValueSchema,
 });
 type CreateCategoryNodeData = Node<z.infer<typeof DataSchema>, "CreateCategory">;
 
+// Migrate legacy data (string) to new format (DynamicValue)
+export function migrateData(data: unknown): z.infer<typeof DataSchema> {
+  const parsed = data as Record<string, unknown>;
+
+  // Already new format
+  if (typeof parsed.categoryName === "object" && parsed.categoryName !== null) {
+    return DataSchema.parse(data);
+  }
+
+  // Migrate from legacy string format
+  const legacyCategoryName = typeof parsed.categoryName === "string" ? parsed.categoryName : "";
+
+  return DataSchema.parse({
+    ...parsed,
+    categoryName: { type: "literal", value: legacyCategoryName } satisfies DynamicValue,
+  });
+}
+
 export const CreateCategoryNode = ({
   id,
-  data,
+  data: rawData,
   mode = "edit",
 }: NodeProps<CreateCategoryNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
@@ -35,7 +60,10 @@ export const CreateCategoryNode = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCategoryNameChange = (newValue: string) => {
+  // Migrate data if needed
+  const data = migrateData(rawData);
+
+  const handleCategoryNameChange = (newValue: DynamicValue) => {
     updateNodeData(id, { categoryName: newValue });
   };
 
@@ -45,8 +73,10 @@ export const CreateCategoryNode = ({
       return;
     }
 
-    const { guildId, sessionId, bot } = executionContext;
-    const categoryName = data.categoryName.trim();
+    const { guildId, sessionId, sessionName, bot } = executionContext;
+    const categoryName = resolveDynamicValue(data.categoryName ?? defaultDynamicValue(), {
+      sessionName,
+    }).trim();
 
     if (categoryName === "") {
       addToast({ message: "カテゴリ名を入力してください", status: "warning" });
@@ -89,11 +119,9 @@ export const CreateCategoryNode = ({
         <BaseNodeHeaderTitle>カテゴリを作成する</BaseNodeHeaderTitle>
       </BaseNodeHeader>
       <BaseNodeContent>
-        <input
-          type="text"
-          className="nodrag input input-bordered w-full"
-          value={data.categoryName}
-          onChange={(evt) => handleCategoryNameChange(evt.target.value)}
+        <DynamicValueInput
+          value={data.categoryName ?? defaultDynamicValue()}
+          onChange={handleCategoryNameChange}
           placeholder="カテゴリ名を入力"
           disabled={isExecuteMode || isLoading || isExecuted}
         />
