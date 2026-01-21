@@ -160,7 +160,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { categoryName: "" },
+        data: { categoryName: { type: "literal", value: "" } },
       };
     } else if (type === "CreateRole") {
       newNode = {
@@ -360,7 +360,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id: categoryNodeId,
         type: "CreateCategory",
         position: { x: startPosition.x, y: currentY },
-        data: { categoryName: parameters.categoryName.trim() },
+        data: { categoryName: { type: "literal", value: parameters.categoryName.trim() } },
       };
       generatedNodes.push(categoryNode);
 

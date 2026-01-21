@@ -166,6 +166,7 @@ function RouteComponent() {
           mode="execute"
           guildId={session.guildId}
           sessionId={session.id}
+          sessionName={sessionName}
           bot={bot}
           showResourcePanel={showResourcePanel}
           onToggleResourcePanel={() => setShowResourcePanel(!showResourcePanel)}
