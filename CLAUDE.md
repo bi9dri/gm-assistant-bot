@@ -29,7 +29,12 @@
 
 プロジェクトの詳細な設計ドキュメントは `/docs` ディレクトリに保存されています：
 
+### ユーザー向けドキュメント (`/docs`)
 - [ノードベースワークフローシステム設計書](docs/node-workflow-system.md) - TRPG/マーダーミステリーセッション管理のための、ノードベースワークフローシステムの設計
+
+### 開発者向けドキュメント (`/docs/dev`)
+- [ノードシステムアーキテクチャ](docs/dev/node-system-architecture.md) - **新しいノードを実装する際は必ず参照**。ノードの基本構造、実装パターン、チェックリストを含む
+- [RecordCombinationNode設計書](docs/dev/record-combination-node.md) - 組み合わせ記録ノードの設計（Issue #23）
 
 ## Project Architecture
 
@@ -111,6 +116,16 @@ fish -c "bun run type-check"
 # Run tests
 fish -c "bun run test"
 ```
+
+## Development Workflow
+
+**重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
+
+1. `fish -c "bun run type-check"` - 型エラーがないことを確認
+2. `fish -c "bun run format"` - コードをフォーマット
+3. `fish -c "bun run lint"` - lint エラーがないことを確認
+
+すべてのコマンドが成功するまで、実装は完了とみなさない。
 
 ## Testing
 
