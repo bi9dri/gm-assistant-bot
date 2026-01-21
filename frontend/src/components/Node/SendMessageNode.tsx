@@ -416,7 +416,7 @@ export const SendMessageNode = ({
               value={data.channelName}
               onChange={(e) => handleChannelNameChange(e.target.value)}
               placeholder="チャンネル名"
-              disabled={isLoading || isExecuted}
+              disabled={isExecuteMode || isLoading || isExecuted}
             />
           </div>
 
@@ -433,7 +433,7 @@ export const SendMessageNode = ({
                     {message.content.length}/2000
                   </span>
                 </div>
-                {data.messages.length > 1 && (
+                {!isExecuteMode && data.messages.length > 1 && (
                   <button
                     type="button"
                     className="nodrag btn btn-ghost btn-xs"
@@ -452,7 +452,7 @@ export const SendMessageNode = ({
                 onChange={(e) => handleContentChange(messageIndex, e.target.value)}
                 placeholder="メッセージを入力"
                 maxLength={2000}
-                disabled={isLoading || isExecuted}
+                disabled={isExecuteMode || isLoading || isExecuted}
               />
 
               {/* Attachments for this message */}
@@ -481,14 +481,16 @@ export const SendMessageNode = ({
                             !
                           </span>
                         )}
-                        <button
-                          type="button"
-                          className="nodrag btn btn-ghost btn-xs"
-                          onClick={() => handleFileRemove(messageIndex, fileIndex)}
-                          disabled={isLoading || isExecuted}
-                        >
-                          ×
-                        </button>
+                        {!isExecuteMode && (
+                          <button
+                            type="button"
+                            className="nodrag btn btn-ghost btn-xs"
+                            onClick={() => handleFileRemove(messageIndex, fileIndex)}
+                            disabled={isLoading || isExecuted}
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -512,7 +514,7 @@ export const SendMessageNode = ({
                       multiple
                       className="hidden"
                       onChange={(e) => handleFileAdd(messageIndex, e)}
-                      disabled={isLoading || isExecuted}
+                      disabled={isExecuteMode || isLoading || isExecuted}
                     />
                     <div
                       className={cn(
@@ -523,7 +525,7 @@ export const SendMessageNode = ({
                         draggingIndex === messageIndex
                           ? "border-primary bg-primary/10 border-solid"
                           : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
-                        (isLoading || isExecuted) &&
+                        (isExecuteMode || isLoading || isExecuted) &&
                           "opacity-50 pointer-events-none cursor-not-allowed",
                       )}
                       onDragOver={handleDragOver}
@@ -531,6 +533,7 @@ export const SendMessageNode = ({
                       onDragLeave={(e) => handleDragLeave(messageIndex, e)}
                       onDrop={(e) => handleDrop(messageIndex, e)}
                       onClick={() =>
+                        !isExecuteMode &&
                         !isLoading &&
                         !isExecuted &&
                         fileInputRefs.current.get(messageIndex)?.click()
@@ -566,14 +569,16 @@ export const SendMessageNode = ({
           ))}
 
           {/* Add message block button */}
-          <button
-            type="button"
-            className="nodrag btn btn-outline btn-sm w-full"
-            onClick={handleAddMessageBlock}
-            disabled={isLoading || isExecuted}
-          >
-            + メッセージを追加
-          </button>
+          {!isExecuteMode && (
+            <button
+              type="button"
+              className="nodrag btn btn-outline btn-sm w-full"
+              onClick={handleAddMessageBlock}
+              disabled={isLoading || isExecuted}
+            >
+              + メッセージを追加
+            </button>
+          )}
 
           {/* Available channels display (execute mode) */}
           {isExecuteMode && channels.length > 0 && (

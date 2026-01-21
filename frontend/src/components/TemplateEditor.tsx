@@ -368,14 +368,14 @@ const TemplateEditorContent = ({
         onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onMoveEnd={handleMoveEnd}
-        onNodeContextMenu={handleNodeContextMenu}
-        onPaneContextMenu={handlePaneContextMenu}
+        onNodeContextMenu={mode === "edit" ? handleNodeContextMenu : undefined}
+        onPaneContextMenu={mode === "edit" ? handlePaneContextMenu : undefined}
         onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} />
-        {storeNodes.length === 0 && (
+        {storeNodes.length === 0 && mode === "edit" && (
           <Panel position="top-center" className="mt-20">
             <div className="text-base-content/50 text-center">
               <p className="text-lg">右クリックでノードを追加</p>

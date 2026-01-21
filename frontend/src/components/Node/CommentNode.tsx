@@ -16,13 +16,15 @@ type CommentNodeData = Node<z.infer<typeof DataSchema>, "Comment">;
 export const CommentNode = ({
   id,
   data,
-  mode: _mode = "edit",
+  mode = "edit",
 }: NodeProps<CommentNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
 
   const handleCommentChange = (newValue: string) => {
     updateNodeData(id, { comment: newValue });
   };
+
+  const isExecuteMode = mode === "execute";
 
   return (
     <BaseNode width={NODE_TYPE_WIDTHS.Comment} className="border-info/50 bg-info/10">
@@ -36,6 +38,7 @@ export const CommentNode = ({
           value={data.comment}
           onChange={(evt) => handleCommentChange(evt.target.value)}
           placeholder="ワークフローの補足情報を入力..."
+          readOnly={isExecuteMode}
         />
       </BaseNodeContent>
     </BaseNode>

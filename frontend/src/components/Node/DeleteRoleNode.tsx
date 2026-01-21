@@ -162,7 +162,7 @@ export const DeleteRoleNode = ({
               className="checkbox"
               checked={data.deleteAll}
               onChange={(e) => handleDeleteAllChange(e.target.checked)}
-              disabled={isLoading || isExecuted}
+              disabled={isExecuteMode || isLoading || isExecuted}
             />
             <span className="label-text">すべて削除</span>
           </label>
@@ -178,7 +178,7 @@ export const DeleteRoleNode = ({
                   value={name}
                   onChange={(evt) => handleRoleNameChange(index, evt.target.value)}
                   placeholder="ロール名を入力"
-                  disabled={isLoading || isExecuted}
+                  disabled={isExecuteMode || isLoading || isExecuted}
                 />
                 {!isExecuteMode && (
                   <button

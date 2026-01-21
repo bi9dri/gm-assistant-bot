@@ -119,7 +119,7 @@ export const CreateRoleNode = ({
               value={role}
               onChange={(evt) => handleRoleChange(index, evt.target.value)}
               placeholder="ロール名を入力"
-              disabled={isLoading || isExecuted}
+              disabled={isExecuteMode || isLoading || isExecuted}
             />
             {!isExecuteMode && (
               <button
