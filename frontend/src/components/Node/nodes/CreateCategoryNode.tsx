@@ -32,16 +32,13 @@ export const DataSchema = BaseNodeDataSchema.extend({
 });
 type CreateCategoryNodeData = Node<z.infer<typeof DataSchema>, "CreateCategory">;
 
-// Migrate legacy data (string) to new format (DynamicValue)
 export function migrateData(data: unknown): z.infer<typeof DataSchema> {
   const parsed = data as Record<string, unknown>;
 
-  // Already new format
   if (typeof parsed.categoryName === "object" && parsed.categoryName !== null) {
     return DataSchema.parse(data);
   }
 
-  // Migrate from legacy string format
   const legacyCategoryName = typeof parsed.categoryName === "string" ? parsed.categoryName : "";
 
   return DataSchema.parse({
@@ -61,7 +58,6 @@ export const CreateCategoryNode = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Migrate data if needed
   const data = migrateData(rawData);
 
   const handleCategoryNameChange = (newValue: DynamicValue) => {

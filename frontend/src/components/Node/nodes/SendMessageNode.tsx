@@ -47,16 +47,13 @@ export const DataSchema = BaseNodeDataSchema.extend({
     .default([{ content: "", attachments: [] }]),
 });
 
-// Helper to migrate legacy data
 export const migrateData = (data: unknown): z.infer<typeof DataSchema> => {
   const parsed = data as Record<string, unknown>;
 
-  // If already has messages array, validate and return
   if (Array.isArray(parsed.messages)) {
     return DataSchema.parse(data);
   }
 
-  // Migrate from legacy format
   const legacy = LegacyDataSchema.parse(data);
   return DataSchema.parse({
     ...parsed,
@@ -113,7 +110,6 @@ export const SendMessageNode = ({
   data: rawData,
   mode = "edit",
 }: NodeProps<SendMessageNodeData> & { mode?: "edit" | "execute" }) => {
-  // Migrate legacy data format if needed
   const data = migrateData(rawData);
 
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
@@ -128,7 +124,6 @@ export const SendMessageNode = ({
   const [isLoading, setIsLoading] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
-  // Get channel list in execute mode
   useEffect(() => {
     if (executionContext) {
       void db.Channel.where("sessionId")
@@ -138,32 +133,27 @@ export const SendMessageNode = ({
     }
   }, [executionContext]);
 
-  // Channel name change handler
   const handleChannelNameChange = (value: string) => {
     updateNodeData(id, { channelName: value });
   };
 
-  // Message content change handler for a specific message block
   const handleContentChange = (messageIndex: number, value: string) => {
     const newMessages = [...data.messages];
     newMessages[messageIndex] = { ...newMessages[messageIndex], content: value };
     updateNodeData(id, { messages: newMessages });
   };
 
-  // Add new message block
   const handleAddMessageBlock = () => {
     const newMessages = [...data.messages, { content: "", attachments: [] }];
     updateNodeData(id, { messages: newMessages });
   };
 
-  // Remove message block
   const handleRemoveMessageBlock = (messageIndex: number) => {
     if (data.messages.length <= 1) {
       addToast({ message: "最低1つのメッセージが必要です", status: "warning" });
       return;
     }
 
-    // Delete associated files from OPFS
     const message = data.messages[messageIndex];
     const fs = new FileSystem();
     for (const attachment of message.attachments) {
@@ -229,7 +219,6 @@ export const SendMessageNode = ({
     [templateEditorContext, executionContext, data.messages, id, updateNodeData, addToast],
   );
 
-  // File add handler (from input element)
   const handleFileAdd = async (
     messageIndex: number,
     event: React.ChangeEvent<HTMLInputElement>,
@@ -239,14 +228,12 @@ export const SendMessageNode = ({
 
     await processFiles(messageIndex, Array.from(files));
 
-    // Reset input
     const inputRef = fileInputRefs.current.get(messageIndex);
     if (inputRef) {
       inputRef.value = "";
     }
   };
 
-  // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -286,7 +273,6 @@ export const SendMessageNode = ({
     await processFiles(messageIndex, Array.from(files));
   };
 
-  // File remove handler for a specific message block
   const handleFileRemove = async (messageIndex: number, fileIndex: number) => {
     const attachment = data.messages[messageIndex].attachments[fileIndex];
     const fs = new FileSystem();
@@ -306,7 +292,6 @@ export const SendMessageNode = ({
     updateNodeData(id, { messages: newMessages });
   };
 
-  // Send message handler
   const handleSendMessage = async () => {
     if (!executionContext) {
       addToast({ message: "実行コンテキストがありません", status: "error" });
@@ -315,13 +300,11 @@ export const SendMessageNode = ({
 
     const { bot } = executionContext;
 
-    // Validation
     if (data.channelName.trim() === "") {
       addToast({ message: "チャンネル名を入力してください", status: "warning" });
       return;
     }
 
-    // Check if there's at least one message with content or attachments
     const hasValidMessage = data.messages.some(
       (m) => m.content.trim() !== "" || m.attachments.length > 0,
     );
@@ -330,7 +313,6 @@ export const SendMessageNode = ({
       return;
     }
 
-    // Find channel
     const channel = channels.find((c) => c.name === data.channelName.trim());
     if (!channel) {
       addToast({
@@ -346,7 +328,6 @@ export const SendMessageNode = ({
     const fs = new FileSystem();
 
     try {
-      // Send each message block sequentially
       for (const message of data.messages) {
         // Skip empty messages
         if (message.content.trim() === "" && message.attachments.length === 0) {

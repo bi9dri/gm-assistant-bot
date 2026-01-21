@@ -113,7 +113,6 @@ export const CreateChannelNode = ({
 
     const { guildId, sessionId, bot } = executionContext;
 
-    // Check if category exists
     const category = await db.Category.where("sessionId").equals(sessionId).first();
     if (!category) {
       addToast({
@@ -130,13 +129,11 @@ export const CreateChannelNode = ({
       return;
     }
 
-    // Resolve role names to IDs
     const roleNameToId = new Map<string, string>();
     for (const role of roles) {
       roleNameToId.set(role.name, role.id);
     }
 
-    // Check for missing roles
     const missingRoles: string[] = [];
     for (const channel of validChannels) {
       for (const perm of channel.rolePermissions) {
@@ -165,7 +162,6 @@ export const CreateChannelNode = ({
       setProgress({ current: i + 1, total: validChannels.length });
       const channelData = validChannels[i];
 
-      // Convert role permissions to IDs
       const writerRoleIds: string[] = [];
       const readerRoleIds: string[] = [];
 

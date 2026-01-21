@@ -8,6 +8,17 @@
 
 ## General Guidelines
 
+### Code Comments
+- **冗長なコメントを書かない** - 識別子やコードから自明な内容を繰り返すコメントは不要
+- 避けるべきコメントの例:
+  - 関数名の言い換え: `// Add new message block` → `handleAddMessageBlock()` という関数名で十分
+  - コードの直訳: `// Get session roles from DB` → DBクエリであることは見れば分かる
+  - セクション区切り: `// Handlers for edit mode` → コードの構造から明らか
+- 書くべきコメント:
+  - **Why（なぜ）**: なぜその実装を選んだのか、背景や制約
+  - **非自明なロジック**: 複雑なアルゴリズムや業務ルールの説明
+  - **TODO/FIXME**: 後で対応が必要な箇所
+
 ### Runtime and Package Manager
 - Default to using **Bun** instead of Node.js
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`

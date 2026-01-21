@@ -639,7 +639,6 @@ function KanbanBoard({ columns, cards, cardPlacements, onCardMove, disabled }: K
     }
   };
 
-  // Get cards for each column
   const getCardsForColumn = (columnId: string): KanbanCard[] => {
     const placedCardIds = cardPlacements
       .filter((p) => p.columnId === columnId)
@@ -684,7 +683,6 @@ export const KanbanNode = ({
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
 
-  // Handlers for edit mode
   const handleTitleChange = (newTitle: string) => {
     updateNodeData(id, { title: newTitle });
   };
@@ -701,7 +699,6 @@ export const KanbanNode = ({
     updateNodeData(id, { initialPlacements });
   };
 
-  // Initialize cardPlacements from initialPlacements on first execute mode render
   const hasInitialized = useRef(false);
   useEffect(() => {
     if (
@@ -721,7 +718,6 @@ export const KanbanNode = ({
     }
   }, [isExecuteMode, data.cardPlacements.length, data.initialPlacements, id, updateNodeData]);
 
-  // Handler for execute mode
   const handleCardMove = (cardId: string, columnId: string) => {
     const existingIndex = data.cardPlacements.findIndex((p) => p.cardId === cardId);
     const newPlacement: CardPlacement = {
