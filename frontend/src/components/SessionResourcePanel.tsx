@@ -2,8 +2,9 @@ import { Panel } from "@xyflow/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { LuFlag, LuHash, LuMic, LuPanelRight, LuUsers, LuX } from "react-icons/lu";
 
-import { db, GameSession } from "@/db";
 import type { ChannelData, GameFlags, RoleData } from "@/db/schemas";
+
+import { db, GameSession } from "@/db";
 
 interface SessionResourcePanelProps {
   sessionId: number;
@@ -29,7 +30,10 @@ export function SessionResourcePanel({ sessionId, isOpen, onClose }: SessionReso
   if (!isOpen) return null;
 
   return (
-    <Panel position="top-right" className="w-72 max-h-[calc(100%-2rem)] overflow-y-auto bg-base-200 rounded-box shadow-xl m-2">
+    <Panel
+      position="top-right"
+      className="w-72 max-h-[calc(100%-2rem)] overflow-y-auto bg-base-200 rounded-box shadow-xl m-2"
+    >
       {/* Header */}
       <div className="sticky top-0 flex items-center justify-between p-3 bg-base-200 border-b border-base-300 z-10 rounded-t-box">
         <div className="flex items-center gap-2">

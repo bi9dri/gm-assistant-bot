@@ -18,9 +18,9 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { DiscordBotData } from "@/db";
 
 import { createNodeTypes } from "@/components/Node";
-import { SessionResourcePanel } from "@/components/SessionResourcePanel";
 import { NodeExecutionContext } from "@/components/Node/NodeExecutionContext";
 import { TemplateEditorContext } from "@/components/Node/TemplateEditorContext";
+import { SessionResourcePanel } from "@/components/SessionResourcePanel";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
