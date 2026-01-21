@@ -72,7 +72,6 @@ export const DeleteCategoryNode = ({
     let successCount = 0;
     let currentProgress = 0;
 
-    // Delete all channels first
     for (const channel of channels) {
       currentProgress++;
       setProgress({ current: currentProgress, total: totalItems });
@@ -88,7 +87,6 @@ export const DeleteCategoryNode = ({
       }
     }
 
-    // Then delete all categories
     for (const category of categories) {
       currentProgress++;
       setProgress({ current: currentProgress, total: totalItems });
@@ -115,7 +113,6 @@ export const DeleteCategoryNode = ({
       if (successCount === totalItems) {
         updateNodeData(id, { executedAt: new Date() });
       }
-      // Refresh data
       void db.Category.where("sessionId")
         .equals(executionContext.sessionId)
         .toArray()

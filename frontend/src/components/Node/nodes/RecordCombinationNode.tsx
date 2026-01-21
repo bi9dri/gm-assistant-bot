@@ -98,13 +98,11 @@ function getFilteredTargetOptions(
     let isDisabled = false;
     let disabledReason = "";
 
-    // Self-pairing check (same-set mode only)
     if (config.mode === "same-set" && !config.allowSelfPairing && option.id === selectedSourceId) {
       isDisabled = true;
       disabledReason = "自分自身とはペアになれません";
     }
 
-    // Duplicate check
     if (!isDisabled && !config.allowDuplicates && selectedSourceId) {
       const existingPair = recordedPairs.find((pair) => {
         if (config.distinguishOrder) {
@@ -318,15 +316,12 @@ function PairingInputForm({
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedTargetId, setSelectedTargetId] = useState<string>("");
 
-  // Re-filter targets when source changes (self-pairing and duplicate check)
   const currentTargetOptions = useMemo(() => {
     if (!selectedSourceId) return targetOptions;
     return targetOptions.map((opt) => {
-      // Self-pairing check
       if (config.mode === "same-set" && !config.allowSelfPairing && opt.id === selectedSourceId) {
         return { ...opt, isDisabled: true, disabledReason: "自分自身とはペアになれません" };
       }
-      // Duplicate check
       if (!config.allowDuplicates) {
         const existingPair = recordedPairs.find((pair) => {
           if (config.distinguishOrder) {
@@ -470,7 +465,6 @@ export const RecordCombinationNode = ({
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
 
-  // Handlers for edit mode
   const handleTitleChange = (newTitle: string) => {
     updateNodeData(id, { title: newTitle });
   };
@@ -493,7 +487,6 @@ export const RecordCombinationNode = ({
     });
   };
 
-  // Handler for execute mode
   const handleRecordPair = (sourceId: string, targetId: string) => {
     const validation = validatePair(data.config, data.recordedPairs, sourceId, targetId);
     if (!validation.valid) {
@@ -518,7 +511,6 @@ export const RecordCombinationNode = ({
     });
   };
 
-  // Compute filtered target options
   const filteredTargetOptions = useMemo(
     () =>
       getFilteredTargetOptions(

@@ -67,20 +67,17 @@ export const DeleteRoleNode = ({
 
     const { guildId, sessionId, bot } = executionContext;
 
-    // Get session roles from DB
     const sessionRoles = await db.Role.where("sessionId").equals(sessionId).toArray();
 
     let targetRoles: RoleData[];
 
     if (data.deleteAll) {
-      // Delete all roles in session
       if (sessionRoles.length === 0) {
         addToast({ message: "削除するロールがありません", status: "warning" });
         return;
       }
       targetRoles = sessionRoles;
     } else {
-      // Delete by name match
       const validNames = data.roleNames.filter((name) => name.trim() !== "");
 
       if (validNames.length === 0) {
@@ -88,7 +85,6 @@ export const DeleteRoleNode = ({
         return;
       }
 
-      // Find roles by exact name match
       const notFoundNames: string[] = [];
       targetRoles = [];
 

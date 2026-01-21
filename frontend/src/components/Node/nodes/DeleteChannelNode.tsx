@@ -68,10 +68,8 @@ export const DeleteChannelNode = ({
       return;
     }
 
-    // Get session channels from DB
     const sessionChannels = await db.Channel.where("sessionId").equals(sessionId).toArray();
 
-    // Find channels by exact name match
     const notFoundNames: string[] = [];
     const targetChannels: ChannelData[] = [];
 

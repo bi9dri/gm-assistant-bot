@@ -91,13 +91,11 @@ export const ChangeChannelPermissionNode = ({
 
     const { bot } = executionContext;
 
-    // Validate channel name
     if (data.channelName.trim() === "") {
       addToast({ message: "チャンネル名を入力してください", status: "warning" });
       return;
     }
 
-    // Find channel by name
     const channel = channels.find((c) => c.name === data.channelName.trim());
     if (!channel) {
       addToast({
@@ -107,13 +105,11 @@ export const ChangeChannelPermissionNode = ({
       return;
     }
 
-    // Resolve role names to IDs
     const roleNameToId = new Map<string, string>();
     for (const role of roles) {
       roleNameToId.set(role.name, role.id);
     }
 
-    // Check for missing roles
     const missingRoles: string[] = [];
     for (const perm of data.rolePermissions) {
       if (perm.roleName.trim() !== "" && !roleNameToId.has(perm.roleName)) {
@@ -132,7 +128,6 @@ export const ChangeChannelPermissionNode = ({
 
     setIsLoading(true);
 
-    // Convert role permissions to IDs
     const writerRoleIds: string[] = [];
     const readerRoleIds: string[] = [];
 
@@ -155,7 +150,6 @@ export const ChangeChannelPermissionNode = ({
         readerRoleIds,
       });
 
-      // Update local DB
       await db.Channel.update(channel.id, {
         writerRoleIds,
         readerRoleIds,

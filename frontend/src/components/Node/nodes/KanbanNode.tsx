@@ -338,7 +338,6 @@ function KanbanBoard({
     }
   };
 
-  // Get cards for each column
   const getCardsForColumn = (columnId: string): KanbanCard[] => {
     const placedCardIds = cardPlacements
       .filter((p) => p.columnId === columnId)
@@ -346,7 +345,6 @@ function KanbanBoard({
     return cards.filter((c) => placedCardIds.includes(c.id));
   };
 
-  // Get unassigned cards
   const getUnassignedCards = (): KanbanCard[] => {
     const allPlacedCardIds = cardPlacements.map((p) => p.cardId);
     return cards.filter((c) => !allPlacedCardIds.includes(c.id));
@@ -404,7 +402,6 @@ export const KanbanNode = ({
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
 
-  // Handlers for edit mode
   const handleTitleChange = (newTitle: string) => {
     updateNodeData(id, { title: newTitle });
   };
@@ -421,15 +418,12 @@ export const KanbanNode = ({
     updateNodeData(id, { unassignedColumnLabel: label });
   };
 
-  // Handler for execute mode
   const handleCardMove = (cardId: string, columnId: string) => {
     if (columnId === "unassigned") {
-      // Remove from placements
       updateNodeData(id, {
         cardPlacements: data.cardPlacements.filter((p) => p.cardId !== cardId),
       });
     } else {
-      // Update or add placement
       const existingIndex = data.cardPlacements.findIndex((p) => p.cardId === cardId);
       const newPlacement: CardPlacement = {
         cardId,

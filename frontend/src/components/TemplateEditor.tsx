@@ -213,44 +213,36 @@ const TemplateEditorContent = ({
     if (!container) return;
 
     const { top, left, width, height } = container.getBoundingClientRect();
-    const menuWidth = 192; // w-48
-    const menuHeight = 100; // estimated height
+    const menuWidth = 192;
+    const menuHeight = 100;
     const padding = 20;
 
-    // Calculate click position relative to pane
     const clickX = event.clientX - left;
     const clickY = event.clientY - top;
 
-    // Check available space in each direction
     const hasSpaceRight = clickX + menuWidth + padding <= width;
     const hasSpaceBottom = clickY + menuHeight + padding <= height;
     const hasSpaceLeft = clickX - menuWidth - padding >= 0;
     const hasSpaceTop = clickY - menuHeight - padding >= 0;
 
-    // Determine menu position based on priority: bottom-right → top-right → bottom-left → top-left
     let menuTop: number | undefined;
     let menuLeft: number | undefined;
     let menuRight: number | undefined;
     let menuBottom: number | undefined;
 
     if (hasSpaceRight && hasSpaceBottom) {
-      // Bottom-right (default)
       menuTop = clickY;
       menuLeft = clickX;
     } else if (hasSpaceRight && hasSpaceTop) {
-      // Top-right
       menuBottom = height - clickY;
       menuLeft = clickX;
     } else if (hasSpaceLeft && hasSpaceBottom) {
-      // Bottom-left
       menuTop = clickY;
       menuRight = width - clickX;
     } else if (hasSpaceLeft && hasSpaceTop) {
-      // Top-left
       menuBottom = height - clickY;
       menuRight = width - clickX;
     } else {
-      // Fallback: position at click point (may overflow)
       menuTop = clickY;
       menuLeft = clickX;
     }
@@ -273,24 +265,20 @@ const TemplateEditorContent = ({
       if (!container) return;
 
       const { top, left, width, height } = container.getBoundingClientRect();
-      const menuWidth = 192; // w-48
-      const menuHeight = 50; // estimated height for single item
+      const menuWidth = 192;
+      const menuHeight = 50;
       const padding = 20;
 
-      // Calculate click position relative to pane
       const clickX = event.clientX - left;
       const clickY = event.clientY - top;
 
-      // Convert screen position to flow position (for node creation)
       const flowPosition = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
-      // Check available space in each direction
       const hasSpaceRight = clickX + menuWidth + padding <= width;
       const hasSpaceBottom = clickY + menuHeight + padding <= height;
       const hasSpaceLeft = clickX - menuWidth - padding >= 0;
       const hasSpaceTop = clickY - menuHeight - padding >= 0;
 
-      // Determine menu position based on priority: bottom-right → top-right → bottom-left → top-left
       let menuTop: number | undefined;
       let menuLeft: number | undefined;
       let menuRight: number | undefined;
@@ -343,7 +331,6 @@ const TemplateEditorContent = ({
     }
   }, [contextMenu, deleteNode]);
 
-  // Close context menu on Escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
