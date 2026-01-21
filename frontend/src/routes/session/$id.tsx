@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState } from "react";
-import { LuPanelRight } from "react-icons/lu";
+import { LuCheck, LuPanelRight } from "react-icons/lu";
 
 import { TemplateEditor } from "@/components/TemplateEditor";
 import { GameSession } from "@/db";
 import { db } from "@/db";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
-import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/session/$id")({
   component: RouteComponent,
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/session/$id")({
 function RouteComponent() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { addToast } = useToast();
 
   const data = useLiveQuery(async () => {
     const session = await GameSession.getById(Number(id));
@@ -52,30 +51,11 @@ function RouteComponent() {
     }
   }, [session, id, previousSessionId]);
 
-  const handleSave = async () => {
-    if (!session) {
-      return;
-    }
-
-    try {
-      const { nodes, edges, viewport } = useTemplateEditorStore.getState();
-      await session.update({
-        name: sessionName,
-        reactFlowData: { nodes, edges, viewport },
-      });
-
-      addToast({
-        message: "セッションを保存しました",
-        durationSeconds: 5,
-      });
-    } catch (error) {
-      console.error("Failed to save session:", error);
-      addToast({
-        message: "セッションの保存に失敗しました",
-        status: "error",
-      });
-    }
-  };
+  // 自動保存（実行モード時は常に有効）
+  const { showSaved } = useAutoSave({
+    sessionId: session?.id,
+    enabled: !!session,
+  });
 
   if (session === undefined) {
     return (
@@ -113,9 +93,12 @@ function RouteComponent() {
           className="input input-bordered flex-1 max-w-md"
         />
 
-        <button onClick={handleSave} disabled={!sessionName.trim()} className="btn btn-primary">
-          保存
-        </button>
+        {showSaved && (
+          <span className="flex items-center gap-1 text-success text-sm">
+            <LuCheck size={16} />
+            保存しました
+          </span>
+        )}
 
         <div className="flex-1" />
 
