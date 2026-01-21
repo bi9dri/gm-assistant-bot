@@ -12,7 +12,6 @@
 - Default to using **Bun** instead of Node.js
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
 - Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
 - Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
 - Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
 - Bun automatically loads .env, so don't use dotenv
@@ -24,14 +23,8 @@
 
 ## Design Documentation
 
-プロジェクトの詳細な設計ドキュメントは `/docs` ディレクトリに保存されています：
-
-### ユーザー向けドキュメント (`/docs`)
-- [ノードベースワークフローシステム設計書](docs/node-workflow-system.md) - TRPG/マーダーミステリーセッション管理のための、ノードベースワークフローシステムの設計
-
 ### 開発者向けドキュメント (`/docs/dev`)
 - [ノードシステムアーキテクチャ](docs/dev/node-system-architecture.md) - **新しいノードを実装する際は必ず参照**。ノードの基本構造、実装パターン、チェックリストを含む
-- [RecordCombinationNode設計書](docs/dev/record-combination-node.md) - 組み合わせ記録ノードの設計（Issue #23）
 
 ### Skills（Claude Code スキル）
 - **node-creator**: 新しいノードタイプ（`XxxNode`）を実装する際は、**必ずこのスキルを利用すること**。スキルには実装チェックリスト、コンポーネントテンプレート、登録手順が含まれている。
@@ -39,447 +32,82 @@
 
 ## Project Architecture
 
-This is a single-page application (SPA) project with client-side Discord integration.
+Bun workspaceを使用したモノレポ構成。
 
-### Application (React SPA)
-- **Framework**: React
+### Frontend (`/frontend`)
+- **Framework**: React + TanStack Router (file-based routing)
+- **UI**: DaisyUI + Tailwind CSS v4
+- **Build**: Vite
 - **Deployment**: Cloudflare Workers Static Assets
-- **Entry point**: `src/main.tsx` - React app with TanStack Router
-- **Build**: Vite build + TypeScript compilation
-- **UI**: React + DaisyUI + Tailwind CSS v4
-- **Routing**: TanStack Router with file-based routing
 - **Data Persistence**: Dexie.js (IndexedDB) with Zod validation
-- **Discord Integration**: Direct client-side Discord API integration using Bot Token
+- **State Management**: Zustand
+- **Workflow Editor**: @xyflow/react
 
-### Discord Integration
-- **Client**: Custom ApiClient class (`src/discord.ts`)
-- **Authentication**: Discord Bot Token stored in IndexedDB
-- **API**: Direct REST API calls to Discord API v10
-- **Features**:
-  - Bot profile retrieval
-  - Guild list retrieval
-  - Category creation
-  - Channel creation and deletion
-  - Role creation and deletion
-  - Channel permission management
-- **Validation**: Zod schemas for type safety
-- **Security**: Bot Token stored locally in browser (IndexedDB)
-
-### Database (Client-side)
-- **Dexie.js**: TypeScript-friendly wrapper for IndexedDB
-- **Zod**: Schema validation for runtime type safety
-- **Storage**: Browser-based IndexedDB only
-- **Data Models**:
-  - DiscordBot: Bot token and profile information
-  - GameSession: Session information with guild and workflow
-  - SessionNode: Workflow nodes for session management
-  - Guild: Discord guild information
-  - Category: Discord category information
-  - Channel: Discord channel information with permissions
-  - Role: Discord role information
-  - Template: Reusable workflow templates
-  - TemplateNode: Template workflow nodes
-
-### Development Tools
-- **Vite** for development and bundling (with HMR)
-- **TanStack Router** for file-based routing with type safety
-- **Bun** for package management and testing
-- **Wrangler** for Cloudflare Workers deployment
-- **oxlint/oxfmt** for linting and formatting
-- **Vitest** for testing
+### Backend (`/backend`)
+- **Framework**: Hono
+- **Deployment**: Cloudflare Workers
+- **Discord Integration**: @discordjs/rest + discord-api-types
+- **Validation**: Zod + @hono/zod-validator
 
 ## Development Commands
 
-All commands should be run from the `frontend` directory:
+ルートディレクトリから実行:
 
 ```bash
-# Start development server with Vite HMR (port 3000)
-bun run dev
+bun dev         # 開発サーバー起動 (frontend: 3000, backend: 8787)
+bun build       # ビルド
+bun deploy      # Cloudflare Workersにデプロイ
+bun lint        # リンティング
+bun format      # フォーマット
+bun type-check  # 型チェック
+bun test        # テスト
+```
 
-# Build for production
-bun run build
-
-# Preview production build locally
-bun run preview
-
-# Deploy to Cloudflare Workers
-bun run deploy
-
-# Lint all code
-bun run lint
-
-# Format all code
-bun run format
-
-# Type check all code
-bun run type-check
-
-# Run tests
-bun run test
+個別パッケージで実行:
+```bash
+bun run --filter frontend dev
+bun run --filter backend dev
 ```
 
 ## Development Workflow
 
 **重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
 
-1. `bun run type-check` - 型エラーがないことを確認
-2. `bun run format` - コードをフォーマット
-3. `bun run lint` - lint エラーがないことを確認
+1. `bun type-check` - 型エラーがないことを確認
+2. `bun format` - コードをフォーマット
+3. `bun lint` - lint エラーがないことを確認
 
 すべてのコマンドが成功するまで、実装は完了とみなさない。
+
+## Knowledge Management
+
+実装完了時、以下の条件に該当する場合はドキュメントを更新する：
+
+### CLAUDE.md の更新
+- プロジェクト構造に大きな変更があった場合（新しいディレクトリ、アーキテクチャ変更など）
+- 新しい開発規約やワークフローが追加された場合
+- 使用技術スタックに変更があった場合
+
+### docs/dev/ への知識保存
+以下のような再利用可能な知識が得られた場合、`/docs/dev/` に新しいドキュメントを作成または既存ドキュメントを更新する：
+
+- **実装パターン**: 繰り返し使用される実装パターンが確立された場合（例: `node-system-architecture.md`）
+- **トラブルシューティング**: 解決に時間がかかった問題とその解決方法
+- **設計判断**: 重要な設計判断とその理由（なぜその方法を選んだか）
+
+ドキュメント作成の判断基準:
+1. 将来同じような実装をする際に参照する価値があるか
+2. 他の開発者（または将来の自分）が同じ問題に直面する可能性があるか
+3. 情報がコード内のコメントだけでは不十分か
 
 ## Testing
 
 Use `vitest` to run tests.
 
-```ts#example.test.ts
+```ts
 import { test, expect } from "vitest";
 
 test("example test", () => {
   expect(1).toBe(1);
 });
 ```
-
-## Application Structure (React with TanStack Router + DaisyUI)
-
-The application uses Vite for fast development with HMR, TanStack Router for file-based routing, and DaisyUI for UI components.
-
-### Main Entry Point
-
-`src/main.tsx`:
-
-```tsx#main.tsx
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-import "./styles.css";
-
-const router = createRouter({
-  routeTree,
-  context: {},
-  defaultPreload: "intent",
-  scrollRestoration: true,
-  defaultStructuralSharing: true,
-  defaultPreloadStaleTime: 0,
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-const rootElement = document.getElementById("app");
-if (rootElement && !rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  );
-}
-```
-
-### Tailwind CSS v4 + DaisyUI Configuration
-
-`src/styles.css`:
-
-```css#styles.css
-@import "tailwindcss";
-@plugin "daisyui";
-@custom-variant dark (&:is(.dark *));
-```
-
-### Data Persistence with Dexie.js
-
-Browser-based data storage using IndexedDB with Dexie.js and Zod:
-
-`src/db.ts`:
-```tsx#db.ts
-import Dexie, { type EntityTable, type Table } from "dexie";
-import z from "zod";
-import * as models from "@/models";
-
-export class DB extends Dexie {
-  DiscordBot!: Table<z.infer<typeof models.DiscordBotSchema>, string>;
-  GameSession!: EntityTable<z.infer<typeof models.GameSessionSchema>, "id">;
-  SessionNode!: EntityTable<z.infer<typeof models.SessionNodeSchema>, "id">;
-  Guild!: Table<z.infer<typeof models.GuildSchema>, string>;
-  Category!: Table<z.infer<typeof models.CategorySchema>, string>;
-  Channel!: Table<z.infer<typeof models.ChannelSchema>, string>;
-  Role!: Table<z.infer<typeof models.RoleSchema>, string>;
-  Template!: EntityTable<models.Template, "id">;
-  TemplateNode!: EntityTable<models.TemplateNode, "id">;
-
-  constructor() {
-    super("GmAssistant");
-    this.version(1).stores({
-      DiscordBot: "id, name, token, icon",
-      GameSession: "++id, name, guildId, createdAt",
-      SessionNode: "++id, sessionId, description, executedAt",
-      Guild: "id, name, icon",
-      Category: "id, sessionId, name",
-      Channel: "id, sessionId, name, type, *writerRoleIds, *readerRoleIds",
-      Role: "[id+guildId], name",
-      Template: "++id, name, createdAt, updatedAt",
-      TemplateNode: "++id, templateId, description",
-    });
-  }
-}
-
-export const db = new DB();
-```
-
-**Model example** (`src/models/Template.ts`):
-```tsx#Template.ts
-import { db } from "@/db";
-import z from "zod";
-
-const schema = z.object({
-  id: z.number(),
-  name: z.string().min(1).trim(),
-  createdAt: z.date(),
-  updatedAt: z.date().optional(),
-});
-
-export class Template {
-  constructor(
-    public id: number,
-    public name: string,
-    public createdAt: Date,
-    public updatedAt?: Date,
-  ) {}
-
-  static async create(name: string) {
-    schema.pick({ name: true }).parse({ name });
-    const now = new Date();
-    const id = await db.Template.add({ name, createdAt: now });
-    return new Template(id, name, now);
-  }
-
-  async update() {
-    this.updatedAt = new Date();
-    await db.Template.put(this);
-  }
-
-  static async delete(id: number) {
-    await db.Template.delete(id);
-  }
-
-  static async getAll() {
-    return db.Template.toArray();
-  }
-
-  static async getById(id: number) {
-    return db.Template.get(id);
-  }
-}
-```
-
-**Key features:**
-- No backend server required - all data stored in browser
-- Type-safe with TypeScript and Zod validation
-- Supports large datasets via IndexedDB
-- Workflow-based session management with nodes
-
-### Discord Integration
-
-The app integrates with Discord API directly from the browser using a custom client.
-
-**Discord Client** (`src/discord.ts`):
-```tsx#discord.ts
-import { ChannelType, OverwriteType, PermissionFlagsBits } from "discord-api-types/v10";
-import z from "zod";
-
-export class ApiClient {
-  private readonly token: string;
-  private readonly baseUrl = "https://discord.com/api/v10";
-
-  constructor(token: string) {
-    this.token = token;
-  }
-
-  private async request<T>(
-    method: "GET" | "POST" | "PATCH" | "DELETE",
-    endpoint: string,
-    body?: unknown,
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const options: RequestInit = {
-      method,
-      headers: {
-        Authorization: `Bot ${this.token}`,
-        "Content-Type": "application/json",
-      },
-    };
-    if (body) options.body = JSON.stringify(body);
-
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      throw new Error(`Discord API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.status === 204 ? undefined : response.json();
-  }
-
-  async getProfile() {
-    // Get bot user profile
-  }
-
-  async getGuilds() {
-    // List all guilds the bot has access to
-  }
-
-  async createRole(data: { guildId: string; name: string }) {
-    // Create a mentionable role
-  }
-
-  async createCategory(data: { guildId: string; name: string }) {
-    // Create a category with locked @everyone permissions
-  }
-
-  async createChannel(data: {
-    guildId: string;
-    parentCategoryId: string;
-    name: string;
-    type: "text" | "voice";
-    writerRoleIds: string[];
-    readerRoleIds: string[];
-  }) {
-    // Create a text/voice channel with role-based permissions
-  }
-
-  async deleteChannel(data: { channelId: string }) {
-    // Delete a channel
-  }
-
-  async deleteRole(data: { guildId: string; roleId: string }) {
-    // Delete a role
-  }
-
-  async changeChannelPermissions(data: {
-    channelId: string;
-    writerRoleIds: string[];
-    readerRoleIds: string[];
-  }) {
-    // Update channel permissions
-  }
-}
-```
-
-**Usage example:**
-```tsx
-import { DiscordBot } from "@/models";
-import { ApiClient } from "@/api";
-
-// Get bot from IndexedDB
-const bot = await DiscordBot.getById("bot-id");
-const client = new ApiClient(bot.token);
-
-// List guilds
-const guilds = await client.getGuilds();
-
-// Create role
-const role = await client.createRole({ guildId: "123", name: "Player" });
-
-// Create category
-const category = await client.createCategory({ guildId: "123", name: "Session" });
-
-// Create channel
-const channel = await client.createChannel({
-  guildId: "123",
-  parentCategoryId: category.id,
-  name: "general",
-  type: "text",
-  writerRoleIds: [role.id],
-  readerRoleIds: [],
-});
-```
-
-**Notes:**
-- Bot Token stored in browser IndexedDB (via DiscordBot model)
-- Direct REST API calls to Discord API v10
-- Type-safe with `discord-api-types` and Zod validation
-- Permissions are carefully configured for role-based channel access (writers, readers)
-- Writer roles: Can read, write messages, manage threads, send voice, etc.
-- Reader roles: Can view, read history, connect to voice, speak, but cannot write
-- @everyone role: Denied all permissions in categories (privacy by default)
-
-### Project Structure
-
-```
-/
-├── src/                       # Application source code
-│   ├── main.tsx               # Application entry point
-│   ├── styles.css             # Global styles with Tailwind CSS v4 + DaisyUI
-│   ├── routes/                # TanStack Router file-based routes
-│   │   ├── __root.tsx         # Root layout
-│   │   ├── index.tsx          # Home page
-│   │   ├── session.tsx        # Session management page
-│   │   ├── bot/               # Discord bot management
-│   │   │   ├── index.tsx      # Bot list page
-│   │   │   └── new.tsx        # Bot registration page
-│   │   └── template/          # Template management
-│   │       ├── index.tsx      # Template list page
-│   │       ├── new.tsx        # Template creation page
-│   │       └── $id.tsx        # Template editor page
-│   ├── models/                # Dexie.js models and Zod schemas
-│   │   ├── index.ts           # Model exports
-│   │   ├── DiscordBot.ts      # Discord bot model
-│   │   ├── GameSession.ts     # Game session model
-│   │   ├── SessionNode.ts     # Session workflow node model
-│   │   ├── Guild.ts           # Discord guild model
-│   │   ├── Category.ts        # Discord category model
-│   │   ├── Channel.ts         # Discord channel model
-│   │   ├── Role.ts            # Discord role model
-│   │   ├── Template.ts        # Template model
-│   │   └── TemplateNode.ts    # Template workflow node model
-│   ├── components/            # Shared React components
-│   │   ├── CreateSession.tsx  # Session creation form
-│   │   ├── TemplateCard.tsx   # Template card component
-│   │   ├── TemplateEditor.tsx # Template workflow editor
-│   │   └── BotCard.tsx        # Bot card component
-│   ├── theme/                 # Theme management
-│   │   ├── index.ts           # Theme exports
-│   │   ├── ThemeProvider.tsx  # Theme context provider
-│   │   ├── ThemeSwichMenu.tsx # Theme switcher menu
-│   │   └── ThemeIcon.tsx      # Theme icon component
-│   ├── toast/                 # Toast notifications
-│   │   └── ToastProvider.tsx  # Toast context provider
-│   ├── db.ts                  # Dexie.js database setup
-│   ├── discord.ts             # Discord API client
-│   └── routeTree.gen.ts       # Generated router tree (auto-generated)
-├── public/                    # Static assets
-├── docs/                      # Documentation
-│   └── node-workflow-system.md # Workflow system design doc
-├── index.html                 # HTML entry point
-├── vite.config.ts             # Vite configuration
-├── wrangler.toml              # Cloudflare Workers config
-├── tsconfig.json              # TypeScript configuration
-├── package.json               # Dependencies and scripts
-├── CLAUDE.md                  # AI assistant instructions
-└── README.md                  # Project documentation
-```
-
-## Key Features
-
-### Workflow-based Session Management
-- Node-based workflow system for TRPG/Murder Mystery sessions
-- Template system for reusable workflows
-- Visual workflow editor using @xyflow/react
-- Automatic Discord resource creation based on workflow steps
-
-### Discord Integration Features
-- Store multiple Discord bot tokens
-- List all guilds the bot has access to
-- Create categories with locked @everyone permissions
-- Create text/voice channels with role-based permissions
-- Create and delete roles
-- Manage channel permissions dynamically
-
-### Data Management
-- All data stored locally in browser (IndexedDB)
-- No backend server required
-- Supports import/export for data portability (planned)
-- Type-safe with Zod validation throughout
