@@ -31,7 +31,6 @@
 
 ### 開発者向けドキュメント (`/docs/dev`)
 - [ノードシステムアーキテクチャ](docs/dev/node-system-architecture.md) - **新しいノードを実装する際は必ず参照**。ノードの基本構造、実装パターン、チェックリストを含む
-- [RecordCombinationNode設計書](docs/dev/record-combination-node.md) - 組み合わせ記録ノードの設計（Issue #23）
 
 ### Skills（Claude Code スキル）
 - **node-creator**: 新しいノードタイプ（`XxxNode`）を実装する際は、**必ずこのスキルを利用すること**。スキルには実装チェックリスト、コンポーネントテンプレート、登録手順が含まれている。

@@ -23,7 +23,9 @@
 | SendMessage | チャンネルへメッセージ送信＆ファイル添付 | lg |
 | Blueprint | マーダーミステリー基本セット（展開ノード） | lg |
 | SetGameFlag | セッションのゲームフラグ設定 | md |
-| LabeledGroup | ノードをグループ化するコンテナ | xl (640px) |
+| RecordCombination | 組み合わせペアを記録 | lg |
+| Kanban | カンバンボード | xl (640px) |
+| LabeledGroup | ノードをグループ化するコンテナ | xl |
 | Comment | ワークフロー内のコメント | md |
 
 ---
