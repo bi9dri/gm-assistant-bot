@@ -15,6 +15,7 @@ import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/D
 import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
 import type { DataSchema as LabeledGroupDataSchema } from "@/components/Node/LabeledGroupNode";
+import type { DataSchema as RecordCombinationDataSchema } from "@/components/Node/RecordCombinationNode";
 import type { DataSchema as SendMessageDataSchema } from "@/components/Node/SendMessageNode";
 import type { DataSchema as SetGameFlagDataSchema } from "@/components/Node/SetGameFlagNode";
 
@@ -31,6 +32,7 @@ export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 export type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
+export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 
@@ -46,6 +48,7 @@ export type FlowNode =
   | Node<DeleteChannelNodeData, "DeleteChannel">
   | Node<DeleteRoleNodeData, "DeleteRole">
   | Node<LabeledGroupNodeData, "LabeledGroup">
+  | Node<RecordCombinationNodeData, "RecordCombination">
   | Node<SendMessageNodeData, "SendMessage">
   | Node<SetGameFlagNodeData, "SetGameFlag">;
 
@@ -87,6 +90,7 @@ interface TemplateEditorActions {
       | DeleteChannelNodeData
       | DeleteRoleNodeData
       | LabeledGroupNodeData
+      | RecordCombinationNodeData
       | SendMessageNodeData
       | SetGameFlagNodeData
     >,
@@ -104,6 +108,7 @@ interface TemplateEditorActions {
       | "DeleteChannel"
       | "DeleteRole"
       | "LabeledGroup"
+      | "RecordCombination"
       | "SendMessage"
       | "SetGameFlag",
     position: { x: number; y: number },
@@ -250,6 +255,27 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { comment: "" },
+      };
+    } else if (type === "RecordCombination") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "組み合わせを記録",
+          config: {
+            mode: "same-set",
+            allowSelfPairing: false,
+            allowDuplicates: false,
+            distinguishOrder: true,
+            allowMultipleAssignments: false,
+          },
+          sourceOptions: {
+            label: "選択肢A",
+            items: [],
+          },
+          recordedPairs: [],
+        },
       };
     } else {
       newNode = {

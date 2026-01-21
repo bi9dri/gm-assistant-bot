@@ -85,7 +85,10 @@ const NODE_CATEGORIES = [
   },
   {
     category: "ゲーム管理",
-    nodes: [{ type: "SetGameFlag", label: "ゲームフラグを設定する" }],
+    nodes: [
+      { type: "SetGameFlag", label: "ゲームフラグを設定する" },
+      { type: "RecordCombination", label: "組み合わせを記録する" },
+    ],
   },
   {
     category: "その他",
