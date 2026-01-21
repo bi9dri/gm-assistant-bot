@@ -1,10 +1,4 @@
-import {
-  type Node,
-  type NodeProps,
-  NodeResizer,
-  Panel,
-  type PanelPosition,
-} from "@xyflow/react";
+import { type Node, type NodeProps, NodeResizer } from "@xyflow/react";
 import type { ComponentProps, ReactNode } from "react";
 import z from "zod";
 
@@ -13,8 +7,22 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { BaseNode, cn } from "./base-node";
 import { BaseNodeDataSchema, LABELED_GROUP_DEFAULTS } from "./base-schema";
 
+// Available background colors for LabeledGroupNode
+export const GROUP_BG_COLORS = [
+  { name: "default", value: "", label: "デフォルト" },
+  { name: "red", value: "bg-red-500/20", label: "赤" },
+  { name: "orange", value: "bg-orange-500/20", label: "オレンジ" },
+  { name: "yellow", value: "bg-yellow-500/20", label: "黄" },
+  { name: "green", value: "bg-green-500/20", label: "緑" },
+  { name: "cyan", value: "bg-cyan-500/20", label: "シアン" },
+  { name: "blue", value: "bg-blue-500/20", label: "青" },
+  { name: "purple", value: "bg-purple-500/20", label: "紫" },
+  { name: "pink", value: "bg-pink-500/20", label: "ピンク" },
+] as const;
+
 export const DataSchema = BaseNodeDataSchema.extend({
   label: z.string().trim(),
+  bgColor: z.string().optional(),
 });
 
 type LabeledGroupNodeData = Node<z.infer<typeof DataSchema>, "LabeledGroup">;
@@ -25,53 +33,30 @@ type GroupNodeLabelProps = ComponentProps<"div">;
 
 function GroupNodeLabel({ children, className, ...props }: GroupNodeLabelProps) {
   return (
-    <div className="h-full w-full" {...props}>
-      <div
-        className={cn("text-card-foreground bg-secondary w-fit p-2 text-xs font-semibold", className)}
-      >
-        {children}
-      </div>
+    <div
+      className={cn("text-primary-content bg-primary w-fit p-2 text-xs font-semibold", className)}
+      {...props}
+    >
+      {children}
     </div>
   );
 }
 
 type GroupNodeProps = Partial<NodeProps> & {
   label?: ReactNode;
-  position?: PanelPosition;
+  bgColor?: string;
 };
 
-function GroupNode({ label, position, selected }: GroupNodeProps) {
-  const getLabelClassName = (position?: PanelPosition) => {
-    switch (position) {
-      case "top-left":
-        return "rounded-br-sm";
-      case "top-center":
-        return "rounded-b-sm";
-      case "top-right":
-        return "rounded-bl-sm";
-      case "bottom-left":
-        return "rounded-tr-sm";
-      case "bottom-right":
-        return "rounded-tl-sm";
-      case "bottom-center":
-        return "rounded-t-sm";
-      default:
-        return "rounded-br-sm";
-    }
-  };
-
+function GroupNode({ label, selected, bgColor }: GroupNodeProps) {
   return (
     <BaseNode
       className={cn(
-        "h-full overflow-hidden rounded-sm bg-base-200/50 dark:bg-base-300/30",
+        "h-full overflow-hidden rounded-sm",
+        bgColor || "bg-base-200/50 dark:bg-base-300/30",
         selected && "border-primary",
       )}
     >
-      <Panel className="m-0 p-0" position={position}>
-        {label && (
-          <GroupNodeLabel className={getLabelClassName(position)}>{label}</GroupNodeLabel>
-        )}
-      </Panel>
+      {label && <GroupNodeLabel className="rounded-br-sm">{label}</GroupNodeLabel>}
     </BaseNode>
   );
 }
@@ -90,16 +75,39 @@ export const LabeledGroupNode = ({
     updateNodeData(id, { label: newValue });
   };
 
+  const handleBgColorChange = (newValue: string) => {
+    updateNodeData(id, { bgColor: newValue });
+  };
+
   const isEditMode = mode === "edit";
 
   const labelContent = isEditMode ? (
-    <input
-      type="text"
-      className="nodrag input input-ghost input-xs p-0 text-xs font-semibold bg-transparent border-none focus:outline-none min-w-24"
-      value={data.label}
-      onChange={(evt) => handleLabelChange(evt.target.value)}
-      placeholder="グループ名を入力"
-    />
+    <div className="flex items-center gap-2">
+      <input
+        type="text"
+        className="nodrag input input-ghost input-xs p-0 text-xs font-semibold text-primary-content placeholder:text-primary-content/50 border-none focus:outline-none focus:bg-primary min-w-24"
+        value={data.label}
+        onChange={(evt) => handleLabelChange(evt.target.value)}
+        placeholder="グループ名を入力"
+      />
+      {selected && (
+        <div className="nodrag flex gap-0.5">
+          {GROUP_BG_COLORS.map((color) => (
+            <button
+              key={color.name}
+              type="button"
+              title={color.label}
+              className={cn(
+                "w-4 h-4 rounded-sm border border-primary-content/30 hover:scale-110 transition-transform",
+                color.value || "bg-base-200/50",
+                data.bgColor === color.value && "ring-2 ring-primary-content ring-offset-1",
+              )}
+              onClick={() => handleBgColorChange(color.value)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   ) : (
     <span>{data.label || "グループ"}</span>
   );
@@ -115,7 +123,7 @@ export const LabeledGroupNode = ({
           handleClassName="!h-3 !w-3 !bg-primary !border-primary"
         />
       )}
-      <GroupNode label={labelContent} position="top-left" selected={selected} />
+      <GroupNode label={labelContent} selected={selected} bgColor={data.bgColor} />
     </>
   );
 };

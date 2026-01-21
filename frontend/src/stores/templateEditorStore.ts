@@ -233,6 +233,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { label: "" },
+        zIndex: -1,
         style: {
           width: LABELED_GROUP_DEFAULTS.width,
           height: LABELED_GROUP_DEFAULTS.height,
