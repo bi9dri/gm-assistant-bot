@@ -12,6 +12,7 @@ import {
   DeleteCategoryNode,
   DeleteChannelNode,
   DeleteRoleNode,
+  KanbanNode,
   LabeledGroupNode,
   RecordCombinationNode,
   SendMessageNode,
@@ -75,6 +76,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <RecordCombinationNode {...props} mode={mode} />
   );
 
+  const KanbanWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <KanbanNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -90,5 +95,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     LabeledGroup: LabeledGroupWithMode,
     Comment: CommentWithMode,
     RecordCombination: RecordCombinationWithMode,
+    Kanban: KanbanWithMode,
   } as NodeTypes;
 }

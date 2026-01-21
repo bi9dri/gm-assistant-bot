@@ -34,3 +34,5 @@ export {
 export { SendMessageNode, DataSchema as SendMessageDataSchema } from "./SendMessageNode";
 
 export { SetGameFlagNode, DataSchema as SetGameFlagDataSchema } from "./SetGameFlagNode";
+
+export { KanbanNode, DataSchema as KanbanDataSchema } from "./KanbanNode";
