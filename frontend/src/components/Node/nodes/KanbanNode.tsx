@@ -1,6 +1,6 @@
 import { type Node, type NodeProps } from "@xyflow/react";
 import { useRef, useState, useEffect } from "react";
-import { HiPencil } from "react-icons/hi";
+import { HiDotsVertical, HiPencil, HiTrash } from "react-icons/hi";
 import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
@@ -8,12 +8,10 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import {
   BaseNode,
   BaseNodeContent,
-  BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
   BaseNodeDataSchema,
-  NODE_CONTENT_HEIGHTS,
   NODE_TYPE_WIDTHS,
 } from "../base";
 
@@ -37,11 +35,16 @@ const CardPlacementSchema = z.object({
   movedAt: z.coerce.date(),
 });
 
+const InitialPlacementSchema = z.object({
+  cardId: z.string(),
+  columnId: z.string(),
+});
+
 export const DataSchema = BaseNodeDataSchema.extend({
   title: z.string().default("カンバン"),
   columns: z.array(KanbanColumnSchema).default([]),
   cards: z.array(KanbanCardSchema).default([]),
-  unassignedColumnLabel: z.string().default("未配置"),
+  initialPlacements: z.array(InitialPlacementSchema).default([]),
   cardPlacements: z.array(CardPlacementSchema).default([]),
 });
 
@@ -55,6 +58,7 @@ type KanbanNode = Node<KanbanNodeData, "Kanban">;
 type KanbanCard = z.infer<typeof KanbanCardSchema>;
 type KanbanColumn = z.infer<typeof KanbanColumnSchema>;
 type CardPlacement = z.infer<typeof CardPlacementSchema>;
+type InitialPlacement = z.infer<typeof InitialPlacementSchema>;
 
 // ============================================================
 // Utility Functions
@@ -141,68 +145,373 @@ function EditableTitle({ title, defaultTitle, onTitleChange }: EditableTitleProp
   );
 }
 
-interface ItemListEditorProps {
-  label: string;
-  items: { id: string; label: string }[];
-  onItemsChange: (items: { id: string; label: string }[]) => void;
-  disabled?: boolean;
-  addButtonLabel: string;
+// ============================================================
+// Editable Components (for Edit Mode)
+// ============================================================
+
+interface EditableKanbanCardProps {
+  card: KanbanCard;
+  onLabelChange: (newLabel: string) => void;
+  onDelete: () => void;
+  onDragStart: (e: React.DragEvent, cardId: string) => void;
 }
 
-function ItemListEditor({
-  label,
-  items,
-  onItemsChange,
-  disabled,
-  addButtonLabel,
-}: ItemListEditorProps) {
-  const handleLabelChange = (index: number, newLabel: string) => {
-    const updated = [...items];
-    updated[index] = { ...updated[index], label: newLabel };
-    onItemsChange(updated);
-  };
-
-  const handleAdd = () => {
-    onItemsChange([...items, { id: generateId(), label: "" }]);
-  };
-
-  const handleRemove = (index: number) => {
-    onItemsChange(items.filter((_, i) => i !== index));
+function EditableKanbanCard({
+  card,
+  onLabelChange,
+  onDelete,
+  onDragStart,
+}: EditableKanbanCardProps) {
+  // Prevent drag when starting from input
+  const handleDragStart = (e: React.DragEvent) => {
+    if ((e.target as HTMLElement).tagName === "INPUT") {
+      e.preventDefault();
+      return;
+    }
+    onDragStart(e, card.id);
   };
 
   return (
-    <div className="space-y-2">
-      <div className="text-sm font-medium text-base-content/70">{label}</div>
-      {items.map((item, index) => (
-        <div key={item.id} className="flex gap-2 items-center">
-          <input
-            type="text"
-            className="nodrag input input-bordered input-sm flex-1"
-            value={item.label}
-            onChange={(e) => handleLabelChange(index, e.target.value)}
-            placeholder={`${label}名を入力`}
-            disabled={disabled}
-          />
-          {!disabled && (
-            <button
-              type="button"
-              className="nodrag btn btn-ghost btn-sm btn-square"
-              onClick={() => handleRemove(index)}
-              title="削除"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      ))}
-      {!disabled && (
-        <button type="button" className="nodrag btn btn-ghost btn-sm" onClick={handleAdd}>
-          + {addButtonLabel}
-        </button>
-      )}
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      className="nodrag bg-base-100 rounded px-1 py-0.5 text-sm shadow-sm border border-base-300 flex items-center gap-1 cursor-grab active:cursor-grabbing"
+    >
+      {/* Drag Handle */}
+      <div className="shrink-0 text-base-content/30">
+        <HiDotsVertical className="w-3 h-3 rotate-90" />
+      </div>
+
+      {/* Input - not draggable */}
+      <input
+        type="text"
+        draggable={false}
+        className="input input-xs flex-1 bg-transparent border-none p-0 h-auto min-h-0 focus:outline-none cursor-text"
+        value={card.label}
+        onChange={(e) => onLabelChange(e.target.value)}
+        placeholder="カード名"
+      />
+
+      {/* Delete Button */}
+      <button
+        type="button"
+        className="btn btn-ghost btn-xs btn-square shrink-0 opacity-50 hover:opacity-100"
+        onClick={onDelete}
+        title="削除"
+      >
+        ×
+      </button>
     </div>
   );
 }
+
+interface EditableKanbanColumnProps {
+  column: KanbanColumn;
+  cards: KanbanCard[];
+  onLabelChange: (newLabel: string) => void;
+  onDelete: () => void;
+  onAddCard: () => void;
+  onCardLabelChange: (cardId: string, newLabel: string) => void;
+  onCardDelete: (cardId: string) => void;
+  onDragStart: (e: React.DragEvent, cardId: string) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, columnId: string) => void;
+  isDragOver: boolean;
+  onDragEnter: (e: React.DragEvent, columnId: string) => void;
+  onDragLeave: (e: React.DragEvent, columnId: string) => void;
+}
+
+function EditableKanbanColumn({
+  column,
+  cards,
+  onLabelChange,
+  onDelete,
+  onAddCard,
+  onCardLabelChange,
+  onCardDelete,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragOver,
+  onDragEnter,
+  onDragLeave,
+}: EditableKanbanColumnProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(column.label);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleStartEdit = () => {
+    setEditValue(column.label);
+    setIsEditing(true);
+    // Close dropdown
+    if (dropdownRef.current) {
+      dropdownRef.current.open = false;
+    }
+  };
+
+  const handleConfirm = () => {
+    onLabelChange(editValue);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleConfirm();
+    } else if (e.key === "Escape") {
+      setEditValue(column.label);
+      setIsEditing(false);
+    }
+  };
+
+  const handleDelete = () => {
+    // Close dropdown
+    if (dropdownRef.current) {
+      dropdownRef.current.open = false;
+    }
+    onDelete();
+  };
+
+  return (
+    <div className="flex flex-col min-w-28 max-w-36">
+      {/* Column Header */}
+      <div className="group flex items-center gap-1 mb-1 min-h-5">
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            className="nodrag input input-xs flex-1 font-medium"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleConfirm}
+            placeholder="列名"
+          />
+        ) : (
+          <>
+            <span
+              className="text-xs font-medium text-base-content/70 truncate flex-1"
+              title={column.label}
+            >
+              {column.label}
+            </span>
+            <details ref={dropdownRef} className="dropdown dropdown-end nodrag">
+              <summary className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 shrink-0">
+                <HiDotsVertical className="w-3 h-3" />
+              </summary>
+              <ul className="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-1 shadow-lg border border-base-300">
+                <li>
+                  <button type="button" onClick={handleStartEdit} className="text-xs">
+                    <HiPencil className="w-3 h-3" />
+                    名前を変更
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={handleDelete} className="text-xs text-error">
+                    <HiTrash className="w-3 h-3" />
+                    削除
+                  </button>
+                </li>
+              </ul>
+            </details>
+          </>
+        )}
+      </div>
+
+      {/* Column Body */}
+      <div
+        className={cn(
+          "nodrag flex-1 min-h-20 p-1 rounded border border-dashed space-y-1 overflow-y-auto nowheel",
+          isDragOver ? "border-primary bg-primary/10" : "border-base-300 bg-base-200/50",
+        )}
+        onDragOver={onDragOver}
+        onDragEnter={(e) => onDragEnter(e, column.id)}
+        onDragLeave={(e) => onDragLeave(e, column.id)}
+        onDrop={(e) => onDrop(e, column.id)}
+        style={{ maxHeight: "150px" }}
+      >
+        {cards.map((card) => (
+          <EditableKanbanCard
+            key={card.id}
+            card={card}
+            onLabelChange={(newLabel) => onCardLabelChange(card.id, newLabel)}
+            onDelete={() => onCardDelete(card.id)}
+            onDragStart={onDragStart}
+          />
+        ))}
+        {cards.length === 0 && (
+          <div className="text-xs text-base-content/30 text-center py-2">ドロップ</div>
+        )}
+      </div>
+
+      {/* Add Card Button */}
+      <button
+        type="button"
+        className="nodrag btn btn-ghost btn-xs mt-1 text-base-content/50"
+        onClick={onAddCard}
+      >
+        + カード
+      </button>
+    </div>
+  );
+}
+
+interface EditableKanbanBoardProps {
+  columns: KanbanColumn[];
+  cards: KanbanCard[];
+  initialPlacements: InitialPlacement[];
+  onColumnsChange: (columns: KanbanColumn[]) => void;
+  onCardsChange: (cards: KanbanCard[]) => void;
+  onInitialPlacementsChange: (placements: InitialPlacement[]) => void;
+}
+
+function EditableKanbanBoard({
+  columns,
+  cards,
+  initialPlacements,
+  onColumnsChange,
+  onCardsChange,
+  onInitialPlacementsChange,
+}: EditableKanbanBoardProps) {
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, cardId: string) => {
+    e.dataTransfer.setData("cardId", cardId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData("cardId");
+    if (cardId) {
+      // Update or add placement
+      const existingIndex = initialPlacements.findIndex((p) => p.cardId === cardId);
+      const newPlacement: InitialPlacement = { cardId, columnId };
+
+      if (existingIndex >= 0) {
+        const updated = [...initialPlacements];
+        updated[existingIndex] = newPlacement;
+        onInitialPlacementsChange(updated);
+      } else {
+        onInitialPlacementsChange([...initialPlacements, newPlacement]);
+      }
+    }
+    setDragOverColumnId(null);
+  };
+
+  const handleDragEnter = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    setDragOverColumnId(columnId);
+  };
+
+  const handleDragLeave = (e: React.DragEvent, columnId: string) => {
+    const relatedTarget = e.relatedTarget as EventTarget | null;
+    if (
+      !relatedTarget ||
+      !(relatedTarget instanceof window.Node) ||
+      !e.currentTarget.contains(relatedTarget)
+    ) {
+      if (dragOverColumnId === columnId) {
+        setDragOverColumnId(null);
+      }
+    }
+  };
+
+  // Get cards for each column
+  const getCardsForColumn = (columnId: string): KanbanCard[] => {
+    const placedCardIds = initialPlacements
+      .filter((p) => p.columnId === columnId)
+      .map((p) => p.cardId);
+    return cards.filter((c) => placedCardIds.includes(c.id));
+  };
+
+  // Column handlers
+  const handleAddColumn = () => {
+    onColumnsChange([...columns, { id: generateId(), label: "新しい列" }]);
+  };
+
+  const handleColumnLabelChange = (columnId: string, newLabel: string) => {
+    onColumnsChange(columns.map((c) => (c.id === columnId ? { ...c, label: newLabel } : c)));
+  };
+
+  const handleDeleteColumn = (columnId: string) => {
+    onColumnsChange(columns.filter((c) => c.id !== columnId));
+    // Remove placements for deleted column
+    onInitialPlacementsChange(initialPlacements.filter((p) => p.columnId !== columnId));
+  };
+
+  // Card handlers
+  const handleAddCard = (columnId: string) => {
+    const newCard = { id: generateId(), label: "" };
+    onCardsChange([...cards, newCard]);
+    // Set initial placement for the new card
+    onInitialPlacementsChange([...initialPlacements, { cardId: newCard.id, columnId }]);
+  };
+
+  const handleCardLabelChange = (cardId: string, newLabel: string) => {
+    onCardsChange(cards.map((c) => (c.id === cardId ? { ...c, label: newLabel } : c)));
+  };
+
+  const handleCardDelete = (cardId: string) => {
+    onCardsChange(cards.filter((c) => c.id !== cardId));
+    onInitialPlacementsChange(initialPlacements.filter((p) => p.cardId !== cardId));
+  };
+
+  return (
+    <div className="overflow-x-auto nowheel">
+      <div className="flex gap-2 min-w-max pb-1">
+        {/* User-defined columns */}
+        {columns.map((column) => (
+          <EditableKanbanColumn
+            key={column.id}
+            column={column}
+            cards={getCardsForColumn(column.id)}
+            onLabelChange={(newLabel) => handleColumnLabelChange(column.id, newLabel)}
+            onDelete={() => handleDeleteColumn(column.id)}
+            onAddCard={() => handleAddCard(column.id)}
+            onCardLabelChange={handleCardLabelChange}
+            onCardDelete={handleCardDelete}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            isDragOver={dragOverColumnId === column.id}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+          />
+        ))}
+
+        {/* Add Column Button */}
+        <div className="flex flex-col min-w-20">
+          <div className="h-5 mb-1" /> {/* Spacer for header alignment */}
+          <button
+            type="button"
+            className="nodrag btn btn-ghost btn-sm h-20 border border-dashed border-base-300 text-base-content/50"
+            onClick={handleAddColumn}
+          >
+            + 列追加
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Read-only Components (for Execute Mode)
+// ============================================================
 
 interface KanbanCardComponentProps {
   card: KanbanCard;
@@ -227,7 +536,7 @@ function KanbanCardComponent({ card, onDragStart, disabled }: KanbanCardComponen
 }
 
 interface KanbanColumnComponentProps {
-  column: KanbanColumn | { id: "unassigned"; label: string };
+  column: KanbanColumn;
   cards: KanbanCard[];
   onDragStart: (e: React.DragEvent, cardId: string) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -285,19 +594,11 @@ interface KanbanBoardProps {
   columns: KanbanColumn[];
   cards: KanbanCard[];
   cardPlacements: CardPlacement[];
-  unassignedColumnLabel: string;
   onCardMove: (cardId: string, columnId: string) => void;
   disabled?: boolean;
 }
 
-function KanbanBoard({
-  columns,
-  cards,
-  cardPlacements,
-  unassignedColumnLabel,
-  onCardMove,
-  disabled,
-}: KanbanBoardProps) {
+function KanbanBoard({ columns, cards, cardPlacements, onCardMove, disabled }: KanbanBoardProps) {
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
@@ -346,30 +647,9 @@ function KanbanBoard({
     return cards.filter((c) => placedCardIds.includes(c.id));
   };
 
-  // Get unassigned cards
-  const getUnassignedCards = (): KanbanCard[] => {
-    const allPlacedCardIds = cardPlacements.map((p) => p.cardId);
-    return cards.filter((c) => !allPlacedCardIds.includes(c.id));
-  };
-
-  const unassignedCards = getUnassignedCards();
-
   return (
     <div className="overflow-x-auto nowheel">
       <div className="flex gap-2 min-w-max pb-1">
-        {/* Unassigned column */}
-        <KanbanColumnComponent
-          column={{ id: "unassigned", label: unassignedColumnLabel }}
-          cards={unassignedCards}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          isDragOver={dragOverColumnId === "unassigned"}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          disabled={disabled}
-        />
-
         {/* User-defined columns */}
         {columns.map((column) => (
           <KanbanColumnComponent
@@ -417,35 +697,47 @@ export const KanbanNode = ({
     updateNodeData(id, { cards });
   };
 
-  const handleUnassignedLabelChange = (label: string) => {
-    updateNodeData(id, { unassignedColumnLabel: label });
+  const handleInitialPlacementsChange = (initialPlacements: InitialPlacement[]) => {
+    updateNodeData(id, { initialPlacements });
   };
+
+  // Initialize cardPlacements from initialPlacements on first execute mode render
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (
+      isExecuteMode &&
+      !hasInitialized.current &&
+      data.cardPlacements.length === 0 &&
+      data.initialPlacements.length > 0
+    ) {
+      hasInitialized.current = true;
+      const now = new Date();
+      updateNodeData(id, {
+        cardPlacements: data.initialPlacements.map((p) => ({
+          ...p,
+          movedAt: now,
+        })),
+      });
+    }
+  }, [isExecuteMode, data.cardPlacements.length, data.initialPlacements, id, updateNodeData]);
 
   // Handler for execute mode
   const handleCardMove = (cardId: string, columnId: string) => {
-    if (columnId === "unassigned") {
-      // Remove from placements
-      updateNodeData(id, {
-        cardPlacements: data.cardPlacements.filter((p) => p.cardId !== cardId),
-      });
-    } else {
-      // Update or add placement
-      const existingIndex = data.cardPlacements.findIndex((p) => p.cardId === cardId);
-      const newPlacement: CardPlacement = {
-        cardId,
-        columnId,
-        movedAt: new Date(),
-      };
+    const existingIndex = data.cardPlacements.findIndex((p) => p.cardId === cardId);
+    const newPlacement: CardPlacement = {
+      cardId,
+      columnId,
+      movedAt: new Date(),
+    };
 
-      if (existingIndex >= 0) {
-        const updated = [...data.cardPlacements];
-        updated[existingIndex] = newPlacement;
-        updateNodeData(id, { cardPlacements: updated });
-      } else {
-        updateNodeData(id, {
-          cardPlacements: [...data.cardPlacements, newPlacement],
-        });
-      }
+    if (existingIndex >= 0) {
+      const updated = [...data.cardPlacements];
+      updated[existingIndex] = newPlacement;
+      updateNodeData(id, { cardPlacements: updated });
+    } else {
+      updateNodeData(id, {
+        cardPlacements: [...data.cardPlacements, newPlacement],
+      });
     }
   };
 
@@ -468,49 +760,14 @@ export const KanbanNode = ({
 
       <BaseNodeContent>
         {!isExecuteMode && (
-          <>
-            {/* Settings Section */}
-            <div className="collapse collapse-arrow bg-base-200 shrink-0">
-              <input type="checkbox" className="nodrag" />
-              <div className="collapse-title text-sm font-medium py-2 min-h-0">設定</div>
-              <div className="collapse-content space-y-2">
-                <div className="form-control">
-                  <label className="label py-1">
-                    <span className="label-text text-xs">未配置列のラベル</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="nodrag input input-bordered input-sm"
-                    value={data.unassignedColumnLabel}
-                    onChange={(e) => handleUnassignedLabelChange(e.target.value)}
-                    placeholder="未配置"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Columns and Cards - Scrollable area */}
-            <div
-              className="flex flex-col gap-4 overflow-y-auto nowheel"
-              style={{ maxHeight: NODE_CONTENT_HEIGHTS.md }}
-            >
-              <ItemListEditor
-                label="キャラクター（列）"
-                items={data.columns}
-                onItemsChange={handleColumnsChange}
-                addButtonLabel="キャラクターを追加"
-              />
-
-              <div className="divider my-0" />
-
-              <ItemListEditor
-                label="アイテム（カード）"
-                items={data.cards}
-                onItemsChange={handleCardsChange}
-                addButtonLabel="アイテムを追加"
-              />
-            </div>
-          </>
+          <EditableKanbanBoard
+            columns={data.columns}
+            cards={data.cards}
+            initialPlacements={data.initialPlacements}
+            onColumnsChange={handleColumnsChange}
+            onCardsChange={handleCardsChange}
+            onInitialPlacementsChange={handleInitialPlacementsChange}
+          />
         )}
 
         {isExecuteMode && (
@@ -518,20 +775,11 @@ export const KanbanNode = ({
             columns={data.columns}
             cards={data.cards}
             cardPlacements={data.cardPlacements}
-            unassignedColumnLabel={data.unassignedColumnLabel}
             onCardMove={handleCardMove}
             disabled={isExecuted}
           />
         )}
       </BaseNodeContent>
-
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <div className="text-xs text-base-content/50">
-            {data.columns.length}列 / {data.cards.length}カード
-          </div>
-        </BaseNodeFooter>
-      )}
     </BaseNode>
   );
 };

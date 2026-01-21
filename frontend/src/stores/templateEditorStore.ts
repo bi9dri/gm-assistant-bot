@@ -292,7 +292,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           title: "カンバン",
           columns: [],
           cards: [],
-          unassignedColumnLabel: "未配置",
+          initialPlacements: [],
           cardPlacements: [],
         },
       };
