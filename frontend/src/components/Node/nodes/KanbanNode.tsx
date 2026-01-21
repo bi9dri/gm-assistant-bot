@@ -8,7 +8,6 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import {
   BaseNode,
   BaseNodeContent,
-  BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
@@ -163,69 +162,40 @@ function EditableKanbanCard({
   onDelete,
   onDragStart,
 }: EditableKanbanCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(card.label);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+  // Prevent drag when starting from input
+  const handleDragStart = (e: React.DragEvent) => {
+    if ((e.target as HTMLElement).tagName === "INPUT") {
+      e.preventDefault();
+      return;
     }
-  }, [isEditing]);
-
-  const handleStartEdit = () => {
-    setEditValue(card.label);
-    setIsEditing(true);
+    onDragStart(e, card.id);
   };
-
-  const handleConfirm = () => {
-    onLabelChange(editValue);
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleConfirm();
-    } else if (e.key === "Escape") {
-      setEditValue(card.label);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="nodrag bg-base-100 rounded px-1 py-0.5 shadow-sm border border-primary">
-        <input
-          ref={inputRef}
-          type="text"
-          className="input input-xs w-full bg-transparent border-none p-0 h-auto min-h-0 focus:outline-none"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleConfirm}
-          placeholder="カード名"
-        />
-      </div>
-    );
-  }
 
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, card.id)}
-      className="nodrag group bg-base-100 rounded px-2 py-1 text-sm shadow-sm border border-base-300 cursor-grab hover:bg-base-200 active:cursor-grabbing flex items-center justify-between gap-1"
+      onDragStart={handleDragStart}
+      className="nodrag bg-base-100 rounded px-1 py-0.5 text-sm shadow-sm border border-base-300 flex items-center gap-1 cursor-grab active:cursor-grabbing"
     >
-      <span
-        className="truncate flex-1 cursor-text"
-        onDoubleClick={handleStartEdit}
-        title={card.label || "(未入力)"}
-      >
-        {card.label || "(未入力)"}
-      </span>
+      {/* Drag Handle */}
+      <div className="shrink-0 text-base-content/30">
+        <HiDotsVertical className="w-3 h-3 rotate-90" />
+      </div>
+
+      {/* Input - not draggable */}
+      <input
+        type="text"
+        draggable={false}
+        className="input input-xs flex-1 bg-transparent border-none p-0 h-auto min-h-0 focus:outline-none cursor-text"
+        value={card.label}
+        onChange={(e) => onLabelChange(e.target.value)}
+        placeholder="カード名"
+      />
+
+      {/* Delete Button */}
       <button
         type="button"
-        className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 shrink-0"
+        className="btn btn-ghost btn-xs btn-square shrink-0 opacity-50 hover:opacity-100"
         onClick={onDelete}
         title="削除"
       >
@@ -810,14 +780,6 @@ export const KanbanNode = ({
           />
         )}
       </BaseNodeContent>
-
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <div className="text-xs text-base-content/50">
-            {data.columns.length}列 / {data.cards.length}カード
-          </div>
-        </BaseNodeFooter>
-      )}
     </BaseNode>
   );
 };
