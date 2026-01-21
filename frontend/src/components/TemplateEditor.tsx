@@ -77,6 +77,10 @@ const NODE_CATEGORIES = [
     category: "ゲーム管理",
     nodes: [{ type: "SetGameFlag", label: "ゲームフラグを設定する" }],
   },
+  {
+    category: "その他",
+    nodes: [{ type: "Comment", label: "コメント" }],
+  },
 ] as const;
 
 type NodeType = (typeof NODE_CATEGORIES)[number]["nodes"][number]["type"];
