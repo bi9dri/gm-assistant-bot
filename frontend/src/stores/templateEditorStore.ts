@@ -7,6 +7,7 @@ import { create } from "zustand";
 import type { DataSchema as AddRoleToRoleMembersDataSchema } from "@/components/Node/AddRoleToRoleMembersNode";
 import type { DataSchema as BlueprintDataSchema } from "@/components/Node/BlueprintNode";
 import type { DataSchema as ChangeChannelPermissionDataSchema } from "@/components/Node/ChangeChannelPermissionNode";
+import type { DataSchema as CommentDataSchema } from "@/components/Node/CommentNode";
 import type { DataSchema as CreateCategoryDataSchema } from "@/components/Node/CreateCategoryNode";
 import type { DataSchema as CreateChannelDataSchema } from "@/components/Node/CreateChannelNode";
 import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/CreateRoleNode";
@@ -22,6 +23,7 @@ import { LABELED_GROUP_DEFAULTS } from "@/components/Node/base-schema";
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
 export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
+export type CommentNodeData = z.infer<typeof CommentDataSchema>;
 export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
@@ -36,6 +38,7 @@ export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
   | Node<BlueprintNodeData, "Blueprint">
   | Node<ChangeChannelPermissionNodeData, "ChangeChannelPermission">
+  | Node<CommentNodeData, "Comment">
   | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateChannelNodeData, "CreateChannel">
   | Node<CreateRoleNodeData, "CreateRole">
@@ -76,6 +79,7 @@ interface TemplateEditorActions {
       | AddRoleToRoleMembersNodeData
       | BlueprintNodeData
       | ChangeChannelPermissionNodeData
+      | CommentNodeData
       | CreateCategoryNodeData
       | CreateChannelNodeData
       | CreateRoleNodeData
@@ -92,6 +96,7 @@ interface TemplateEditorActions {
       | "AddRoleToRoleMembers"
       | "Blueprint"
       | "ChangeChannelPermission"
+      | "Comment"
       | "CreateCategory"
       | "CreateChannel"
       | "CreateRole"
@@ -238,6 +243,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           width: LABELED_GROUP_DEFAULTS.width,
           height: LABELED_GROUP_DEFAULTS.height,
         },
+      };
+    } else if (type === "Comment") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { comment: "" },
       };
     } else {
       newNode = {

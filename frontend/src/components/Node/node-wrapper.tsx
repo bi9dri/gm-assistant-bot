@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { AddRoleToRoleMembersNode } from "./AddRoleToRoleMembersNode";
 import { BlueprintNode } from "./BlueprintNode";
 import { ChangeChannelPermissionNode } from "./ChangeChannelPermissionNode";
+import { CommentNode } from "./CommentNode";
 import { CreateCategoryNode } from "./CreateCategoryNode";
 import { CreateChannelNode } from "./CreateChannelNode";
 import { CreateRoleNode } from "./CreateRoleNode";
@@ -63,6 +64,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <LabeledGroupNode {...props} mode={mode} />
   );
 
+  const CommentWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <CommentNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -76,5 +81,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     Blueprint: BlueprintWithMode,
     SetGameFlag: SetGameFlagWithMode,
     LabeledGroup: LabeledGroupWithMode,
+    Comment: CommentWithMode,
   } as NodeTypes;
 }

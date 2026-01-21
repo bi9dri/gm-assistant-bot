@@ -29,6 +29,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   Blueprint: NODE_WIDTHS.lg,
   SetGameFlag: NODE_WIDTHS.md,
   LabeledGroup: NODE_WIDTHS.xl,
+  Comment: NODE_WIDTHS.md,
 } as const;
 
 // LabeledGroup node default dimensions
