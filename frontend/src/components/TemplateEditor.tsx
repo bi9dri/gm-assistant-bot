@@ -86,6 +86,7 @@ const NODE_CATEGORIES = [
     nodes: [
       { type: "SetGameFlag", label: "ゲームフラグを設定する" },
       { type: "RecordCombination", label: "組み合わせを記録する" },
+      { type: "Kanban", label: "カンバンを操作する" },
     ],
   },
   {

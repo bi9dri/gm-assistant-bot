@@ -15,6 +15,7 @@ import {
   type DeleteCategoryDataSchema,
   type DeleteChannelDataSchema,
   type DeleteRoleDataSchema,
+  type KanbanDataSchema,
   type LabeledGroupDataSchema,
   type RecordCombinationDataSchema,
   type SendMessageDataSchema,
@@ -32,6 +33,7 @@ export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
 export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
+export type KanbanNodeData = z.infer<typeof KanbanDataSchema>;
 export type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
 export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
@@ -48,6 +50,7 @@ export type FlowNode =
   | Node<DeleteCategoryNodeData, "DeleteCategory">
   | Node<DeleteChannelNodeData, "DeleteChannel">
   | Node<DeleteRoleNodeData, "DeleteRole">
+  | Node<KanbanNodeData, "Kanban">
   | Node<LabeledGroupNodeData, "LabeledGroup">
   | Node<RecordCombinationNodeData, "RecordCombination">
   | Node<SendMessageNodeData, "SendMessage">
@@ -90,6 +93,7 @@ interface TemplateEditorActions {
       | DeleteCategoryNodeData
       | DeleteChannelNodeData
       | DeleteRoleNodeData
+      | KanbanNodeData
       | LabeledGroupNodeData
       | RecordCombinationNodeData
       | SendMessageNodeData
@@ -108,6 +112,7 @@ interface TemplateEditorActions {
       | "DeleteCategory"
       | "DeleteChannel"
       | "DeleteRole"
+      | "Kanban"
       | "LabeledGroup"
       | "RecordCombination"
       | "SendMessage"
@@ -276,6 +281,19 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
             items: [],
           },
           recordedPairs: [],
+        },
+      };
+    } else if (type === "Kanban") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "カンバン",
+          columns: [],
+          cards: [],
+          unassignedColumnLabel: "未配置",
+          cardPlacements: [],
         },
       };
     } else {

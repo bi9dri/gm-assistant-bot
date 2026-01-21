@@ -71,4 +71,6 @@ export {
   SendMessageDataSchema,
   SetGameFlagNode,
   SetGameFlagDataSchema,
+  KanbanNode,
+  KanbanDataSchema,
 } from "./nodes";
