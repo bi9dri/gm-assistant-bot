@@ -34,7 +34,9 @@ interface Props {
 }
 
 interface ContextMenu {
-  nodeId: string;
+  type: "node" | "pane";
+  nodeId?: string;
+  position?: { x: number; y: number }; // Flow coordinates for node creation
   top?: number;
   left?: number;
   right?: number;
@@ -110,6 +112,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
 
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
+  const [addNodePosition, setAddNodePosition] = useState<{ x: number; y: number } | null>(null);
 
   // Reconnect成功フラグ（何もない場所にドロップされた場合にEdge削除を判定）
   const edgeReconnectSuccessful = useRef(true);
@@ -153,23 +156,39 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
   const handleAddNode = useCallback(() => {
     if (!selectedNodeType) return;
 
-    // Get the center of the current viewport
-    const pane = document.querySelector(".react-flow__pane") as HTMLElement;
-    if (!pane) return;
+    let position: { x: number; y: number };
 
-    const { width, height } = pane.getBoundingClientRect();
-    const centerX = width / 2;
-    const centerY = height / 2;
+    if (addNodePosition) {
+      // Use position from right-click context menu
+      position = addNodePosition;
+    } else {
+      // Fallback: Get the center of the current viewport
+      const pane = document.querySelector(".react-flow__pane") as HTMLElement;
+      if (!pane) return;
 
-    // Convert screen position to flow position
-    const position = screenToFlowPosition({ x: centerX, y: centerY });
+      const { width, height } = pane.getBoundingClientRect();
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      position = screenToFlowPosition({ x: centerX, y: centerY });
+    }
 
     addNode(selectedNodeType as NodeType, position);
 
     const modal = document.getElementById("addNodeModal") as HTMLInputElement;
     if (modal) modal.checked = false;
     setSelectedNodeType(null);
-  }, [selectedNodeType, addNode, screenToFlowPosition]);
+    setAddNodePosition(null);
+  }, [selectedNodeType, addNode, addNodePosition, screenToFlowPosition]);
+
+  const handleOpenAddNodeModal = useCallback(() => {
+    if (contextMenu?.type === "pane" && contextMenu.position) {
+      setAddNodePosition(contextMenu.position);
+    }
+    const modal = document.getElementById("addNodeModal") as HTMLInputElement;
+    if (modal) modal.checked = true;
+    setContextMenu(null);
+  }, [contextMenu]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -223,6 +242,7 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     }
 
     setContextMenu({
+      type: "node",
       nodeId: node.id,
       top: menuTop,
       left: menuLeft,
@@ -231,19 +251,79 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
     });
   }, []);
 
+  const handlePaneContextMenu = useCallback(
+    (event: MouseEvent | React.MouseEvent) => {
+      event.preventDefault();
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const { top, left, width, height } = container.getBoundingClientRect();
+      const menuWidth = 192; // w-48
+      const menuHeight = 50; // estimated height for single item
+      const padding = 20;
+
+      // Calculate click position relative to pane
+      const clickX = event.clientX - left;
+      const clickY = event.clientY - top;
+
+      // Convert screen position to flow position (for node creation)
+      const flowPosition = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      // Check available space in each direction
+      const hasSpaceRight = clickX + menuWidth + padding <= width;
+      const hasSpaceBottom = clickY + menuHeight + padding <= height;
+      const hasSpaceLeft = clickX - menuWidth - padding >= 0;
+      const hasSpaceTop = clickY - menuHeight - padding >= 0;
+
+      // Determine menu position based on priority: bottom-right → top-right → bottom-left → top-left
+      let menuTop: number | undefined;
+      let menuLeft: number | undefined;
+      let menuRight: number | undefined;
+      let menuBottom: number | undefined;
+
+      if (hasSpaceRight && hasSpaceBottom) {
+        menuTop = clickY;
+        menuLeft = clickX;
+      } else if (hasSpaceRight && hasSpaceTop) {
+        menuBottom = height - clickY;
+        menuLeft = clickX;
+      } else if (hasSpaceLeft && hasSpaceBottom) {
+        menuTop = clickY;
+        menuRight = width - clickX;
+      } else if (hasSpaceLeft && hasSpaceTop) {
+        menuBottom = height - clickY;
+        menuRight = width - clickX;
+      } else {
+        menuTop = clickY;
+        menuLeft = clickX;
+      }
+
+      setContextMenu({
+        type: "pane",
+        position: flowPosition,
+        top: menuTop,
+        left: menuLeft,
+        right: menuRight,
+        bottom: menuBottom,
+      });
+    },
+    [screenToFlowPosition],
+  );
+
   const handlePaneClick = useCallback(() => {
     setContextMenu(null);
   }, []);
 
   const handleDuplicate = useCallback(() => {
-    if (contextMenu) {
+    if (contextMenu?.type === "node" && contextMenu.nodeId) {
       duplicateNode(contextMenu.nodeId);
       setContextMenu(null);
     }
   }, [contextMenu, duplicateNode]);
 
   const handleDelete = useCallback(() => {
-    if (contextMenu) {
+    if (contextMenu?.type === "node" && contextMenu.nodeId) {
       deleteNode(contextMenu.nodeId);
       setContextMenu(null);
     }
@@ -278,16 +358,19 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
         onReconnectEnd={onReconnectEnd}
         onMoveEnd={handleMoveEnd}
         onNodeContextMenu={handleNodeContextMenu}
+        onPaneContextMenu={handlePaneContextMenu}
         onPaneClick={handlePaneClick}
         defaultViewport={storeViewport}
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} />
-        <Panel position="top-right">
-          <label htmlFor="addNodeModal" className="btn btn-outline btn-primary">
-            ノード追加
-          </label>
-        </Panel>
+        {storeNodes.length === 0 && (
+          <Panel position="top-center" className="mt-20">
+            <div className="text-base-content/50 text-center">
+              <p className="text-lg">右クリックでノードを追加</p>
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
 
       <input id="addNodeModal" type="checkbox" className="modal-toggle" />
@@ -358,18 +441,28 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
             bottom: contextMenu.bottom !== undefined ? `${contextMenu.bottom}px` : undefined,
           }}
         >
-          <ul className="menu p-2 w-48">
-            <li>
-              <button type="button" onClick={handleDuplicate}>
-                複製
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={handleDelete}>
-                削除
-              </button>
-            </li>
-          </ul>
+          {contextMenu.type === "pane" ? (
+            <ul className="menu p-2 w-48">
+              <li>
+                <button type="button" onClick={handleOpenAddNodeModal}>
+                  ノードを作成する
+                </button>
+              </li>
+            </ul>
+          ) : (
+            <ul className="menu p-2 w-48">
+              <li>
+                <button type="button" onClick={handleDuplicate}>
+                  複製
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={handleDelete}>
+                  削除
+                </button>
+              </li>
+            </ul>
+          )}
         </div>
       )}
     </div>

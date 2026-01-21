@@ -100,6 +100,33 @@ function RouteComponent() {
         <button onClick={handleSave} disabled={!templateName.trim()} className="btn btn-primary">
           保存
         </button>
+        <div className="relative group">
+          <div className="btn btn-ghost btn-circle btn-sm" aria-label="操作ヒント">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-50 p-4 shadow-lg bg-base-100 rounded-box w-64 border border-base-300">
+            <h4 className="font-bold mb-2">操作ガイド</h4>
+            <ul className="text-sm space-y-1">
+              <li>・右クリックでノードを追加</li>
+              <li>・ノード上で右クリックで複製・削除</li>
+              <li>・ドラッグでノードを移動</li>
+              <li>・ハンドルをドラッグで接続</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 min-h-0">
