@@ -298,6 +298,7 @@ interface PairingInputFormProps {
   targetOptions: FilteredOption[];
   sourceLabel: string;
   targetLabel: string;
+  recordedPairs: RecordedPair[];
   onRecord: (sourceId: string, targetId: string) => void;
   disabled?: boolean;
 }
@@ -308,22 +309,41 @@ function PairingInputForm({
   targetOptions,
   sourceLabel,
   targetLabel,
+  recordedPairs,
   onRecord,
   disabled,
 }: PairingInputFormProps) {
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedTargetId, setSelectedTargetId] = useState<string>("");
 
-  // Re-filter targets when source changes
+  // Re-filter targets when source changes (self-pairing and duplicate check)
   const currentTargetOptions = useMemo(() => {
     if (!selectedSourceId) return targetOptions;
     return targetOptions.map((opt) => {
+      // Self-pairing check
       if (config.mode === "same-set" && !config.allowSelfPairing && opt.id === selectedSourceId) {
         return { ...opt, isDisabled: true, disabledReason: "自分自身とはペアになれません" };
       }
+      // Duplicate check
+      if (!config.allowDuplicates) {
+        const existingPair = recordedPairs.find((pair) => {
+          if (config.distinguishOrder) {
+            // 順序を区別: A→B と B→A は別扱い
+            return pair.sourceId === selectedSourceId && pair.targetId === opt.id;
+          }
+          // 順序を区別しない: A-B と B-A は同じ扱い
+          return (
+            (pair.sourceId === selectedSourceId && pair.targetId === opt.id) ||
+            (pair.sourceId === opt.id && pair.targetId === selectedSourceId)
+          );
+        });
+        if (existingPair) {
+          return { ...opt, isDisabled: true, disabledReason: "既に記録済みです" };
+        }
+      }
       return opt;
     });
-  }, [targetOptions, selectedSourceId, config]);
+  }, [targetOptions, selectedSourceId, config, recordedPairs]);
 
   const handleRecord = () => {
     if (selectedSourceId && selectedTargetId) {
@@ -619,6 +639,7 @@ export const RecordCombinationNode = ({
               targetOptions={filteredTargetOptions}
               sourceLabel={data.sourceOptions.label}
               targetLabel={data.targetOptions?.label ?? "選択肢B"}
+              recordedPairs={data.recordedPairs}
               onRecord={handleRecordPair}
               disabled={isExecuted}
             />
