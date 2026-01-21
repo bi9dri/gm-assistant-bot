@@ -27,8 +27,10 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
       const fileSystem = new FileSystem();
       await fileSystem.clearSessionFiles(id);
 
-      const checkbox = document.getElementById(`confirmDeleteModal-${id}`) as HTMLInputElement;
-      checkbox.checked = false;
+      const checkbox = document.getElementById(
+        `confirmDeleteModal-${id}`,
+      ) as HTMLInputElement | null;
+      if (checkbox) checkbox.checked = false;
       addToast({
         message: "セッションを削除しました",
         durationSeconds: 10,
