@@ -112,7 +112,7 @@ export const SetGameFlagNode = ({
             value={data.flagKey}
             onChange={(evt) => handleKeyChange(evt.target.value)}
             placeholder="例: アイテム入手, イベント発生済み"
-            disabled={isLoading || isExecuted}
+            disabled={isExecuteMode || isLoading || isExecuted}
           />
         </label>
         <label className="form-control w-full">
@@ -125,7 +125,7 @@ export const SetGameFlagNode = ({
             value={data.flagValue}
             onChange={(evt) => handleValueChange(evt.target.value)}
             placeholder="例: 1, アイテム名"
-            disabled={isLoading || isExecuted}
+            disabled={isExecuteMode || isLoading || isExecuted}
           />
         </label>
       </BaseNodeContent>

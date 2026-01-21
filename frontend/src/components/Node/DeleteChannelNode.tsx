@@ -145,7 +145,7 @@ export const DeleteChannelNode = ({
               value={name}
               onChange={(evt) => handleChannelNameChange(index, evt.target.value)}
               placeholder="チャンネル名を入力"
-              disabled={isLoading || isExecuted}
+              disabled={isExecuteMode || isLoading || isExecuted}
             />
             {!isExecuteMode && (
               <button

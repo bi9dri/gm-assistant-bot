@@ -194,7 +194,7 @@ export const ChangeChannelPermissionNode = ({
             value={data.channelName}
             onChange={(evt) => handleChannelNameChange(evt.target.value)}
             placeholder="チャンネル名"
-            disabled={isLoading || isExecuted}
+            disabled={isExecuteMode || isLoading || isExecuted}
           />
 
           {/* Warning message */}
@@ -230,7 +230,7 @@ export const ChangeChannelPermissionNode = ({
                     handleRolePermissionChange(roleIndex, "roleName", e.target.value)
                   }
                   placeholder="ロール名"
-                  disabled={isLoading || isExecuted}
+                  disabled={isExecuteMode || isLoading || isExecuted}
                 />
                 <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">読み取り</span>
@@ -241,28 +241,32 @@ export const ChangeChannelPermissionNode = ({
                     onChange={(e) =>
                       handleRolePermissionChange(roleIndex, "canWrite", e.target.checked)
                     }
-                    disabled={isLoading || isExecuted}
+                    disabled={isExecuteMode || isLoading || isExecuted}
                   />
                   <span className="text-xs">書き込み</span>
                 </label>
-                <button
-                  type="button"
-                  className="nodrag btn btn-ghost btn-xs"
-                  onClick={() => handleRemoveRolePermission(roleIndex)}
-                  disabled={isLoading || isExecuted}
-                >
-                  x
-                </button>
+                {!isExecuteMode && (
+                  <button
+                    type="button"
+                    className="nodrag btn btn-ghost btn-xs"
+                    onClick={() => handleRemoveRolePermission(roleIndex)}
+                    disabled={isLoading || isExecuted}
+                  >
+                    x
+                  </button>
+                )}
               </div>
             ))}
-            <button
-              type="button"
-              className="nodrag btn btn-ghost btn-xs"
-              onClick={handleAddRolePermission}
-              disabled={isLoading || isExecuted}
-            >
-              + ロールを追加
-            </button>
+            {!isExecuteMode && (
+              <button
+                type="button"
+                className="nodrag btn btn-ghost btn-xs"
+                onClick={handleAddRolePermission}
+                disabled={isLoading || isExecuted}
+              >
+                + ロールを追加
+              </button>
+            )}
           </div>
 
           {/* Show available roles and channels in execute mode */}
