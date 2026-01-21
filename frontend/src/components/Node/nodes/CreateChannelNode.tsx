@@ -20,6 +20,7 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
+import { ResourceSelector } from "../utils";
 
 const RolePermissionSchema = z.object({
   roleName: z.string().trim(),
@@ -278,21 +279,19 @@ export const CreateChannelNode = ({
                     key={`${id}-channel-${channelIndex}-role-${roleIndex}`}
                     className="flex gap-2 items-center"
                   >
-                    <input
-                      type="text"
-                      className="nodrag input input-bordered input-xs flex-1"
-                      value={perm.roleName}
-                      onChange={(e) =>
-                        handleRolePermissionChange(
-                          channelIndex,
-                          roleIndex,
-                          "roleName",
-                          e.target.value,
-                        )
-                      }
-                      placeholder="ロール名"
-                      disabled={isExecuteMode || isLoading || isExecuted}
-                    />
+                    <div className="flex-1">
+                      <ResourceSelector
+                        nodeId={id}
+                        resourceType="role"
+                        value={perm.roleName}
+                        onChange={(name) =>
+                          handleRolePermissionChange(channelIndex, roleIndex, "roleName", name)
+                        }
+                        placeholder="ロール名"
+                        disabled={isExecuteMode || isLoading || isExecuted}
+                        className="input-xs"
+                      />
+                    </div>
                     <label className="nodrag flex items-center gap-1 cursor-pointer">
                       <span className="text-xs">読み取り</span>
                       <input

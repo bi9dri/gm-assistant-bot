@@ -19,6 +19,7 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
+import { ResourceSelector } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
   memberRoleName: z.string().trim(),
@@ -129,11 +130,11 @@ export const AddRoleToRoleMembersNode = ({
           <label className="label py-1">
             <span className="label-text text-xs">対象メンバーのロール名</span>
           </label>
-          <input
-            type="text"
-            className="nodrag input input-bordered w-full"
+          <ResourceSelector
+            nodeId={id}
+            resourceType="role"
             value={data.memberRoleName}
-            onChange={(evt) => handleMemberRoleNameChange(evt.target.value)}
+            onChange={handleMemberRoleNameChange}
             placeholder="例: プレイヤー"
             disabled={isExecuteMode || isLoading || isExecuted}
           />
@@ -142,11 +143,11 @@ export const AddRoleToRoleMembersNode = ({
           <label className="label py-1">
             <span className="label-text text-xs">付与するロール名</span>
           </label>
-          <input
-            type="text"
-            className="nodrag input input-bordered w-full"
+          <ResourceSelector
+            nodeId={id}
+            resourceType="role"
             value={data.addRoleName}
-            onChange={(evt) => handleAddRoleNameChange(evt.target.value)}
+            onChange={handleAddRoleNameChange}
             placeholder="例: 参加者"
             disabled={isExecuteMode || isLoading || isExecuted}
           />

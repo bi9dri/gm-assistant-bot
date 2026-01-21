@@ -20,6 +20,7 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
+import { ResourceSelector } from "../utils";
 
 const RolePermissionSchema = z.object({
   roleName: z.string().trim(),
@@ -190,11 +191,11 @@ export const ChangeChannelPermissionNode = ({
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
           {/* Channel name input */}
-          <input
-            type="text"
-            className="nodrag input input-bordered input-sm w-full"
+          <ResourceSelector
+            nodeId={id}
+            resourceType="channel"
             value={data.channelName}
-            onChange={(evt) => handleChannelNameChange(evt.target.value)}
+            onChange={handleChannelNameChange}
             placeholder="チャンネル名"
             disabled={isExecuteMode || isLoading || isExecuted}
           />
@@ -224,16 +225,17 @@ export const ChangeChannelPermissionNode = ({
             <p className="text-xs font-semibold">ロール権限</p>
             {data.rolePermissions.map((perm, roleIndex) => (
               <div key={`${id}-role-${roleIndex}`} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  className="nodrag input input-bordered input-xs flex-1"
-                  value={perm.roleName}
-                  onChange={(e) =>
-                    handleRolePermissionChange(roleIndex, "roleName", e.target.value)
-                  }
-                  placeholder="ロール名"
-                  disabled={isExecuteMode || isLoading || isExecuted}
-                />
+                <div className="flex-1">
+                  <ResourceSelector
+                    nodeId={id}
+                    resourceType="role"
+                    value={perm.roleName}
+                    onChange={(name) => handleRolePermissionChange(roleIndex, "roleName", name)}
+                    placeholder="ロール名"
+                    disabled={isExecuteMode || isLoading || isExecuted}
+                    className="input-xs"
+                  />
+                </div>
                 <label className="nodrag flex items-center gap-1 cursor-pointer">
                   <span className="text-xs">読み取り</span>
                   <input

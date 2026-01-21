@@ -121,6 +121,7 @@ export const CreateCategoryNode = ({
       </BaseNodeHeader>
       <BaseNodeContent>
         <DynamicValueInput
+          nodeId={id}
           value={data.categoryName ?? defaultDynamicValue()}
           onChange={handleCategoryNameChange}
           placeholder="カテゴリ名を入力"
