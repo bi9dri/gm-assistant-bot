@@ -14,8 +14,11 @@ import type { DataSchema as CreateRoleDataSchema } from "@/components/Node/Creat
 import type { DataSchema as DeleteCategoryDataSchema } from "@/components/Node/DeleteCategoryNode";
 import type { DataSchema as DeleteChannelDataSchema } from "@/components/Node/DeleteChannelNode";
 import type { DataSchema as DeleteRoleDataSchema } from "@/components/Node/DeleteRoleNode";
+import type { DataSchema as LabeledGroupDataSchema } from "@/components/Node/LabeledGroupNode";
 import type { DataSchema as SendMessageDataSchema } from "@/components/Node/SendMessageNode";
 import type { DataSchema as SetGameFlagDataSchema } from "@/components/Node/SetGameFlagNode";
+
+import { LABELED_GROUP_DEFAULTS } from "@/components/Node/base-schema";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
@@ -27,6 +30,7 @@ export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
 export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
 export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
 export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
+export type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 
@@ -41,6 +45,7 @@ export type FlowNode =
   | Node<DeleteCategoryNodeData, "DeleteCategory">
   | Node<DeleteChannelNodeData, "DeleteChannel">
   | Node<DeleteRoleNodeData, "DeleteRole">
+  | Node<LabeledGroupNodeData, "LabeledGroup">
   | Node<SendMessageNodeData, "SendMessage">
   | Node<SetGameFlagNodeData, "SetGameFlag">;
 
@@ -81,6 +86,7 @@ interface TemplateEditorActions {
       | DeleteCategoryNodeData
       | DeleteChannelNodeData
       | DeleteRoleNodeData
+      | LabeledGroupNodeData
       | SendMessageNodeData
       | SetGameFlagNodeData
     >,
@@ -97,6 +103,7 @@ interface TemplateEditorActions {
       | "DeleteCategory"
       | "DeleteChannel"
       | "DeleteRole"
+      | "LabeledGroup"
       | "SendMessage"
       | "SetGameFlag",
     position: { x: number; y: number },
@@ -224,6 +231,18 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { flagKey: "", flagValue: "" },
+      };
+    } else if (type === "LabeledGroup") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { label: "" },
+        zIndex: -1,
+        style: {
+          width: LABELED_GROUP_DEFAULTS.width,
+          height: LABELED_GROUP_DEFAULTS.height,
+        },
       };
     } else if (type === "Comment") {
       newNode = {

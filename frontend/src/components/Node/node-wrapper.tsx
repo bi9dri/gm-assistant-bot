@@ -11,6 +11,7 @@ import { CreateRoleNode } from "./CreateRoleNode";
 import { DeleteCategoryNode } from "./DeleteCategoryNode";
 import { DeleteChannelNode } from "./DeleteChannelNode";
 import { DeleteRoleNode } from "./DeleteRoleNode";
+import { LabeledGroupNode } from "./LabeledGroupNode";
 import { SendMessageNode } from "./SendMessageNode";
 import { SetGameFlagNode } from "./SetGameFlagNode";
 
@@ -59,6 +60,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <SetGameFlagNode {...props} mode={mode} />
   );
 
+  const LabeledGroupWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <LabeledGroupNode {...props} mode={mode} />
+  );
+
   const CommentWithMode: ComponentType<NodeProps<any>> = (props) => (
     <CommentNode {...props} mode={mode} />
   );
@@ -75,6 +80,7 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     SendMessage: SendMessageWithMode,
     Blueprint: BlueprintWithMode,
     SetGameFlag: SetGameFlagWithMode,
+    LabeledGroup: LabeledGroupWithMode,
     Comment: CommentWithMode,
   } as NodeTypes;
 }
