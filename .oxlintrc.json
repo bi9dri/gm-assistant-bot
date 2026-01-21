@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": [
+    "eslint-plugin-sonarjs"
+  ],
+  "rules": {
+    "sonarjs/cognitive-complexity": [
+      "warn",
+      15
+    ],
+    "sonarjs/cyclomatic-complexity": [
+      "warn",
+      10
+    ]
+  }
+}
