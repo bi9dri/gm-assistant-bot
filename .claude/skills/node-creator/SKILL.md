@@ -11,10 +11,10 @@ Create new Node components for the @xyflow/react based workflow editor. Each nod
 
 When creating a new node type `{NodeName}Node`:
 
-1. Create `frontend/src/components/Node/{NodeName}Node.tsx`
-2. Add width to `frontend/src/components/Node/base-schema.ts`
-3. Register in `frontend/src/components/Node/node-wrapper.tsx`
-4. Export from `frontend/src/components/Node/index.ts`
+1. Create `frontend/src/components/Node/nodes/{NodeName}Node.tsx`
+2. Add width to `frontend/src/components/Node/base/base-schema.ts`
+3. Register in `frontend/src/components/Node/base/node-wrapper.tsx`
+4. Export from `frontend/src/components/Node/nodes/index.ts`
 5. Add types/data to `frontend/src/stores/templateEditorStore.ts`
 6. Add UI option in `frontend/src/components/TemplateEditor.tsx`
 
@@ -38,9 +38,10 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_TYPE_WIDTHS } from "./base-schema";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+  BaseNodeDataSchema,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { useNodeExecutionOptional } from "../contexts";
 
 // 1. Define schema extending BaseNodeDataSchema
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -152,7 +153,8 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
 ### node-wrapper.tsx
 
 ```ts
-import { {NodeName}Node } from "./{NodeName}Node";
+// frontend/src/components/Node/base/node-wrapper.tsx
+import { {NodeName}Node } from "../nodes/{NodeName}Node";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
   const {NodeName}WithMode: ComponentType<NodeProps<any>> = (props) => (
@@ -166,16 +168,17 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
 }
 ```
 
-### index.ts
+### nodes/index.ts
 
 ```ts
-export { {NodeName}Node } from "./{NodeName}Node";
+// frontend/src/components/Node/nodes/index.ts
+export { {NodeName}Node, DataSchema as {NodeName}DataSchema } from "./{NodeName}Node";
 ```
 
 ### templateEditorStore.ts
 
 ```ts
-import type { DataSchema as {NodeName}DataSchema } from "@/components/Node/{NodeName}Node";
+import type { {NodeName}DataSchema } from "@/components/Node";
 
 export type {NodeName}NodeData = z.infer<typeof {NodeName}DataSchema>;
 

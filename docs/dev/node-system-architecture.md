@@ -35,7 +35,7 @@
 すべてのノードは `BaseNodeDataSchema` を拡張します。
 
 ```typescript
-// frontend/src/components/Node/base-schema.ts
+// frontend/src/components/Node/base/base-schema.ts
 export const BaseNodeDataSchema = z.object({
   executedAt: z.coerce.date().optional(),  // 実行完了時刻
 });
@@ -75,7 +75,7 @@ export const NODE_CONTENT_HEIGHTS = {
 ### 基本構造
 
 ```typescript
-// frontend/src/components/Node/ExampleNode.tsx
+// frontend/src/components/Node/nodes/ExampleNode.tsx
 import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useState } from "react";
 import z from "zod";
@@ -91,9 +91,11 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
   cn,
-} from "./base-node";
-import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "./base-schema";
-import { useNodeExecutionOptional } from "./NodeExecutionContext";
+  BaseNodeDataSchema,
+  NODE_CONTENT_HEIGHTS,
+  NODE_TYPE_WIDTHS,
+} from "../base";
+import { useNodeExecutionOptional } from "../contexts";
 
 // 1. スキーマ定義
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -197,7 +199,7 @@ export const ExampleNode = ({
 ### BaseNode コンポーネント群
 
 ```typescript
-// frontend/src/components/Node/base-node.tsx
+// frontend/src/components/Node/base/base-node.tsx
 export function BaseNode({ className, width, style, ...props })
 export function BaseNodeHeader({ className, ...props })
 export function BaseNodeHeaderTitle({ className, ...props })
@@ -228,7 +230,7 @@ export function LabeledHandle({ title, position, ...props })
 ### 実行コンテキスト
 
 ```typescript
-// frontend/src/components/Node/NodeExecutionContext.tsx
+// frontend/src/components/Node/contexts/NodeExecutionContext.tsx
 interface NodeExecutionContextValue {
   guildId: string;
   sessionId: number;
@@ -245,7 +247,7 @@ interface NodeExecutionContextValue {
 
 1. **型のインポート**
 ```typescript
-import type { DataSchema as ExampleDataSchema } from "@/components/Node/ExampleNode";
+import type { ExampleDataSchema } from "@/components/Node";
 ```
 
 2. **型定義の追加**
@@ -301,8 +303,8 @@ addNode: (
 ## node-wrapper.tsx への登録
 
 ```typescript
-// frontend/src/components/Node/node-wrapper.tsx
-import { ExampleNode } from "./ExampleNode";
+// frontend/src/components/Node/base/node-wrapper.tsx
+import { ExampleNode } from "../nodes/ExampleNode";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
   const ExampleWithMode: ComponentType<NodeProps<any>> = (props) => (
@@ -338,23 +340,24 @@ const NODE_CATEGORIES = [
 
 ## 新しいノード実装のチェックリスト
 
-1. [ ] `frontend/src/components/Node/NewNode.tsx` を作成
+1. [ ] `frontend/src/components/Node/nodes/NewNode.tsx` を作成
    - DataSchema を定義
    - コンポーネントを実装
-2. [ ] `frontend/src/components/Node/base-schema.ts` に幅を追加
+2. [ ] `frontend/src/components/Node/base/base-schema.ts` に幅を追加
    - `NODE_TYPE_WIDTHS` に追加
-3. [ ] `frontend/src/components/Node/node-wrapper.tsx` に登録
+3. [ ] `frontend/src/components/Node/base/node-wrapper.tsx` に登録
    - インポート追加
    - `createNodeTypes` 関数内で mode を注入
-4. [ ] `frontend/src/stores/templateEditorStore.ts` を更新
+4. [ ] `frontend/src/components/Node/nodes/index.ts` にエクスポート追加
+   - ノードコンポーネントと DataSchema をエクスポート
+5. [ ] `frontend/src/stores/templateEditorStore.ts` を更新
    - 型インポート
    - 型定義追加
    - FlowNode union型に追加
    - addNode 関数に初期データ追加
    - updateNodeData の型に追加
-5. [ ] `frontend/src/components/TemplateEditor.tsx` に追加
+6. [ ] `frontend/src/components/TemplateEditor.tsx` に追加
    - `NODE_CATEGORIES` に追加
-6. [ ] `frontend/src/components/Node/index.ts` にエクスポート追加（必要に応じて）
 
 ---
 
@@ -363,7 +366,7 @@ const NODE_CATEGORIES = [
 ノードのパラメータを動的に解決するシステム。
 
 ```typescript
-// frontend/src/components/Node/DynamicValue.ts
+// frontend/src/components/Node/utils/DynamicValue.ts
 export const DynamicValueSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("literal"), value: z.string() }),
   z.object({ type: z.literal("session.name") }),
@@ -448,10 +451,11 @@ for (let i = 0; i < items.length; i++) {
 
 | ファイル | 説明 |
 |---------|------|
-| `frontend/src/components/Node/base-node.tsx` | UIプリミティブ |
-| `frontend/src/components/Node/base-schema.ts` | 共通スキーマ・定数 |
-| `frontend/src/components/Node/node-wrapper.tsx` | ノードタイプ登録 |
-| `frontend/src/components/Node/NodeExecutionContext.tsx` | 実行コンテキスト |
-| `frontend/src/components/Node/DynamicValue.ts` | 動的値システム |
+| `frontend/src/components/Node/base/base-node.tsx` | UIプリミティブ |
+| `frontend/src/components/Node/base/base-schema.ts` | 共通スキーマ・定数 |
+| `frontend/src/components/Node/base/node-wrapper.tsx` | ノードタイプ登録 |
+| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | 実行コンテキスト |
+| `frontend/src/components/Node/utils/DynamicValue.ts` | 動的値システム |
+| `frontend/src/components/Node/nodes/` | 全ノード実装（14種類） |
 | `frontend/src/stores/templateEditorStore.ts` | Zustandストア |
 | `frontend/src/components/TemplateEditor.tsx` | エディタ本体 |

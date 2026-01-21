@@ -156,12 +156,10 @@ export const DataSchema = BaseNodeDataSchema.extend({
 
 | ファイル | 変更内容 |
 |---------|---------|
-| `frontend/src/components/Node/RecordCombinationNode.tsx` | 新規作成: メインコンポーネント + スキーマ |
-| `frontend/src/components/Node/RecordCombinationNode/*.tsx` | 新規作成: サブコンポーネント群 |
-| `frontend/src/components/Node/hooks/useFilteredOptions.ts` | 新規作成: フィルタリングロジック |
-| `frontend/src/components/Node/hooks/usePairingValidation.ts` | 新規作成: 検証ロジック |
-| `frontend/src/components/Node/base-schema.ts` | NODE_TYPE_WIDTHSに `RecordCombination: NODE_WIDTHS.lg` 追加 |
-| `frontend/src/components/Node/node-wrapper.tsx` | createNodeTypes関数への登録 |
+| `frontend/src/components/Node/nodes/RecordCombinationNode.tsx` | 新規作成: メインコンポーネント + スキーマ |
+| `frontend/src/components/Node/base/base-schema.ts` | NODE_TYPE_WIDTHSに `RecordCombination: NODE_WIDTHS.lg` 追加 |
+| `frontend/src/components/Node/base/node-wrapper.tsx` | createNodeTypes関数への登録 |
+| `frontend/src/components/Node/nodes/index.ts` | エクスポート追加 |
 | `frontend/src/stores/templateEditorStore.ts` | FlowNode型 + addNode関数の拡張 |
 | `frontend/src/components/TemplateEditor.tsx` | NODE_CATEGORIESの「ゲーム管理」カテゴリに追加 |
 
@@ -169,7 +167,7 @@ export const DataSchema = BaseNodeDataSchema.extend({
 
 ```typescript
 // import追加
-import type { DataSchema as RecordCombinationDataSchema } from "@/components/Node/RecordCombinationNode";
+import type { RecordCombinationDataSchema } from "@/components/Node";
 
 // 型定義追加
 export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
