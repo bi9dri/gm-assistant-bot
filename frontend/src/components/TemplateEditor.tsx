@@ -20,6 +20,7 @@ import type { DiscordBotData } from "@/db";
 import { createNodeTypes } from "@/components/Node";
 import { NodeExecutionContext } from "@/components/Node/NodeExecutionContext";
 import { TemplateEditorContext } from "@/components/Node/TemplateEditorContext";
+import { SessionResourcePanel } from "@/components/SessionResourcePanel";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
@@ -31,6 +32,8 @@ interface Props {
   guildId?: string;
   sessionId?: number;
   bot?: DiscordBotData;
+  showResourcePanel?: boolean;
+  onToggleResourcePanel?: () => void;
 }
 
 interface ContextMenu {
@@ -91,7 +94,15 @@ const NODE_CATEGORIES = [
 
 type NodeType = (typeof NODE_CATEGORIES)[number]["nodes"][number]["type"];
 
-const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props) => {
+const TemplateEditorContent = ({
+  nodes,
+  edges,
+  viewport,
+  mode = "edit",
+  sessionId,
+  showResourcePanel,
+  onToggleResourcePanel,
+}: Props) => {
   const {
     nodes: storeNodes,
     edges: storeEdges,
@@ -370,6 +381,13 @@ const TemplateEditorContent = ({ nodes, edges, viewport, mode = "edit" }: Props)
               <p className="text-lg">右クリックでノードを追加</p>
             </div>
           </Panel>
+        )}
+        {mode === "execute" && sessionId && (
+          <SessionResourcePanel
+            sessionId={sessionId}
+            isOpen={showResourcePanel ?? false}
+            onClose={onToggleResourcePanel ?? (() => {})}
+          />
         )}
       </ReactFlow>
 
