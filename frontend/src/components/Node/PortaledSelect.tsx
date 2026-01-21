@@ -153,13 +153,13 @@ export function PortaledSelect({
           <>
             {/* 背景オーバーレイ - クリックで閉じる */}
             <div
-              className="fixed inset-0 z-[9998]"
+              className="fixed inset-0 z-9998"
               onClick={() => setIsOpen(false)}
               onWheel={() => setIsOpen(false)}
             />
             <ul
               ref={menuRef}
-              className="menu bg-base-100 shadow-lg rounded-box border border-base-300 z-[9999] max-h-48 overflow-y-auto"
+              className="menu bg-base-100 shadow-lg rounded-box border border-base-300 z-9999 max-h-48 overflow-y-auto"
               style={{
                 position: "fixed",
                 top: position.top,
