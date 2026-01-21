@@ -57,3 +57,10 @@ main.padded {
 [data-slot="base-node-content"]::-webkit-scrollbar-thumb:hover {
   background-color: oklch(var(--bc) / 0.5);
 }
+
+/* Error toast custom styling using theme colors */
+.toast .alert-error {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: var(--color-error-content);
+}
