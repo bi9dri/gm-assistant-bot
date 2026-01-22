@@ -24,13 +24,12 @@ import { useNodeExecutionOptional } from "../contexts";
 const BranchOptionSchema = z.object({
   id: z.string(),
   label: z.string(),
-  value: z.string(),
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
   title: z.string().min(1).default("選択肢を選ぶ"),
   options: z.array(BranchOptionSchema).min(2),
-  resultFlagKey: z.string(),
+  flagName: z.string(),
   selectedValue: z.string().optional(),
 });
 
@@ -127,14 +126,8 @@ function OptionListEditor({ options, onOptionsChange, disabled }: OptionListEdit
     onOptionsChange(updated);
   };
 
-  const handleValueChange = (index: number, newValue: string) => {
-    const updated = [...options];
-    updated[index] = { ...updated[index], value: newValue };
-    onOptionsChange(updated);
-  };
-
   const handleAdd = () => {
-    onOptionsChange([...options, { id: generateId(), label: "", value: "" }]);
+    onOptionsChange([...options, { id: generateId(), label: "" }]);
   };
 
   const handleRemove = (index: number) => {
@@ -152,15 +145,7 @@ function OptionListEditor({ options, onOptionsChange, disabled }: OptionListEdit
             className="nodrag input input-bordered input-sm flex-1"
             value={option.label}
             onChange={(e) => handleLabelChange(index, e.target.value)}
-            placeholder="ラベル"
-            disabled={disabled}
-          />
-          <input
-            type="text"
-            className="nodrag input input-bordered input-sm flex-1"
-            value={option.value}
-            onChange={(e) => handleValueChange(index, e.target.value)}
-            placeholder="値"
+            placeholder="選択肢"
             disabled={disabled}
           />
           {!disabled && (
@@ -208,8 +193,8 @@ export const SelectBranchNode = ({
     updateNodeData(id, { options });
   };
 
-  const handleResultFlagKeyChange = (newKey: string) => {
-    updateNodeData(id, { resultFlagKey: newKey });
+  const handleFlagNameChange = (newKey: string) => {
+    updateNodeData(id, { flagName: newKey });
   };
 
   const handleExecute = async () => {
@@ -224,10 +209,10 @@ export const SelectBranchNode = ({
     }
 
     const { sessionId } = executionContext;
-    const key = data.resultFlagKey.trim();
+    const key = data.flagName.trim();
 
     if (key === "") {
-      addToast({ message: "結果フラグKeyを入力してください", status: "warning" });
+      addToast({ message: "フラグ名を入力してください", status: "warning" });
       return;
     }
 
@@ -245,15 +230,13 @@ export const SelectBranchNode = ({
 
       await session.update({ gameFlags: updatedFlags });
 
-      const selectedLabel = data.options.find((opt) => opt.value === selectedOption)?.label ?? "";
-
       updateNodeData(id, {
         selectedValue: selectedOption,
         executedAt: new Date(),
       });
 
       addToast({
-        message: `「${selectedLabel}」を選択しました`,
+        message: `「${selectedOption}」を選択しました`,
         status: "success",
         durationSeconds: 5,
       });
@@ -267,7 +250,7 @@ export const SelectBranchNode = ({
     }
   };
 
-  const selectedLabel = data.options.find((opt) => opt.value === data.selectedValue)?.label;
+  const selectedLabel = data.selectedValue;
 
   return (
     <BaseNode
@@ -291,13 +274,13 @@ export const SelectBranchNode = ({
           <>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">結果フラグKey</span>
+                <span className="label-text">フラグ名</span>
               </div>
               <input
                 type="text"
                 className="nodrag input input-bordered w-full"
-                value={data.resultFlagKey}
-                onChange={(e) => handleResultFlagKeyChange(e.target.value)}
+                value={data.flagName}
+                onChange={(e) => handleFlagNameChange(e.target.value)}
                 placeholder="例: selectedCriminal"
                 disabled={isLoading}
               />
@@ -316,7 +299,7 @@ export const SelectBranchNode = ({
         {isExecuteMode && (
           <>
             <div className="text-sm text-base-content/70 mb-2">
-              保存先: <span className="font-mono">{data.resultFlagKey || "(未設定)"}</span>
+              フラグ名: <span className="font-mono">{data.flagName || "(未設定)"}</span>
             </div>
 
             {isExecuted ? (
@@ -335,8 +318,8 @@ export const SelectBranchNode = ({
                       type="radio"
                       name={`select-branch-${id}`}
                       className="nodrag radio radio-sm"
-                      value={option.value}
-                      checked={selectedOption === option.value}
+                      value={option.label}
+                      checked={selectedOption === option.label}
                       onChange={(e) => setSelectedOption(e.target.value)}
                       disabled={isLoading}
                     />
