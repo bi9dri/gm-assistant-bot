@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { LuPencil, LuChevronDown } from "react-icons/lu";
 
 import { PortaledSelect } from "./PortaledSelect";
 import { useTemplateResources } from "./useTemplateResources";
@@ -11,7 +10,6 @@ interface ResourceSelectorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  allowCustom?: boolean;
   channelTypeFilter?: "text" | "voice";
   className?: string;
 }
@@ -23,7 +21,6 @@ export function ResourceSelector({
   onChange,
   placeholder,
   disabled,
-  allowCustom = true,
   channelTypeFilter,
   className,
 }: ResourceSelectorProps) {
@@ -78,58 +75,15 @@ export function ResourceSelector({
     );
   }
 
-  // Check if current value is in the options list
-  const isValueInOptions = options.some((opt) => opt.id === value);
-
-  // If value is not in options and allowCustom, show text input with switch button
-  if (!isValueInOptions && value !== "" && allowCustom) {
-    return (
-      <div className="flex gap-1 items-center w-full">
-        <input
-          type="text"
-          className={`nodrag input input-bordered input-sm flex-1 ${className ?? ""}`}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          disabled={disabled}
-        />
-        <button
-          type="button"
-          className="nodrag btn btn-ghost btn-sm btn-square"
-          onClick={() => onChange("")}
-          title="リストから選択"
-          disabled={disabled}
-        >
-          <LuChevronDown className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   // Show dropdown with options
   return (
-    <div className="flex gap-1 items-center w-full">
-      <div className="flex-1">
-        <PortaledSelect
-          options={options}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          disabled={disabled}
-          className={`w-full ${className ?? ""}`}
-        />
-      </div>
-      {allowCustom && (
-        <button
-          type="button"
-          className="nodrag btn btn-ghost btn-sm btn-square"
-          onClick={() => onChange(value || "")}
-          title="カスタム入力"
-          disabled={disabled}
-        >
-          <LuPencil className="w-4 h-4" />
-        </button>
-      )}
-    </div>
+    <PortaledSelect
+      options={options}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      className={`w-full ${className ?? ""}`}
+    />
   );
 }
