@@ -18,6 +18,7 @@ import {
   type KanbanDataSchema,
   type LabeledGroupDataSchema,
   type RecordCombinationDataSchema,
+  type SelectBranchDataSchema,
   type SendMessageDataSchema,
   type SetGameFlagDataSchema,
   LABELED_GROUP_DEFAULTS,
@@ -36,6 +37,7 @@ export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
 export type KanbanNodeData = z.infer<typeof KanbanDataSchema>;
 export type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
 export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
+export type SelectBranchNodeData = z.infer<typeof SelectBranchDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 
@@ -53,6 +55,7 @@ export type FlowNode =
   | Node<KanbanNodeData, "Kanban">
   | Node<LabeledGroupNodeData, "LabeledGroup">
   | Node<RecordCombinationNodeData, "RecordCombination">
+  | Node<SelectBranchNodeData, "SelectBranch">
   | Node<SendMessageNodeData, "SendMessage">
   | Node<SetGameFlagNodeData, "SetGameFlag">;
 
@@ -96,6 +99,7 @@ interface TemplateEditorActions {
       | KanbanNodeData
       | LabeledGroupNodeData
       | RecordCombinationNodeData
+      | SelectBranchNodeData
       | SendMessageNodeData
       | SetGameFlagNodeData
     >,
@@ -115,6 +119,7 @@ interface TemplateEditorActions {
       | "Kanban"
       | "LabeledGroup"
       | "RecordCombination"
+      | "SelectBranch"
       | "SendMessage"
       | "SetGameFlag",
     position: { x: number; y: number },
@@ -294,6 +299,20 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           cards: [],
           initialPlacements: [],
           cardPlacements: [],
+        },
+      };
+    } else if (type === "SelectBranch") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "選択肢を選ぶ",
+          options: [
+            { id: crypto.randomUUID(), label: "", value: "" },
+            { id: crypto.randomUUID(), label: "", value: "" },
+          ],
+          resultFlagKey: "",
         },
       };
     } else {

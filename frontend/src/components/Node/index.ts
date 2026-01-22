@@ -73,4 +73,6 @@ export {
   SetGameFlagDataSchema,
   KanbanNode,
   KanbanDataSchema,
+  SelectBranchNode,
+  SelectBranchDataSchema,
 } from "./nodes";

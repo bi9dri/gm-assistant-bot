@@ -15,6 +15,7 @@ import {
   KanbanNode,
   LabeledGroupNode,
   RecordCombinationNode,
+  SelectBranchNode,
   SendMessageNode,
   SetGameFlagNode,
 } from "../nodes";
@@ -80,6 +81,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <KanbanNode {...props} mode={mode} />
   );
 
+  const SelectBranchWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <SelectBranchNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -96,5 +101,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     Comment: CommentWithMode,
     RecordCombination: RecordCombinationWithMode,
     Kanban: KanbanWithMode,
+    SelectBranch: SelectBranchWithMode,
   } as NodeTypes;
 }
