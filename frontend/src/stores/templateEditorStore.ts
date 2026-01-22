@@ -309,10 +309,10 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         data: {
           title: "選択肢を選ぶ",
           options: [
-            { id: crypto.randomUUID(), label: "", value: "" },
-            { id: crypto.randomUUID(), label: "", value: "" },
+            { id: crypto.randomUUID(), label: "" },
+            { id: crypto.randomUUID(), label: "" },
           ],
-          resultFlagKey: "",
+          flagName: "",
         },
       };
     } else {
