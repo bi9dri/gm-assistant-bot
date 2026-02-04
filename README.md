@@ -25,18 +25,18 @@ bun install
 開発サーバーを起動（frontend: 3000, backend: 8787）:
 
 ```bash
-bun dev
+bun run --bun dev
 ```
 
 ### コマンド一覧
 
 ```bash
-bun lint        # リンティング
-bun format      # フォーマット
-bun type-check  # 型チェック
-bun test        # テスト
-bun build       # ビルド
-bun deploy      # Cloudflare Workersにデプロイ
+bun run --bun lint        # リンティング
+bun run --bun format      # フォーマット
+bun run --bun type-check  # 型チェック
+bun run --bun test        # テスト
+bun run --bun build       # ビルド
+bun run --bun deploy      # Cloudflare Workersにデプロイ
 ```
 
 ## ライセンス

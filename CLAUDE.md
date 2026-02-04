@@ -22,9 +22,9 @@
 ### Runtime and Package Manager
 - Default to using **Bun** instead of Node.js
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
+- Use `bun run --bun test` instead of `jest` or `vitest`
 - Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
+- Use `bun run --bun <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
 - Bun automatically loads .env, so don't use dotenv
 
 ### Dependency Management
@@ -65,28 +65,28 @@ Bun workspaceを使用したモノレポ構成。
 ルートディレクトリから実行:
 
 ```bash
-bun dev         # 開発サーバー起動 (frontend: 3000, backend: 8787)
-bun build       # ビルド
-bun deploy      # Cloudflare Workersにデプロイ
-bun lint        # リンティング
-bun format      # フォーマット
-bun type-check  # 型チェック
-bun test        # テスト
+bun run --bun dev         # 開発サーバー起動 (frontend: 3000, backend: 8787)
+bun run --bun build       # ビルド
+bun run --bun deploy      # Cloudflare Workersにデプロイ
+bun run --bun lint        # リンティング
+bun run --bun format      # フォーマット
+bun run --bun type-check  # 型チェック
+bun run --bun test        # テスト
 ```
 
 個別パッケージで実行:
 ```bash
-bun run --filter frontend dev
-bun run --filter backend dev
+bun run --bun --filter frontend dev
+bun run --bun --filter backend dev
 ```
 
 ## Development Workflow
 
 **重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
 
-1. `bun type-check` - 型エラーがないことを確認
-2. `bun format` - コードをフォーマット
-3. `bun lint` - lint エラーがないことを確認
+1. `bun run --bun type-check` - 型エラーがないことを確認
+2. `bun run --bun format` - コードをフォーマット
+3. `bun run --bun lint` - lint エラーがないことを確認
 
 すべてのコマンドが成功するまで、実装は完了とみなさない。
 
@@ -110,15 +110,3 @@ bun run --filter backend dev
 1. 将来同じような実装をする際に参照する価値があるか
 2. 他の開発者（または将来の自分）が同じ問題に直面する可能性があるか
 3. 情報がコード内のコメントだけでは不十分か
-
-## Testing
-
-Use `vitest` to run tests.
-
-```ts
-import { test, expect } from "vitest";
-
-test("example test", () => {
-  expect(1).toBe(1);
-});
-```
