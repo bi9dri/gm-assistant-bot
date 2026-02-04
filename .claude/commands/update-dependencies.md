@@ -6,10 +6,11 @@ npm dependency packagesのアップデートをして
 # 手順
 
 ## 1. アップデート対象の洗い出し
-root directoryで `bun run ncu` を実行し、アップデート対象を洗い出す
+root directoryで以下のコマンドを実行し、アップデート対象を洗い出す
 
 ```bash
-bun run ncu
+bun run --bun ncu
+bun audit
 ```
 
 ## 2. リリースノート・変更履歴の確認
@@ -63,8 +64,8 @@ bun install --filter "frontend" パッケージ名@バージョン
 root directoryで実行
 
 ```bash
-bun run type-check
-bun run test
+bun run --bun type-check
+bun run --bun test
 ```
 
 問題があれば該当パッケージのアップデートを戻す
@@ -120,13 +121,13 @@ Grep: "\.(refine|superRefine|transform|preprocess)\("
 git checkout -b update-dependencies-safe-updates
 
 # アップデートしたファイルをステージング
-git add backend/package.json frontend/package.json bun.lock
+git add package.json backend/package.json frontend/package.json bun.lock
 
 # コミット
 git commit -m "chore: Update npm dependencies (safe updates)
 
 Updated the following packages without code changes required:
-- パッケージ名: 旧バージョン → 新バージョン
+- パッケージ名: 旧バージョン -> 新バージョン
 ...
 
 All packages include only bug fixes, type improvements, and minor enhancements.
@@ -153,12 +154,16 @@ gh pr create --title "chore: Update npm dependencies (safe updates)" --body "...
 ```markdown
 ## アップデート内容
 
+### Root
+- パッケージ名: 旧バージョン -> [新バージョン](https://github.com/org/repo/releases/tag/新バージョン)
+  - 変更内容の概要
+
 ### Backend
-- パッケージ名: 旧バージョン → 新バージョン
+- パッケージ名: 旧バージョン -> [新バージョン](https://github.com/org/repo/releases/tag/新バージョン)
   - 変更内容の概要
 
 ### Frontend
-- パッケージ名: 旧バージョン → 新バージョン
+- パッケージ名: 旧バージョン -> [新バージョン](https://github.com/org/repo/releases/tag/新バージョン)
   - 変更内容の概要
 
 ## 備考
