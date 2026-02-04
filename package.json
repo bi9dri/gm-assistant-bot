@@ -21,6 +21,6 @@
     "oxlint": "1.32.0",
     "oxlint-tsgolint": "0.8.6",
     "typescript": "5.9.3",
-    "wrangler": "4.54.0"
+    "wrangler": "4.59.1"
   }
 }
