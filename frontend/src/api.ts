@@ -5,7 +5,7 @@ import type { AppType } from "../../backend/src/index";
 const API_BASE_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:8787"
-    : "https://gm-assistant-bot-api.workers.dev";
+    : "https://gm-assistant-bot-api.bidri.dev";
 
 export const BOT_TOKEN_HEADER = "X-Discord-Bot-Token";
 
