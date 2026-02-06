@@ -97,7 +97,7 @@ const app = new Hono()
   .use(
     "*",
     cors({
-      origin: ["http://localhost:3000", "https://gm-assistant-bot.pages.dev"],
+      origin: ["http://localhost:3000", "https://gm-assistant-bot.bidri.dev"],
       allowHeaders: ["Content-Type", BOT_TOKEN_HEADER],
       allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     }),

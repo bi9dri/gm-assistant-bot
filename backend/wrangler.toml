@@ -3,5 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2025-12-12"
 compatibility_flags = ["nodejs_compat"]
 
+[[routes]]
+pattern = "gm-assistant-bot-api.bidri.dev"
+custom_domain = true
+
 [observability]
 enabled = true
