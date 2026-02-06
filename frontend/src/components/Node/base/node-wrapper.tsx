@@ -18,6 +18,7 @@ import {
   SelectBranchNode,
   SendMessageNode,
   SetGameFlagNode,
+  ShuffleAssignNode,
 } from "../nodes";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
@@ -85,6 +86,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <SelectBranchNode {...props} mode={mode} />
   );
 
+  const ShuffleAssignWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <ShuffleAssignNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -102,5 +107,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     RecordCombination: RecordCombinationWithMode,
     Kanban: KanbanWithMode,
     SelectBranch: SelectBranchWithMode,
+    ShuffleAssign: ShuffleAssignWithMode,
   } as NodeTypes;
 }

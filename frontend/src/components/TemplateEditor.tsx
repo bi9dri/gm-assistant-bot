@@ -88,6 +88,7 @@ const NODE_CATEGORIES = [
       { type: "SelectBranch", label: "選択肢から分岐する" },
       { type: "RecordCombination", label: "組み合わせを記録する" },
       { type: "Kanban", label: "カンバンを操作する" },
+      { type: "ShuffleAssign", label: "シャッフル割り当て" },
     ],
   },
   {
