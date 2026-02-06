@@ -75,4 +75,6 @@ export {
   KanbanDataSchema,
   SelectBranchNode,
   SelectBranchDataSchema,
+  ShuffleAssignNode,
+  ShuffleAssignDataSchema,
 } from "./nodes";

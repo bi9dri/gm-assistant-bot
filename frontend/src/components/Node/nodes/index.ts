@@ -38,3 +38,5 @@ export { SetGameFlagNode, DataSchema as SetGameFlagDataSchema } from "./SetGameF
 export { KanbanNode, DataSchema as KanbanDataSchema } from "./KanbanNode";
 
 export { SelectBranchNode, DataSchema as SelectBranchDataSchema } from "./SelectBranchNode";
+
+export { ShuffleAssignNode, DataSchema as ShuffleAssignDataSchema } from "./ShuffleAssignNode";

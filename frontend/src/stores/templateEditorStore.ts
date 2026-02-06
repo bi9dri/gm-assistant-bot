@@ -21,6 +21,7 @@ import {
   type SelectBranchDataSchema,
   type SendMessageDataSchema,
   type SetGameFlagDataSchema,
+  type ShuffleAssignDataSchema,
   LABELED_GROUP_DEFAULTS,
 } from "@/components/Node";
 
@@ -40,6 +41,7 @@ export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSche
 export type SelectBranchNodeData = z.infer<typeof SelectBranchDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
+export type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
@@ -57,7 +59,8 @@ export type FlowNode =
   | Node<RecordCombinationNodeData, "RecordCombination">
   | Node<SelectBranchNodeData, "SelectBranch">
   | Node<SendMessageNodeData, "SendMessage">
-  | Node<SetGameFlagNodeData, "SetGameFlag">;
+  | Node<SetGameFlagNodeData, "SetGameFlag">
+  | Node<ShuffleAssignNodeData, "ShuffleAssign">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -102,6 +105,7 @@ interface TemplateEditorActions {
       | SelectBranchNodeData
       | SendMessageNodeData
       | SetGameFlagNodeData
+      | ShuffleAssignNodeData
     >,
   ) => void;
   addNode: (
@@ -121,7 +125,8 @@ interface TemplateEditorActions {
       | "RecordCombination"
       | "SelectBranch"
       | "SendMessage"
-      | "SetGameFlag",
+      | "SetGameFlag"
+      | "ShuffleAssign",
     position: { x: number; y: number },
   ) => void;
   expandBlueprint: (nodeId: string) => void;
@@ -313,6 +318,18 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
             { id: crypto.randomUUID(), label: "" },
           ],
           flagName: "",
+        },
+      };
+    } else if (type === "ShuffleAssign") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "シャッフル割り当て",
+          items: [""],
+          targets: [""],
+          resultFlagPrefix: "",
         },
       };
     } else {
