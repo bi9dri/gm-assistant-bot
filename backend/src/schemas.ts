@@ -27,6 +27,7 @@ export const createChannelSchema = z.object({
 });
 
 export const changeChannelPermissionsSchema = z.object({
+  guildId: z.string().nonempty().trim(),
   channelId: z.string().nonempty().trim(),
   writerRoleIds: z.array(z.string().nonempty().trim()),
   readerRoleIds: z.array(z.string().nonempty().trim()),
