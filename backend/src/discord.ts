@@ -163,6 +163,11 @@ export async function createChannel(token: string, data: CreateChannelData) {
       name: data.name,
       parent_id: data.parentCategoryId,
       permission_overwrites: [
+        {
+          id: data.guildId,
+          type: OverwriteType.Role,
+          deny: allPermission.toString(),
+        },
         ...data.writerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,
@@ -187,6 +192,11 @@ export async function changeChannelPermissions(token: string, data: ChangeChanne
   await rest.patch(Routes.channel(data.channelId), {
     body: {
       permission_overwrites: [
+        {
+          id: data.guildId,
+          type: OverwriteType.Role,
+          deny: allPermission.toString(),
+        },
         ...data.writerRoleIds.map((r) => ({
           id: r,
           type: OverwriteType.Role,

@@ -89,7 +89,7 @@ export const ChangeChannelPermissionNode = ({
       return;
     }
 
-    const { bot } = executionContext;
+    const { guildId, bot } = executionContext;
 
     if (data.channelName.trim() === "") {
       addToast({ message: "チャンネル名を入力してください", status: "warning" });
@@ -145,6 +145,7 @@ export const ChangeChannelPermissionNode = ({
 
     try {
       await client.changeChannelPermissions({
+        guildId,
         channelId: channel.id,
         writerRoleIds,
         readerRoleIds,
