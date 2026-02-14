@@ -32,24 +32,9 @@ export const DataSchema = BaseNodeDataSchema.extend({
 });
 type CreateCategoryNodeData = Node<z.infer<typeof DataSchema>, "CreateCategory">;
 
-export function migrateData(data: unknown): z.infer<typeof DataSchema> {
-  const parsed = data as Record<string, unknown>;
-
-  if (typeof parsed.categoryName === "object" && parsed.categoryName !== null) {
-    return DataSchema.parse(data);
-  }
-
-  const legacyCategoryName = typeof parsed.categoryName === "string" ? parsed.categoryName : "";
-
-  return DataSchema.parse({
-    ...parsed,
-    categoryName: { type: "literal", value: legacyCategoryName } satisfies DynamicValue,
-  });
-}
-
 export const CreateCategoryNode = ({
   id,
-  data: rawData,
+  data,
   mode = "edit",
 }: NodeProps<CreateCategoryNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
@@ -57,8 +42,6 @@ export const CreateCategoryNode = ({
   const { addToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const data = migrateData(rawData);
 
   const handleCategoryNameChange = (newValue: DynamicValue) => {
     updateNodeData(id, { categoryName: newValue });

@@ -33,38 +33,13 @@ const MessageBlockSchema = z.object({
   attachments: z.array(AttachmentSchema).max(4).default([]),
 });
 
-// Legacy data migration: convert old format (content, attachments) to new format (messages)
-const LegacyDataSchema = z.object({
-  content: z.string().optional(),
-  attachments: z.array(AttachmentSchema).optional(),
-});
-
 export const DataSchema = BaseNodeDataSchema.extend({
-  channelName: z.string().trim(),
+  channelNames: z.array(z.string().trim()).min(1).default([""]),
   messages: z
     .array(MessageBlockSchema)
     .min(1)
     .default([{ content: "", attachments: [] }]),
 });
-
-export const migrateData = (data: unknown): z.infer<typeof DataSchema> => {
-  const parsed = data as Record<string, unknown>;
-
-  if (Array.isArray(parsed.messages)) {
-    return DataSchema.parse(data);
-  }
-
-  const legacy = LegacyDataSchema.parse(data);
-  return DataSchema.parse({
-    ...parsed,
-    messages: [
-      {
-        content: legacy.content ?? "",
-        attachments: legacy.attachments ?? [],
-      },
-    ],
-  });
-};
 
 type SendMessageNodeData = Node<z.infer<typeof DataSchema>, "SendMessage">;
 type Attachment = z.infer<typeof AttachmentSchema>;
@@ -107,11 +82,9 @@ const saveFileToOPFS = async (
 
 export const SendMessageNode = ({
   id,
-  data: rawData,
+  data,
   mode = "edit",
 }: NodeProps<SendMessageNodeData> & { mode?: "edit" | "execute" }) => {
-  const data = migrateData(rawData);
-
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
   const templateEditorContext = useTemplateEditorContextOptional();
   const executionContext = useNodeExecutionOptional();
@@ -133,8 +106,24 @@ export const SendMessageNode = ({
     }
   }, [executionContext]);
 
-  const handleChannelNameChange = (value: string) => {
-    updateNodeData(id, { channelName: value });
+  const handleChannelNameChange = (index: number, value: string) => {
+    const newChannelNames = [...data.channelNames];
+    newChannelNames[index] = value;
+    updateNodeData(id, { channelNames: newChannelNames });
+  };
+
+  const handleAddChannelName = () => {
+    const newChannelNames = [...data.channelNames, ""];
+    updateNodeData(id, { channelNames: newChannelNames });
+  };
+
+  const handleRemoveChannelName = (index: number) => {
+    if (data.channelNames.length <= 1) {
+      addToast({ message: "最低1つのチャンネルが必要です", status: "warning" });
+      return;
+    }
+    const newChannelNames = data.channelNames.filter((_, i) => i !== index);
+    updateNodeData(id, { channelNames: newChannelNames });
   };
 
   const handleContentChange = (messageIndex: number, value: string) => {
@@ -300,8 +289,13 @@ export const SendMessageNode = ({
 
     const { bot } = executionContext;
 
-    if (data.channelName.trim() === "") {
-      addToast({ message: "チャンネル名を入力してください", status: "warning" });
+    // Validate channel names
+    const validChannelNames = data.channelNames
+      .map((name) => name.trim())
+      .filter((name) => name !== "");
+
+    if (validChannelNames.length === 0) {
+      addToast({ message: "少なくとも1つのチャンネル名を入力してください", status: "warning" });
       return;
     }
 
@@ -313,12 +307,29 @@ export const SendMessageNode = ({
       return;
     }
 
-    const channel = channels.find((c) => c.name === data.channelName.trim());
-    if (!channel) {
+    // Find all target channels
+    const targetChannels: ChannelData[] = [];
+    const notFoundChannels: string[] = [];
+
+    for (const channelName of validChannelNames) {
+      const channel = channels.find((c) => c.name === channelName);
+      if (channel) {
+        targetChannels.push(channel);
+      } else {
+        notFoundChannels.push(channelName);
+      }
+    }
+
+    if (notFoundChannels.length > 0) {
       addToast({
-        message: `チャンネル「${data.channelName}」が見つかりません`,
+        message: `チャンネルが見つかりません: ${notFoundChannels.join(", ")}`,
         status: "error",
       });
+      return;
+    }
+
+    if (targetChannels.length === 0) {
+      addToast({ message: "対象チャンネルが見つかりません", status: "error" });
       return;
     }
 
@@ -328,38 +339,40 @@ export const SendMessageNode = ({
     const fs = new FileSystem();
 
     try {
-      for (const message of data.messages) {
-        // Skip empty messages
-        if (message.content.trim() === "" && message.attachments.length === 0) {
-          continue;
-        }
-
-        // Read files from OPFS for this message
-        const files: File[] = [];
-        for (const attachment of message.attachments) {
-          try {
-            const file = await fs.readFile(attachment.filePath);
-            files.push(file);
-          } catch (error) {
-            console.error("Failed to read file:", error);
-            addToast({
-              message: `ファイル「${attachment.fileName}」の読み込みに失敗しました`,
-              status: "error",
-            });
-            setIsLoading(false);
-            return;
+      for (const channel of targetChannels) {
+        for (const message of data.messages) {
+          // Skip empty messages
+          if (message.content.trim() === "" && message.attachments.length === 0) {
+            continue;
           }
-        }
 
-        await client.sendMessage({
-          channelId: channel.id,
-          content: message.content,
-          files: files.length > 0 ? files : undefined,
-        });
+          // Read files from OPFS for this message
+          const files: File[] = [];
+          for (const attachment of message.attachments) {
+            try {
+              const file = await fs.readFile(attachment.filePath);
+              files.push(file);
+            } catch (error) {
+              console.error("Failed to read file:", error);
+              addToast({
+                message: `ファイル「${attachment.fileName}」の読み込みに失敗しました`,
+                status: "error",
+              });
+              setIsLoading(false);
+              return;
+            }
+          }
+
+          await client.sendMessage({
+            channelId: channel.id,
+            content: message.content,
+            files: files.length > 0 ? files : undefined,
+          });
+        }
       }
 
       addToast({
-        message: "メッセージを送信しました",
+        message: `${targetChannels.length}個のチャンネルにメッセージを送信しました`,
         status: "success",
         durationSeconds: 5,
       });
@@ -388,18 +401,44 @@ export const SendMessageNode = ({
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
-          {/* Channel name input */}
+          {/* Channel names input */}
           <div>
             <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
-            <ResourceSelector
-              nodeId={id}
-              resourceType="channel"
-              value={data.channelName}
-              onChange={handleChannelNameChange}
-              placeholder="チャンネル名"
-              disabled={isExecuteMode || isLoading || isExecuted}
-              channelTypeFilter="text"
-            />
+            {data.channelNames.map((name, index) => (
+              <div key={`${id}-channel-${index}`} className="flex gap-2 items-center mb-2">
+                <div className="flex-1">
+                  <ResourceSelector
+                    nodeId={id}
+                    resourceType="channel"
+                    value={name}
+                    onChange={(newName) => handleChannelNameChange(index, newName)}
+                    placeholder="チャンネル名"
+                    disabled={isExecuteMode || isLoading || isExecuted}
+                    channelTypeFilter="text"
+                  />
+                </div>
+                {!isExecuteMode && data.channelNames.length > 1 && (
+                  <button
+                    type="button"
+                    className="nodrag btn btn-ghost btn-sm"
+                    onClick={() => handleRemoveChannelName(index)}
+                    disabled={isLoading || isExecuted}
+                  >
+                    削除
+                  </button>
+                )}
+              </div>
+            ))}
+            {!isExecuteMode && (
+              <button
+                type="button"
+                className="nodrag btn btn-ghost btn-sm"
+                onClick={handleAddChannelName}
+                disabled={isLoading || isExecuted}
+              >
+                + チャンネルを追加
+              </button>
+            )}
           </div>
 
           {/* Message blocks */}
