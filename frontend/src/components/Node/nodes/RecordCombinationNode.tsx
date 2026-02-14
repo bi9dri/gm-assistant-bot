@@ -656,11 +656,9 @@ export const RecordCombinationNode = ({
         )}
       </BaseNodeContent>
 
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <div className="text-xs text-base-content/50">{data.recordedPairs.length}件記録済み</div>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <div className="text-xs text-base-content/50">{data.recordedPairs.length}件記録済み</div>
+      </BaseNodeFooter>
     </BaseNode>
   );
 };
