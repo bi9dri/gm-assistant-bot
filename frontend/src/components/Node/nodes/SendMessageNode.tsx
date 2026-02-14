@@ -70,7 +70,6 @@ const saveFileToOPFS = async (
 
   let basePath = `${baseDir}/${file.name}`;
 
-  // If file exists, create a random subdirectory
   if (await fs.fileExists(basePath)) {
     const randomDir = crypto.randomUUID().slice(0, 8);
     basePath = `${baseDir}/${randomDir}/${file.name}`;
@@ -146,7 +145,7 @@ export const SendMessageNode = ({
     const message = data.messages[messageIndex];
     const fs = new FileSystem();
     for (const attachment of message.attachments) {
-      void fs.deleteFile(attachment.filePath).catch(() => {});
+      void fs.deleteFile(attachment.filePath).catch(() => { });
     }
 
     const newMessages = data.messages.filter((_, i) => i !== messageIndex);
@@ -289,7 +288,6 @@ export const SendMessageNode = ({
 
     const { bot } = executionContext;
 
-    // Validate channel names
     const validChannelNames = data.channelNames
       .map((name) => name.trim())
       .filter((name) => name !== "");
@@ -307,7 +305,6 @@ export const SendMessageNode = ({
       return;
     }
 
-    // Find all target channels
     const targetChannels: ChannelData[] = [];
     const notFoundChannels: string[] = [];
 
@@ -341,12 +338,10 @@ export const SendMessageNode = ({
     try {
       for (const channel of targetChannels) {
         for (const message of data.messages) {
-          // Skip empty messages
           if (message.content.trim() === "" && message.attachments.length === 0) {
             continue;
           }
 
-          // Read files from OPFS for this message
           const files: File[] = [];
           for (const attachment of message.attachments) {
             try {
@@ -401,7 +396,6 @@ export const SendMessageNode = ({
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
-          {/* Channel names input */}
           <div>
             <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
             {data.channelNames.map((name, index) => (
@@ -441,13 +435,11 @@ export const SendMessageNode = ({
             )}
           </div>
 
-          {/* Message blocks */}
           {data.messages.map((message, messageIndex) => (
             <div
               key={`${id}-message-${messageIndex}`}
               className="border border-base-content/20 rounded-lg p-3 space-y-2"
             >
-              {/* Message header with delete button */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-base-content/60">
@@ -466,7 +458,6 @@ export const SendMessageNode = ({
                 )}
               </div>
 
-              {/* Message input */}
               <textarea
                 className="nodrag textarea textarea-bordered w-full h-24"
                 value={message.content}
@@ -476,13 +467,11 @@ export const SendMessageNode = ({
                 disabled={isExecuteMode || isLoading || isExecuted}
               />
 
-              {/* Attachments for this message */}
               <div>
                 <label className="text-xs font-semibold mb-1 block">
                   添付ファイル ({message.attachments.length}/4)
                 </label>
 
-                {/* File list */}
                 {message.attachments.length > 0 && (
                   <div className="space-y-1 mb-2">
                     {message.attachments.map((attachment, fileIndex) => (
@@ -517,14 +506,12 @@ export const SendMessageNode = ({
                   </div>
                 )}
 
-                {/* File size warning message */}
                 {message.attachments.some((a) => a.fileSize > FILE_SIZE_WARNING_THRESHOLD) && (
                   <p className="text-xs text-warning mb-2">
                     1MBを超えるファイルがあります。圧縮などでサイズを最適化することをお勧めします。
                   </p>
                 )}
 
-                {/* Drop zone / Add file */}
                 {message.attachments.length < 4 ? (
                   <>
                     <input
@@ -547,7 +534,7 @@ export const SendMessageNode = ({
                           ? "border-primary bg-primary/10 border-solid"
                           : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
                         (isExecuteMode || isLoading || isExecuted) &&
-                          "opacity-50 pointer-events-none cursor-not-allowed",
+                        "opacity-50 pointer-events-none cursor-not-allowed",
                       )}
                       onDragOver={handleDragOver}
                       onDragEnter={(e) => handleDragEnter(messageIndex, e)}
@@ -589,7 +576,6 @@ export const SendMessageNode = ({
             </div>
           ))}
 
-          {/* Add message block button */}
           {!isExecuteMode && (
             <button
               type="button"
@@ -601,7 +587,6 @@ export const SendMessageNode = ({
             </button>
           )}
 
-          {/* Available channels display (execute mode) */}
           {isExecuteMode && channels.length > 0 && (
             <p className="text-xs text-base-content/60">
               利用可能なチャンネル: {channels.map((c) => c.name).join(", ")}
