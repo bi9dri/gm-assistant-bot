@@ -201,4 +201,20 @@ describe("Template", () => {
       expect(exported.reactFlowData.nodes).toHaveLength(1);
     });
   });
+
+  describe("static methods", () => {
+    test("getAll returns all templates", async () => {
+      await Template.create("T1");
+      await Template.create("T2");
+      const all = await Template.getAll();
+      expect(all.length).toBe(2);
+    });
+
+    test("delete removes template from DB", async () => {
+      const template = await Template.create("To Delete");
+      await Template.delete(template.id);
+      const result = await Template.getById(template.id);
+      expect(result).toBeUndefined();
+    });
+  });
 });
