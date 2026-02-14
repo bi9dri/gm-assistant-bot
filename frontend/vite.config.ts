@@ -5,11 +5,9 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { URL, fileURLToPath } from "node:url";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     devtools(),
-    // @ts-ignore -- tailwindcss has no types
     tailwindcss(),
     tanstackRouter({
       target: "react",

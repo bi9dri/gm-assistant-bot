@@ -317,19 +317,17 @@ export const ShuffleAssignNode = ({
           </div>
         )}
       </BaseNodeContent>
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="nodrag btn btn-primary"
-            onClick={handleShuffle}
-            disabled={isLoading || isExecuted}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm"></span>}
-            シャッフル実行
-          </button>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <button
+          type="button"
+          className="nodrag btn btn-primary"
+          onClick={handleShuffle}
+          disabled={!isExecuteMode || isLoading || isExecuted}
+        >
+          {isLoading && <span className="loading loading-spinner loading-sm"></span>}
+          シャッフル実行
+        </button>
+      </BaseNodeFooter>
       <BaseHandle id="target-1" type="target" position={Position.Top} />
       <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>

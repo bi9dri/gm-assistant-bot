@@ -364,19 +364,17 @@ export const CreateChannelNode = ({
           </div>
         )}
       </BaseNodeContent>
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="nodrag btn btn-primary"
-            onClick={handleCreateChannels}
-            disabled={isLoading || !!data.executedAt}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm"></span>}
-            作成
-          </button>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <button
+          type="button"
+          className="nodrag btn btn-primary"
+          onClick={handleCreateChannels}
+          disabled={!isExecuteMode || isLoading || !!data.executedAt}
+        >
+          {isLoading && <span className="loading loading-spinner loading-sm"></span>}
+          作成
+        </button>
+      </BaseNodeFooter>
       <BaseHandle id="target-1" type="target" position={Position.Top} />
       <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>

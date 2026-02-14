@@ -157,19 +157,17 @@ export const DeleteCategoryNode = ({
           </div>
         )}
       </BaseNodeContent>
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="btn btn-error"
-            onClick={handleDelete}
-            disabled={isLoading || !!data.executedAt}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm"></span>}
-            削除
-          </button>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <button
+          type="button"
+          className="btn btn-error"
+          onClick={handleDelete}
+          disabled={!isExecuteMode || isLoading || !!data.executedAt}
+        >
+          {isLoading && <span className="loading loading-spinner loading-sm"></span>}
+          削除
+        </button>
+      </BaseNodeFooter>
       <BaseHandle id="target-1" type="target" position={Position.Top} />
       <BaseHandle id="source-1" type="source" position={Position.Bottom} />
     </BaseNode>

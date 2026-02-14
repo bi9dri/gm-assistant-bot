@@ -332,19 +332,17 @@ export const SelectBranchNode = ({
         )}
       </BaseNodeContent>
 
-      {isExecuteMode && !isExecuted && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="nodrag btn btn-primary w-full"
-            onClick={handleExecute}
-            disabled={isLoading || !selectedOption}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm" />}
-            確定する
-          </button>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <button
+          type="button"
+          className="nodrag btn btn-primary w-full"
+          onClick={handleExecute}
+          disabled={!isExecuteMode || isExecuted || isLoading || !selectedOption}
+        >
+          {isLoading && <span className="loading loading-spinner loading-sm" />}
+          確定する
+        </button>
+      </BaseNodeFooter>
 
       <BaseHandle id="target-1" type="target" position={Position.Top} />
       <BaseHandle id="source-1" type="source" position={Position.Bottom} />
