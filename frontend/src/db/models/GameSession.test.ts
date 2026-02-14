@@ -1,34 +1,14 @@
+import { createTestSession } from "#test/factories";
 import { describe, test, expect, spyOn } from "bun:test";
 
-import { db } from "../instance";
 import { defaultReactFlowData } from "../schemas";
-import { GameSession } from "./GameSession";
-
-// テストセッションを作成するヘルパー
-async function createTestSession(name = "Test Session"): Promise<GameSession> {
-  const id = await db.GameSession.add({
-    name,
-    guildId: "guild-123",
-    botId: "bot-456",
-    gameFlags: JSON.stringify({}),
-    reactFlowData: JSON.stringify(defaultReactFlowData),
-    createdAt: new Date(),
-    lastUsedAt: new Date(),
-  });
-
-  const session = await GameSession.getById(id);
-  if (!session) {
-    throw new Error("Failed to create test session");
-  }
-  return session;
-}
 
 describe("GameSession", () => {
   // Tables are cleared in test/unit.setup.ts afterEach
 
   describe("update", () => {
     test("lastUsedAtを常に更新する", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
       const originalLastUsedAt = session.lastUsedAt;
 
       // 時間差を確保するために少し待機
@@ -40,7 +20,7 @@ describe("GameSession", () => {
     });
 
     test("名前のみを更新し、他のフィールドは保持する", async () => {
-      const session = await createTestSession("Original");
+      const session = await createTestSession({ name: "Original" });
       const originalGameFlags = session.gameFlags;
       const originalReactFlowData = session.reactFlowData;
 
@@ -52,7 +32,7 @@ describe("GameSession", () => {
     });
 
     test("gameFlagsをZodバリデーション付きで更新する", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       await session.update({ gameFlags: { key1: "value1", key2: 123 } });
 
@@ -60,7 +40,7 @@ describe("GameSession", () => {
     });
 
     test("reactFlowDataをJSONエンコードして更新する", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
       const newReactFlowData = {
         nodes: [{ id: "1", type: "test", position: { x: 0, y: 0 }, data: {} }],
         edges: [],
@@ -73,7 +53,7 @@ describe("GameSession", () => {
     });
 
     test("reactFlowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       // 無効なreactFlowData（必須フィールドが欠落）
       const invalidData = { nodes: [] } as unknown as Parameters<
@@ -84,7 +64,7 @@ describe("GameSession", () => {
     });
 
     test("更新時に名前をトリムする", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       await session.update({ name: "  Trimmed Name  " });
 
@@ -94,7 +74,7 @@ describe("GameSession", () => {
 
   describe("getParsedGameFlags", () => {
     test("有効なJSONを正常にパースする", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
       await session.update({ gameFlags: { flag1: true, flag2: "test" } });
 
       const parsed = session.getParsedGameFlags();
@@ -103,7 +83,7 @@ describe("GameSession", () => {
     });
 
     test("無効なJSONの場合は空オブジェクトを返す", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       // 無効なJSONを手動で設定
       session.gameFlags = "invalid json {";
@@ -118,7 +98,7 @@ describe("GameSession", () => {
 
   describe("getParsedReactFlowData", () => {
     test("有効なJSONを正常にパースする", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
       const reactFlowData = {
         nodes: [{ id: "node1" }],
         edges: [{ id: "edge1" }],
@@ -132,7 +112,7 @@ describe("GameSession", () => {
     });
 
     test("無効なJSONの場合はdefaultReactFlowDataを返す", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       // 無効なJSONを手動で設定
       session.reactFlowData = "not valid json";
@@ -145,7 +125,7 @@ describe("GameSession", () => {
     });
 
     test("バリデーションが失敗した場合はdefaultReactFlowDataを返す", async () => {
-      const session = await createTestSession();
+      const session = await createTestSession({});
 
       // パースは成功するがZodバリデーションが失敗するJSONを設定
       session.reactFlowData = JSON.stringify({ nodes: "not an array" });

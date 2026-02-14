@@ -26,7 +26,7 @@ import type {
  * guild.idをハッシュ化してデフォルトアバターインデックス(0-5)を決定
  * 同じguildは常に同じアバターを返す
  */
-function getDefaultAvatarIndex(id: string): number {
+export function getDefaultAvatarIndex(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash << 5) - hash + id.charCodeAt(i);
@@ -38,7 +38,7 @@ function getDefaultAvatarIndex(id: string): number {
 /**
  * guild.iconがnull/undefinedの場合、デフォルトアバターURLを返す
  */
-function getGuildIconUrl(guildId: string, iconHash: string | null): string {
+export function getGuildIconUrl(guildId: string, iconHash: string | null): string {
   if (!iconHash) {
     const avatarIndex = getDefaultAvatarIndex(guildId);
     return `https://cdn.discordapp.com/embed/avatars/${avatarIndex}.png`;
@@ -49,7 +49,7 @@ function getGuildIconUrl(guildId: string, iconHash: string | null): string {
 /**
  * user.avatarがnull/undefinedの場合、デフォルトアバターURLを返す
  */
-function getUserAvatarUrl(userId: string, avatarHash: string | null): string {
+export function getUserAvatarUrl(userId: string, avatarHash: string | null): string {
   if (!avatarHash) {
     const avatarIndex = getDefaultAvatarIndex(userId);
     return `https://cdn.discordapp.com/embed/avatars/${avatarIndex}.png`;

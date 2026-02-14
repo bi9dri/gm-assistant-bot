@@ -18,3 +18,14 @@ export {
   collectResourcesBeforeNode,
   type TemplateResources,
 } from "./useTemplateResources";
+
+export {
+  getFilteredTargetOptions,
+  validatePair,
+  type OptionItem,
+  type RecordedPair,
+  type CombinationConfig,
+  type FilteredOption,
+} from "./recordCombination";
+
+export { fisherYatesShuffle } from "./shuffle";

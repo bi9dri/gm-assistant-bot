@@ -16,7 +16,15 @@ import {
   NODE_CONTENT_HEIGHTS,
   NODE_TYPE_WIDTHS,
 } from "../base";
-import { PortaledSelect } from "../utils";
+import {
+  PortaledSelect,
+  getFilteredTargetOptions,
+  validatePair,
+  type OptionItem,
+  type RecordedPair,
+  type CombinationConfig,
+  type FilteredOption,
+} from "../utils";
 
 // ============================================================
 // Schema Definitions
@@ -65,98 +73,11 @@ export type RecordCombinationNodeData = z.infer<typeof DataSchema>;
 type RecordCombinationNode = Node<RecordCombinationNodeData, "RecordCombination">;
 
 // ============================================================
-// Types
-// ============================================================
-
-type OptionItem = z.infer<typeof OptionItemSchema>;
-type RecordedPair = z.infer<typeof RecordedPairSchema>;
-type CombinationConfig = z.infer<typeof CombinationConfigSchema>;
-
-interface FilteredOption extends OptionItem {
-  isDisabled: boolean;
-  disabledReason: string;
-}
-
-// ============================================================
 // Utility Functions
 // ============================================================
 
 function generateId(): string {
   return crypto.randomUUID();
-}
-
-function getFilteredTargetOptions(
-  config: CombinationConfig,
-  sourceOptions: OptionItem[],
-  targetOptions: OptionItem[] | undefined,
-  recordedPairs: RecordedPair[],
-  selectedSourceId: string | null,
-): FilteredOption[] {
-  const baseTargets = config.mode === "same-set" ? sourceOptions : (targetOptions ?? []);
-
-  return baseTargets.map((option) => {
-    let isDisabled = false;
-    let disabledReason = "";
-
-    if (config.mode === "same-set" && !config.allowSelfPairing && option.id === selectedSourceId) {
-      isDisabled = true;
-      disabledReason = "自分自身とはペアになれません";
-    }
-
-    if (!isDisabled && !config.allowDuplicates && selectedSourceId) {
-      const existingPair = recordedPairs.find((pair) => {
-        if (config.distinguishOrder) {
-          // 順序を区別: A→B と B→A は別扱い
-          return pair.sourceId === selectedSourceId && pair.targetId === option.id;
-        }
-        // 順序を区別しない: A-B と B-A は同じ扱い
-        return (
-          (pair.sourceId === selectedSourceId && pair.targetId === option.id) ||
-          (pair.sourceId === option.id && pair.targetId === selectedSourceId)
-        );
-      });
-      if (existingPair) {
-        isDisabled = true;
-        disabledReason = "既に記録済みです";
-      }
-    }
-
-    return { ...option, isDisabled, disabledReason };
-  });
-}
-
-function validatePair(
-  config: CombinationConfig,
-  recordedPairs: RecordedPair[],
-  sourceId: string,
-  targetId: string,
-): { valid: boolean; error?: string } {
-  if (!sourceId || !targetId) {
-    return { valid: false, error: "両方を選択してください" };
-  }
-
-  if (config.mode === "same-set" && !config.allowSelfPairing && sourceId === targetId) {
-    return { valid: false, error: "自分自身とはペアになれません" };
-  }
-
-  if (!config.allowDuplicates) {
-    const isDuplicate = recordedPairs.some((pair) => {
-      if (config.distinguishOrder) {
-        // 順序を区別: A→B と B→A は別扱い
-        return pair.sourceId === sourceId && pair.targetId === targetId;
-      }
-      // 順序を区別しない: A-B と B-A は同じ扱い
-      return (
-        (pair.sourceId === sourceId && pair.targetId === targetId) ||
-        (pair.sourceId === targetId && pair.targetId === sourceId)
-      );
-    });
-    if (isDuplicate) {
-      return { valid: false, error: "このペアは既に記録されています" };
-    }
-  }
-
-  return { valid: true };
 }
 
 // ============================================================
