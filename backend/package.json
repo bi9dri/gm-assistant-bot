@@ -4,6 +4,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
+    "test": "bun test",
     "lint": "oxlint && oxfmt --check ./src",
     "format": "oxlint --fix && oxfmt --write ./src",
     "type-check": "oxlint --type-aware --type-check",

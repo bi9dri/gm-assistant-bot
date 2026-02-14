@@ -32,10 +32,17 @@
 - This is a security measure against supply chain attacks
 - When updating dependencies, always specify exact versions
 
+### GitHub Actions Security
+- **External actions must be pinned to full commit SHA** (NOT tags or branches)
+- Example: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2`
+- See [GitHub Actions セキュリティルール](docs/dev/github-actions-rules.md) for details
+
 ## Design Documentation
 
 ### 開発者向けドキュメント (`/docs/dev`)
 - [ノードシステムアーキテクチャ](docs/dev/node-system-architecture.md) - **新しいノードを実装する際は必ず参照**。ノードの基本構造、実装パターン、チェックリストを含む
+- [テスト戦略](docs/dev/testing-strategy.md) - テストピラミッド、TDD ワークフロー、カバレッジ戦略、アンチパターン、実装ロードマップ
+- [GitHub Actions セキュリティルール](docs/dev/github-actions-rules.md) - ワークフローのセキュリティ規約。外部アクションは必ず固定ハッシュ値でピン留めすること
 
 ### Skills（Claude Code スキル）
 - **node-creator**: 新しいノードタイプ（`XxxNode`）を実装する際は、**必ずこのスキルを利用すること**。スキルには実装チェックリスト、コンポーネントテンプレート、登録手順が含まれている。
@@ -84,9 +91,10 @@ bun run --bun --filter backend dev
 
 **重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
 
-1. `bun run --bun type-check` - 型エラーがないことを確認
-2. `bun run --bun format` - コードをフォーマット
-3. `bun run --bun lint` - lint エラーがないことを確認
+1. `bun run --bun test` - テストが通ることを確認
+2. `bun run --bun type-check` - 型エラーがないことを確認
+3. `bun run --bun format` - コードをフォーマット
+4. `bun run --bun lint` - lint エラーがないことを確認
 
 すべてのコマンドが成功するまで、実装は完了とみなさない。
 

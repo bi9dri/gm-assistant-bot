@@ -145,7 +145,7 @@ export const SendMessageNode = ({
     const message = data.messages[messageIndex];
     const fs = new FileSystem();
     for (const attachment of message.attachments) {
-      void fs.deleteFile(attachment.filePath).catch(() => { });
+      void fs.deleteFile(attachment.filePath).catch(() => {});
     }
 
     const newMessages = data.messages.filter((_, i) => i !== messageIndex);
@@ -534,7 +534,7 @@ export const SendMessageNode = ({
                           ? "border-primary bg-primary/10 border-solid"
                           : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
                         (isExecuteMode || isLoading || isExecuted) &&
-                        "opacity-50 pointer-events-none cursor-not-allowed",
+                          "opacity-50 pointer-events-none cursor-not-allowed",
                       )}
                       onDragOver={handleDragOver}
                       onDragEnter={(e) => handleDragEnter(messageIndex, e)}
