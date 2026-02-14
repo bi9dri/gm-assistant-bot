@@ -85,6 +85,96 @@ describe("templateEditorStore", () => {
       expect(node.type).toBe("AddRoleToRoleMembers");
       expect(node.data).toEqual({ memberRoleName: "", addRoleName: "" });
     });
+
+    test("SetGameFlagノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("SetGameFlag", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("SetGameFlag");
+      expect(node.data).toEqual({ flagKey: "", flagValue: "" });
+    });
+
+    test("LabeledGroupノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("LabeledGroup", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("LabeledGroup");
+      expect(node.data).toEqual({ label: "" });
+      expect(node.zIndex).toBe(-1);
+      expect(node.style).toBeDefined();
+      expect(node.style?.width).toBeGreaterThan(0);
+      expect(node.style?.height).toBeGreaterThan(0);
+    });
+
+    test("Commentノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("Comment", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("Comment");
+      expect(node.data).toEqual({ comment: "" });
+    });
+
+    test("RecordCombinationノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("RecordCombination", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("RecordCombination");
+      expect(node.data).toEqual({
+        title: "組み合わせを記録",
+        config: {
+          mode: "same-set",
+          allowSelfPairing: false,
+          allowDuplicates: false,
+          distinguishOrder: true,
+          allowMultipleAssignments: false,
+        },
+        sourceOptions: {
+          label: "選択肢A",
+          items: [],
+        },
+        recordedPairs: [],
+      });
+    });
+
+    test("Kanbanノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("Kanban", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("Kanban");
+      expect(node.data).toEqual({
+        title: "カンバン",
+        columns: [],
+        cards: [],
+        initialPlacements: [],
+        cardPlacements: [],
+      });
+    });
+
+    test("SelectBranchノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("SelectBranch", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("SelectBranch");
+      if (node.type !== "SelectBranch") return;
+      expect(node.data.title).toBe("選択肢を選ぶ");
+      expect(node.data.options).toHaveLength(2);
+      expect(node.data.options[0].label).toBe("");
+      expect(node.data.options[1].label).toBe("");
+      expect(node.data.flagName).toBe("");
+    });
+
+    test("ShuffleAssignノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("ShuffleAssign", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("ShuffleAssign");
+      expect(node.data).toEqual({
+        title: "シャッフル割り当て",
+        items: [""],
+        targets: [""],
+        resultFlagPrefix: "",
+      });
+    });
   });
 
   describe("duplicateNode", () => {
@@ -491,6 +581,117 @@ describe("templateEditorStore", () => {
 
       expect(useTemplateEditorStore.getState().nodes).toEqual(originalNodes);
       expect(useTemplateEditorStore.getState().edges).toEqual(originalEdges);
+    });
+  });
+
+  describe("onNodesChange", () => {
+    test("ノードの変更を適用する", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      useTemplateEditorStore.getState().onNodesChange([
+        {
+          id: node.id,
+          type: "position",
+          position: { x: 200, y: 200 },
+        },
+      ]);
+
+      const updatedNode = useTemplateEditorStore.getState().nodes[0];
+      expect(updatedNode.position).toEqual({ x: 200, y: 200 });
+    });
+  });
+
+  describe("onEdgesChange", () => {
+    test("エッジの変更を適用する", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
+
+      const nodes = useTemplateEditorStore.getState().nodes;
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[1].id,
+        sourceHandle: null,
+        targetHandle: null,
+      });
+
+      const edge = useTemplateEditorStore.getState().edges[0];
+      useTemplateEditorStore.getState().onEdgesChange([
+        {
+          id: edge.id,
+          type: "remove",
+        },
+      ]);
+
+      expect(useTemplateEditorStore.getState().edges.length).toBe(0);
+    });
+  });
+
+  describe("setViewport", () => {
+    test("viewportを設定する", () => {
+      const newViewport = { x: 100, y: 200, zoom: 1.5 };
+      useTemplateEditorStore.getState().setViewport(newViewport);
+
+      expect(useTemplateEditorStore.getState().viewport).toEqual(newViewport);
+    });
+  });
+
+  describe("initialize", () => {
+    test("ノード、エッジ、viewportを設定する", () => {
+      const nodes = [
+        {
+          id: "node-1",
+          type: "CreateRole" as const,
+          position: { x: 100, y: 100 },
+          data: { roles: ["Admin"] },
+        },
+      ];
+      const edges = [
+        {
+          id: "edge-1",
+          source: "node-1",
+          target: "node-2",
+        },
+      ];
+      const viewport = { x: 50, y: 75, zoom: 1.2 };
+
+      useTemplateEditorStore.getState().initialize(nodes, edges, viewport);
+
+      expect(useTemplateEditorStore.getState().nodes).toEqual(nodes);
+      expect(useTemplateEditorStore.getState().edges).toEqual(edges);
+      expect(useTemplateEditorStore.getState().viewport).toEqual(viewport);
+      expect(useTemplateEditorStore.getState().initialized).toBe(true);
+    });
+
+    test("viewportがnullの場合デフォルト値を使用", () => {
+      const nodes = [
+        {
+          id: "node-1",
+          type: "CreateRole" as const,
+          position: { x: 100, y: 100 },
+          data: { roles: ["Admin"] },
+        },
+      ];
+      const edges: never[] = [];
+
+      useTemplateEditorStore.getState().initialize(nodes, edges, undefined);
+
+      expect(useTemplateEditorStore.getState().viewport).toEqual({ x: 0, y: 0, zoom: 1 });
+      expect(useTemplateEditorStore.getState().initialized).toBe(true);
+    });
+  });
+
+  describe("reset", () => {
+    test("ストアをリセットする", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().setViewport({ x: 100, y: 200, zoom: 1.5 });
+
+      useTemplateEditorStore.getState().reset();
+
+      expect(useTemplateEditorStore.getState().nodes).toEqual([]);
+      expect(useTemplateEditorStore.getState().edges).toEqual([]);
+      expect(useTemplateEditorStore.getState().viewport).toEqual({ x: 0, y: 0, zoom: 1 });
+      expect(useTemplateEditorStore.getState().initialized).toBe(false);
     });
   });
 });

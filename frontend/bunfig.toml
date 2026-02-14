@@ -3,6 +3,39 @@ preload = ["./test/unit.setup.ts"]
 coverage = true
 coverageReporter = ["text", "lcov"]
 coverageDir = "./coverage"
-# Threshold temporarily disabled during Phase 1-2, will be set after Phase 3
-# coverageThreshold = { lines = 0.9, functions = 0.95, statements = 0.9 }
+coverageThreshold = { lines = 0.90, functions = 0.80, statements = 0.90 }
 coverageSkipTestFiles = true
+
+coveragePathIgnorePatterns = [
+  # React コンポーネント — E2E フェーズで対応
+  "src/components/Node/nodes/**",
+  "src/components/Node/base/base-node.tsx",
+  "src/components/Node/base/node-wrapper.tsx",
+  "src/components/Node/utils/DynamicValueInput.tsx",
+  "src/components/Node/utils/PortaledSelect.tsx",
+  "src/components/Node/utils/ResourceSelector.tsx",
+  "src/toast/**",
+
+  # ロジック無し DB モデル
+  "src/db/models/Category.ts",
+  "src/db/models/Channel.ts",
+  "src/db/models/DiscordBot.ts",
+  "src/db/models/Guild.ts",
+  "src/db/models/Role.ts",
+
+  # DB設定ファイル — upgrade callback は Dexie 内部 API に依存しテスト困難
+  "src/db/database.ts",
+
+  # React コンテキスト/フック
+  "src/components/Node/contexts/**",
+  "src/components/Node/utils/useTemplateResources.ts",
+
+  # API クライアント — バックエンドテストで間接的にカバー
+  "src/api.ts",
+
+  # ファイルシステム — 外部 API (OPFS, zip.js) 依存が大部分
+  "src/fileSystem.ts",
+
+  # テストセットアップ
+  "test/**",
+]

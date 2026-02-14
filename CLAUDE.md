@@ -19,6 +19,9 @@
   - **非自明なロジック**: 複雑なアルゴリズムや業務ルールの説明
   - **TODO/FIXME**: 後で対応が必要な箇所
 
+### TypeScript Patterns
+- **Union type narrowing**: Use type guards for discriminated unions (e.g., `if (node.type !== "XxxNode") return;`)
+
 ### Runtime and Package Manager
 - Default to using **Bun** instead of Node.js
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
@@ -26,6 +29,9 @@
 - Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
 - Use `bun run --bun <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
 - Bun automatically loads .env, so don't use dotenv
+- **`--filter` option**: Searches by package name (in `package.json`), not workspace name. Supports wildcards (e.g., `--filter '*'`)
+- **Coverage exclude patterns**: Use glob patterns in `coveragePathIgnorePatterns` (e.g., `"src/components/**"`), NOT regex
+- **Coverage thresholds**: Applied globally to all files - exclude untestable files rather than lowering thresholds
 
 ### Dependency Management
 - **Use fixed versions only** (no `^` or `~` prefixes)
