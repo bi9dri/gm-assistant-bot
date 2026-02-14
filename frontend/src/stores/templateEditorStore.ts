@@ -230,7 +230,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { channelName: "", messages: [{ content: "", attachments: [] }] },
+        data: { channelNames: [""], messages: [{ content: "", attachments: [] }] },
       };
     } else if (type === "Blueprint") {
       newNode = {
