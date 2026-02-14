@@ -2,6 +2,7 @@
   "name": "gm-assistant-bot-frontend",
   "private": true,
   "type": "module",
+  "packageManager": "bun@1.3.8",
   "scripts": {
     "lint": "oxlint && oxfmt --check ./src ./test",
     "format": "oxlint --fix && oxfmt --write ./src ./test",
