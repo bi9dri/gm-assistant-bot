@@ -1,6 +1,11 @@
 import { describe, test, expect } from "bun:test";
 
-import { resolveDynamicValue, type DynamicValue, type DynamicValueContext } from "./DynamicValue";
+import {
+  resolveDynamicValue,
+  defaultDynamicValue,
+  type DynamicValue,
+  type DynamicValueContext,
+} from "./DynamicValue";
 
 describe("resolveDynamicValue", () => {
   test.each([
@@ -92,5 +97,12 @@ describe("resolveDynamicValue", () => {
       "channel-1",
     );
     expect(resolveDynamicValue({ type: "gameFlag", flagKey: "turn" }, context)).toBe("3");
+  });
+});
+
+describe("defaultDynamicValue", () => {
+  test("returns literal type with empty value", () => {
+    const result = defaultDynamicValue();
+    expect(result).toEqual({ type: "literal", value: "" });
   });
 });
