@@ -472,7 +472,7 @@ export const ConditionalBranchNode = ({
         </button>
       </BaseNodeFooter>
 
-      <BaseHandle id="target-1" type="target" position={Position.Top} />
+      <BaseHandle id="target-1" type="target" position={Position.Left} />
 
       {data.conditions.map((condition, index) => (
         <LabeledHandle

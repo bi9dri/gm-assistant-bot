@@ -607,8 +607,8 @@ export const SendMessageNode = ({
         </button>
       </BaseNodeFooter>
 
-      <BaseHandle id="target-1" type="target" position={Position.Top} />
-      <BaseHandle id="source-1" type="source" position={Position.Bottom} />
+      <BaseHandle id="target-1" type="target" position={Position.Left} />
+      <BaseHandle id="source-1" type="source" position={Position.Right} />
     </BaseNode>
   );
 };
