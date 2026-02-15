@@ -104,6 +104,10 @@ export const BlueprintNode = ({
   const validSharedChannels = data.parameters.sharedTextChannels.filter((n) => n.trim());
   const totalTextChannels = validCharacters.length + validSharedChannels.length;
 
+  const sessionPrefix = data.parameters.categoryName.trim();
+  const plRoleName = sessionPrefix ? `${sessionPrefix}PL` : "PL";
+  const spectatorRoleName = sessionPrefix ? `${sessionPrefix}観戦` : "観戦";
+
   const isExecuteMode = mode === "execute";
 
   return (
@@ -213,13 +217,17 @@ export const BlueprintNode = ({
         <div className="text-xs text-base-content/60 mt-4 p-2 bg-base-200 rounded">
           <p className="font-semibold mb-1">生成されるノード:</p>
           <ul className="list-disc list-inside space-y-0.5">
-            <li>ロール作成: PL, 観戦 + キャラクター{validCharacters.length}個</li>
+            <li>
+              ロール作成: {plRoleName}, {spectatorRoleName} + キャラクター{validCharacters.length}個
+            </li>
             <li>カテゴリ作成: {data.parameters.categoryName.trim() ? 1 : 0}個</li>
             <li>
               チャンネル作成: テキスト{totalTextChannels}個 + VC{data.parameters.voiceChannelCount}
               個
             </li>
-            <li>PLロールメンバーに観戦ロール付与</li>
+            <li>
+              {plRoleName}ロールメンバーに{spectatorRoleName}ロール付与
+            </li>
             <li>カテゴリ削除</li>
             <li>全ロール削除</li>
           </ul>
