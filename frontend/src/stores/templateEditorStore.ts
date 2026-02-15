@@ -459,8 +459,8 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     const generatedEdges: Edge[] = [];
     const startPosition = blueprintNode.position;
 
-    let currentY = startPosition.y;
-    const VERTICAL_SPACING = 200;
+    let currentX = startPosition.x;
+    const HORIZONTAL_SPACING = 350;
 
     let previousNodeId: string | null = null;
 
@@ -478,12 +478,12 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       const roleNode: Node<CreateRoleNodeData, "CreateRole"> = {
         id: roleNodeId,
         type: "CreateRole",
-        position: { x: startPosition.x, y: currentY },
+        position: { x: currentX, y: startPosition.y },
         data: { roles: allRoles },
       };
       generatedNodes.push(roleNode);
       previousNodeId = roleNodeId;
-      currentY += VERTICAL_SPACING;
+      currentX += HORIZONTAL_SPACING;
     }
 
     // 2. Create CreateCategoryNode if category name is provided
@@ -492,7 +492,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       const categoryNode: Node<CreateCategoryNodeData, "CreateCategory"> = {
         id: categoryNodeId,
         type: "CreateCategory",
-        position: { x: startPosition.x, y: currentY },
+        position: { x: currentX, y: startPosition.y },
         data: { categoryName: { type: "literal", value: parameters.categoryName.trim() } },
       };
       generatedNodes.push(categoryNode);
@@ -507,7 +507,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         });
       }
       previousNodeId = categoryNodeId;
-      currentY += VERTICAL_SPACING;
+      currentX += HORIZONTAL_SPACING;
     }
 
     // 3. Create CreateChannelNode with channels
@@ -549,7 +549,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       const channelNode: Node<CreateChannelNodeData, "CreateChannel"> = {
         id: channelNodeId,
         type: "CreateChannel",
-        position: { x: startPosition.x, y: currentY },
+        position: { x: currentX, y: startPosition.y },
         data: { channels },
       };
       generatedNodes.push(channelNode);
@@ -564,7 +564,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         });
       }
       previousNodeId = channelNodeId;
-      currentY += VERTICAL_SPACING;
+      currentX += HORIZONTAL_SPACING;
     }
 
     // 4. Create AddRoleToRoleMembersNode: Add "観戦" role to "PL" role members
@@ -575,7 +575,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     const addRoleNode: Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers"> = {
       id: addRoleNodeId,
       type: "AddRoleToRoleMembers",
-      position: { x: startPosition.x, y: currentY },
+      position: { x: currentX, y: startPosition.y },
       data: { memberRoleName: "PL", addRoleName: "観戦" },
     };
     generatedNodes.push(addRoleNode);
@@ -590,7 +590,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       });
     }
     previousNodeId = addRoleNodeId;
-    currentY += VERTICAL_SPACING;
+    currentX += HORIZONTAL_SPACING;
 
     // 5. Create DeleteCategoryNode
     const deleteCategoryNodeId = generateNextId(
@@ -600,7 +600,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     const deleteCategoryNode: Node<DeleteCategoryNodeData, "DeleteCategory"> = {
       id: deleteCategoryNodeId,
       type: "DeleteCategory",
-      position: { x: startPosition.x, y: currentY },
+      position: { x: currentX, y: startPosition.y },
       data: {},
     };
     generatedNodes.push(deleteCategoryNode);
@@ -615,14 +615,14 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       });
     }
     previousNodeId = deleteCategoryNodeId;
-    currentY += VERTICAL_SPACING;
+    currentX += HORIZONTAL_SPACING;
 
     // 6. Create DeleteRoleNode (delete all roles)
     const deleteRoleNodeId = generateNextId(state.nodes.concat(generatedNodes), "DeleteRole");
     const deleteRoleNode: Node<DeleteRoleNodeData, "DeleteRole"> = {
       id: deleteRoleNodeId,
       type: "DeleteRole",
-      position: { x: startPosition.x, y: currentY },
+      position: { x: currentX, y: startPosition.y },
       data: { deleteAll: true, roleNames: [] },
     };
     generatedNodes.push(deleteRoleNode);
