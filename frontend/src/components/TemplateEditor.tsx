@@ -85,6 +85,7 @@ const NODE_CATEGORIES = [
     category: "ゲーム管理",
     nodes: [
       { type: "SetGameFlag", label: "ゲームフラグを設定する" },
+      { type: "ConditionalBranch", label: "条件で分岐する" },
       { type: "SelectBranch", label: "選択肢から分岐する" },
       { type: "RecordCombination", label: "組み合わせを記録する" },
       { type: "Kanban", label: "カンバンを操作する" },

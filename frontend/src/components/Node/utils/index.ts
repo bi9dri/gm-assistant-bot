@@ -29,3 +29,10 @@ export {
 } from "./recordCombination";
 
 export { fisherYatesShuffle } from "./shuffle";
+
+export {
+  evaluateCondition,
+  evaluateConditions,
+  type Condition,
+  type GameFlags,
+} from "./evaluateCondition";

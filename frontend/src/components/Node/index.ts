@@ -51,6 +51,8 @@ export {
   ChangeChannelPermissionDataSchema,
   CommentNode,
   CommentDataSchema,
+  ConditionalBranchNode,
+  ConditionalBranchDataSchema,
   CreateCategoryNode,
   CreateCategoryDataSchema,
   CreateChannelNode,

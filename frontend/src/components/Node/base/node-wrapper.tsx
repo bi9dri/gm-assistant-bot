@@ -6,6 +6,7 @@ import {
   BlueprintNode,
   ChangeChannelPermissionNode,
   CommentNode,
+  ConditionalBranchNode,
   CreateCategoryNode,
   CreateChannelNode,
   CreateRoleNode,
@@ -74,6 +75,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <CommentNode {...props} mode={mode} />
   );
 
+  const ConditionalBranchWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <ConditionalBranchNode {...props} mode={mode} />
+  );
+
   const RecordCombinationWithMode: ComponentType<NodeProps<any>> = (props) => (
     <RecordCombinationNode {...props} mode={mode} />
   );
@@ -104,6 +109,7 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     SetGameFlag: SetGameFlagWithMode,
     LabeledGroup: LabeledGroupWithMode,
     Comment: CommentWithMode,
+    ConditionalBranch: ConditionalBranchWithMode,
     RecordCombination: RecordCombinationWithMode,
     Kanban: KanbanWithMode,
     SelectBranch: SelectBranchWithMode,

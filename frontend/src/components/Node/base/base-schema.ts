@@ -30,6 +30,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   SetGameFlag: NODE_WIDTHS.md,
   LabeledGroup: NODE_WIDTHS.xl,
   Comment: NODE_WIDTHS.md,
+  ConditionalBranch: NODE_WIDTHS.lg,
   RecordCombination: NODE_WIDTHS.lg,
   Kanban: NODE_WIDTHS.xl,
   SelectBranch: NODE_WIDTHS.md,
