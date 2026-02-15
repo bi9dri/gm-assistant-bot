@@ -467,9 +467,10 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     const validCharacters = parameters.characterNames.filter((n) => n.trim());
     const validSharedChannels = parameters.sharedTextChannels.filter((n) => n.trim());
 
-    // Common roles for Murder Mystery
-    const commonRoles = ["PL", "観戦"];
-    // All roles including common ones
+    const sessionPrefix = parameters.categoryName.trim();
+    const commonRoles = sessionPrefix
+      ? [`${sessionPrefix}PL`, `${sessionPrefix}観戦`]
+      : ["PL", "観戦"];
     const allRoles = [...commonRoles, ...validCharacters];
 
     // 1. Create CreateRoleNode with common roles + character roles
@@ -567,7 +568,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       currentX += HORIZONTAL_SPACING;
     }
 
-    // 4. Create AddRoleToRoleMembersNode: Add "観戦" role to "PL" role members
+    // 4. Create AddRoleToRoleMembersNode: Add spectator role to PL role members
     const addRoleNodeId = generateNextId(
       state.nodes.concat(generatedNodes),
       "AddRoleToRoleMembers",
@@ -576,7 +577,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       id: addRoleNodeId,
       type: "AddRoleToRoleMembers",
       position: { x: currentX, y: startPosition.y },
-      data: { memberRoleName: "PL", addRoleName: "観戦" },
+      data: { memberRoleName: commonRoles[0], addRoleName: commonRoles[1] },
     };
     generatedNodes.push(addRoleNode);
 

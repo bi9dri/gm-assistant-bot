@@ -376,6 +376,29 @@ describe("templateEditorStore", () => {
       });
     });
 
+    test("カテゴリ名がある場合、PL/観戦ロールにプレフィックスが付く", () => {
+      const position = { x: 100, y: 100 };
+      useTemplateEditorStore.getState().addNode("Blueprint", position);
+
+      const blueprintNode = useTemplateEditorStore.getState().nodes[0];
+      useTemplateEditorStore.getState().updateNodeData(blueprintNode.id, {
+        parameters: {
+          characterNames: ["Alice", "Bob"],
+          voiceChannelCount: 0,
+          categoryName: "セッション",
+          sharedTextChannels: [],
+        },
+      });
+
+      useTemplateEditorStore.getState().expandBlueprint(blueprintNode.id);
+
+      const roleNode = useTemplateEditorStore.getState().nodes.find((n) => n.type === "CreateRole");
+      expect(roleNode).toBeDefined();
+      expect(roleNode?.data).toEqual({
+        roles: ["セッションPL", "セッション観戦", "Alice", "Bob"],
+      });
+    });
+
     test("カテゴリ名が提供されている場合CreateCategoryノードを生成する", () => {
       const position = { x: 100, y: 100 };
       useTemplateEditorStore.getState().addNode("Blueprint", position);
@@ -484,6 +507,32 @@ describe("templateEditorStore", () => {
       expect(addRoleNode?.data).toEqual({
         memberRoleName: "PL",
         addRoleName: "観戦",
+      });
+    });
+
+    test("カテゴリ名がある場合、AddRoleToRoleMembersノードにもプレフィックスが付く", () => {
+      const position = { x: 100, y: 100 };
+      useTemplateEditorStore.getState().addNode("Blueprint", position);
+
+      const blueprintNode = useTemplateEditorStore.getState().nodes[0];
+      useTemplateEditorStore.getState().updateNodeData(blueprintNode.id, {
+        parameters: {
+          characterNames: [],
+          voiceChannelCount: 0,
+          categoryName: "テスト",
+          sharedTextChannels: [],
+        },
+      });
+
+      useTemplateEditorStore.getState().expandBlueprint(blueprintNode.id);
+
+      const addRoleNode = useTemplateEditorStore
+        .getState()
+        .nodes.find((n) => n.type === "AddRoleToRoleMembers");
+      expect(addRoleNode).toBeDefined();
+      expect(addRoleNode?.data).toEqual({
+        memberRoleName: "テストPL",
+        addRoleName: "テスト観戦",
       });
     });
 
