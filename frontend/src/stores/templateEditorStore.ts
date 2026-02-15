@@ -9,6 +9,7 @@ import {
   type BlueprintDataSchema,
   type ChangeChannelPermissionDataSchema,
   type CommentDataSchema,
+  type ConditionalBranchDataSchema,
   type CreateCategoryDataSchema,
   type CreateChannelDataSchema,
   type CreateRoleDataSchema,
@@ -29,6 +30,7 @@ export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDa
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
 export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
 export type CommentNodeData = z.infer<typeof CommentDataSchema>;
+export type ConditionalBranchNodeData = z.infer<typeof ConditionalBranchDataSchema>;
 export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
 export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
 export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
@@ -48,6 +50,7 @@ export type FlowNode =
   | Node<BlueprintNodeData, "Blueprint">
   | Node<ChangeChannelPermissionNodeData, "ChangeChannelPermission">
   | Node<CommentNodeData, "Comment">
+  | Node<ConditionalBranchNodeData, "ConditionalBranch">
   | Node<CreateCategoryNodeData, "CreateCategory">
   | Node<CreateChannelNodeData, "CreateChannel">
   | Node<CreateRoleNodeData, "CreateRole">
@@ -93,6 +96,7 @@ interface TemplateEditorActions {
       | BlueprintNodeData
       | ChangeChannelPermissionNodeData
       | CommentNodeData
+      | ConditionalBranchNodeData
       | CreateCategoryNodeData
       | CreateChannelNodeData
       | CreateRoleNodeData
@@ -114,6 +118,7 @@ interface TemplateEditorActions {
       | "Blueprint"
       | "ChangeChannelPermission"
       | "Comment"
+      | "ConditionalBranch"
       | "CreateCategory"
       | "CreateChannel"
       | "CreateRole"
@@ -132,6 +137,9 @@ interface TemplateEditorActions {
   expandBlueprint: (nodeId: string) => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
+  deleteEdges: (edgeIds: string[]) => void;
+  updateEdgeStyles: (nodeId: string, activeHandleIds: string[]) => void;
+  clearEdgeStyles: (nodeId: string) => void;
   setViewport: (viewport: Viewport) => void;
   initialize: (nodes: FlowNode[], edges: Edge[], viewport?: Viewport) => void;
   reset: () => void;
@@ -272,6 +280,17 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         position,
         data: { comment: "" },
       };
+    } else if (type === "ConditionalBranch") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "条件分岐",
+          conditions: [{ id: crypto.randomUUID(), flagKey: "", operator: "equals", value: "" }],
+          hasDefaultBranch: true,
+        },
+      };
     } else if (type === "RecordCombination") {
       newNode = {
         id,
@@ -372,6 +391,39 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     set({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
       edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
+    });
+  },
+
+  deleteEdges: (edgeIds) => {
+    set({
+      edges: get().edges.filter((e) => !edgeIds.includes(e.id)),
+    });
+  },
+
+  updateEdgeStyles: (nodeId, activeHandleIds) => {
+    set({
+      edges: get().edges.map((edge) => {
+        if (edge.source !== nodeId) return edge;
+
+        const isActive = activeHandleIds.includes(edge.sourceHandle ?? "");
+        return {
+          ...edge,
+          style: isActive
+            ? { stroke: "#22c55e", strokeWidth: 2.5 }
+            : { stroke: "#9ca3af", strokeDasharray: "5 5", opacity: 0.4 },
+          animated: isActive,
+        };
+      }),
+    });
+  },
+
+  clearEdgeStyles: (nodeId) => {
+    set({
+      edges: get().edges.map((edge) => {
+        if (edge.source !== nodeId) return edge;
+        const { style: _style, animated: _animated, ...rest } = edge;
+        return rest;
+      }),
     });
   },
 

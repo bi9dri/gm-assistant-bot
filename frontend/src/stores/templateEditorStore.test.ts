@@ -175,6 +175,20 @@ describe("templateEditorStore", () => {
         resultFlagPrefix: "",
       });
     });
+
+    test("ConditionalBranchノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("ConditionalBranch", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("ConditionalBranch");
+      if (node.type !== "ConditionalBranch") return;
+      expect(node.data.title).toBe("条件分岐");
+      expect(node.data.conditions).toHaveLength(1);
+      expect(node.data.conditions[0].flagKey).toBe("");
+      expect(node.data.conditions[0].operator).toBe("equals");
+      expect(node.data.conditions[0].value).toBe("");
+      expect(node.data.hasDefaultBranch).toBe(true);
+    });
   });
 
   describe("duplicateNode", () => {
@@ -678,6 +692,130 @@ describe("templateEditorStore", () => {
 
       expect(useTemplateEditorStore.getState().viewport).toEqual({ x: 0, y: 0, zoom: 1 });
       expect(useTemplateEditorStore.getState().initialized).toBe(true);
+    });
+  });
+
+  describe("deleteEdges", () => {
+    test("指定されたIDのエッジを削除する", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
+      useTemplateEditorStore.getState().addNode("DeleteRole", { x: 300, y: 300 });
+
+      const nodes = useTemplateEditorStore.getState().nodes;
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[1].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[1].id,
+        target: nodes[2].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+
+      const edges = useTemplateEditorStore.getState().edges;
+      expect(edges.length).toBe(2);
+
+      useTemplateEditorStore.getState().deleteEdges([edges[0].id]);
+
+      const remainingEdges = useTemplateEditorStore.getState().edges;
+      expect(remainingEdges.length).toBe(1);
+      expect(remainingEdges[0].id).toBe(edges[1].id);
+    });
+  });
+
+  describe("updateEdgeStyles", () => {
+    test("指定されたノードから出るエッジのスタイルを更新する", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
+      useTemplateEditorStore.getState().addNode("DeleteRole", { x: 300, y: 300 });
+
+      const nodes = useTemplateEditorStore.getState().nodes;
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[1].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[2].id,
+        sourceHandle: "source-2",
+        targetHandle: "target-1",
+      });
+
+      useTemplateEditorStore.getState().updateEdgeStyles(nodes[0].id, ["source-1"]);
+
+      const edges = useTemplateEditorStore.getState().edges;
+      const activeEdge = edges.find((e) => e.sourceHandle === "source-1");
+      const inactiveEdge = edges.find((e) => e.sourceHandle === "source-2");
+
+      expect(activeEdge?.style).toEqual({ stroke: "#22c55e", strokeWidth: 2.5 });
+      expect(activeEdge?.animated).toBe(true);
+
+      expect(inactiveEdge?.style).toEqual({
+        stroke: "#9ca3af",
+        strokeDasharray: "5 5",
+        opacity: 0.4,
+      });
+      expect(inactiveEdge?.animated).toBe(false);
+    });
+
+    test("他のノードのエッジには影響しない", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
+      useTemplateEditorStore.getState().addNode("DeleteRole", { x: 300, y: 300 });
+
+      const nodes = useTemplateEditorStore.getState().nodes;
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[2].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[1].id,
+        target: nodes[2].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+
+      useTemplateEditorStore.getState().updateEdgeStyles(nodes[0].id, ["source-1"]);
+
+      const edges = useTemplateEditorStore.getState().edges;
+      const otherNodeEdge = edges.find((e) => e.source === nodes[1].id);
+
+      expect(otherNodeEdge?.style).toBeUndefined();
+      expect(otherNodeEdge?.animated).toBeUndefined();
+    });
+  });
+
+  describe("clearEdgeStyles", () => {
+    test("指定されたノードから出るエッジのスタイルをクリアする", () => {
+      useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
+      useTemplateEditorStore.getState().addNode("CreateChannel", { x: 200, y: 200 });
+
+      const nodes = useTemplateEditorStore.getState().nodes;
+      useTemplateEditorStore.getState().onConnect({
+        source: nodes[0].id,
+        target: nodes[1].id,
+        sourceHandle: "source-1",
+        targetHandle: "target-1",
+      });
+
+      useTemplateEditorStore.getState().updateEdgeStyles(nodes[0].id, ["source-1"]);
+
+      let edge = useTemplateEditorStore.getState().edges[0];
+      expect(edge.style).toBeDefined();
+      expect(edge.animated).toBe(true);
+
+      useTemplateEditorStore.getState().clearEdgeStyles(nodes[0].id);
+
+      edge = useTemplateEditorStore.getState().edges[0];
+      expect(edge.style).toBeUndefined();
+      expect(edge.animated).toBeUndefined();
     });
   });
 

@@ -12,6 +12,11 @@ export {
 
 export { CommentNode, DataSchema as CommentDataSchema } from "./CommentNode";
 
+export {
+  ConditionalBranchNode,
+  DataSchema as ConditionalBranchDataSchema,
+} from "./ConditionalBranchNode";
+
 export { CreateCategoryNode, DataSchema as CreateCategoryDataSchema } from "./CreateCategoryNode";
 
 export { CreateChannelNode, DataSchema as CreateChannelDataSchema } from "./CreateChannelNode";
