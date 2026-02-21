@@ -8,7 +8,7 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { BaseNode, cn, BaseNodeDataSchema, LABELED_GROUP_DEFAULTS } from "../base";
 
 // Available background colors for LabeledGroupNode
-export const GROUP_BG_COLORS = [
+const GROUP_BG_COLORS = [
   { name: "default", value: "", label: "デフォルト" },
   { name: "red", value: "bg-red-500/20", label: "赤" },
   { name: "orange", value: "bg-orange-500/20", label: "オレンジ" },

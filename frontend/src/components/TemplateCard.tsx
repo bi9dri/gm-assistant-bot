@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
-export const TemplateCardSchema = z.object({
+const TemplateCardSchema = z.object({
   id: z.number(),
   name: z.string().trim().nonempty(),
   updatedAt: z.date().optional(),

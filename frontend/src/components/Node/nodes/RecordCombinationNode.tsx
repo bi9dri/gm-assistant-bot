@@ -69,7 +69,7 @@ export const DataSchema = BaseNodeDataSchema.extend({
   recordedPairs: z.array(RecordedPairSchema).default([]),
 });
 
-export type RecordCombinationNodeData = z.infer<typeof DataSchema>;
+type RecordCombinationNodeData = z.infer<typeof DataSchema>;
 type RecordCombinationNode = Node<RecordCombinationNodeData, "RecordCombination">;
 
 // ============================================================

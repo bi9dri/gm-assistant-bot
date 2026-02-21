@@ -48,7 +48,7 @@ export const DataSchema = BaseNodeDataSchema.extend({
   cardPlacements: z.array(CardPlacementSchema).default([]),
 });
 
-export type KanbanNodeData = z.infer<typeof DataSchema>;
+type KanbanNodeData = z.infer<typeof DataSchema>;
 type KanbanNode = Node<KanbanNodeData, "Kanban">;
 
 // ============================================================

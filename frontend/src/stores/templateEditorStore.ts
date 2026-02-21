@@ -145,7 +145,7 @@ interface TemplateEditorActions {
   reset: () => void;
 }
 
-export type TemplateEditorStore = TemplateEditorState & TemplateEditorActions;
+type TemplateEditorStore = TemplateEditorState & TemplateEditorActions;
 
 // Zustandストア作成
 export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => ({
