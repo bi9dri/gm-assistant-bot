@@ -11,14 +11,6 @@ interface NodeExecutionContextValue {
 
 export const NodeExecutionContext = createContext<NodeExecutionContextValue | null>(null);
 
-export function useNodeExecution() {
-  const context = useContext(NodeExecutionContext);
-  if (!context) {
-    throw new Error("useNodeExecution must be used within NodeExecutionContext.Provider");
-  }
-  return context;
-}
-
 export function useNodeExecutionOptional() {
   return useContext(NodeExecutionContext);
 }
