@@ -4,7 +4,7 @@ import z from "zod";
 import { db } from "@/db";
 import { useToast } from "@/toast/ToastProvider";
 
-export const BotCardSchema = z.object({
+const BotCardSchema = z.object({
   id: z.string().trim().nonempty(),
   name: z.string().trim().nonempty(),
   icon: z.url(),

@@ -93,8 +93,6 @@ export function BaseNodeFooter({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-export type BaseHandleProps = HandleProps;
-
 export function BaseHandle({ className, children, ...props }: ComponentProps<typeof Handle>) {
   return (
     <Handle

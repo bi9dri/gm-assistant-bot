@@ -4,7 +4,7 @@ import type { ReactFlowData } from "@/db/schemas";
 import { db } from "@/db";
 import { defaultReactFlowData } from "@/db/schemas";
 
-export interface SessionFactoryOptions {
+interface SessionFactoryOptions {
   name?: string;
   guildId?: string;
   botId?: string;

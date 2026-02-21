@@ -14,9 +14,12 @@
     "build": "bun --filter '*' build",
     "deploy": "bun --filter '*' deploy",
     "test": "bun --filter '*' test",
-    "ncu": "ncu --packageManager bun --workspaces --cooldown 7"
+    "ncu": "ncu --packageManager bun --workspaces --cooldown 7",
+    "knip": "knip"
   },
   "devDependencies": {
+    "@types/node": "25.3.0",
+    "knip": "5.84.1",
     "npm-check-updates": "19.3.2",
     "oxfmt": "0.17.0",
     "oxlint": "1.32.0",

@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { FileSystem } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
 
-export const SessionCardSchema = z.object({
+const SessionCardSchema = z.object({
   id: z.number(),
   name: z.string().trim().nonempty(),
   guildId: z.string().trim().nonempty(),
