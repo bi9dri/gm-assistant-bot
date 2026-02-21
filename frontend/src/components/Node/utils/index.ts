@@ -1,7 +1,6 @@
 export {
   DynamicValueSchema,
   type DynamicValue,
-  type DynamicValueContext,
   defaultDynamicValue,
   resolveDynamicValue,
 } from "./DynamicValue";

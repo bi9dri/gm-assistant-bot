@@ -4,9 +4,7 @@ import { useMemo } from "react";
 
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
-import type { DynamicValue } from "./DynamicValue";
-
-export interface TemplateResources {
+interface TemplateResources {
   roles: Array<{ name: string; sourceNodeId: string }>;
   channels: Array<{ name: string; type: "text" | "voice"; sourceNodeId: string }>;
   gameFlags: Array<{ key: string; sourceNodeId: string }>;
@@ -16,7 +14,7 @@ export interface TemplateResources {
  * Collects all resources that would be available before a specific node executes.
  * Traverses the graph backwards from the target node to find all predecessor nodes.
  */
-export function collectResourcesBeforeNode(
+function collectResourcesBeforeNode(
   targetNodeId: string,
   nodes: FlowNode[],
   edges: Edge[],
@@ -90,53 +88,4 @@ export function useTemplateResources(nodeId: string): TemplateResources {
   const edges = useTemplateEditorStore((state) => state.edges);
 
   return useMemo(() => collectResourcesBeforeNode(nodeId, nodes, edges), [nodeId, nodes, edges]);
-}
-
-/**
- * Hook to get ALL resources in the template (for overview/validation).
- */
-export function useAllTemplateResources(): TemplateResources {
-  const nodes = useTemplateEditorStore((state) => state.nodes);
-
-  return useMemo(() => {
-    const resources: TemplateResources = {
-      roles: [],
-      channels: [],
-      gameFlags: [],
-    };
-
-    for (const node of nodes) {
-      if (node.type === "CreateRole") {
-        const data = node.data as { roles: string[] };
-        for (const roleName of data.roles) {
-          if (roleName.trim()) {
-            resources.roles.push({ name: roleName.trim(), sourceNodeId: node.id });
-          }
-        }
-      } else if (node.type === "CreateChannel") {
-        const data = node.data as { channels: Array<{ name: string; type: "text" | "voice" }> };
-        for (const channel of data.channels) {
-          if (channel.name.trim()) {
-            resources.channels.push({
-              name: channel.name.trim(),
-              type: channel.type,
-              sourceNodeId: node.id,
-            });
-          }
-        }
-      } else if (node.type === "CreateCategory") {
-        const data = node.data as { categoryName: DynamicValue };
-        if (data.categoryName.type === "literal" && data.categoryName.value.trim()) {
-          // Category is not tracked in TemplateResources currently
-        }
-      } else if (node.type === "SetGameFlag") {
-        const data = node.data as { flagKey: string };
-        if (data.flagKey.trim()) {
-          resources.gameFlags.push({ key: data.flagKey.trim(), sourceNodeId: node.id });
-        }
-      }
-    }
-
-    return resources;
-  }, [nodes]);
 }
