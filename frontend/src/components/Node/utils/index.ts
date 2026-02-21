@@ -13,13 +13,6 @@ export { PortaledSelect } from "./PortaledSelect";
 export { ResourceSelector } from "./ResourceSelector";
 
 export {
-  useTemplateResources,
-  useAllTemplateResources,
-  collectResourcesBeforeNode,
-  type TemplateResources,
-} from "./useTemplateResources";
-
-export {
   getFilteredTargetOptions,
   validatePair,
   type OptionItem,
@@ -30,9 +23,4 @@ export {
 
 export { fisherYatesShuffle } from "./shuffle";
 
-export {
-  evaluateCondition,
-  evaluateConditions,
-  type Condition,
-  type GameFlags,
-} from "./evaluateCondition";
+export { evaluateConditions, type GameFlags } from "./evaluateCondition";
