@@ -16,9 +16,9 @@
   "dependencies": {
     "@tailwindcss/vite": "4.1.18",
     "@tanstack/react-devtools": "0.9.6",
-    "@tanstack/react-router": "1.141.0",
-    "@tanstack/react-router-devtools": "1.141.0",
-    "@tanstack/router-plugin": "1.141.0",
+    "@tanstack/react-router": "1.163.2",
+    "@tanstack/react-router-devtools": "1.163.2",
+    "@tanstack/router-plugin": "1.163.2",
     "@xyflow/react": "12.10.1",
     "@zip.js/zip.js": "2.8.21",
     "clsx": "2.1.1",
