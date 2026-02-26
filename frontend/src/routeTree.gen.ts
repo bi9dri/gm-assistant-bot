@@ -72,9 +72,9 @@ export interface FileRoutesByFullPath {
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRoute
   '/template/new': typeof TemplateNewRoute
-  '/bot': typeof BotIndexRoute
-  '/session': typeof SessionIndexRoute
-  '/template': typeof TemplateIndexRoute
+  '/bot/': typeof BotIndexRoute
+  '/session/': typeof SessionIndexRoute
+  '/template/': typeof TemplateIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,9 +108,9 @@ export interface FileRouteTypes {
     | '/session/new'
     | '/template/$id'
     | '/template/new'
-    | '/bot'
-    | '/session'
-    | '/template'
+    | '/bot/'
+    | '/session/'
+    | '/template/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -159,21 +159,21 @@ declare module '@tanstack/react-router' {
     '/template/': {
       id: '/template/'
       path: '/template'
-      fullPath: '/template'
+      fullPath: '/template/'
       preLoaderRoute: typeof TemplateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/session/': {
       id: '/session/'
       path: '/session'
-      fullPath: '/session'
+      fullPath: '/session/'
       preLoaderRoute: typeof SessionIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bot/': {
       id: '/bot/'
       path: '/bot'
-      fullPath: '/bot'
+      fullPath: '/bot/'
       preLoaderRoute: typeof BotIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
