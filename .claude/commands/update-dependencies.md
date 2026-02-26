@@ -195,3 +195,17 @@ gh issue create --title "chore: パッケージ名をバージョンにアップ
 - UIライブラリ（daisyui等）は視覚的な確認も推奨
 - 破壊的変更を含むパッケージは慎重に影響範囲を調査
 - PRには概要・テスト結果を含めない（簡潔に）
+
+## @types/bun をアップデートする場合
+
+`@types/bun` は bun 本体のバージョンと対応しているため、合わせて以下も更新する：
+
+1. **mise.toml**: `bun = "X.Y.Z"` を新バージョンに変更
+2. **package.json** (root, backend, frontend): `"packageManager": "bun@X.Y.Z"` を新バージョンに変更
+3. **GitHub Actions ワークフロー** (`.github/workflows/*.yml`): `setup-bun` ステップの `bun-version` を新バージョンに変更
+
+```yaml
+- uses: oven-sh/setup-bun@<hash>  # vX.Y.Z
+  with:
+    bun-version: "X.Y.Z"
+```
