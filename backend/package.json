@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
-  "packageManager": "bun@1.3.8",
+  "packageManager": "bun@1.3.9",
   "scripts": {
     "test": "bun test",
     "lint": "oxlint && oxfmt --check ./src",
@@ -17,12 +17,12 @@
     "@discordjs/rest": "2.6.0",
     "@hono/zod-validator": "0.7.6",
     "discord-api-types": "0.38.37",
-    "hono": "4.11.7",
+    "hono": "4.12.3",
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251212.0",
-    "@types/bun": "1.3.8"
+    "@types/bun": "1.3.9"
   },
   "peerDependencies": {
     "typescript": "5.9.3"
