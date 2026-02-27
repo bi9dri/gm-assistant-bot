@@ -6,18 +6,18 @@ Simple node with one input field. Example: CreateCategoryNode
 
 ```tsx
 export const DataSchema = BaseNodeDataSchema.extend({
-  categoryName: z.string().trim(),
+  categoryName: z.string().trim().default(""),
 });
 
 // In component:
 <BaseNodeContent>
   <input
     type="text"
-    className="input input-bordered w-full"
+    className="nodrag input input-bordered w-full"
     value={data.categoryName}
     onChange={(evt) => handleChange(evt.target.value)}
     placeholder="カテゴリ名を入力"
-    disabled={isLoading}
+    disabled={isExecuteMode || isLoading || isExecuted}
   />
 </BaseNodeContent>
 ```
@@ -51,7 +51,7 @@ Node with dynamic list of inputs. Example: CreateRoleNode
 
 ```tsx
 export const DataSchema = BaseNodeDataSchema.extend({
-  roles: z.array(z.string().nonempty().trim()),
+  roles: z.array(z.string().trim()).min(1).default([""]),
 });
 
 // Handlers:
@@ -75,17 +75,18 @@ const handleRemoveItem = (index: number) => {
     <div key={`${id}-role-${index}`} className="flex gap-2 items-center mb-2">
       <input
         type="text"
-        className="input input-bordered w-full"
+        className="nodrag input input-bordered w-full"
         value={role}
         onChange={(evt) => handleItemChange(index, evt.target.value)}
         placeholder="ロール名を入力"
-        disabled={isLoading}
+        disabled={isExecuteMode || isLoading || isExecuted}
       />
-      {!isExecuteMode && (
+      {!isExecuteMode && data.roles.length > 1 && (
         <button
           type="button"
-          className="btn btn-ghost btn-sm"
+          className="nodrag btn btn-ghost btn-sm"
           onClick={() => handleRemoveItem(index)}
+          disabled={isLoading || isExecuted}
         >
           削除
         </button>
@@ -93,8 +94,13 @@ const handleRemoveItem = (index: number) => {
     </div>
   ))}
   {!isExecuteMode && (
-    <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={handleAddItem}>
-      ロールを追加
+    <button
+      type="button"
+      className="nodrag btn btn-ghost btn-sm mt-2"
+      onClick={handleAddItem}
+      disabled={isLoading || isExecuted}
+    >
+      + 追加
     </button>
   )}
 </BaseNodeContent>
@@ -106,8 +112,8 @@ Node that selects from DB data. Example: DeleteRoleNode
 
 ```tsx
 export const DataSchema = BaseNodeDataSchema.extend({
-  deleteAll: z.boolean(),
-  selectedRoleIds: z.array(z.string()),
+  deleteAll: z.boolean().default(false),
+  selectedRoleIds: z.array(z.string()).default([]),
 });
 
 // Load data from DB:
@@ -122,28 +128,16 @@ useEffect(() => {
   }
 }, [executionContext]);
 
-// Handlers:
-const handleDeleteAllChange = (checked: boolean) => {
-  updateNodeData(id, { deleteAll: checked, selectedRoleIds: [] });
-};
-
-const handleItemToggle = (itemId: string) => {
-  const newSelected = data.selectedRoleIds.includes(itemId)
-    ? data.selectedRoleIds.filter((id) => id !== itemId)
-    : [...data.selectedRoleIds, itemId];
-  updateNodeData(id, { selectedRoleIds: newSelected });
-};
-
 // In component:
 <BaseNodeContent>
   <div className="form-control mb-2">
     <label className="label cursor-pointer justify-start gap-2">
       <input
         type="checkbox"
-        className="checkbox"
+        className="nodrag checkbox"
         checked={data.deleteAll}
-        onChange={(e) => handleDeleteAllChange(e.target.checked)}
-        disabled={isLoading}
+        onChange={(e) => updateNodeData(id, { deleteAll: e.target.checked })}
+        disabled={isExecuteMode || isLoading || isExecuted}
       />
       <span className="label-text">すべて削除</span>
     </label>
@@ -155,10 +149,15 @@ const handleItemToggle = (itemId: string) => {
         <label key={role.id} className="label cursor-pointer justify-start gap-2 py-1">
           <input
             type="checkbox"
-            className="checkbox checkbox-sm"
+            className="nodrag checkbox checkbox-sm"
             checked={data.selectedRoleIds.includes(role.id)}
-            onChange={() => handleItemToggle(role.id)}
-            disabled={isLoading}
+            onChange={() => {
+              const newSelected = data.selectedRoleIds.includes(role.id)
+                ? data.selectedRoleIds.filter((id) => id !== role.id)
+                : [...data.selectedRoleIds, role.id];
+              updateNodeData(id, { selectedRoleIds: newSelected });
+            }}
+            disabled={isExecuteMode || isLoading || isExecuted}
           />
           <span className="label-text">{role.name}</span>
         </label>
@@ -225,17 +224,95 @@ const handleExecute = async () => {
 )}
 ```
 
-## Button Styling
+## Pattern 5: ResourceSelector (Channel/Role Picker)
 
-- Primary action (create): `btn btn-primary`
-- Destructive action (delete): `btn btn-error`
-- Neutral action: `btn btn-ghost`
+`ResourceSelector` は先行ノードが作成したチャンネルやロールを候補に表示するセレクタ。
+Import: `import { ResourceSelector } from "../utils";`
 
-## Node Width Guidelines
+```tsx
+export const DataSchema = BaseNodeDataSchema.extend({
+  channelName: z.string().trim().default(""),
+});
 
-| Width | Use Case |
-|-------|----------|
-| sm (192) | Single short input |
-| md (256) | Basic size, Simple input(s) with label |
-| lg (480) | Complex forms |
-| xl (640) | Complex layout |
+// In component:
+<BaseNodeContent>
+  <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
+  <ResourceSelector
+    nodeId={id}
+    resourceType="channel"   // "channel" | "role"
+    value={data.channelName}
+    onChange={(newName) => updateNodeData(id, { channelName: newName })}
+    placeholder="チャンネル名"
+    disabled={isExecuteMode || isLoading || isExecuted}
+    channelTypeFilter="text"  // "text" | "voice" (channelのみ)
+  />
+</BaseNodeContent>
+```
+
+実行時のチャンネル解決:
+```tsx
+const [channels, setChannels] = useState<ChannelData[]>([]);
+
+useEffect(() => {
+  if (executionContext) {
+    void db.Channel.where("sessionId")
+      .equals(executionContext.sessionId)
+      .toArray()
+      .then(setChannels);
+  }
+}, [executionContext]);
+
+// In handleExecute:
+const channel = channels.find((c) => c.name === data.channelName.trim());
+if (!channel) {
+  addToast({ message: `チャンネルが見つかりません: ${data.channelName}`, status: "error" });
+  return;
+}
+await client.sendMessage({ channelId: channel.id, content: "..." });
+```
+
+## Pattern 6: Message Blocks with File Attachment
+
+複数メッセージ+ファイル添付が必要な場合は共通ユーティリティを使用する。
+Import: `import { MessageBlockSchema, type Attachment, FILE_SIZE_WARNING_THRESHOLD, formatFileSize, saveFileToOPFS } from "../utils";`
+
+```tsx
+export const DataSchema = BaseNodeDataSchema.extend({
+  messages: z
+    .array(MessageBlockSchema)
+    .min(1)
+    .default([{ content: "", attachments: [] }]),
+});
+```
+
+ファイル保存には `templateEditorContext` (テンプレートID) または `executionContext` (セッションID) が必要:
+```tsx
+import { useTemplateEditorContextOptional } from "../contexts";
+
+const templateEditorContext = useTemplateEditorContextOptional();
+// saveFileToOPFS(file, { templateId: templateEditorContext?.templateId, sessionId: executionContext?.sessionId })
+```
+
+実装例: `SendMessageNode.tsx` を参照。
+
+---
+
+## UI Guidelines
+
+### Button Styling
+- Primary action (create/send): `nodrag btn btn-primary`
+- Destructive action (delete): `nodrag btn btn-error`
+- Neutral/ghost action: `nodrag btn btn-ghost`
+
+### Disabled State Rules
+- Edit-only inputs: `disabled={isExecuteMode || isLoading || isExecuted}`
+- Action button: `disabled={!isExecuteMode || isLoading || isExecuted}`
+
+### Node Width Guidelines
+
+| Width | px  | Use Case |
+|-------|-----|----------|
+| sm    | 192 | Single short input |
+| md    | 256 | Simple input(s) with label |
+| lg    | 480 | Complex forms |
+| xl    | 640 | Nested/complex layout (e.g., entry lists) |
