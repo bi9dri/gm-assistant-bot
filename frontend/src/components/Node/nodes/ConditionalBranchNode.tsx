@@ -21,7 +21,7 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
-import { evaluateConditions, type GameFlags } from "../utils";
+import { evaluateConditions, type GameFlags, FlagValueSelector, ResourceSelector } from "../utils";
 
 const ConditionSchema = z.object({
   id: z.string(),
@@ -126,15 +126,27 @@ const OPERATOR_LABELS = {
 };
 
 interface ConditionEditorProps {
+  nodeId: string;
   conditions: Condition[];
   onConditionsChange: (conditions: Condition[]) => void;
   disabled?: boolean;
 }
 
-function ConditionEditor({ conditions, onConditionsChange, disabled }: ConditionEditorProps) {
+function ConditionEditor({
+  nodeId,
+  conditions,
+  onConditionsChange,
+  disabled,
+}: ConditionEditorProps) {
   const handleFieldChange = (index: number, field: keyof Condition, value: string) => {
     const updated = [...conditions];
     updated[index] = { ...updated[index], [field]: value };
+    onConditionsChange(updated);
+  };
+
+  const handleFlagKeyChange = (index: number, flagKey: string) => {
+    const updated = [...conditions];
+    updated[index] = { ...updated[index], flagKey, value: "" };
     onConditionsChange(updated);
   };
 
@@ -204,11 +216,11 @@ function ConditionEditor({ conditions, onConditionsChange, disabled }: Condition
             )}
           </div>
 
-          <input
-            type="text"
-            className="nodrag input input-bordered input-sm w-full"
+          <ResourceSelector
+            nodeId={nodeId}
+            resourceType="gameFlag"
             value={condition.flagKey}
-            onChange={(e) => handleFieldChange(index, "flagKey", e.target.value)}
+            onChange={(v) => handleFlagKeyChange(index, v)}
             placeholder="フラグ名 (例: team)"
             disabled={disabled}
           />
@@ -229,11 +241,11 @@ function ConditionEditor({ conditions, onConditionsChange, disabled }: Condition
           </select>
 
           {condition.operator !== "exists" && condition.operator !== "notExists" && (
-            <input
-              type="text"
-              className="nodrag input input-bordered input-sm w-full"
+            <FlagValueSelector
+              nodeId={nodeId}
+              flagKey={condition.flagKey}
               value={condition.value}
-              onChange={(e) => handleFieldChange(index, "value", e.target.value)}
+              onChange={(v) => handleFieldChange(index, "value", v)}
               placeholder="値"
               disabled={disabled}
             />
@@ -430,6 +442,7 @@ export const ConditionalBranchNode = ({
         {!isExecuteMode && (
           <>
             <ConditionEditor
+              nodeId={id}
               conditions={data.conditions}
               onConditionsChange={handleConditionsChange}
               disabled={isLoading}
