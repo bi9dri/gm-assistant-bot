@@ -5,6 +5,7 @@ export { NodeExecutionContext, TemplateEditorContext } from "./contexts";
 export {
   AddRoleToRoleMembersDataSchema,
   BlueprintDataSchema,
+  CombinationSendMessageDataSchema,
   ChangeChannelPermissionDataSchema,
   CommentDataSchema,
   ConditionalBranchDataSchema,

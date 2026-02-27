@@ -36,6 +36,9 @@ coveragePathIgnorePatterns = [
   # ファイルシステム — 外部 API (OPFS, zip.js) 依存が大部分
   "src/fileSystem.ts",
 
+  # saveFileToOPFS が FileSystem (OPFS) に依存するため除外
+  "src/components/Node/utils/messageSchema.ts",
+
   # テストセットアップ
   "test/**",
 ]

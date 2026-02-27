@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import {
   AddRoleToRoleMembersNode,
   BlueprintNode,
+  CombinationSendMessageNode,
   ChangeChannelPermissionNode,
   CommentNode,
   ConditionalBranchNode,
@@ -59,6 +60,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <SendMessageNode {...props} mode={mode} />
   );
 
+  const CombinationSendMessageWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <CombinationSendMessageNode {...props} mode={mode} />
+  );
+
   const BlueprintWithMode: ComponentType<NodeProps<any>> = (props) => (
     <BlueprintNode {...props} mode={mode} />
   );
@@ -105,6 +110,7 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     ChangeChannelPermission: ChangeChannelPermissionWithMode,
     AddRoleToRoleMembers: AddRoleToRoleMembersWithMode,
     SendMessage: SendMessageWithMode,
+    CombinationSendMessage: CombinationSendMessageWithMode,
     Blueprint: BlueprintWithMode,
     SetGameFlag: SetGameFlagWithMode,
     LabeledGroup: LabeledGroupWithMode,

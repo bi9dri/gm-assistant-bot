@@ -24,6 +24,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   ChangeChannelPermission: NODE_WIDTHS.md,
   AddRoleToRoleMembers: NODE_WIDTHS.md,
   SendMessage: NODE_WIDTHS.lg,
+  CombinationSendMessage: NODE_WIDTHS.xl,
   Blueprint: NODE_WIDTHS.lg,
   SetGameFlag: NODE_WIDTHS.md,
   LabeledGroup: NODE_WIDTHS.xl,

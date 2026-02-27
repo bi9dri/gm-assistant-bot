@@ -3,6 +3,11 @@ export {
   DataSchema as AddRoleToRoleMembersDataSchema,
 } from "./AddRoleToRoleMembersNode";
 
+export {
+  CombinationSendMessageNode,
+  DataSchema as CombinationSendMessageDataSchema,
+} from "./CombinationSendMessageNode";
+
 export { BlueprintNode, DataSchema as BlueprintDataSchema } from "./BlueprintNode";
 
 export {
