@@ -79,7 +79,10 @@ const NODE_CATEGORIES = [
   },
   {
     category: "メッセージ",
-    nodes: [{ type: "SendMessage", label: "メッセージを送信する" }],
+    nodes: [
+      { type: "SendMessage", label: "メッセージを送信する" },
+      { type: "CombinationSendMessage", label: "組み合わせメッセージを送信する" },
+    ],
   },
   {
     category: "ゲーム管理",

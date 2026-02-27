@@ -8,6 +8,7 @@ import {
   type AddRoleToRoleMembersDataSchema,
   type BlueprintDataSchema,
   type ChangeChannelPermissionDataSchema,
+  type CombinationSendMessageDataSchema,
   type CommentDataSchema,
   type ConditionalBranchDataSchema,
   type CreateCategoryDataSchema,
@@ -28,6 +29,7 @@ import {
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
+export type CombinationSendMessageNodeData = z.infer<typeof CombinationSendMessageDataSchema>;
 export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
 export type CommentNodeData = z.infer<typeof CommentDataSchema>;
 export type ConditionalBranchNodeData = z.infer<typeof ConditionalBranchDataSchema>;
@@ -48,6 +50,7 @@ export type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
   | Node<BlueprintNodeData, "Blueprint">
+  | Node<CombinationSendMessageNodeData, "CombinationSendMessage">
   | Node<ChangeChannelPermissionNodeData, "ChangeChannelPermission">
   | Node<CommentNodeData, "Comment">
   | Node<ConditionalBranchNodeData, "ConditionalBranch">
@@ -95,6 +98,7 @@ interface TemplateEditorActions {
       | AddRoleToRoleMembersNodeData
       | BlueprintNodeData
       | ChangeChannelPermissionNodeData
+      | CombinationSendMessageNodeData
       | CommentNodeData
       | ConditionalBranchNodeData
       | CreateCategoryNodeData
@@ -117,6 +121,7 @@ interface TemplateEditorActions {
       | "AddRoleToRoleMembers"
       | "Blueprint"
       | "ChangeChannelPermission"
+      | "CombinationSendMessage"
       | "Comment"
       | "ConditionalBranch"
       | "CreateCategory"
@@ -239,6 +244,22 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: { channelNames: [""], messages: [{ content: "", attachments: [] }] },
+      };
+    } else if (type === "CombinationSendMessage") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          entries: [
+            {
+              id: crypto.randomUUID(),
+              channelName: "",
+              messages: [{ content: "", attachments: [] }],
+              collapsed: false,
+            },
+          ],
+        },
       };
     } else if (type === "Blueprint") {
       newNode = {
