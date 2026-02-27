@@ -5,7 +5,7 @@ description: Create new Node types for the React Flow based workflow editor. Use
 
 # Node Creator
 
-Create new Node components for the @xyflow/react based workflow editor. Each node represents a Discord operation (create/delete roles, categories, channels, etc.).
+Create new Node components for the @xyflow/react based workflow editor. Each node represents a Discord operation (create/delete roles, categories, channels, send messages, etc.).
 
 ## Implementation Checklist
 
@@ -15,8 +15,9 @@ When creating a new node type `{NodeName}Node`:
 2. Add width to `frontend/src/components/Node/base/base-schema.ts`
 3. Register in `frontend/src/components/Node/base/node-wrapper.tsx`
 4. Export from `frontend/src/components/Node/nodes/index.ts`
-5. Add types/data to `frontend/src/stores/templateEditorStore.ts`
-6. Add UI option in `frontend/src/components/TemplateEditor.tsx`
+5. Re-export from `frontend/src/components/Node/index.ts`
+6. Add types/data to `frontend/src/stores/templateEditorStore.ts`
+7. Add UI option in `frontend/src/components/TemplateEditor.tsx`
 
 ## Node Component Template
 
@@ -25,8 +26,8 @@ import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useState } from "react";
 import z from "zod";
 
-import { db } from "@/db";
 import { ApiClient } from "@/api";
+import { db } from "@/db";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -39,14 +40,14 @@ import {
   BaseNodeHeaderTitle,
   cn,
   BaseNodeDataSchema,
+  NODE_CONTENT_HEIGHTS,
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
 
 // 1. Define schema extending BaseNodeDataSchema
 export const DataSchema = BaseNodeDataSchema.extend({
-  // Add node-specific fields here
-  fieldName: z.string().trim(),
+  fieldName: z.string().trim().default(""),
 });
 type {NodeName}NodeData = Node<z.infer<typeof DataSchema>, "{NodeName}">;
 
@@ -75,7 +76,6 @@ export const {NodeName}Node = ({
     }
 
     const { guildId, sessionId, bot } = executionContext;
-    // Validate input
     if (data.fieldName.trim() === "") {
       addToast({ message: "入力してください", status: "warning" });
       return;
@@ -99,8 +99,12 @@ export const {NodeName}Node = ({
   };
 
   const isExecuteMode = mode === "execute";
+  const isExecuted = !!data.executedAt;
 
   // 5. Render with BaseNode components
+  //    - Add "nodrag" class to ALL interactive elements (inputs, buttons, textareas)
+  //    - Disable inputs when: isExecuteMode || isLoading || isExecuted
+  //    - Disable action button when: !isExecuteMode || isLoading || isExecuted
   return (
     <BaseNode
       width={NODE_TYPE_WIDTHS.{NodeName}}
@@ -109,35 +113,35 @@ export const {NodeName}Node = ({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle>ノードタイトル</BaseNodeHeaderTitle>
       </BaseNodeHeader>
-      <BaseNodeContent>
+      <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <input
           type="text"
-          className="input input-bordered w-full"
+          className="nodrag input input-bordered w-full"
           value={data.fieldName}
           onChange={(evt) => handleFieldChange(evt.target.value)}
           placeholder="入力"
-          disabled={isLoading}
+          disabled={isExecuteMode || isLoading || isExecuted}
         />
       </BaseNodeContent>
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleExecute}
-            disabled={isLoading || !!data.executedAt}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm"></span>}
-            実行
-          </button>
-        </BaseNodeFooter>
-      )}
+      <BaseNodeFooter>
+        <button
+          type="button"
+          className="nodrag btn btn-primary"
+          onClick={handleExecute}
+          disabled={!isExecuteMode || isLoading || isExecuted}
+        >
+          {isLoading && <span className="loading loading-spinner loading-sm"></span>}
+          実行
+        </button>
+      </BaseNodeFooter>
       <BaseHandle id="target-1" type="target" position={Position.Left} />
       <BaseHandle id="source-1" type="source" position={Position.Right} />
     </BaseNode>
   );
 };
 ```
+
+> **重要**: `nodrag` クラスはドラッグ誤作動を防ぐため、すべてのインタラクティブ要素（`input`, `button`, `textarea`, `select` 等）に必須。
 
 ## Registration Steps
 
@@ -153,14 +157,12 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
 ### node-wrapper.tsx
 
 ```ts
-// frontend/src/components/Node/base/node-wrapper.tsx
-import { {NodeName}Node } from "../nodes/{NodeName}Node";
+import { {NodeName}Node } from "../nodes";  // nodes/index.ts 経由
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
   const {NodeName}WithMode: ComponentType<NodeProps<any>> = (props) => (
     <{NodeName}Node {...props} mode={mode} />
   );
-  // ...
   return {
     // existing...
     {NodeName}: {NodeName}WithMode,
@@ -171,8 +173,16 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
 ### nodes/index.ts
 
 ```ts
-// frontend/src/components/Node/nodes/index.ts
 export { {NodeName}Node, DataSchema as {NodeName}DataSchema } from "./{NodeName}Node";
+```
+
+### Node/index.ts
+
+```ts
+export {
+  // existing...
+  {NodeName}DataSchema,
+} from "./nodes";
 ```
 
 ### templateEditorStore.ts
@@ -186,49 +196,33 @@ export type FlowNode =
   // existing...
   | Node<{NodeName}NodeData, "{NodeName}">;
 
-// In addNode function:
-addNode: (type, position) => {
-  // ...
-  if (type === "{NodeName}") {
-    newNode = {
-      id,
-      type,
-      position,
-      data: { fieldName: "" }, // default data
-    };
-  }
-  // ...
-}
+// updateNodeData の data 引数 union に追加:
+data: Partial<... | {NodeName}NodeData>
 
-// Update type signatures:
-updateNodeData: (nodeId: string, data: Partial<... | {NodeName}NodeData>) => void;
+// addNode の type union に追加:
 addNode: (type: "..." | "{NodeName}", position: { x: number; y: number }) => void;
+
+// addNode 実装に分岐追加:
+} else if (type === "{NodeName}") {
+  newNode = { id, type, position, data: { fieldName: "" } };
+}
 ```
 
 ### TemplateEditor.tsx
 
-Add to modal and handleAddNode:
+`NODE_CATEGORIES` 配列の適切なカテゴリに追加するだけ:
 
 ```tsx
-// In handleAddNode:
-if (selectedNodeType === "{NodeName}" || ...) {
-  addNode(selectedNodeType, position);
-}
-
-// In modal radio buttons:
-<label className="card cursor-pointer">
-  <div className="card-body">
-    <input
-      type="radio"
-      name="nodeType"
-      value="{NodeName}"
-      checked={selectedNodeType === "{NodeName}"}
-      onChange={(e) => setSelectedNodeType(e.target.value)}
-      className="radio"
-    />
-    <span className="ml-2">ノードの説明</span>
-  </div>
-</label>
+const NODE_CATEGORIES = [
+  // ...
+  {
+    category: "カテゴリ名",
+    nodes: [
+      // existing...
+      { type: "{NodeName}", label: "ノードの説明" },
+    ],
+  },
+] as const;
 ```
 
 ## Node Patterns
@@ -238,6 +232,8 @@ See [references/patterns.md](references/patterns.md) for common implementation p
 - Multiple value list (like CreateRoleNode)
 - Selection from existing data (like DeleteRoleNode)
 - Progress tracking for batch operations
+- ResourceSelector (channel/role picker from preceding nodes)
+- Message blocks with file attachment
 
 ## Execution Context
 
@@ -247,6 +243,7 @@ Nodes receive execution context via `useNodeExecutionOptional()`:
 interface NodeExecutionContextValue {
   guildId: string;      // Discord guild ID
   sessionId: number;    // Session ID for DB scoping
+  sessionName: string;  // Session name (for DynamicValue resolution)
   bot: DiscordBotData;  // Bot token and profile
 }
 ```
@@ -260,3 +257,4 @@ Available in `@/api`:
 - `createChannel({ guildId, parentCategoryId, name, type, writerRoleIds, readerRoleIds })`
 - `deleteChannel({ guildId, channelId })`
 - `changeChannelPermissions({ channelId, writerRoleIds, readerRoleIds })`
+- `sendMessage({ channelId, content, files? })`
