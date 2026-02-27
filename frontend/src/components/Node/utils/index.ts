@@ -9,6 +9,8 @@ export { DynamicValueInput } from "./DynamicValueInput";
 
 export { PortaledSelect } from "./PortaledSelect";
 
+export { FlagValueSelector } from "./FlagValueSelector";
+
 export { ResourceSelector } from "./ResourceSelector";
 
 export {
