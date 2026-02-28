@@ -24,7 +24,14 @@ export {
 
 export { fisherYatesShuffle } from "./shuffle";
 
-export { evaluateConditions, type GameFlags } from "./evaluateCondition";
+export {
+  evaluateConditions,
+  type GameFlags,
+  type Branch,
+  type ConditionNode,
+  type RuleNode,
+  type GroupNode,
+} from "./evaluateCondition";
 
 export {
   MessageBlockSchema,

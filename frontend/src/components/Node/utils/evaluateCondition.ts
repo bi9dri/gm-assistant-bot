@@ -1,4 +1,5 @@
-export type Condition = {
+export type RuleNode = {
+  type: "rule";
   id: string;
   flagKey: string;
   operator: "equals" | "notEquals" | "contains" | "exists" | "notExists";
@@ -6,16 +7,29 @@ export type Condition = {
   valueType?: "literal" | "flag";
 };
 
+export type GroupNode = {
+  type: "group";
+  id: string;
+  logic: "and" | "or";
+  children: ConditionNode[];
+};
+
+export type ConditionNode = RuleNode | GroupNode;
+
+export type Branch = {
+  id: string;
+  root: ConditionNode;
+};
+
 export type GameFlags = Record<string, string>;
 
-export function evaluateCondition(condition: Condition, gameFlags: GameFlags): boolean {
-  const flagValue = gameFlags[condition.flagKey];
-  const flagExists = condition.flagKey in gameFlags;
+export function evaluateRule(rule: RuleNode, gameFlags: GameFlags): boolean {
+  const flagValue = gameFlags[rule.flagKey];
+  const flagExists = rule.flagKey in gameFlags;
 
-  const compareValue =
-    condition.valueType === "flag" ? (gameFlags[condition.value] ?? "") : condition.value;
+  const compareValue = rule.valueType === "flag" ? (gameFlags[rule.value] ?? "") : rule.value;
 
-  switch (condition.operator) {
+  switch (rule.operator) {
     case "equals":
       return flagExists && flagValue === compareValue;
     case "notEquals":
@@ -29,10 +43,20 @@ export function evaluateCondition(condition: Condition, gameFlags: GameFlags): b
   }
 }
 
-export function evaluateConditions(conditions: Condition[], gameFlags: GameFlags): string | null {
-  for (const condition of conditions) {
-    if (evaluateCondition(condition, gameFlags)) {
-      return condition.id;
+export function evaluateConditionNode(node: ConditionNode, gameFlags: GameFlags): boolean {
+  if (node.type === "rule") {
+    return evaluateRule(node, gameFlags);
+  }
+  if (node.logic === "and") {
+    return node.children.every((child) => evaluateConditionNode(child, gameFlags));
+  }
+  return node.children.some((child) => evaluateConditionNode(child, gameFlags));
+}
+
+export function evaluateConditions(branches: Branch[], gameFlags: GameFlags): string | null {
+  for (const branch of branches) {
+    if (evaluateConditionNode(branch.root, gameFlags)) {
+      return branch.id;
     }
   }
   return null;
