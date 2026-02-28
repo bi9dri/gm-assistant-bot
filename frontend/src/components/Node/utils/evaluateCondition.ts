@@ -3,6 +3,7 @@ export type Condition = {
   flagKey: string;
   operator: "equals" | "notEquals" | "contains" | "exists" | "notExists";
   value: string;
+  valueType?: "literal" | "flag";
 };
 
 export type GameFlags = Record<string, string>;
@@ -11,13 +12,16 @@ export function evaluateCondition(condition: Condition, gameFlags: GameFlags): b
   const flagValue = gameFlags[condition.flagKey];
   const flagExists = condition.flagKey in gameFlags;
 
+  const compareValue =
+    condition.valueType === "flag" ? (gameFlags[condition.value] ?? "") : condition.value;
+
   switch (condition.operator) {
     case "equals":
-      return flagExists && flagValue === condition.value;
+      return flagExists && flagValue === compareValue;
     case "notEquals":
-      return !flagExists || flagValue !== condition.value;
+      return !flagExists || flagValue !== compareValue;
     case "contains":
-      return flagExists && flagValue.includes(condition.value);
+      return flagExists && flagValue.includes(compareValue);
     case "exists":
       return flagExists;
     case "notExists":
