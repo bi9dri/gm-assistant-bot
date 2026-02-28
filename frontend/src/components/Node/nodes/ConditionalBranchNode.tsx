@@ -24,6 +24,7 @@ import {
 import { useNodeExecutionOptional } from "../contexts";
 import {
   evaluateConditions,
+  evaluateAllConditions,
   conditionToInfix,
   type GameFlags,
   type Branch,
@@ -64,7 +65,8 @@ export const DataSchema = BaseNodeDataSchema.extend({
   title: z.string().min(1).default("条件分岐"),
   conditions: z.array(BranchSchema).min(1),
   hasDefaultBranch: z.boolean().default(true),
-  evaluatedConditionId: z.string().optional(),
+  matchMode: z.enum(["first", "all"]).default("first"),
+  evaluatedConditionIds: z.array(z.string()).optional(),
 });
 
 type ConditionalBranchNodeData = Node<z.infer<typeof DataSchema>, "ConditionalBranch">;
@@ -541,15 +543,15 @@ function ConditionNodeSummary({ node, depth = 0 }: ConditionNodeSummaryProps) {
 
 interface BranchSummaryProps {
   branches: Branch[];
-  evaluatedConditionId?: string;
+  evaluatedConditionIds?: string[];
 }
 
-function BranchSummary({ branches, evaluatedConditionId }: BranchSummaryProps) {
+function BranchSummary({ branches, evaluatedConditionIds }: BranchSummaryProps) {
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium text-base-content/70">条件リスト</div>
       {branches.map((branch, index) => {
-        const isEvaluated = evaluatedConditionId === branch.id;
+        const isEvaluated = evaluatedConditionIds?.includes(branch.id) ?? false;
         return (
           <div
             key={branch.id}
@@ -590,7 +592,7 @@ export const ConditionalBranchNode = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const isExecuteMode = mode === "execute";
-  const isExecuted = !!data.evaluatedConditionId;
+  const isExecuted = !!data.evaluatedConditionIds;
 
   const handleTitleChange = (newTitle: string) => {
     updateNodeData(id, { title: newTitle });
@@ -628,6 +630,14 @@ export const ConditionalBranchNode = ({
     updateNodeData(id, { hasDefaultBranch });
   };
 
+  const handleReset = () => {
+    updateNodeData(id, {
+      evaluatedConditionIds: undefined,
+      executedAt: undefined,
+    });
+    clearEdgeStyles(id);
+  };
+
   const handleEvaluate = async () => {
     if (!executionContext) {
       addToast({ message: "実行コンテキストがありません", status: "error" });
@@ -645,26 +655,40 @@ export const ConditionalBranchNode = ({
       }
 
       const gameFlags = session.getParsedGameFlags();
-      const matchedConditionId = evaluateConditions(data.conditions, gameFlags as GameFlags);
 
-      const activeHandleIds: string[] = [];
-      if (matchedConditionId) {
-        activeHandleIds.push(`source-cond-${matchedConditionId}`);
-      } else if (data.hasDefaultBranch) {
+      let matchedIds: string[];
+      if (data.matchMode === "all") {
+        matchedIds = evaluateAllConditions(data.conditions, gameFlags as GameFlags);
+      } else {
+        const firstMatch = evaluateConditions(data.conditions, gameFlags as GameFlags);
+        matchedIds = firstMatch ? [firstMatch] : [];
+      }
+
+      const activeHandleIds: string[] = matchedIds.map((cid) => `source-cond-${cid}`);
+      if (matchedIds.length === 0 && data.hasDefaultBranch) {
         activeHandleIds.push("source-default");
       }
 
       updateEdgeStyles(id, activeHandleIds);
 
       updateNodeData(id, {
-        evaluatedConditionId: matchedConditionId ?? "default",
+        evaluatedConditionIds: matchedIds,
         executedAt: new Date(),
       });
 
-      if (matchedConditionId) {
-        const conditionIndex = data.conditions.findIndex((c) => c.id === matchedConditionId) + 1;
+      if (matchedIds.length === 1) {
+        const conditionIndex = data.conditions.findIndex((c) => c.id === matchedIds[0]) + 1;
         addToast({
           message: `条件 #${conditionIndex} にマッチしました`,
+          status: "success",
+          durationSeconds: 5,
+        });
+      } else if (matchedIds.length > 1) {
+        const indices = matchedIds
+          .map((cid) => `#${data.conditions.findIndex((c) => c.id === cid) + 1}`)
+          .join(", ");
+        addToast({
+          message: `${matchedIds.length}件の条件にマッチしました (${indices})`,
           status: "success",
           durationSeconds: 5,
         });
@@ -687,16 +711,16 @@ export const ConditionalBranchNode = ({
 
   useEffect(() => {
     return () => {
-      if (isExecuteMode && data.evaluatedConditionId) {
+      if (isExecuteMode && data.evaluatedConditionIds) {
         clearEdgeStyles(id);
       }
     };
-  }, [isExecuteMode, data.evaluatedConditionId, id, clearEdgeStyles]);
+  }, [isExecuteMode, data.evaluatedConditionIds, id, clearEdgeStyles]);
 
   return (
     <BaseNode
       width={NODE_TYPE_WIDTHS.ConditionalBranch}
-      className={cn("bg-base-300", data.evaluatedConditionId && "border-success bg-success/10")}
+      className={cn("bg-base-300", data.evaluatedConditionIds && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
         {isExecuteMode ? (
@@ -732,47 +756,61 @@ export const ConditionalBranchNode = ({
               />
               <span className="text-sm">デフォルト分岐を有効にする</span>
             </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="nodrag checkbox checkbox-sm"
+                checked={data.matchMode === "all"}
+                onChange={(e) =>
+                  updateNodeData(id, { matchMode: e.target.checked ? "all" : "first" })
+                }
+              />
+              <span className="text-sm">複数マッチを許可する</span>
+            </label>
           </>
         )}
 
         {isExecuteMode && (
           <BranchSummary
             branches={data.conditions}
-            evaluatedConditionId={
-              data.evaluatedConditionId === "default" ? undefined : data.evaluatedConditionId
-            }
+            evaluatedConditionIds={data.evaluatedConditionIds}
           />
         )}
       </BaseNodeContent>
 
       <BaseNodeFooter>
-        <button
-          type="button"
-          className="nodrag btn btn-primary w-full"
-          onClick={handleEvaluate}
-          disabled={!isExecuteMode || isExecuted || isLoading}
-        >
-          {isLoading && <span className="loading loading-spinner loading-sm" />}
-          判定する
-        </button>
+        {isExecuteMode && isExecuted ? (
+          <button type="button" className="nodrag btn btn-outline btn-sm" onClick={handleReset}>
+            やり直す
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="nodrag btn btn-primary w-full"
+            onClick={handleEvaluate}
+            disabled={!isExecuteMode || isExecuted || isLoading}
+          >
+            {isLoading && <span className="loading loading-spinner loading-sm" />}
+            判定する
+          </button>
+        )}
       </BaseNodeFooter>
 
       <BaseHandle id="target-1" type="target" position={Position.Left} />
 
       {data.conditions.map((branch, index) => {
         const infix = conditionToInfix(branch.root);
-        const fullLabel = `#${index + 1} ${infix}`;
-        const displayLabel =
-          infix.length > 24 ? `#${index + 1} ${infix.slice(0, 24)}...` : fullLabel;
-        const hasTooltip = infix.length > 24;
+        const label = `#${index + 1} ${infix}`;
         return (
           <LabeledHandle
             key={branch.id}
             id={`source-cond-${branch.id}`}
             type="source"
             position={Position.Right}
-            title={displayLabel}
-            tooltip={hasTooltip ? fullLabel : undefined}
+            title={label}
+            tooltip={label}
+            labelClassName="truncate max-w-[calc(480px-3rem)]"
             style={{
               top: `${((index + 1) / (data.conditions.length + (data.hasDefaultBranch ? 2 : 1))) * 100}%`,
             }}
@@ -785,7 +823,7 @@ export const ConditionalBranchNode = ({
           id="source-default"
           type="source"
           position={Position.Right}
-          title="default"
+          title="デフォルト"
           style={{
             top: `${((data.conditions.length + 1) / (data.conditions.length + 2)) * 100}%`,
           }}
