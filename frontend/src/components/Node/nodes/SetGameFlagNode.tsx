@@ -62,7 +62,7 @@ export const SetGameFlagNode = ({
     const value = data.flagValue.trim();
 
     if (key === "") {
-      addToast({ message: "フラグのKeyを入力してください", status: "warning" });
+      addToast({ message: "フラグ名を入力してください", status: "warning" });
       return;
     }
 
@@ -119,7 +119,7 @@ export const SetGameFlagNode = ({
       <BaseNodeContent>
         <label className="form-control w-full">
           <div className="label">
-            <span className="label-text">Key</span>
+            <span className="label-text">フラグ名</span>
           </div>
           <input
             type="text"

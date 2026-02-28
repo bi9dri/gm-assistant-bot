@@ -118,7 +118,7 @@ export const DynamicValueInput = ({
           resourceType="gameFlag"
           value={value.flagKey}
           onChange={(key) => onChange({ type: "gameFlag", flagKey: key })}
-          placeholder="フラグキーを選択"
+          placeholder="フラグ名を選択"
           disabled={disabled}
         />
       )}
