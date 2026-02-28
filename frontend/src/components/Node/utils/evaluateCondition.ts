@@ -62,6 +62,12 @@ export function evaluateConditions(branches: Branch[], gameFlags: GameFlags): st
   return null;
 }
 
+export function evaluateAllConditions(branches: Branch[], gameFlags: GameFlags): string[] {
+  return branches
+    .filter((branch) => evaluateConditionNode(branch.root, gameFlags))
+    .map((branch) => branch.id);
+}
+
 const OPERATOR_KEYWORDS: Record<RuleNode["operator"], string> = {
   equals: "eq",
   notEquals: "neq",
