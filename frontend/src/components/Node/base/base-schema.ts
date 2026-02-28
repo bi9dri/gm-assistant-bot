@@ -34,6 +34,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   Kanban: NODE_WIDTHS.xl,
   SelectBranch: NODE_WIDTHS.md,
   ShuffleAssign: NODE_WIDTHS.lg,
+  RandomSelect: NODE_WIDTHS.md,
 } as const;
 
 // LabeledGroup node default dimensions

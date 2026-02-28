@@ -22,4 +22,5 @@ export {
   SendMessageDataSchema,
   SetGameFlagDataSchema,
   ShuffleAssignDataSchema,
+  RandomSelectDataSchema,
 } from "./nodes";

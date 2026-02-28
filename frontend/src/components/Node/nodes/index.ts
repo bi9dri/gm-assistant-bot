@@ -50,3 +50,5 @@ export { KanbanNode, DataSchema as KanbanDataSchema } from "./KanbanNode";
 export { SelectBranchNode, DataSchema as SelectBranchDataSchema } from "./SelectBranchNode";
 
 export { ShuffleAssignNode, DataSchema as ShuffleAssignDataSchema } from "./ShuffleAssignNode";
+
+export { RandomSelectNode, DataSchema as RandomSelectDataSchema } from "./RandomSelectNode";
