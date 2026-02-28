@@ -310,6 +310,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         data: { comment: "" },
       };
     } else if (type === "ConditionalBranch") {
+      const branchId = crypto.randomUUID();
       newNode = {
         id,
         type,
@@ -318,11 +319,15 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           title: "条件分岐",
           conditions: [
             {
-              id: crypto.randomUUID(),
-              flagKey: "",
-              operator: "equals",
-              value: "",
-              valueType: "literal",
+              id: branchId,
+              root: {
+                type: "rule",
+                id: crypto.randomUUID(),
+                flagKey: "",
+                operator: "equals",
+                value: "",
+                valueType: "literal",
+              },
             },
           ],
           hasDefaultBranch: true,

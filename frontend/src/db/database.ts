@@ -38,6 +38,18 @@ const ConditionalBranchNodeV3Data = z.object({
   conditions: z.array(ConditionalBranchConditionSchema),
 });
 
+const ConditionalBranchConditionV4Schema = z.object({
+  id: z.string(),
+  flagKey: z.string(),
+  operator: z.string(),
+  value: z.string(),
+  valueType: z.string().optional(),
+});
+
+const ConditionalBranchNodeV4Data = z.object({
+  conditions: z.array(ConditionalBranchConditionV4Schema),
+});
+
 const SendMessageNodeV1Data = z.object({
   channelName: z.string(),
 });
@@ -142,6 +154,54 @@ export class DB extends Dexie {
                 value: name,
               }));
               delete node.data.channelNames;
+              modified = true;
+            }
+          }
+        }
+
+        return modified ? JSON.stringify(parsed) : reactFlowDataStr;
+      };
+
+      await tx
+        .table("Template")
+        .toCollection()
+        .modify((template) => {
+          template.reactFlowData = migrateReactFlowData(template.reactFlowData);
+        });
+
+      await tx
+        .table("GameSession")
+        .toCollection()
+        .modify((session) => {
+          session.reactFlowData = migrateReactFlowData(session.reactFlowData);
+        });
+    });
+
+    this.version(5).upgrade(async (tx) => {
+      const migrateReactFlowData = (reactFlowDataStr: string): string => {
+        let parsed: z.infer<typeof ReactFlowDataMigrationSchema>;
+        try {
+          parsed = ReactFlowDataMigrationSchema.parse(JSON.parse(reactFlowDataStr));
+        } catch {
+          return reactFlowDataStr;
+        }
+
+        let modified = false;
+        for (const node of parsed.nodes) {
+          if (node.type === "ConditionalBranch" && node.data) {
+            const v4 = ConditionalBranchNodeV4Data.safeParse(node.data);
+            if (v4.success) {
+              node.data.conditions = v4.data.conditions.map((c) => ({
+                id: c.id,
+                root: {
+                  type: "rule",
+                  id: c.id,
+                  flagKey: c.flagKey,
+                  operator: c.operator,
+                  value: c.value,
+                  valueType: c.valueType ?? "literal",
+                },
+              }));
               modified = true;
             }
           }

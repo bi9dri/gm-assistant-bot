@@ -196,9 +196,13 @@ describe("templateEditorStore", () => {
       if (node.type !== "ConditionalBranch") return;
       expect(node.data.title).toBe("条件分岐");
       expect(node.data.conditions).toHaveLength(1);
-      expect(node.data.conditions[0].flagKey).toBe("");
-      expect(node.data.conditions[0].operator).toBe("equals");
-      expect(node.data.conditions[0].value).toBe("");
+      const branch = node.data.conditions[0];
+      expect(branch.id).toBeDefined();
+      expect(branch.root.type).toBe("rule");
+      if (branch.root.type !== "rule") return;
+      expect(branch.root.flagKey).toBe("");
+      expect(branch.root.operator).toBe("equals");
+      expect(branch.root.value).toBe("");
       expect(node.data.hasDefaultBranch).toBe(true);
     });
   });
