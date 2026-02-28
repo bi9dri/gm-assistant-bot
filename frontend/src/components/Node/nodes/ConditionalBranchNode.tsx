@@ -28,6 +28,7 @@ const ConditionSchema = z.object({
   flagKey: z.string(),
   operator: z.enum(["equals", "notEquals", "contains", "exists", "notExists"]),
   value: z.string(),
+  valueType: z.enum(["literal", "flag"]).default("literal"),
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
@@ -150,10 +151,16 @@ function ConditionEditor({
     onConditionsChange(updated);
   };
 
+  const handleValueTypeChange = (index: number, valueType: Condition["valueType"]) => {
+    const updated = [...conditions];
+    updated[index] = { ...updated[index], valueType, value: "" };
+    onConditionsChange(updated);
+  };
+
   const handleAdd = () => {
     onConditionsChange([
       ...conditions,
-      { id: generateId(), flagKey: "", operator: "equals", value: "" },
+      { id: generateId(), flagKey: "", operator: "equals", value: "", valueType: "literal" },
     ]);
   };
 
@@ -241,14 +248,53 @@ function ConditionEditor({
           </select>
 
           {condition.operator !== "exists" && condition.operator !== "notExists" && (
-            <FlagValueSelector
-              nodeId={nodeId}
-              flagKey={condition.flagKey}
-              value={condition.value}
-              onChange={(v) => handleFieldChange(index, "value", v)}
-              placeholder="値"
-              disabled={disabled}
-            />
+            <>
+              <div className="flex gap-3 text-sm">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    className="nodrag radio radio-xs"
+                    name={`valueType-${condition.id}`}
+                    value="literal"
+                    checked={condition.valueType !== "flag"}
+                    onChange={() => handleValueTypeChange(index, "literal")}
+                    disabled={disabled}
+                  />
+                  固定値
+                </label>
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    className="nodrag radio radio-xs"
+                    name={`valueType-${condition.id}`}
+                    value="flag"
+                    checked={condition.valueType === "flag"}
+                    onChange={() => handleValueTypeChange(index, "flag")}
+                    disabled={disabled}
+                  />
+                  フラグの値
+                </label>
+              </div>
+              {condition.valueType === "flag" ? (
+                <ResourceSelector
+                  nodeId={nodeId}
+                  resourceType="gameFlag"
+                  value={condition.value}
+                  onChange={(v) => handleFieldChange(index, "value", v)}
+                  placeholder="比較するフラグ名"
+                  disabled={disabled}
+                />
+              ) : (
+                <FlagValueSelector
+                  nodeId={nodeId}
+                  flagKey={condition.flagKey}
+                  value={condition.value}
+                  onChange={(v) => handleFieldChange(index, "value", v)}
+                  placeholder="値"
+                  disabled={disabled}
+                />
+              )}
+            </>
           )}
         </div>
       ))}
@@ -292,7 +338,12 @@ function ConditionSummary({ conditions, evaluatedConditionId }: ConditionSummary
                 {OPERATOR_LABELS[condition.operator]}
               </span>
               {condition.operator !== "exists" && condition.operator !== "notExists" && (
-                <span className="font-mono">{condition.value || "(未設定)"}</span>
+                <span className="font-mono">
+                  {condition.valueType === "flag" && (
+                    <span className="text-base-content/50 not-italic">フラグ:</span>
+                  )}
+                  {condition.value || "(未設定)"}
+                </span>
               )}
             </div>
           </div>
