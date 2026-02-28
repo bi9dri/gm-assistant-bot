@@ -90,6 +90,7 @@ interface TemplateEditorState {
   edges: Edge[];
   viewport: Viewport;
   initialized: boolean;
+  missingFilePaths: Set<string>;
 }
 
 interface TemplateEditorActions {
@@ -151,6 +152,7 @@ interface TemplateEditorActions {
   deleteEdges: (edgeIds: string[]) => void;
   updateEdgeStyles: (nodeId: string, activeHandleIds: string[]) => void;
   clearEdgeStyles: (nodeId: string) => void;
+  setMissingFilePaths: (paths: Set<string>) => void;
   setViewport: (viewport: Viewport) => void;
   initialize: (nodes: FlowNode[], edges: Edge[], viewport?: Viewport) => void;
   reset: () => void;
@@ -164,6 +166,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   edges: [],
   viewport: { x: 0, y: 0, zoom: 1 },
   initialized: false,
+  missingFilePaths: new Set(),
 
   onNodesChange: (changes) => {
     set({
@@ -488,6 +491,10 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     });
   },
 
+  setMissingFilePaths: (paths) => {
+    set({ missingFilePaths: paths });
+  },
+
   setViewport: (viewport) => {
     set({ viewport });
   },
@@ -507,6 +514,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
       initialized: false,
+      missingFilePaths: new Set(),
     });
   },
 
