@@ -87,6 +87,7 @@ bun run --bun lint        # リンティング
 bun run --bun format      # フォーマット
 bun run --bun type-check  # 型チェック
 bun run --bun test        # テスト
+bun run knip              # 未使用エクスポート・ファイル・依存関係の検出
 ```
 
 個別パッケージで実行:
@@ -103,6 +104,7 @@ bun run --bun --filter backend dev
 2. `bun run --bun type-check` - 型エラーがないことを確認
 3. `bun run --bun format` - コードをフォーマット
 4. `bun run --bun lint` - lint エラーがないことを確認
+5. `bun run knip` - 未使用エクスポート・ファイル・依存関係がないことを確認
 
 すべてのコマンドが成功するまで、実装は完了とみなさない。
 
