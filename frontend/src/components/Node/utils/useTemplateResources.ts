@@ -4,8 +4,6 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
 import { collectResourcesBeforeNode, type TemplateResources } from "./collectResources";
 
-export type { TemplateResources };
-
 /**
  * Hook to get available resources for the current node.
  */
