@@ -93,6 +93,7 @@ const NODE_CATEGORIES = [
       { type: "RecordCombination", label: "組み合わせを記録する" },
       { type: "Kanban", label: "カンバンを操作する" },
       { type: "ShuffleAssign", label: "シャッフル割り当て" },
+      { type: "RandomSelect", label: "ランダム選択" },
     ],
   },
   {

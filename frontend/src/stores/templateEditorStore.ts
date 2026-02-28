@@ -24,6 +24,7 @@ import {
   type SendMessageDataSchema,
   type SetGameFlagDataSchema,
   type ShuffleAssignDataSchema,
+  type RandomSelectDataSchema,
   LABELED_GROUP_DEFAULTS,
 } from "@/components/Node";
 
@@ -46,6 +47,7 @@ export type SelectBranchNodeData = z.infer<typeof SelectBranchDataSchema>;
 export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 export type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
+export type RandomSelectNodeData = z.infer<typeof RandomSelectDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
@@ -66,7 +68,8 @@ export type FlowNode =
   | Node<SelectBranchNodeData, "SelectBranch">
   | Node<SendMessageNodeData, "SendMessage">
   | Node<SetGameFlagNodeData, "SetGameFlag">
-  | Node<ShuffleAssignNodeData, "ShuffleAssign">;
+  | Node<ShuffleAssignNodeData, "ShuffleAssign">
+  | Node<RandomSelectNodeData, "RandomSelect">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -114,6 +117,7 @@ interface TemplateEditorActions {
       | SendMessageNodeData
       | SetGameFlagNodeData
       | ShuffleAssignNodeData
+      | RandomSelectNodeData
     >,
   ) => void;
   addNode: (
@@ -136,7 +140,8 @@ interface TemplateEditorActions {
       | "SelectBranch"
       | "SendMessage"
       | "SetGameFlag"
-      | "ShuffleAssign",
+      | "ShuffleAssign"
+      | "RandomSelect",
     position: { x: number; y: number },
   ) => void;
   expandBlueprint: (nodeId: string) => void;
@@ -370,6 +375,17 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           items: [""],
           targets: [""],
           resultFlagPrefix: "",
+        },
+      };
+    } else if (type === "RandomSelect") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: {
+          title: "ランダム選択",
+          items: [""],
+          resultFlagKey: "",
         },
       };
     } else {

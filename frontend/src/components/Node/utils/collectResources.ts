@@ -98,6 +98,15 @@ export function collectResourcesBeforeNode(
           }
         }
       }
+    } else if (node.type === "RandomSelect") {
+      const data = node.data as { resultFlagKey: string; items: string[] };
+      if (data.resultFlagKey.trim()) {
+        resources.gameFlags.push({
+          key: data.resultFlagKey.trim(),
+          values: data.items.filter((i) => i.trim() !== ""),
+          sourceNodeId: node.id,
+        });
+      }
     }
   }
 

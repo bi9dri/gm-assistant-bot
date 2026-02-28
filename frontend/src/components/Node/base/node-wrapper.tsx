@@ -21,6 +21,7 @@ import {
   SendMessageNode,
   SetGameFlagNode,
   ShuffleAssignNode,
+  RandomSelectNode,
 } from "../nodes";
 
 export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
@@ -100,6 +101,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <ShuffleAssignNode {...props} mode={mode} />
   );
 
+  const RandomSelectWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <RandomSelectNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -120,5 +125,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     Kanban: KanbanWithMode,
     SelectBranch: SelectBranchWithMode,
     ShuffleAssign: ShuffleAssignWithMode,
+    RandomSelect: RandomSelectWithMode,
   } as NodeTypes;
 }
