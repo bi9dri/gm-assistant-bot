@@ -66,6 +66,7 @@ export const CombinationSendMessageNode = ({
 }: NodeProps<CombinationSendMessageNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
   const missingFilePaths = useTemplateEditorStore((state) => state.missingFilePaths);
+  const removeMissingFilePath = useTemplateEditorStore((state) => state.removeMissingFilePath);
   const templateEditorContext = useTemplateEditorContextOptional();
   const executionContext = useNodeExecutionOptional();
   const { addToast } = useToast();
@@ -196,6 +197,7 @@ export const CombinationSendMessageNode = ({
       for (const file of filesToAdd) {
         try {
           const filePath = await saveFileToOPFS(file, { templateId, sessionId });
+          removeMissingFilePath(filePath);
           newAttachments.push({ fileName: file.name, filePath, fileSize: file.size });
         } catch (error) {
           console.error("Failed to write file:", error);
@@ -213,7 +215,15 @@ export const CombinationSendMessageNode = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [templateEditorContext, executionContext, data.entries, id, updateNodeData, addToast],
+    [
+      templateEditorContext,
+      executionContext,
+      data.entries,
+      id,
+      updateNodeData,
+      addToast,
+      removeMissingFilePath,
+    ],
   );
 
   const fileRefKey = (entryIndex: number, messageIndex: number) => `${entryIndex}-${messageIndex}`;

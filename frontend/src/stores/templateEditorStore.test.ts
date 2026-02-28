@@ -906,6 +906,40 @@ describe("templateEditorStore", () => {
     });
   });
 
+  describe("removeMissingFilePath", () => {
+    test("指定したパスを missingFilePaths から削除する", () => {
+      useTemplateEditorStore
+        .getState()
+        .setMissingFilePaths(new Set(["template/1/a.png", "template/1/b.png"]));
+
+      useTemplateEditorStore.getState().removeMissingFilePath("template/1/a.png");
+
+      const { missingFilePaths } = useTemplateEditorStore.getState();
+      expect(missingFilePaths.has("template/1/a.png")).toBe(false);
+      expect(missingFilePaths.has("template/1/b.png")).toBe(true);
+    });
+
+    test("存在しないパスを指定しても例外が発生しない", () => {
+      useTemplateEditorStore.getState().setMissingFilePaths(new Set(["template/1/a.png"]));
+
+      expect(() => {
+        useTemplateEditorStore.getState().removeMissingFilePath("template/1/nonexistent.png");
+      }).not.toThrow();
+
+      expect(useTemplateEditorStore.getState().missingFilePaths.has("template/1/a.png")).toBe(true);
+    });
+
+    test("存在しないパスを指定したとき Set の参照は変わらない", () => {
+      useTemplateEditorStore.getState().setMissingFilePaths(new Set(["template/1/a.png"]));
+
+      const before = useTemplateEditorStore.getState().missingFilePaths;
+      useTemplateEditorStore.getState().removeMissingFilePath("template/1/nonexistent.png");
+      const after = useTemplateEditorStore.getState().missingFilePaths;
+
+      expect(after).toBe(before);
+    });
+  });
+
   describe("reset", () => {
     test("ストアをリセットする", () => {
       useTemplateEditorStore.getState().addNode("CreateRole", { x: 100, y: 100 });
