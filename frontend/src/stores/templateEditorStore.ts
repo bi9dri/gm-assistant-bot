@@ -248,7 +248,10 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { channelNames: [""], messages: [{ content: "", attachments: [] }] },
+        data: {
+          channelTargets: [{ type: "channelName", value: "" }],
+          messages: [{ content: "", attachments: [] }],
+        },
       };
     } else if (type === "CombinationSendMessage") {
       newNode = {

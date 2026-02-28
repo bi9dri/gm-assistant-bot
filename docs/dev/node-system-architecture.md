@@ -449,6 +449,40 @@ for (let i = 0; i < items.length; i++) {
 
 ---
 
+## DataSchema 変更とマイグレーション
+
+ノードの `DataSchema` を変更した場合、既存の IndexedDB データとの互換性を保つために Dexie マイグレーションが必要になる。
+
+### 設計方針
+
+DataSchema の変更は **DB レベルのマイグレーション** で対応する（アプリ起動時の変換ロジックではなく）。Dexie のバージョニング機構を使うことで、一度だけ確実にデータを変換できる。
+
+### マイグレーション履歴
+
+| DB version | 変更内容 |
+|-----------|---------|
+| v1 → v2 | `SendMessageNode.channelName` (string) → `channelNames` (string[]) / `CreateCategoryNode.categoryName` → DynamicValue 型へ |
+| v2 → v3 | `SendMessageNode.channelNames` (string[]) → `channelTargets` (ChannelTarget[]) |
+
+### 仕組み（4ステップ）
+
+1. **旧スキーマ定義**: `z.object({ ... })` で移行前のデータ形を定義する
+2. **safeParse で条件分岐**: 旧スキーマにマッチするレコードのみ変換する（新スキーマのデータはスキップ）
+3. **両テーブルを移行**: `Template` と `GameSession` の両方に `reactFlowData` が含まれるため、両方を `modify()` する
+4. **旧フィールドを delete**: 変換後は `delete node.data.oldField` で不要フィールドを削除する
+
+### キーファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `frontend/src/db/database.ts` | Dexie マイグレーション定義（`this.version(N).upgrade()`） |
+| `frontend/src/db/schemas.ts` | DB テーブルの型定義 |
+| `frontend/src/components/Node/nodes/{NodeName}Node.tsx` | ノードの `DataSchema`（変更対象） |
+
+> スキーマ変更の実装手順は [`.claude/skills/schema-migration/SKILL.md`](../../.claude/skills/schema-migration/SKILL.md) を参照。
+
+---
+
 ## 関連ファイル
 
 | ファイル | 説明 |

@@ -4,7 +4,7 @@ import { LuUpload, LuDownload } from "react-icons/lu";
 import z from "zod";
 
 import { ApiClient } from "@/api";
-import { db, type ChannelData } from "@/db";
+import { db, type ChannelData, GameSession } from "@/db";
 import { FileSystem } from "@/fileSystem";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
@@ -29,8 +29,18 @@ import {
   saveFileToOPFS,
 } from "../utils";
 
+const ChannelTargetSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("channelName"), value: z.string().trim() }),
+  z.object({ type: z.literal("flagKey"), value: z.string().trim() }),
+]);
+
+type ChannelTarget = z.infer<typeof ChannelTargetSchema>;
+
 export const DataSchema = BaseNodeDataSchema.extend({
-  channelNames: z.array(z.string().trim()).min(1).default([""]),
+  channelTargets: z
+    .array(ChannelTargetSchema)
+    .min(1)
+    .default([{ type: "channelName", value: "" }]),
   messages: z
     .array(MessageBlockSchema)
     .min(1)
@@ -65,24 +75,30 @@ export const SendMessageNode = ({
     }
   }, [executionContext]);
 
-  const handleChannelNameChange = (index: number, value: string) => {
-    const newChannelNames = [...data.channelNames];
-    newChannelNames[index] = value;
-    updateNodeData(id, { channelNames: newChannelNames });
+  const handleChannelTargetChange = (index: number, value: string) => {
+    const newTargets = [...data.channelTargets];
+    newTargets[index] = { ...newTargets[index], value };
+    updateNodeData(id, { channelTargets: newTargets });
   };
 
-  const handleAddChannelName = () => {
-    const newChannelNames = [...data.channelNames, ""];
-    updateNodeData(id, { channelNames: newChannelNames });
+  const handleChannelTargetTypeChange = (index: number, type: ChannelTarget["type"]) => {
+    const newTargets = [...data.channelTargets];
+    newTargets[index] = { type, value: "" };
+    updateNodeData(id, { channelTargets: newTargets });
   };
 
-  const handleRemoveChannelName = (index: number) => {
-    if (data.channelNames.length <= 1) {
+  const handleAddChannelTarget = () => {
+    const newTargets = [...data.channelTargets, { type: "channelName" as const, value: "" }];
+    updateNodeData(id, { channelTargets: newTargets });
+  };
+
+  const handleRemoveChannelTarget = (index: number) => {
+    if (data.channelTargets.length <= 1) {
       addToast({ message: "最低1つのチャンネルが必要です", status: "warning" });
       return;
     }
-    const newChannelNames = data.channelNames.filter((_, i) => i !== index);
-    updateNodeData(id, { channelNames: newChannelNames });
+    const newTargets = data.channelTargets.filter((_, i) => i !== index);
+    updateNodeData(id, { channelTargets: newTargets });
   };
 
   const handleContentChange = (messageIndex: number, value: string) => {
@@ -246,16 +262,7 @@ export const SendMessageNode = ({
       return;
     }
 
-    const { bot } = executionContext;
-
-    const validChannelNames = data.channelNames
-      .map((name) => name.trim())
-      .filter((name) => name !== "");
-
-    if (validChannelNames.length === 0) {
-      addToast({ message: "少なくとも1つのチャンネル名を入力してください", status: "warning" });
-      return;
-    }
+    const { bot, sessionId } = executionContext;
 
     const hasValidMessage = data.messages.some(
       (m) => m.content.trim() !== "" || m.attachments.length > 0,
@@ -265,10 +272,47 @@ export const SendMessageNode = ({
       return;
     }
 
+    // Resolve channel names from targets (direct name or flag-based lookup)
+    let gameFlags: Record<string, string> = {};
+    const hasFlagTargets = data.channelTargets.some((t) => t.type === "flagKey");
+    if (hasFlagTargets) {
+      const session = await GameSession.getById(sessionId);
+      if (!session) {
+        addToast({ message: "セッションが見つかりません", status: "error" });
+        return;
+      }
+      gameFlags = session.getParsedGameFlags() as Record<string, string>;
+    }
+
+    const resolvedChannelNames: string[] = [];
+    for (const target of data.channelTargets) {
+      if (target.type === "channelName") {
+        const name = target.value.trim();
+        if (name !== "") resolvedChannelNames.push(name);
+      } else {
+        const flagKey = target.value.trim();
+        if (flagKey === "") continue;
+        const resolvedName = gameFlags[flagKey];
+        if (resolvedName === undefined) {
+          addToast({
+            message: `フラグ「${flagKey}」が設定されていません`,
+            status: "error",
+          });
+          return;
+        }
+        resolvedChannelNames.push(resolvedName);
+      }
+    }
+
+    if (resolvedChannelNames.length === 0) {
+      addToast({ message: "少なくとも1つのチャンネルを指定してください", status: "warning" });
+      return;
+    }
+
     const targetChannels: ChannelData[] = [];
     const notFoundChannels: string[] = [];
 
-    for (const channelName of validChannelNames) {
+    for (const channelName of resolvedChannelNames) {
       const channel = channels.find((c) => c.name === channelName);
       if (channel) {
         targetChannels.push(channel);
@@ -358,28 +402,70 @@ export const SendMessageNode = ({
         <div className="space-y-3">
           <div>
             <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
-            {data.channelNames.map((name, index) => (
-              <div key={`${id}-channel-${index}`} className="flex gap-2 items-center mb-2">
-                <div className="flex-1">
-                  <ResourceSelector
-                    nodeId={id}
-                    resourceType="channel"
-                    value={name}
-                    onChange={(newName) => handleChannelNameChange(index, newName)}
-                    placeholder="チャンネル名"
-                    disabled={isExecuteMode || isLoading || isExecuted}
-                    channelTypeFilter="text"
-                  />
+            {data.channelTargets.map((target, index) => (
+              <div key={`${id}-channel-${index}`} className="mb-2 space-y-1">
+                <div className="flex flex-wrap gap-2">
+                  <label className="label cursor-pointer gap-1 p-0">
+                    <input
+                      type="radio"
+                      name={`channel-type-${id}-${index}`}
+                      className="nodrag radio radio-xs"
+                      checked={target.type === "channelName"}
+                      onChange={() => handleChannelTargetTypeChange(index, "channelName")}
+                      disabled={isExecuteMode || isLoading || isExecuted}
+                    />
+                    <span className="label-text text-xs">チャンネル名</span>
+                  </label>
+                  <label className="label cursor-pointer gap-1 p-0">
+                    <input
+                      type="radio"
+                      name={`channel-type-${id}-${index}`}
+                      className="nodrag radio radio-xs"
+                      checked={target.type === "flagKey"}
+                      onChange={() => handleChannelTargetTypeChange(index, "flagKey")}
+                      disabled={isExecuteMode || isLoading || isExecuted}
+                    />
+                    <span className="label-text text-xs">フラグから取得</span>
+                  </label>
                 </div>
-                {!isExecuteMode && data.channelNames.length > 1 && (
-                  <button
-                    type="button"
-                    className="nodrag btn btn-ghost btn-sm"
-                    onClick={() => handleRemoveChannelName(index)}
-                    disabled={isLoading || isExecuted}
-                  >
-                    削除
-                  </button>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    {target.type === "channelName" ? (
+                      <ResourceSelector
+                        nodeId={id}
+                        resourceType="channel"
+                        value={target.value}
+                        onChange={(newName) => handleChannelTargetChange(index, newName)}
+                        placeholder="チャンネル名"
+                        disabled={isExecuteMode || isLoading || isExecuted}
+                        channelTypeFilter="text"
+                      />
+                    ) : (
+                      <ResourceSelector
+                        nodeId={id}
+                        resourceType="gameFlag"
+                        value={target.value}
+                        onChange={(newKey) => handleChannelTargetChange(index, newKey)}
+                        placeholder="フラグキー"
+                        disabled={isExecuteMode || isLoading || isExecuted}
+                      />
+                    )}
+                  </div>
+                  {!isExecuteMode && data.channelTargets.length > 1 && (
+                    <button
+                      type="button"
+                      className="nodrag btn btn-ghost btn-sm"
+                      onClick={() => handleRemoveChannelTarget(index)}
+                      disabled={isLoading || isExecuted}
+                    >
+                      削除
+                    </button>
+                  )}
+                </div>
+                {target.type === "flagKey" && (
+                  <p className="text-xs text-warning">
+                    フラグの値に一致するチャンネルが存在しない場合、送信に失敗します
+                  </p>
                 )}
               </div>
             ))}
@@ -387,7 +473,7 @@ export const SendMessageNode = ({
               <button
                 type="button"
                 className="nodrag btn btn-ghost btn-sm"
-                onClick={handleAddChannelName}
+                onClick={handleAddChannelTarget}
                 disabled={isLoading || isExecuted}
               >
                 + チャンネルを追加

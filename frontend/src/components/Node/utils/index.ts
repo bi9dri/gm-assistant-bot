@@ -27,7 +27,6 @@ export { fisherYatesShuffle } from "./shuffle";
 export { evaluateConditions, type GameFlags } from "./evaluateCondition";
 
 export {
-  AttachmentSchema,
   MessageBlockSchema,
   type Attachment,
   FILE_SIZE_WARNING_THRESHOLD,
