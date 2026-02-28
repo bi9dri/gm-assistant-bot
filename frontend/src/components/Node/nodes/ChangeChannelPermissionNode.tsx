@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -28,6 +29,7 @@ const RolePermissionSchema = z.object({
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("チャンネル権限を変更する"),
   channelName: z.string().trim(),
   rolePermissions: z.array(RolePermissionSchema),
 });
@@ -47,6 +49,10 @@ export const ChangeChannelPermissionNode = ({
   const [roles, setRoles] = useState<RoleData[]>([]);
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   useEffect(() => {
     if (executionContext) {
@@ -181,7 +187,15 @@ export const ChangeChannelPermissionNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>チャンネル権限を変更する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "チャンネル権限を変更する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="チャンネル権限を変更する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">

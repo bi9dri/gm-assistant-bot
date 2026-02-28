@@ -17,3 +17,5 @@ export {
 } from "./base-schema";
 
 export { createNodeTypes } from "./node-wrapper";
+
+export { EditableTitle } from "./editable-title";

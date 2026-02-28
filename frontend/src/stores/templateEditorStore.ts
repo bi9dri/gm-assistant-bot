@@ -199,49 +199,49 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { categoryName: { type: "literal", value: "" } },
+        data: { title: "カテゴリを作成する", categoryName: { type: "literal", value: "" } },
       };
     } else if (type === "CreateRole") {
       newNode = {
         id,
         type,
         position,
-        data: { roles: [""] },
+        data: { title: "ロールを作成する", roles: [""] },
       };
     } else if (type === "CreateChannel") {
       newNode = {
         id,
         type,
         position,
-        data: { channels: [] },
+        data: { title: "チャンネルを作成する", channels: [] },
       };
     } else if (type === "DeleteCategory") {
       newNode = {
         id,
         type,
         position,
-        data: {},
+        data: { title: "カテゴリを削除する" },
       };
     } else if (type === "DeleteRole") {
       newNode = {
         id,
         type,
         position,
-        data: { deleteAll: false, roleNames: [""] },
+        data: { title: "ロールを削除する", deleteAll: false, roleNames: [""] },
       };
     } else if (type === "DeleteChannel") {
       newNode = {
         id,
         type,
         position,
-        data: { channelNames: [""] },
+        data: { title: "チャンネルを削除する", channelNames: [""] },
       };
     } else if (type === "ChangeChannelPermission") {
       newNode = {
         id,
         type,
         position,
-        data: { channelName: "", rolePermissions: [] },
+        data: { title: "チャンネル権限を変更する", channelName: "", rolePermissions: [] },
       };
     } else if (type === "SendMessage") {
       newNode = {
@@ -249,6 +249,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: {
+          title: "メッセージを送信する",
           channelTargets: [{ type: "channelName", value: "" }],
           messages: [{ content: "", attachments: [] }],
         },
@@ -259,6 +260,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: {
+          title: "組み合わせメッセージを送信する",
           entries: [
             {
               id: crypto.randomUUID(),
@@ -275,6 +277,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         type,
         position,
         data: {
+          title: "マーダーミステリー基本セット",
           parameters: {
             characterNames: [""],
             voiceChannelCount: 0,
@@ -288,7 +291,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { flagKey: "", flagValue: "" },
+        data: { title: "ゲームフラグを設定する", flagKey: "", flagValue: "" },
       };
     } else if (type === "LabeledGroup") {
       newNode = {
@@ -307,7 +310,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { comment: "" },
+        data: { title: "コメント", comment: "" },
       };
     } else if (type === "ConditionalBranch") {
       const branchId = crypto.randomUUID();
@@ -409,7 +412,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { memberRoleName: "", addRoleName: "" },
+        data: { title: "ロールメンバーにロールを付与", memberRoleName: "", addRoleName: "" },
       };
     }
 
@@ -533,7 +536,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id: roleNodeId,
         type: "CreateRole",
         position: { x: currentX, y: startPosition.y },
-        data: { roles: allRoles },
+        data: { title: "ロールを作成する", roles: allRoles },
       };
       generatedNodes.push(roleNode);
       previousNodeId = roleNodeId;
@@ -547,7 +550,10 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id: categoryNodeId,
         type: "CreateCategory",
         position: { x: currentX, y: startPosition.y },
-        data: { categoryName: { type: "literal", value: parameters.categoryName.trim() } },
+        data: {
+          title: "カテゴリを作成する",
+          categoryName: { type: "literal", value: parameters.categoryName.trim() },
+        },
       };
       generatedNodes.push(categoryNode);
 
@@ -604,7 +610,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id: channelNodeId,
         type: "CreateChannel",
         position: { x: currentX, y: startPosition.y },
-        data: { channels },
+        data: { title: "チャンネルを作成する", channels },
       };
       generatedNodes.push(channelNode);
 
@@ -630,7 +636,11 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       id: addRoleNodeId,
       type: "AddRoleToRoleMembers",
       position: { x: currentX, y: startPosition.y },
-      data: { memberRoleName: commonRoles[0], addRoleName: commonRoles[1] },
+      data: {
+        title: "ロールメンバーにロールを付与",
+        memberRoleName: commonRoles[0],
+        addRoleName: commonRoles[1],
+      },
     };
     generatedNodes.push(addRoleNode);
 
@@ -655,7 +665,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       id: deleteCategoryNodeId,
       type: "DeleteCategory",
       position: { x: currentX, y: startPosition.y },
-      data: {},
+      data: { title: "カテゴリを削除する" },
     };
     generatedNodes.push(deleteCategoryNode);
 
@@ -677,7 +687,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       id: deleteRoleNodeId,
       type: "DeleteRole",
       position: { x: currentX, y: startPosition.y },
-      data: { deleteAll: true, roleNames: [] },
+      data: { title: "ロールを削除する", deleteAll: true, roleNames: [] },
     };
     generatedNodes.push(deleteRoleNode);
 

@@ -13,6 +13,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -166,27 +167,17 @@ export const ShuffleAssignNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>
-          {isExecuteMode && data.title ? data.title : "シャッフル割り当て"}
-        </BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "シャッフル割り当て"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="シャッフル割り当て"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
-        {!isExecuteMode && (
-          <label className="form-control w-full mb-3">
-            <div className="label">
-              <span className="label-text">タイトル</span>
-            </div>
-            <input
-              type="text"
-              className="nodrag input input-bordered w-full"
-              value={data.title}
-              onChange={(evt) => handleTitleChange(evt.target.value)}
-              placeholder="例: ランダム配布"
-              disabled={isLoading || isExecuted}
-            />
-          </label>
-        )}
-
         {!isExecuteMode && (
           <label className="form-control w-full mb-3">
             <div className="label">

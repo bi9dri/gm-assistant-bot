@@ -14,13 +14,16 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
 
-export const DataSchema = BaseNodeDataSchema.extend({});
+export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("カテゴリを削除する"),
+});
 type DeleteCategoryNodeData = Node<z.infer<typeof DataSchema>, "DeleteCategory">;
 
 export const DeleteCategoryNode = ({
@@ -36,6 +39,10 @@ export const DeleteCategoryNode = ({
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   useEffect(() => {
     if (executionContext) {
@@ -133,7 +140,15 @@ export const DeleteCategoryNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>カテゴリを削除する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "カテゴリを削除する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="カテゴリを削除する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent>
         <p className="text-sm text-base-content/60">

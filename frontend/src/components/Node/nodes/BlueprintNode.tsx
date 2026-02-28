@@ -10,6 +10,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
   NODE_TYPE_WIDTHS,
@@ -23,6 +24,7 @@ const BlueprintParameterSchema = z.object({
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("マーダーミステリー基本セット"),
   parameters: BlueprintParameterSchema,
 });
 
@@ -96,6 +98,10 @@ export const BlueprintNode = ({
     });
   };
 
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
+
   const handleExpand = () => {
     expandBlueprint(id);
   };
@@ -113,7 +119,15 @@ export const BlueprintNode = ({
   return (
     <BaseNode width={NODE_TYPE_WIDTHS.Blueprint} className="bg-base-300">
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>マーダーミステリー基本セット</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "マーダーミステリー基本セット"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="マーダーミステリー基本セット"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
         {/* Category name */}

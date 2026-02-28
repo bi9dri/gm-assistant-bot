@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -34,6 +35,7 @@ const ChannelItemSchema = z.object({
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("チャンネルを作成する"),
   channels: z.array(ChannelItemSchema),
 });
 type CreateChannelNodeData = Node<z.infer<typeof DataSchema>, "CreateChannel">;
@@ -53,6 +55,10 @@ export const CreateChannelNode = ({
   const [roles, setRoles] = useState<RoleData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   useEffect(() => {
     if (executionContext) {
@@ -224,7 +230,15 @@ export const CreateChannelNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>チャンネルを作成する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "チャンネルを作成する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="チャンネルを作成する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
         <div className="space-y-4">

@@ -15,7 +15,10 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("CreateCategory");
-      expect(node.data).toEqual({ categoryName: { type: "literal", value: "" } });
+      expect(node.data).toEqual({
+        title: "カテゴリを作成する",
+        categoryName: { type: "literal", value: "" },
+      });
       expect(node.position).toEqual(position);
     });
 
@@ -24,7 +27,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("CreateRole");
-      expect(node.data).toEqual({ roles: [""] });
+      expect(node.data).toEqual({ title: "ロールを作成する", roles: [""] });
     });
 
     test("CreateChannelノードは正しい初期データを持つ", () => {
@@ -32,7 +35,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("CreateChannel");
-      expect(node.data).toEqual({ channels: [] });
+      expect(node.data).toEqual({ title: "チャンネルを作成する", channels: [] });
     });
 
     test("DeleteCategoryノードは正しい初期データを持つ", () => {
@@ -40,7 +43,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("DeleteCategory");
-      expect(node.data).toEqual({});
+      expect(node.data).toEqual({ title: "カテゴリを削除する" });
     });
 
     test("DeleteRoleノードは正しい初期データを持つ", () => {
@@ -48,7 +51,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("DeleteRole");
-      expect(node.data).toEqual({ deleteAll: false, roleNames: [""] });
+      expect(node.data).toEqual({ title: "ロールを削除する", deleteAll: false, roleNames: [""] });
     });
 
     test("DeleteChannelノードは正しい初期データを持つ", () => {
@@ -56,7 +59,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("DeleteChannel");
-      expect(node.data).toEqual({ channelNames: [""] });
+      expect(node.data).toEqual({ title: "チャンネルを削除する", channelNames: [""] });
     });
 
     test("ChangeChannelPermissionノードは正しい初期データを持つ", () => {
@@ -64,7 +67,11 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("ChangeChannelPermission");
-      expect(node.data).toEqual({ channelName: "", rolePermissions: [] });
+      expect(node.data).toEqual({
+        title: "チャンネル権限を変更する",
+        channelName: "",
+        rolePermissions: [],
+      });
     });
 
     test("SendMessageノードは正しい初期データを持つ", () => {
@@ -73,6 +80,7 @@ describe("templateEditorStore", () => {
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("SendMessage");
       expect(node.data).toEqual({
+        title: "メッセージを送信する",
         channelTargets: [{ type: "channelName", value: "" }],
         messages: [{ content: "", attachments: [] }],
       });
@@ -83,7 +91,11 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("AddRoleToRoleMembers");
-      expect(node.data).toEqual({ memberRoleName: "", addRoleName: "" });
+      expect(node.data).toEqual({
+        title: "ロールメンバーにロールを付与",
+        memberRoleName: "",
+        addRoleName: "",
+      });
     });
 
     test("SetGameFlagノードは正しい初期データを持つ", () => {
@@ -91,7 +103,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("SetGameFlag");
-      expect(node.data).toEqual({ flagKey: "", flagValue: "" });
+      expect(node.data).toEqual({ title: "ゲームフラグを設定する", flagKey: "", flagValue: "" });
     });
 
     test("LabeledGroupノードは正しい初期データを持つ", () => {
@@ -111,7 +123,7 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("Comment");
-      expect(node.data).toEqual({ comment: "" });
+      expect(node.data).toEqual({ title: "コメント", comment: "" });
     });
 
     test("RecordCombinationノードは正しい初期データを持つ", () => {
@@ -224,7 +236,7 @@ describe("templateEditorStore", () => {
       const duplicatedNode = nodes[1];
       expect(duplicatedNode.id).not.toBe(originalNode.id);
       expect(duplicatedNode.type).toBe(originalNode.type);
-      expect(duplicatedNode.data).toEqual({ roles: ["Role1", "Role2"] });
+      expect(duplicatedNode.data).toEqual({ title: "ロールを作成する", roles: ["Role1", "Role2"] });
 
       // ディープコピーであることを確認（参照ではない）
       expect(duplicatedNode.data).not.toBe(originalNode.data);
@@ -327,6 +339,7 @@ describe("templateEditorStore", () => {
 
       const updatedNode = useTemplateEditorStore.getState().nodes[0];
       expect(updatedNode.data).toEqual({
+        title: "チャンネル権限を変更する",
         channelName: "general",
         rolePermissions: [],
       });
@@ -340,8 +353,8 @@ describe("templateEditorStore", () => {
       useTemplateEditorStore.getState().updateNodeData(firstNode.id, { roles: ["Admin"] });
 
       const nodes = useTemplateEditorStore.getState().nodes;
-      expect(nodes[0].data).toEqual({ roles: ["Admin"] });
-      expect(nodes[1].data).toEqual({ roles: [""] });
+      expect(nodes[0].data).toEqual({ title: "ロールを作成する", roles: ["Admin"] });
+      expect(nodes[1].data).toEqual({ title: "ロールを作成する", roles: [""] });
     });
   });
 
@@ -388,6 +401,7 @@ describe("templateEditorStore", () => {
       const roleNode = useTemplateEditorStore.getState().nodes.find((n) => n.type === "CreateRole");
       expect(roleNode).toBeDefined();
       expect(roleNode?.data).toEqual({
+        title: "ロールを作成する",
         roles: ["PL", "観戦", "Alice", "Bob"],
       });
     });
@@ -411,6 +425,7 @@ describe("templateEditorStore", () => {
       const roleNode = useTemplateEditorStore.getState().nodes.find((n) => n.type === "CreateRole");
       expect(roleNode).toBeDefined();
       expect(roleNode?.data).toEqual({
+        title: "ロールを作成する",
         roles: ["セッションPL", "セッション観戦", "Alice", "Bob"],
       });
     });
@@ -436,6 +451,7 @@ describe("templateEditorStore", () => {
         .nodes.find((n) => n.type === "CreateCategory");
       expect(categoryNode).toBeDefined();
       expect(categoryNode?.data).toEqual({
+        title: "カテゴリを作成する",
         categoryName: { type: "literal", value: "Game Category" },
       });
     });
@@ -521,6 +537,7 @@ describe("templateEditorStore", () => {
         .nodes.find((n) => n.type === "AddRoleToRoleMembers");
       expect(addRoleNode).toBeDefined();
       expect(addRoleNode?.data).toEqual({
+        title: "ロールメンバーにロールを付与",
         memberRoleName: "PL",
         addRoleName: "観戦",
       });
@@ -547,6 +564,7 @@ describe("templateEditorStore", () => {
         .nodes.find((n) => n.type === "AddRoleToRoleMembers");
       expect(addRoleNode).toBeDefined();
       expect(addRoleNode?.data).toEqual({
+        title: "ロールメンバーにロールを付与",
         memberRoleName: "テストPL",
         addRoleName: "テスト観戦",
       });
@@ -578,6 +596,7 @@ describe("templateEditorStore", () => {
         .nodes.find((n) => n.type === "DeleteRole");
       expect(deleteRoleNode).toBeDefined();
       expect(deleteRoleNode?.data).toEqual({
+        title: "ロールを削除する",
         deleteAll: true,
         roleNames: [],
       });
@@ -722,7 +741,7 @@ describe("templateEditorStore", () => {
           id: "node-1",
           type: "CreateRole" as const,
           position: { x: 100, y: 100 },
-          data: { roles: ["Admin"] },
+          data: { title: "ロールを作成する", roles: ["Admin"] },
         },
       ];
       const edges = [
@@ -748,7 +767,7 @@ describe("templateEditorStore", () => {
           id: "node-1",
           type: "CreateRole" as const,
           position: { x: 100, y: 100 },
-          data: { roles: ["Admin"] },
+          data: { title: "ロールを作成する", roles: ["Admin"] },
         },
       ];
       const edges: never[] = [];

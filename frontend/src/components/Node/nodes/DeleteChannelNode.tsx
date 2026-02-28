@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -23,6 +24,7 @@ import { useNodeExecutionOptional } from "../contexts";
 import { ResourceSelector } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("チャンネルを削除する"),
   channelNames: z.array(z.string().trim()),
 });
 type DeleteChannelNodeData = Node<z.infer<typeof DataSchema>, "DeleteChannel">;
@@ -38,6 +40,10 @@ export const DeleteChannelNode = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleChannelNameChange = (index: number, newValue: string) => {
     const updatedNames = [...data.channelNames];
@@ -135,7 +141,15 @@ export const DeleteChannelNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>チャンネルを削除する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "チャンネルを削除する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="チャンネルを削除する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {data.channelNames.map((name, index) => (
