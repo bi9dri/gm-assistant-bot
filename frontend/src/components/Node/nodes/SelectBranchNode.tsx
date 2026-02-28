@@ -124,6 +124,14 @@ export const SelectBranchNode = ({
     updateNodeData(id, { flagName: newKey });
   };
 
+  const handleReset = () => {
+    updateNodeData(id, {
+      selectedValue: undefined,
+      executedAt: undefined,
+    });
+    setSelectedOption("");
+  };
+
   const handleExecute = async () => {
     if (!executionContext) {
       addToast({ message: "実行コンテキストがありません", status: "error" });
@@ -197,6 +205,13 @@ export const SelectBranchNode = ({
       </BaseNodeHeader>
 
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
+        {isExecuteMode && isExecuted && (
+          <div className="bg-success/20 rounded p-3 text-center mb-2">
+            <div className="text-sm text-base-content/70">選択結果</div>
+            <div className="font-semibold">{selectedLabel}</div>
+          </div>
+        )}
+
         {!isExecuteMode && (
           <>
             <label className="form-control w-full">
@@ -229,12 +244,7 @@ export const SelectBranchNode = ({
               フラグ名: <span className="font-mono">{data.flagName || "(未設定)"}</span>
             </div>
 
-            {isExecuted ? (
-              <div className="bg-success/20 rounded p-3 text-center">
-                <div className="text-sm text-base-content/70">選択結果</div>
-                <div className="font-semibold">{selectedLabel}</div>
-              </div>
-            ) : (
+            {!isExecuted && (
               <div className="space-y-2">
                 {data.options.map((option) => (
                   <label
@@ -260,15 +270,25 @@ export const SelectBranchNode = ({
       </BaseNodeContent>
 
       <BaseNodeFooter>
-        <button
-          type="button"
-          className="nodrag btn btn-primary w-full"
-          onClick={handleExecute}
-          disabled={!isExecuteMode || isExecuted || isLoading || !selectedOption}
-        >
-          {isLoading && <span className="loading loading-spinner loading-sm" />}
-          確定する
-        </button>
+        {isExecuteMode && isExecuted ? (
+          <button
+            type="button"
+            className="nodrag btn btn-outline btn-sm w-full"
+            onClick={handleReset}
+          >
+            やり直す
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="nodrag btn btn-primary w-full"
+            onClick={handleExecute}
+            disabled={!isExecuteMode || isLoading || !selectedOption}
+          >
+            {isLoading && <span className="loading loading-spinner loading-sm" />}
+            確定する
+          </button>
+        )}
       </BaseNodeFooter>
 
       <BaseHandle id="target-1" type="target" position={Position.Left} />
