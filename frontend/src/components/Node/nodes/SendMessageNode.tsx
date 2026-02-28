@@ -58,6 +58,7 @@ export const SendMessageNode = ({
 }: NodeProps<SendMessageNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
   const missingFilePaths = useTemplateEditorStore((state) => state.missingFilePaths);
+  const removeMissingFilePath = useTemplateEditorStore((state) => state.removeMissingFilePath);
   const templateEditorContext = useTemplateEditorContextOptional();
   const executionContext = useNodeExecutionOptional();
   const { addToast } = useToast();
@@ -167,6 +168,7 @@ export const SendMessageNode = ({
       for (const file of filesToAdd) {
         try {
           const filePath = await saveFileToOPFS(file, { templateId, sessionId });
+          removeMissingFilePath(filePath);
           newAttachments.push({
             fileName: file.name,
             filePath,
@@ -187,7 +189,15 @@ export const SendMessageNode = ({
         updateNodeData(id, { messages: newMessages });
       }
     },
-    [templateEditorContext, executionContext, data.messages, id, updateNodeData, addToast],
+    [
+      templateEditorContext,
+      executionContext,
+      data.messages,
+      id,
+      updateNodeData,
+      addToast,
+      removeMissingFilePath,
+    ],
   );
 
   const handleFileAdd = async (
