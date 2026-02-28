@@ -566,65 +566,68 @@ export const CombinationSendMessageNode = ({
                             </p>
                           )}
 
-                          {message.attachments.length < 4 ? (
+                          {!isExecuteMode && (
                             <>
-                              <input
-                                ref={(el) => {
-                                  if (el) fileInputRefs.current.set(dragKey, el);
-                                }}
-                                type="file"
-                                multiple
-                                className="hidden"
-                                onChange={(e) => handleFileAdd(entryIndex, messageIndex, e)}
-                                disabled={isExecuteMode || isLoading || isExecuted}
-                              />
-                              <div
-                                className={cn(
-                                  "nodrag",
-                                  "flex flex-col items-center justify-center gap-1",
-                                  "rounded-lg border-2 p-4 cursor-pointer",
-                                  "transition-all duration-200",
-                                  draggingKey === dragKey
-                                    ? "border-primary bg-primary/10 border-solid"
-                                    : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
-                                  (isExecuteMode || isLoading || isExecuted) &&
-                                    "opacity-50 pointer-events-none cursor-not-allowed",
-                                )}
-                                onDragOver={handleDragOver}
-                                onDragEnter={(e) => handleDragEnter(dragKey, e)}
-                                onDragLeave={(e) => handleDragLeave(dragKey, e)}
-                                onDrop={(e) => handleDrop(entryIndex, messageIndex, dragKey, e)}
-                                onClick={() =>
-                                  !isExecuteMode &&
-                                  !isLoading &&
-                                  !isExecuted &&
-                                  fileInputRefs.current.get(dragKey)?.click()
-                                }
-                              >
-                                {draggingKey === dragKey ? (
-                                  <>
-                                    <LuDownload className="w-6 h-6 text-primary" />
-                                    <span className="text-sm text-primary font-medium">
-                                      ファイルをドロップ
-                                    </span>
-                                    <span className="text-xs text-primary/70">
-                                      あと{4 - message.attachments.length}個追加できます
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <LuUpload className="w-5 h-5 text-base-content/60" />
-                                    <span className="text-sm text-base-content/60">
-                                      ファイルをドロップまたはクリックして追加
-                                    </span>
-                                  </>
-                                )}
-                              </div>
+                              {message.attachments.length < 4 ? (
+                                <>
+                                  <input
+                                    ref={(el) => {
+                                      if (el) fileInputRefs.current.set(dragKey, el);
+                                    }}
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => handleFileAdd(entryIndex, messageIndex, e)}
+                                    disabled={isLoading || isExecuted}
+                                  />
+                                  <div
+                                    className={cn(
+                                      "nodrag",
+                                      "flex flex-col items-center justify-center gap-1",
+                                      "rounded-lg border-2 p-4 cursor-pointer",
+                                      "transition-all duration-200",
+                                      draggingKey === dragKey
+                                        ? "border-primary bg-primary/10 border-solid"
+                                        : "border-dashed border-base-content/30 hover:border-base-content/50 hover:bg-base-200/50",
+                                      (isLoading || isExecuted) &&
+                                        "opacity-50 pointer-events-none cursor-not-allowed",
+                                    )}
+                                    onDragOver={handleDragOver}
+                                    onDragEnter={(e) => handleDragEnter(dragKey, e)}
+                                    onDragLeave={(e) => handleDragLeave(dragKey, e)}
+                                    onDrop={(e) => handleDrop(entryIndex, messageIndex, dragKey, e)}
+                                    onClick={() =>
+                                      !isLoading &&
+                                      !isExecuted &&
+                                      fileInputRefs.current.get(dragKey)?.click()
+                                    }
+                                  >
+                                    {draggingKey === dragKey ? (
+                                      <>
+                                        <LuDownload className="w-6 h-6 text-primary" />
+                                        <span className="text-sm text-primary font-medium">
+                                          ファイルをドロップ
+                                        </span>
+                                        <span className="text-xs text-primary/70">
+                                          あと{4 - message.attachments.length}個追加できます
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <LuUpload className="w-5 h-5 text-base-content/60" />
+                                        <span className="text-sm text-base-content/60">
+                                          ファイルをドロップまたはクリックして追加
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <p className="text-xs text-base-content/60 text-center py-2">
+                                  添付ファイルは最大4つまでです
+                                </p>
+                              )}
                             </>
-                          ) : (
-                            <p className="text-xs text-base-content/60 text-center py-2">
-                              添付ファイルは最大4つまでです
-                            </p>
                           )}
                         </div>
                       </div>
