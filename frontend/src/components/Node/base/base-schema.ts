@@ -28,13 +28,20 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   Blueprint: NODE_WIDTHS.lg,
   SetGameFlag: NODE_WIDTHS.md,
   LabeledGroup: NODE_WIDTHS.xl,
-  Comment: NODE_WIDTHS.md,
   ConditionalBranch: NODE_WIDTHS.lg,
   RecordCombination: NODE_WIDTHS.lg,
   Kanban: NODE_WIDTHS.xl,
   SelectBranch: NODE_WIDTHS.md,
   ShuffleAssign: NODE_WIDTHS.lg,
   RandomSelect: NODE_WIDTHS.md,
+} as const;
+
+// Comment node default dimensions
+export const COMMENT_DEFAULTS = {
+  width: NODE_WIDTHS.md,
+  height: 120,
+  minWidth: 150,
+  minHeight: 80,
 } as const;
 
 // LabeledGroup node default dimensions

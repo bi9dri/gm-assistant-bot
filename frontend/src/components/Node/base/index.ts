@@ -12,6 +12,7 @@ export {
 export {
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
+  COMMENT_DEFAULTS,
   LABELED_GROUP_DEFAULTS,
   NODE_CONTENT_HEIGHTS,
 } from "./base-schema";
