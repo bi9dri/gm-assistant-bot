@@ -38,6 +38,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -47,6 +48,7 @@ import { useNodeExecutionOptional } from "../contexts";
 
 // 1. Define schema extending BaseNodeDataSchema
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("{デフォルトタイトル}"),
   fieldName: z.string().trim().default(""),
 });
 type {NodeName}NodeData = Node<z.infer<typeof DataSchema>, "{NodeName}">;
@@ -64,6 +66,10 @@ export const {NodeName}Node = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // 3. Handler for data changes (edit mode)
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
+
   const handleFieldChange = (newValue: string) => {
     updateNodeData(id, { fieldName: newValue });
   };
@@ -111,7 +117,15 @@ export const {NodeName}Node = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ノードタイトル</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "{デフォルトタイトル}"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="{デフォルトタイトル}"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <input
@@ -204,7 +218,7 @@ addNode: (type: "..." | "{NodeName}", position: { x: number; y: number }) => voi
 
 // addNode 実装に分岐追加:
 } else if (type === "{NodeName}") {
-  newNode = { id, type, position, data: { fieldName: "" } };
+  newNode = { id, type, position, data: { title: "{デフォルトタイトル}", fieldName: "" } };
 }
 ```
 

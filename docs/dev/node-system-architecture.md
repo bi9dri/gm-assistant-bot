@@ -92,6 +92,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -101,6 +102,7 @@ import { useNodeExecutionOptional } from "../contexts";
 
 // 1. スキーマ定義
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("ノードのデフォルトタイトル"),  // 編集可能タイトル
   // ノード固有のデータフィールド
   myField: z.string(),
 });
@@ -120,6 +122,10 @@ export const ExampleNode = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // 3. データ更新ハンドラ
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
+
   const handleFieldChange = (newValue: string) => {
     updateNodeData(id, { myField: newValue });
   };
@@ -156,7 +162,15 @@ export const ExampleNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ノードタイトル</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "ノードのデフォルトタイトル"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="ノードのデフォルトタイトル"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
 
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
@@ -272,7 +286,7 @@ export type FlowNode =
     type,
     position,
     data: {
-      // デフォルト値
+      title: "ノードのデフォルトタイトル",
       myField: "",
     },
   };
@@ -489,9 +503,10 @@ DataSchema の変更は **DB レベルのマイグレーション** で対応す
 |---------|------|
 | `frontend/src/components/Node/base/base-node.tsx` | UIプリミティブ |
 | `frontend/src/components/Node/base/base-schema.ts` | 共通スキーマ・定数 |
+| `frontend/src/components/Node/base/editable-title.tsx` | インライン編集タイトルコンポーネント |
 | `frontend/src/components/Node/base/node-wrapper.tsx` | ノードタイプ登録 |
 | `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | 実行コンテキスト |
 | `frontend/src/components/Node/utils/DynamicValue.ts` | 動的値システム |
-| `frontend/src/components/Node/nodes/` | 全ノード実装（14種類） |
+| `frontend/src/components/Node/nodes/` | 全ノード実装（20種類） |
 | `frontend/src/stores/templateEditorStore.ts` | Zustandストア |
 | `frontend/src/components/TemplateEditor.tsx` | エディタ本体 |
