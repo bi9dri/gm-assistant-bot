@@ -11,6 +11,7 @@ coveragePathIgnorePatterns = [
   "src/components/Node/nodes/**",
   "src/components/Node/base/base-node.tsx",
   "src/components/Node/base/node-wrapper.tsx",
+  "src/components/Node/base/editable-title.tsx",
   "src/components/Node/utils/DynamicValueInput.tsx",
   "src/components/Node/utils/FlagValueSelector.tsx",
   "src/components/Node/utils/PortaledSelect.tsx",

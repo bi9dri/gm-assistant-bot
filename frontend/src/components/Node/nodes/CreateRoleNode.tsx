@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -22,6 +23,7 @@ import {
 import { useNodeExecutionOptional } from "../contexts";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("ロールを作成する"),
   roles: z.array(z.string().nonempty().trim()),
 });
 type CreateRoleNodeData = Node<z.infer<typeof DataSchema>, "CreateRole">;
@@ -37,6 +39,10 @@ export const CreateRoleNode = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleRoleChange = (index: number, newValue: string) => {
     const updatedRoles = [...data.roles];
@@ -110,7 +116,15 @@ export const CreateRoleNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ロールを作成する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "ロールを作成する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="ロールを作成する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {data.roles.map((role, index) => (

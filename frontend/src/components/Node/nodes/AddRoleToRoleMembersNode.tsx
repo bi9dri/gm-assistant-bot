@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
@@ -22,6 +23,7 @@ import { useNodeExecutionOptional } from "../contexts";
 import { ResourceSelector } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("ロールメンバーにロールを付与"),
   memberRoleName: z.string().trim(),
   addRoleName: z.string().trim(),
 });
@@ -37,6 +39,10 @@ export const AddRoleToRoleMembersNode = ({
   const { addToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleMemberRoleNameChange = (newValue: string) => {
     updateNodeData(id, { memberRoleName: newValue });
@@ -123,7 +129,15 @@ export const AddRoleToRoleMembersNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ロールメンバーにロールを付与</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "ロールメンバーにロールを付与"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="ロールメンバーにロールを付与"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent>
         <div className="mb-2">

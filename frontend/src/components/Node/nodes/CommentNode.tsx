@@ -9,11 +9,13 @@ import {
   BaseNodeContent,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
 } from "../base";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("コメント"),
   comment: z.string(),
 });
 
@@ -26,6 +28,10 @@ export const CommentNode = ({
 }: NodeProps<CommentNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
 
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
+
   const handleCommentChange = (newValue: string) => {
     updateNodeData(id, { comment: newValue });
   };
@@ -35,7 +41,15 @@ export const CommentNode = ({
   return (
     <BaseNode width={NODE_TYPE_WIDTHS.Comment} className="border-info/50 bg-info/10">
       <BaseNodeHeader className="bg-info/20">
-        <BaseNodeHeaderTitle>コメント</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "コメント"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="コメント"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent>
         <textarea

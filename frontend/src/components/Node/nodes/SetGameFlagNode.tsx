@@ -13,6 +13,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
@@ -20,6 +21,7 @@ import {
 import { useNodeExecutionOptional } from "../contexts";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("ゲームフラグを設定する"),
   flagKey: z.string().trim(),
   flagValue: z.string().trim(),
 });
@@ -36,6 +38,10 @@ export const SetGameFlagNode = ({
   const { addToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleKeyChange = (newValue: string) => {
     updateNodeData(id, { flagKey: newValue });
@@ -100,7 +106,15 @@ export const SetGameFlagNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ゲームフラグを設定する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "ゲームフラグを設定する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="ゲームフラグを設定する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent>
         <label className="form-control w-full">

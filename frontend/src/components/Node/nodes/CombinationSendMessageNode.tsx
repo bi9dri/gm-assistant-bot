@@ -16,6 +16,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
 } from "../base";
 import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "../base";
@@ -40,6 +41,7 @@ const CombinationEntrySchema = z.object({
 });
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("組み合わせメッセージを送信する"),
   entries: z
     .array(CombinationEntrySchema)
     .min(1)
@@ -85,6 +87,10 @@ export const CombinationSendMessageNode = ({
 
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   // --- Entry-level helpers ---
 
@@ -375,7 +381,17 @@ export const CombinationSendMessageNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>組み合わせメッセージを送信する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>
+            {data.title || "組み合わせメッセージを送信する"}
+          </BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="組み合わせメッセージを送信する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
         <div className="space-y-2">

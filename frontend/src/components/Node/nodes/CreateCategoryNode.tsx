@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_TYPE_WIDTHS,
@@ -28,6 +29,7 @@ import {
 } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("カテゴリを作成する"),
   categoryName: DynamicValueSchema,
 });
 type CreateCategoryNodeData = Node<z.infer<typeof DataSchema>, "CreateCategory">;
@@ -42,6 +44,10 @@ export const CreateCategoryNode = ({
   const { addToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleCategoryNameChange = (newValue: DynamicValue) => {
     updateNodeData(id, { categoryName: newValue });
@@ -96,7 +102,15 @@ export const CreateCategoryNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>カテゴリを作成する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "カテゴリを作成する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="カテゴリを作成する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent>
         <DynamicValueInput

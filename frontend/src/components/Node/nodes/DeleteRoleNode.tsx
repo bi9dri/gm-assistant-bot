@@ -14,6 +14,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
   BaseNodeDataSchema,
   NODE_CONTENT_HEIGHTS,
@@ -23,6 +24,7 @@ import { useNodeExecutionOptional } from "../contexts";
 import { ResourceSelector } from "../utils";
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("ロールを削除する"),
   deleteAll: z.boolean(),
   roleNames: z.array(z.string().trim()),
 });
@@ -39,6 +41,10 @@ export const DeleteRoleNode = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
 
   const handleDeleteAllChange = (checked: boolean) => {
     updateNodeData(id, { deleteAll: checked });
@@ -151,7 +157,15 @@ export const DeleteRoleNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>ロールを削除する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "ロールを削除する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="ロールを削除する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.sm}>
         <div className="form-control mb-2">

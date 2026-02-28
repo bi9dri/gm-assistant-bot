@@ -16,6 +16,7 @@ import {
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
+  EditableTitle,
   cn,
 } from "../base";
 import { BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS } from "../base";
@@ -37,6 +38,7 @@ const ChannelTargetSchema = z.discriminatedUnion("type", [
 type ChannelTarget = z.infer<typeof ChannelTargetSchema>;
 
 export const DataSchema = BaseNodeDataSchema.extend({
+  title: z.string().default("メッセージを送信する"),
   channelTargets: z
     .array(ChannelTargetSchema)
     .min(1)
@@ -63,6 +65,10 @@ export const SendMessageNode = ({
   const dragCounterRefs = useRef<Map<number, number>>(new Map());
 
   const [channels, setChannels] = useState<ChannelData[]>([]);
+
+  const handleTitleChange = (newTitle: string) => {
+    updateNodeData(id, { title: newTitle });
+  };
   const [isLoading, setIsLoading] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
@@ -396,7 +402,15 @@ export const SendMessageNode = ({
       className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
     >
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>メッセージを送信する</BaseNodeHeaderTitle>
+        {isExecuteMode ? (
+          <BaseNodeHeaderTitle>{data.title || "メッセージを送信する"}</BaseNodeHeaderTitle>
+        ) : (
+          <EditableTitle
+            title={data.title}
+            defaultTitle="メッセージを送信する"
+            onTitleChange={handleTitleChange}
+          />
+        )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
