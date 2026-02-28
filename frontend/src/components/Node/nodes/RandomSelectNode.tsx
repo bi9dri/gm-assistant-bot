@@ -65,6 +65,13 @@ export const RandomSelectNode = ({
     updateNodeData(id, { items: updatedItems });
   };
 
+  const handleReset = () => {
+    updateNodeData(id, {
+      selectedItem: undefined,
+      executedAt: undefined,
+    });
+  };
+
   const handleRandomSelect = async () => {
     if (!executionContext) {
       addToast({ message: "実行コンテキストがありません", status: "error" });
@@ -142,6 +149,16 @@ export const RandomSelectNode = ({
         )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
+        {isExecuteMode && data.selectedItem && (
+          <div className="p-3 rounded-box bg-success/20 mb-3">
+            <div className="label">
+              <span className="label-text font-semibold">選択結果</span>
+            </div>
+            <p className="font-bold text-lg">{data.selectedItem}</p>
+            <p className="text-sm text-base-content/60 mt-1">フラグ: {data.resultFlagKey}</p>
+          </div>
+        )}
+
         {!isExecuteMode && (
           <label className="form-control w-full mb-3">
             <div className="label">
@@ -193,27 +210,23 @@ export const RandomSelectNode = ({
             </button>
           )}
         </div>
-
-        {isExecuteMode && data.selectedItem && (
-          <div className="mt-3 p-3 rounded-box bg-success/20">
-            <div className="label">
-              <span className="label-text font-semibold">選択結果</span>
-            </div>
-            <p className="font-bold text-lg">{data.selectedItem}</p>
-            <p className="text-sm text-base-content/60 mt-1">フラグ: {data.resultFlagKey}</p>
-          </div>
-        )}
       </BaseNodeContent>
       <BaseNodeFooter>
-        <button
-          type="button"
-          className="nodrag btn btn-primary"
-          onClick={handleRandomSelect}
-          disabled={!isExecuteMode || isLoading || isExecuted}
-        >
-          {isLoading && <span className="loading loading-spinner loading-sm"></span>}
-          ランダム選択
-        </button>
+        {isExecuteMode && isExecuted ? (
+          <button type="button" className="nodrag btn btn-outline btn-sm" onClick={handleReset}>
+            やり直す
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="nodrag btn btn-primary"
+            onClick={handleRandomSelect}
+            disabled={!isExecuteMode || isLoading}
+          >
+            {isLoading && <span className="loading loading-spinner loading-sm"></span>}
+            ランダム選択
+          </button>
+        )}
       </BaseNodeFooter>
       <BaseHandle id="target-1" type="target" position={Position.Left} />
       <BaseHandle id="source-1" type="source" position={Position.Right} />
