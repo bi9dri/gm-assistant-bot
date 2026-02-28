@@ -162,19 +162,24 @@ describe("addRoleToRoleMembersSchema", () => {
 });
 
 describe("sendMessageSchema", () => {
-  test("rejects empty content", () => {
+  test("rejects empty content without files", () => {
     expect(() => sendMessageSchema.parse({ channelId: "123", content: "" })).toThrow(ZodError);
   });
 
-  test("rejects whitespace-only content", () => {
+  test("rejects whitespace-only content without files", () => {
     expect(() => sendMessageSchema.parse({ channelId: "123", content: "   " })).toThrow(ZodError);
   });
 
-  test("accepts optional files field", () => {
-    const result = sendMessageSchema.parse({
-      channelId: "123",
-      content: "Message",
-    });
+  test("accepts empty content with files", () => {
+    const file = new File(["data"], "test.png", { type: "image/png" });
+    const result = sendMessageSchema.parse({ channelId: "123", content: "", files: file });
+    expect(result.content).toBe("");
+    expect(result.files).toBe(file);
+  });
+
+  test("accepts content without files", () => {
+    const result = sendMessageSchema.parse({ channelId: "123", content: "Message" });
+    expect(result.content).toBe("Message");
     expect(result.files).toBeUndefined();
   });
 });

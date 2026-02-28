@@ -459,9 +459,11 @@ export const CombinationSendMessageNode = ({
                         className="border border-base-content/10 rounded-lg p-3 space-y-2"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-base-content/60">
-                            {message.content.length}/2000
-                          </span>
+                          {!(isExecuteMode && message.content === "") && (
+                            <span className="text-xs text-base-content/60">
+                              {message.content.length}/2000
+                            </span>
+                          )}
                           {!isExecuteMode && entry.messages.length > 1 && (
                             <button
                               type="button"
@@ -474,16 +476,18 @@ export const CombinationSendMessageNode = ({
                           )}
                         </div>
 
-                        <textarea
-                          className="nodrag textarea textarea-bordered w-full h-24"
-                          value={message.content}
-                          onChange={(e) =>
-                            handleContentChange(entryIndex, messageIndex, e.target.value)
-                          }
-                          placeholder="メッセージを入力"
-                          maxLength={2000}
-                          disabled={isExecuteMode || isLoading || isExecuted}
-                        />
+                        {!(isExecuteMode && message.content === "") && (
+                          <textarea
+                            className="nodrag textarea textarea-bordered w-full h-24"
+                            value={message.content}
+                            onChange={(e) =>
+                              handleContentChange(entryIndex, messageIndex, e.target.value)
+                            }
+                            placeholder="メッセージを入力"
+                            maxLength={2000}
+                            disabled={isExecuteMode || isLoading || isExecuted}
+                          />
+                        )}
 
                         <div>
                           <label className="text-xs font-semibold mb-1 block">

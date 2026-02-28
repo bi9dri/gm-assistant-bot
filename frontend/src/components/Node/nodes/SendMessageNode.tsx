@@ -502,9 +502,11 @@ export const SendMessageNode = ({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-base-content/60">
-                    {message.content.length}/2000
-                  </span>
+                  {!(isExecuteMode && message.content === "") && (
+                    <span className="text-xs text-base-content/60">
+                      {message.content.length}/2000
+                    </span>
+                  )}
                 </div>
                 {!isExecuteMode && data.messages.length > 1 && (
                   <button
@@ -518,14 +520,16 @@ export const SendMessageNode = ({
                 )}
               </div>
 
-              <textarea
-                className="nodrag textarea textarea-bordered w-full h-24"
-                value={message.content}
-                onChange={(e) => handleContentChange(messageIndex, e.target.value)}
-                placeholder="メッセージを入力"
-                maxLength={2000}
-                disabled={isExecuteMode || isLoading || isExecuted}
-              />
+              {!(isExecuteMode && message.content === "") && (
+                <textarea
+                  className="nodrag textarea textarea-bordered w-full h-24"
+                  value={message.content}
+                  onChange={(e) => handleContentChange(messageIndex, e.target.value)}
+                  placeholder="メッセージを入力"
+                  maxLength={2000}
+                  disabled={isExecuteMode || isLoading || isExecuted}
+                />
+              )}
 
               <div>
                 <label className="text-xs font-semibold mb-1 block">
