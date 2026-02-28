@@ -44,11 +44,15 @@ export const addRoleToRoleMembersSchema = z.object({
   addRoleId: z.string().trim().nonempty(),
 });
 
-export const sendMessageSchema = z.object({
-  channelId: z.string().trim().nonempty(),
-  content: z.string().trim().nonempty(),
-  files: z.union([z.instanceof(File), z.array(z.instanceof(File)).max(4)]).optional(),
-});
+export const sendMessageSchema = z
+  .object({
+    channelId: z.string().trim().nonempty(),
+    content: z.string().trim().default(""),
+    files: z.union([z.instanceof(File), z.array(z.instanceof(File)).max(4)]).optional(),
+  })
+  .refine((data) => data.content !== "" || data.files !== undefined, {
+    message: "content or files is required",
+  });
 
 export type CreateRoleData = z.infer<typeof createRoleSchema>;
 export type DeleteRoleData = z.infer<typeof deleteRoleSchema>;

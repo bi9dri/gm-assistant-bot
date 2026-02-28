@@ -256,7 +256,7 @@ export async function sendMessage(token: string, data: SendMessageData) {
 
   await rest.post(Routes.channelMessages(data.channelId), {
     body: {
-      content: data.content,
+      content: data.content || undefined,
     },
     files: rawFiles.length > 0 ? rawFiles : undefined,
   });
