@@ -1,4 +1,4 @@
-export { createNodeTypes, LABELED_GROUP_DEFAULTS } from "./base";
+export { createNodeTypes, COMMENT_DEFAULTS, LABELED_GROUP_DEFAULTS } from "./base";
 
 export { NodeExecutionContext, TemplateEditorContext } from "./contexts";
 

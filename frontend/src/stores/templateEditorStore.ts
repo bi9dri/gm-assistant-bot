@@ -25,6 +25,7 @@ import {
   type SetGameFlagDataSchema,
   type ShuffleAssignDataSchema,
   type RandomSelectDataSchema,
+  COMMENT_DEFAULTS,
   LABELED_GROUP_DEFAULTS,
 } from "@/components/Node";
 
@@ -310,7 +311,11 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         id,
         type,
         position,
-        data: { title: "コメント", comment: "" },
+        data: { comment: "" },
+        style: {
+          width: COMMENT_DEFAULTS.width,
+          height: COMMENT_DEFAULTS.height,
+        },
       };
     } else if (type === "ConditionalBranch") {
       const branchId = crypto.randomUUID();
