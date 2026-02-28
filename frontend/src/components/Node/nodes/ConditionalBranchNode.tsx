@@ -21,9 +21,21 @@ import {
   NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
-import { evaluateConditions, type GameFlags, FlagValueSelector, ResourceSelector } from "../utils";
+import {
+  evaluateConditions,
+  type GameFlags,
+  type Branch,
+  type ConditionNode,
+  type RuleNode,
+  type GroupNode,
+  FlagValueSelector,
+  ResourceSelector,
+} from "../utils";
 
-const ConditionSchema = z.object({
+// ---- Zod schemas ----
+
+const RuleNodeSchema = z.object({
+  type: z.literal("rule"),
   id: z.string(),
   flagKey: z.string(),
   operator: z.enum(["equals", "notEquals", "contains", "exists", "notExists"]),
@@ -31,19 +43,53 @@ const ConditionSchema = z.object({
   valueType: z.enum(["literal", "flag"]).default("literal"),
 });
 
+const ConditionNodeSchema: z.ZodType<ConditionNode> = z.union([
+  RuleNodeSchema,
+  z.object({
+    type: z.literal("group"),
+    id: z.string(),
+    logic: z.enum(["and", "or"]),
+    children: z.lazy(() => ConditionNodeSchema.array().min(1)),
+  }),
+]);
+
+const BranchSchema = z.object({
+  id: z.string(),
+  root: ConditionNodeSchema,
+});
+
 export const DataSchema = BaseNodeDataSchema.extend({
   title: z.string().min(1).default("条件分岐"),
-  conditions: z.array(ConditionSchema).min(1),
+  conditions: z.array(BranchSchema).min(1),
   hasDefaultBranch: z.boolean().default(true),
   evaluatedConditionId: z.string().optional(),
 });
 
-type Condition = z.infer<typeof ConditionSchema>;
 type ConditionalBranchNodeData = Node<z.infer<typeof DataSchema>, "ConditionalBranch">;
 
 function generateId(): string {
   return crypto.randomUUID();
 }
+
+// ---- Constants ----
+
+const MAX_NESTING_DEPTH = 4;
+
+const OPERATOR_LABELS = {
+  equals: "等しい",
+  notEquals: "等しくない",
+  contains: "含む",
+  exists: "存在する",
+  notExists: "存在しない",
+};
+
+const GROUP_BORDER_COLORS = ["#60a5fa", "#a78bfa", "#4ade80", "#fb923c"];
+
+function getGroupBorderColor(depth: number): string {
+  return GROUP_BORDER_COLORS[depth % GROUP_BORDER_COLORS.length];
+}
+
+// ---- EditableTitle ----
 
 interface EditableTitleProps {
   title: string;
@@ -118,76 +164,360 @@ function EditableTitle({ title, defaultTitle, onTitleChange }: EditableTitleProp
   );
 }
 
-const OPERATOR_LABELS = {
-  equals: "等しい",
-  notEquals: "等しくない",
-  contains: "含む",
-  exists: "存在する",
-  notExists: "存在しない",
-};
+// ---- RuleEditor ----
 
-interface ConditionEditorProps {
+interface RuleEditorProps {
   nodeId: string;
-  conditions: Condition[];
-  onConditionsChange: (conditions: Condition[]) => void;
+  rule: RuleNode;
+  onChange: (updated: ConditionNode) => void;
+  onRemove?: () => void;
+  onWrapInGroup: () => void;
   disabled?: boolean;
 }
 
-function ConditionEditor({
+function RuleEditor({
   nodeId,
-  conditions,
-  onConditionsChange,
+  rule,
+  onChange,
+  onRemove,
+  onWrapInGroup,
   disabled,
-}: ConditionEditorProps) {
-  const handleFieldChange = (index: number, field: keyof Condition, value: string) => {
-    const updated = [...conditions];
-    updated[index] = { ...updated[index], [field]: value };
-    onConditionsChange(updated);
+}: RuleEditorProps) {
+  const handleFlagKeyChange = (flagKey: string) => {
+    onChange({ ...rule, flagKey, value: "" });
   };
 
-  const handleFlagKeyChange = (index: number, flagKey: string) => {
-    const updated = [...conditions];
-    updated[index] = { ...updated[index], flagKey, value: "" };
-    onConditionsChange(updated);
+  const handleValueTypeChange = (valueType: RuleNode["valueType"]) => {
+    onChange({ ...rule, valueType, value: "" });
   };
 
-  const handleValueTypeChange = (index: number, valueType: Condition["valueType"]) => {
-    const updated = [...conditions];
-    updated[index] = { ...updated[index], valueType, value: "" };
-    onConditionsChange(updated);
+  return (
+    <div className="border border-base-300 rounded p-2 space-y-2">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-medium text-base-content/70">ルール</span>
+        {!disabled && (
+          <div className="flex gap-1">
+            <button
+              type="button"
+              className="nodrag btn btn-ghost btn-xs"
+              onClick={onWrapInGroup}
+              title="グループ化"
+            >
+              グループ化
+            </button>
+            {onRemove && (
+              <button
+                type="button"
+                className="nodrag btn btn-ghost btn-xs btn-square"
+                onClick={onRemove}
+                title="削除"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <ResourceSelector
+        nodeId={nodeId}
+        resourceType="gameFlag"
+        value={rule.flagKey}
+        onChange={handleFlagKeyChange}
+        placeholder="フラグ名 (例: team)"
+        disabled={disabled}
+      />
+
+      <select
+        className="nodrag select select-bordered select-sm w-full"
+        value={rule.operator}
+        onChange={(e) => onChange({ ...rule, operator: e.target.value as RuleNode["operator"] })}
+        disabled={disabled}
+      >
+        {Object.entries(OPERATOR_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      {rule.operator !== "exists" && rule.operator !== "notExists" && (
+        <>
+          <div className="flex gap-3 text-sm">
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                className="nodrag radio radio-xs"
+                name={`valueType-${rule.id}`}
+                value="literal"
+                checked={rule.valueType !== "flag"}
+                onChange={() => handleValueTypeChange("literal")}
+                disabled={disabled}
+              />
+              固定値
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                className="nodrag radio radio-xs"
+                name={`valueType-${rule.id}`}
+                value="flag"
+                checked={rule.valueType === "flag"}
+                onChange={() => handleValueTypeChange("flag")}
+                disabled={disabled}
+              />
+              フラグの値
+            </label>
+          </div>
+          {rule.valueType === "flag" ? (
+            <ResourceSelector
+              nodeId={nodeId}
+              resourceType="gameFlag"
+              value={rule.value}
+              onChange={(v) => onChange({ ...rule, value: v })}
+              placeholder="比較するフラグ名"
+              disabled={disabled}
+            />
+          ) : (
+            <FlagValueSelector
+              nodeId={nodeId}
+              flagKey={rule.flagKey}
+              value={rule.value}
+              onChange={(v) => onChange({ ...rule, value: v })}
+              placeholder="値"
+              disabled={disabled}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---- ConditionNodeEditor (forward declaration for mutual recursion) ----
+
+interface ConditionNodeEditorProps {
+  nodeId: string;
+  node: ConditionNode;
+  onChange: (updated: ConditionNode) => void;
+  onRemove?: () => void;
+  disabled?: boolean;
+  depth: number;
+}
+
+function ConditionNodeEditor({
+  nodeId,
+  node,
+  onChange,
+  onRemove,
+  disabled,
+  depth,
+}: ConditionNodeEditorProps) {
+  if (node.type === "rule") {
+    return (
+      <RuleEditor
+        nodeId={nodeId}
+        rule={node}
+        onChange={onChange}
+        onRemove={onRemove}
+        onWrapInGroup={() => {
+          onChange({
+            type: "group",
+            id: generateId(),
+            logic: "and",
+            children: [node],
+          });
+        }}
+        disabled={disabled}
+      />
+    );
+  }
+
+  return (
+    <GroupEditor
+      nodeId={nodeId}
+      group={node}
+      onChange={onChange}
+      onRemove={onRemove}
+      disabled={disabled}
+      depth={depth}
+    />
+  );
+}
+
+// ---- GroupEditor ----
+
+interface GroupEditorProps {
+  nodeId: string;
+  group: GroupNode;
+  onChange: (updated: ConditionNode) => void;
+  onRemove?: () => void;
+  disabled?: boolean;
+  depth: number;
+}
+
+function GroupEditor({ nodeId, group, onChange, onRemove, disabled, depth }: GroupEditorProps) {
+  const handleChildChange = (index: number, updated: ConditionNode) => {
+    const newChildren = [...group.children];
+    newChildren[index] = updated;
+    onChange({ ...group, children: newChildren });
+  };
+
+  const handleChildRemove = (index: number) => {
+    const newChildren = group.children.filter((_, i) => i !== index);
+    if (newChildren.length === 1) {
+      // Auto-unwrap: グループを解除して残り1つの子で置き換える
+      onChange(newChildren[0]);
+    } else {
+      onChange({ ...group, children: newChildren });
+    }
+  };
+
+  const handleAddRule = () => {
+    const newRule: RuleNode = {
+      type: "rule",
+      id: generateId(),
+      flagKey: "",
+      operator: "equals",
+      value: "",
+      valueType: "literal",
+    };
+    onChange({ ...group, children: [...group.children, newRule] });
+  };
+
+  const handleAddGroup = () => {
+    const newGroup: GroupNode = {
+      type: "group",
+      id: generateId(),
+      logic: "and",
+      children: [
+        {
+          type: "rule",
+          id: generateId(),
+          flagKey: "",
+          operator: "equals",
+          value: "",
+          valueType: "literal",
+        },
+      ],
+    };
+    onChange({ ...group, children: [...group.children, newGroup] });
+  };
+
+  const canRemoveChild = group.children.length > 1;
+  const borderColor = getGroupBorderColor(depth);
+
+  return (
+    <div className="border rounded p-2 space-y-2" style={{ borderColor }}>
+      <div className="flex items-center justify-between">
+        <select
+          className="nodrag select select-bordered select-xs"
+          value={group.logic}
+          onChange={(e) => onChange({ ...group, logic: e.target.value as "and" | "or" })}
+          disabled={disabled}
+        >
+          <option value="and">AND (全て満たす)</option>
+          <option value="or">OR (いずれか満たす)</option>
+        </select>
+        {onRemove && !disabled && (
+          <button
+            type="button"
+            className="nodrag btn btn-ghost btn-xs btn-square"
+            onClick={onRemove}
+            title="グループを削除"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2 pl-3 border-l-2" style={{ borderLeftColor: borderColor }}>
+        {group.children.map((child, index) => (
+          <ConditionNodeEditor
+            key={child.id}
+            nodeId={nodeId}
+            node={child}
+            onChange={(updated) => handleChildChange(index, updated)}
+            onRemove={canRemoveChild ? () => handleChildRemove(index) : undefined}
+            disabled={disabled}
+            depth={depth + 1}
+          />
+        ))}
+      </div>
+
+      {!disabled && (
+        <div className="flex gap-2">
+          <button type="button" className="nodrag btn btn-ghost btn-xs" onClick={handleAddRule}>
+            + ルール
+          </button>
+          {depth < MAX_NESTING_DEPTH && (
+            <button type="button" className="nodrag btn btn-ghost btn-xs" onClick={handleAddGroup}>
+              + グループ
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- BranchEditor ----
+
+interface BranchEditorProps {
+  nodeId: string;
+  branches: Branch[];
+  onBranchesChange: (branches: Branch[]) => void;
+  disabled?: boolean;
+}
+
+function BranchEditor({ nodeId, branches, onBranchesChange, disabled }: BranchEditorProps) {
+  const handleRootChange = (index: number, updated: ConditionNode) => {
+    const newBranches = [...branches];
+    newBranches[index] = { ...newBranches[index], root: updated };
+    onBranchesChange(newBranches);
   };
 
   const handleAdd = () => {
-    onConditionsChange([
-      ...conditions,
-      { id: generateId(), flagKey: "", operator: "equals", value: "", valueType: "literal" },
+    onBranchesChange([
+      ...branches,
+      {
+        id: generateId(),
+        root: {
+          type: "rule",
+          id: generateId(),
+          flagKey: "",
+          operator: "equals",
+          value: "",
+          valueType: "literal",
+        },
+      },
     ]);
   };
 
   const handleRemove = (index: number) => {
-    if (conditions.length <= 1) return;
-    onConditionsChange(conditions.filter((_, i) => i !== index));
+    if (branches.length <= 1) return;
+    onBranchesChange(branches.filter((_, i) => i !== index));
   };
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
-    const updated = [...conditions];
+    const updated = [...branches];
     [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
-    onConditionsChange(updated);
+    onBranchesChange(updated);
   };
 
   const handleMoveDown = (index: number) => {
-    if (index === conditions.length - 1) return;
-    const updated = [...conditions];
+    if (index === branches.length - 1) return;
+    const updated = [...branches];
     [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
-    onConditionsChange(updated);
+    onBranchesChange(updated);
   };
 
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium text-base-content/70">条件リスト</div>
-      {conditions.map((condition, index) => (
-        <div key={condition.id} className="border border-base-300 rounded p-2 space-y-2">
+      {branches.map((branch, index) => (
+        <div key={branch.id} className="border border-base-300 rounded p-2 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-base-content/70">条件 #{index + 1}</span>
             {!disabled && (
@@ -205,7 +535,7 @@ function ConditionEditor({
                   type="button"
                   className="nodrag btn btn-ghost btn-xs btn-square"
                   onClick={() => handleMoveDown(index)}
-                  disabled={index === conditions.length - 1}
+                  disabled={index === branches.length - 1}
                   title="下へ"
                 >
                   <HiChevronDown />
@@ -214,7 +544,7 @@ function ConditionEditor({
                   type="button"
                   className="nodrag btn btn-ghost btn-xs btn-square"
                   onClick={() => handleRemove(index)}
-                  disabled={conditions.length <= 1}
+                  disabled={branches.length <= 1}
                   title="削除"
                 >
                   ×
@@ -223,79 +553,13 @@ function ConditionEditor({
             )}
           </div>
 
-          <ResourceSelector
+          <ConditionNodeEditor
             nodeId={nodeId}
-            resourceType="gameFlag"
-            value={condition.flagKey}
-            onChange={(v) => handleFlagKeyChange(index, v)}
-            placeholder="フラグ名 (例: team)"
+            node={branch.root}
+            onChange={(updated) => handleRootChange(index, updated)}
             disabled={disabled}
+            depth={0}
           />
-
-          <select
-            className="nodrag select select-bordered select-sm w-full"
-            value={condition.operator}
-            onChange={(e) =>
-              handleFieldChange(index, "operator", e.target.value as Condition["operator"])
-            }
-            disabled={disabled}
-          >
-            {Object.entries(OPERATOR_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-
-          {condition.operator !== "exists" && condition.operator !== "notExists" && (
-            <>
-              <div className="flex gap-3 text-sm">
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    className="nodrag radio radio-xs"
-                    name={`valueType-${condition.id}`}
-                    value="literal"
-                    checked={condition.valueType !== "flag"}
-                    onChange={() => handleValueTypeChange(index, "literal")}
-                    disabled={disabled}
-                  />
-                  固定値
-                </label>
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    className="nodrag radio radio-xs"
-                    name={`valueType-${condition.id}`}
-                    value="flag"
-                    checked={condition.valueType === "flag"}
-                    onChange={() => handleValueTypeChange(index, "flag")}
-                    disabled={disabled}
-                  />
-                  フラグの値
-                </label>
-              </div>
-              {condition.valueType === "flag" ? (
-                <ResourceSelector
-                  nodeId={nodeId}
-                  resourceType="gameFlag"
-                  value={condition.value}
-                  onChange={(v) => handleFieldChange(index, "value", v)}
-                  placeholder="比較するフラグ名"
-                  disabled={disabled}
-                />
-              ) : (
-                <FlagValueSelector
-                  nodeId={nodeId}
-                  flagKey={condition.flagKey}
-                  value={condition.value}
-                  onChange={(v) => handleFieldChange(index, "value", v)}
-                  placeholder="値"
-                  disabled={disabled}
-                />
-              )}
-            </>
-          )}
         </div>
       ))}
       {!disabled && (
@@ -307,20 +571,61 @@ function ConditionEditor({
   );
 }
 
-interface ConditionSummaryProps {
-  conditions: Condition[];
+// ---- ConditionNodeSummary ----
+
+interface ConditionNodeSummaryProps {
+  node: ConditionNode;
+  depth?: number;
+}
+
+function ConditionNodeSummary({ node, depth = 0 }: ConditionNodeSummaryProps) {
+  if (node.type === "rule") {
+    return (
+      <div className="text-sm">
+        <span className="font-mono">{node.flagKey || "(未設定)"}</span>
+        <span className="mx-2 text-base-content/50">{OPERATOR_LABELS[node.operator]}</span>
+        {node.operator !== "exists" && node.operator !== "notExists" && (
+          <span className="font-mono">
+            {node.valueType === "flag" && (
+              <span className="text-base-content/50 not-italic">フラグ:</span>
+            )}
+            {node.value || "(未設定)"}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="pl-3 border-l-2" style={{ borderLeftColor: getGroupBorderColor(depth) }}>
+      <div className="text-xs font-medium text-base-content/60 mb-1">
+        {node.logic === "and" ? "AND (全て)" : "OR (いずれか)"}
+      </div>
+      <div className="space-y-1">
+        {node.children.map((child) => (
+          <ConditionNodeSummary key={child.id} node={child} depth={depth + 1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- BranchSummary ----
+
+interface BranchSummaryProps {
+  branches: Branch[];
   evaluatedConditionId?: string;
 }
 
-function ConditionSummary({ conditions, evaluatedConditionId }: ConditionSummaryProps) {
+function BranchSummary({ branches, evaluatedConditionId }: BranchSummaryProps) {
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium text-base-content/70">条件リスト</div>
-      {conditions.map((condition, index) => {
-        const isEvaluated = evaluatedConditionId === condition.id;
+      {branches.map((branch, index) => {
+        const isEvaluated = evaluatedConditionId === branch.id;
         return (
           <div
-            key={condition.id}
+            key={branch.id}
             className={cn(
               "border rounded p-2",
               isEvaluated
@@ -332,26 +637,15 @@ function ConditionSummary({ conditions, evaluatedConditionId }: ConditionSummary
               条件 #{index + 1}
               {isEvaluated && <span className="ml-2 text-success">✓ マッチ</span>}
             </div>
-            <div className="text-sm">
-              <span className="font-mono">{condition.flagKey || "(未設定)"}</span>
-              <span className="mx-2 text-base-content/50">
-                {OPERATOR_LABELS[condition.operator]}
-              </span>
-              {condition.operator !== "exists" && condition.operator !== "notExists" && (
-                <span className="font-mono">
-                  {condition.valueType === "flag" && (
-                    <span className="text-base-content/50 not-italic">フラグ:</span>
-                  )}
-                  {condition.value || "(未設定)"}
-                </span>
-              )}
-            </div>
+            <ConditionNodeSummary node={branch.root} />
           </div>
         );
       })}
     </div>
   );
 }
+
+// ---- ConditionalBranchNode ----
 
 export const ConditionalBranchNode = ({
   id,
@@ -375,7 +669,7 @@ export const ConditionalBranchNode = ({
     updateNodeData(id, { title: newTitle });
   };
 
-  const handleConditionsChange = (conditions: Condition[]) => {
+  const handleConditionsChange = (conditions: Branch[]) => {
     const oldConditions = data.conditions;
     const removedIds = oldConditions
       .filter((old) => !conditions.find((c) => c.id === old.id))
@@ -492,10 +786,10 @@ export const ConditionalBranchNode = ({
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         {!isExecuteMode && (
           <>
-            <ConditionEditor
+            <BranchEditor
               nodeId={id}
-              conditions={data.conditions}
-              onConditionsChange={handleConditionsChange}
+              branches={data.conditions}
+              onBranchesChange={handleConditionsChange}
               disabled={isLoading}
             />
 
@@ -515,8 +809,8 @@ export const ConditionalBranchNode = ({
         )}
 
         {isExecuteMode && (
-          <ConditionSummary
-            conditions={data.conditions}
+          <BranchSummary
+            branches={data.conditions}
             evaluatedConditionId={
               data.evaluatedConditionId === "default" ? undefined : data.evaluatedConditionId
             }
@@ -538,10 +832,10 @@ export const ConditionalBranchNode = ({
 
       <BaseHandle id="target-1" type="target" position={Position.Left} />
 
-      {data.conditions.map((condition, index) => (
+      {data.conditions.map((branch, index) => (
         <LabeledHandle
-          key={condition.id}
-          id={`source-cond-${condition.id}`}
+          key={branch.id}
+          id={`source-cond-${branch.id}`}
           type="source"
           position={Position.Right}
           title={`#${index + 1}`}
