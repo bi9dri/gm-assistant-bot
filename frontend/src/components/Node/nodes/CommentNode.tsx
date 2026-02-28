@@ -1,21 +1,13 @@
 import type { Node, NodeProps } from "@xyflow/react";
 
+import { NodeResizer } from "@xyflow/react";
 import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
-import {
-  BaseNode,
-  BaseNodeContent,
-  BaseNodeHeader,
-  BaseNodeHeaderTitle,
-  EditableTitle,
-  BaseNodeDataSchema,
-  NODE_TYPE_WIDTHS,
-} from "../base";
+import { BaseNode, BaseNodeContent, BaseNodeDataSchema, COMMENT_DEFAULTS } from "../base";
 
 export const DataSchema = BaseNodeDataSchema.extend({
-  title: z.string().default("コメント"),
   comment: z.string(),
 });
 
@@ -24,43 +16,39 @@ type CommentNodeData = Node<z.infer<typeof DataSchema>, "Comment">;
 export const CommentNode = ({
   id,
   data,
+  selected,
   mode = "edit",
 }: NodeProps<CommentNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
-
-  const handleTitleChange = (newTitle: string) => {
-    updateNodeData(id, { title: newTitle });
-  };
 
   const handleCommentChange = (newValue: string) => {
     updateNodeData(id, { comment: newValue });
   };
 
-  const isExecuteMode = mode === "execute";
+  const isEditMode = mode === "edit";
 
   return (
-    <BaseNode width={NODE_TYPE_WIDTHS.Comment} className="border-info/50 bg-info/10">
-      <BaseNodeHeader className="bg-info/20">
-        {isExecuteMode ? (
-          <BaseNodeHeaderTitle>{data.title || "コメント"}</BaseNodeHeaderTitle>
-        ) : (
-          <EditableTitle
-            title={data.title}
-            defaultTitle="コメント"
-            onTitleChange={handleTitleChange}
-          />
-        )}
-      </BaseNodeHeader>
-      <BaseNodeContent>
-        <textarea
-          className="nodrag textarea textarea-bordered w-full resize-none"
-          rows={4}
-          value={data.comment}
-          onChange={(evt) => handleCommentChange(evt.target.value)}
-          placeholder="ワークフローの補足情報を入力..."
-          readOnly={isExecuteMode}
+    <>
+      {isEditMode && (
+        <NodeResizer
+          minWidth={COMMENT_DEFAULTS.minWidth}
+          minHeight={COMMENT_DEFAULTS.minHeight}
+          isVisible={selected}
+          lineClassName="border-info"
+          handleClassName="!h-3 !w-3 !bg-info !border-info"
         />
-      </BaseNodeContent>
-    </BaseNode>
+      )}
+      <BaseNode className="h-full border-info/50 bg-info/10">
+        <BaseNodeContent className="h-full">
+          <textarea
+            className="nodrag textarea textarea-bordered h-full w-full resize-none"
+            value={data.comment}
+            onChange={(evt) => handleCommentChange(evt.target.value)}
+            placeholder="ワークフローの補足情報を入力..."
+            readOnly={!isEditMode}
+          />
+        </BaseNodeContent>
+      </BaseNode>
+    </>
   );
 };

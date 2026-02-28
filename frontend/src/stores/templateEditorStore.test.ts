@@ -123,7 +123,10 @@ describe("templateEditorStore", () => {
 
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("Comment");
-      expect(node.data).toEqual({ title: "コメント", comment: "" });
+      expect(node.data).toEqual({ comment: "" });
+      expect(node.style).toBeDefined();
+      expect(node.style?.width).toBeGreaterThan(0);
+      expect(node.style?.height).toBeGreaterThan(0);
     });
 
     test("RecordCombinationノードは正しい初期データを持つ", () => {
