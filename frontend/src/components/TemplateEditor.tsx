@@ -19,6 +19,7 @@ import type { DiscordBotData } from "@/db";
 
 import { createNodeTypes, NodeExecutionContext, TemplateEditorContext } from "@/components/Node";
 import { SessionResourcePanel } from "@/components/SessionResourcePanel";
+import { useFileExistenceValidation } from "@/hooks/useFileExistenceValidation";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 
 interface Props {
@@ -127,6 +128,8 @@ const TemplateEditorContent = ({
     setViewport,
     initialize,
   } = useTemplateEditorStore();
+
+  useFileExistenceValidation();
 
   const { screenToFlowPosition } = useReactFlow();
   const nodeTypes = useMemo(() => createNodeTypes(mode), [mode]);

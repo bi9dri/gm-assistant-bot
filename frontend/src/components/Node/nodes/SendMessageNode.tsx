@@ -57,6 +57,7 @@ export const SendMessageNode = ({
   mode = "edit",
 }: NodeProps<SendMessageNodeData> & { mode?: "edit" | "execute" }) => {
   const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
+  const missingFilePaths = useTemplateEditorStore((state) => state.missingFilePaths);
   const templateEditorContext = useTemplateEditorContextOptional();
   const executionContext = useNodeExecutionOptional();
   const { addToast } = useToast();
@@ -395,11 +396,18 @@ export const SendMessageNode = ({
 
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
+  const hasMissingFiles = data.messages.some((m) =>
+    m.attachments.some((a) => missingFilePaths.has(a.filePath)),
+  );
 
   return (
     <BaseNode
       width={NODE_TYPE_WIDTHS.SendMessage}
-      className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
+      className={cn(
+        "bg-base-300",
+        data.executedAt && "border-success bg-success/10",
+        hasMissingFiles && "border-error bg-error/10",
+      )}
     >
       <BaseNodeHeader>
         {isExecuteMode ? (
@@ -541,9 +549,17 @@ export const SendMessageNode = ({
                     {message.attachments.map((attachment, fileIndex) => (
                       <div
                         key={`${id}-message-${messageIndex}-attachment-${fileIndex}`}
-                        className="flex items-center gap-2 bg-base-200 rounded px-2 py-1"
+                        className={cn(
+                          "flex items-center gap-2 rounded px-2 py-1",
+                          missingFilePaths.has(attachment.filePath)
+                            ? "bg-error/20 border border-error/30"
+                            : "bg-base-200",
+                        )}
                       >
                         <span className="text-sm truncate flex-1">{attachment.fileName}</span>
+                        {missingFilePaths.has(attachment.filePath) && (
+                          <span className="badge badge-error badge-xs text-xs">欠落</span>
+                        )}
                         <span className="text-xs text-base-content/60">
                           {formatFileSize(attachment.fileSize)}
                         </span>
