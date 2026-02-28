@@ -31,6 +31,10 @@ const SendMessageNodeV1Data = z.object({
   channelName: z.string(),
 });
 
+const SendMessageNodeV2Data = z.object({
+  channelNames: z.array(z.string()),
+});
+
 const CreateCategoryNodeV1Data = z.object({
   categoryName: z.string(),
 });
@@ -85,6 +89,48 @@ export class DB extends Dexie {
                 type: "literal",
                 value: v1.data.categoryName,
               };
+              modified = true;
+            }
+          }
+        }
+
+        return modified ? JSON.stringify(parsed) : reactFlowDataStr;
+      };
+
+      await tx
+        .table("Template")
+        .toCollection()
+        .modify((template) => {
+          template.reactFlowData = migrateReactFlowData(template.reactFlowData);
+        });
+
+      await tx
+        .table("GameSession")
+        .toCollection()
+        .modify((session) => {
+          session.reactFlowData = migrateReactFlowData(session.reactFlowData);
+        });
+    });
+
+    this.version(3).upgrade(async (tx) => {
+      const migrateReactFlowData = (reactFlowDataStr: string): string => {
+        let parsed: z.infer<typeof ReactFlowDataMigrationSchema>;
+        try {
+          parsed = ReactFlowDataMigrationSchema.parse(JSON.parse(reactFlowDataStr));
+        } catch {
+          return reactFlowDataStr;
+        }
+
+        let modified = false;
+        for (const node of parsed.nodes) {
+          if (node.type === "SendMessage" && node.data) {
+            const v2 = SendMessageNodeV2Data.safeParse(node.data);
+            if (v2.success) {
+              node.data.channelTargets = v2.data.channelNames.map((name) => ({
+                type: "channelName",
+                value: name,
+              }));
+              delete node.data.channelNames;
               modified = true;
             }
           }

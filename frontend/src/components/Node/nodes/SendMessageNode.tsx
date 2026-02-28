@@ -36,7 +36,7 @@ const ChannelTargetSchema = z.discriminatedUnion("type", [
 
 type ChannelTarget = z.infer<typeof ChannelTargetSchema>;
 
-const innerSchema = BaseNodeDataSchema.extend({
+export const DataSchema = BaseNodeDataSchema.extend({
   channelTargets: z
     .array(ChannelTargetSchema)
     .min(1)
@@ -47,18 +47,7 @@ const innerSchema = BaseNodeDataSchema.extend({
     .default([{ content: "", attachments: [] }]),
 });
 
-export const DataSchema = z.preprocess((val) => {
-  if (val && typeof val === "object" && "channelNames" in val && !("channelTargets" in val)) {
-    const { channelNames, ...rest } = val as { channelNames: string[]; [key: string]: unknown };
-    return {
-      ...rest,
-      channelTargets: channelNames.map((v) => ({ type: "channelName", value: v })),
-    };
-  }
-  return val;
-}, innerSchema);
-
-type SendMessageNodeData = Node<z.infer<typeof innerSchema>, "SendMessage">;
+type SendMessageNodeData = Node<z.infer<typeof DataSchema>, "SendMessage">;
 
 export const SendMessageNode = ({
   id,
