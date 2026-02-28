@@ -23,6 +23,7 @@ import {
 import { useNodeExecutionOptional } from "../contexts";
 import {
   evaluateConditions,
+  conditionToInfix,
   type GameFlags,
   type Branch,
   type ConditionNode,
@@ -832,18 +833,26 @@ export const ConditionalBranchNode = ({
 
       <BaseHandle id="target-1" type="target" position={Position.Left} />
 
-      {data.conditions.map((branch, index) => (
-        <LabeledHandle
-          key={branch.id}
-          id={`source-cond-${branch.id}`}
-          type="source"
-          position={Position.Right}
-          title={`#${index + 1}`}
-          style={{
-            top: `${((index + 1) / (data.conditions.length + (data.hasDefaultBranch ? 2 : 1))) * 100}%`,
-          }}
-        />
-      ))}
+      {data.conditions.map((branch, index) => {
+        const infix = conditionToInfix(branch.root);
+        const fullLabel = `#${index + 1} ${infix}`;
+        const displayLabel =
+          infix.length > 24 ? `#${index + 1} ${infix.slice(0, 24)}...` : fullLabel;
+        const hasTooltip = infix.length > 24;
+        return (
+          <LabeledHandle
+            key={branch.id}
+            id={`source-cond-${branch.id}`}
+            type="source"
+            position={Position.Right}
+            title={displayLabel}
+            tooltip={hasTooltip ? fullLabel : undefined}
+            style={{
+              top: `${((index + 1) / (data.conditions.length + (data.hasDefaultBranch ? 2 : 1))) * 100}%`,
+            }}
+          />
+        );
+      })}
 
       {data.hasDefaultBranch && (
         <LabeledHandle

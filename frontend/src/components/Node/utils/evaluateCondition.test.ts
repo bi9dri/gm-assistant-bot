@@ -2,7 +2,12 @@ import { describe, expect, it } from "bun:test";
 
 import type { RuleNode, ConditionNode, Branch } from "./evaluateCondition";
 
-import { evaluateRule, evaluateConditionNode, evaluateConditions } from "./evaluateCondition";
+import {
+  evaluateRule,
+  evaluateConditionNode,
+  evaluateConditions,
+  conditionToInfix,
+} from "./evaluateCondition";
 
 describe("evaluateRule", () => {
   const gameFlags = {
@@ -555,5 +560,127 @@ describe("evaluateConditions", () => {
       },
     ];
     expect(evaluateConditions(branches, gameFlags)).toBe("complex");
+  });
+});
+
+describe("conditionToInfix", () => {
+  describe("RuleNode", () => {
+    it("equals", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "hp",
+        operator: "equals",
+        value: "0",
+      };
+      expect(conditionToInfix(node)).toBe('hp eq "0"');
+    });
+
+    it("notEquals", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "hp",
+        operator: "notEquals",
+        value: "dead",
+      };
+      expect(conditionToInfix(node)).toBe('hp neq "dead"');
+    });
+
+    it("contains", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "name",
+        operator: "contains",
+        value: "abc",
+      };
+      expect(conditionToInfix(node)).toBe('name has "abc"');
+    });
+
+    it("exists", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "item",
+        operator: "exists",
+        value: "",
+      };
+      expect(conditionToInfix(node)).toBe("item exists");
+    });
+
+    it("notExists", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "weapon",
+        operator: "notExists",
+        value: "",
+      };
+      expect(conditionToInfix(node)).toBe("weapon !exists");
+    });
+
+    it("flag reference uses $ prefix", () => {
+      const node: ConditionNode = {
+        type: "rule",
+        id: "1",
+        flagKey: "team",
+        operator: "equals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(conditionToInfix(node)).toBe("team eq $alias");
+    });
+  });
+
+  describe("GroupNode (top-level, no outer parentheses)", () => {
+    it("AND group", () => {
+      const node: ConditionNode = {
+        type: "group",
+        id: "g1",
+        logic: "and",
+        children: [
+          { type: "rule", id: "r1", flagKey: "status", operator: "equals", value: "alive" },
+          { type: "rule", id: "r2", flagKey: "weapon", operator: "exists", value: "" },
+        ],
+      };
+      expect(conditionToInfix(node)).toBe('status eq "alive" AND weapon exists');
+    });
+
+    it("OR group", () => {
+      const node: ConditionNode = {
+        type: "group",
+        id: "g1",
+        logic: "or",
+        children: [
+          { type: "rule", id: "r1", flagKey: "item", operator: "exists", value: "" },
+          { type: "rule", id: "r2", flagKey: "name", operator: "contains", value: "abc" },
+        ],
+      };
+      expect(conditionToInfix(node)).toBe('item exists OR name has "abc"');
+    });
+  });
+
+  describe("Nested GroupNode (with parentheses)", () => {
+    it("AND with nested OR", () => {
+      const node: ConditionNode = {
+        type: "group",
+        id: "g1",
+        logic: "and",
+        children: [
+          { type: "rule", id: "r1", flagKey: "hp", operator: "notEquals", value: "dead" },
+          {
+            type: "group",
+            id: "g2",
+            logic: "or",
+            children: [
+              { type: "rule", id: "r2", flagKey: "item", operator: "exists", value: "" },
+              { type: "rule", id: "r3", flagKey: "name", operator: "contains", value: "abc" },
+            ],
+          },
+        ],
+      };
+      expect(conditionToInfix(node)).toBe('hp neq "dead" AND (item exists OR name has "abc")');
+    });
   });
 });

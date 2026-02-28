@@ -26,6 +26,7 @@ export { fisherYatesShuffle } from "./shuffle";
 
 export {
   evaluateConditions,
+  conditionToInfix,
   type GameFlags,
   type Branch,
   type ConditionNode,

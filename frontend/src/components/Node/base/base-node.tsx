@@ -120,11 +120,13 @@ export function LabeledHandle({
   labelClassName,
   handleClassName,
   title,
+  tooltip,
   position,
   ...props
 }: HandleProps &
   ComponentProps<"div"> & {
     title: string;
+    tooltip?: string;
     handleClassName?: string;
     labelClassName?: string;
   }) {
@@ -132,7 +134,7 @@ export function LabeledHandle({
 
   return (
     <div
-      title={title}
+      title={tooltip ?? title}
       className={cn("relative flex items-center", flexDirections[position], className)}
       ref={ref}
     >
