@@ -73,7 +73,7 @@ describe("templateEditorStore", () => {
       const node = useTemplateEditorStore.getState().nodes[0];
       expect(node.type).toBe("SendMessage");
       expect(node.data).toEqual({
-        channelNames: [""],
+        channelTargets: [{ type: "channelName", value: "" }],
         messages: [{ content: "", attachments: [] }],
       });
     });
