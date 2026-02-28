@@ -61,3 +61,25 @@ export function evaluateConditions(branches: Branch[], gameFlags: GameFlags): st
   }
   return null;
 }
+
+const OPERATOR_KEYWORDS: Record<RuleNode["operator"], string> = {
+  equals: "eq",
+  notEquals: "neq",
+  contains: "has",
+  exists: "exists",
+  notExists: "!exists",
+};
+
+export function conditionToInfix(node: ConditionNode, nested = false): string {
+  if (node.type === "rule") {
+    const op = OPERATOR_KEYWORDS[node.operator];
+    if (node.operator === "exists" || node.operator === "notExists") {
+      return `${node.flagKey} ${op}`;
+    }
+    const val = node.valueType === "flag" ? `$${node.value}` : `"${node.value}"`;
+    return `${node.flagKey} ${op} ${val}`;
+  }
+  const logic = node.logic.toUpperCase();
+  const children = node.children.map((c) => conditionToInfix(c, true)).join(` ${logic} `);
+  return nested ? `(${children})` : children;
+}
