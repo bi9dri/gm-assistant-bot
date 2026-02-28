@@ -6,6 +6,7 @@ import {
   evaluateRule,
   evaluateConditionNode,
   evaluateConditions,
+  evaluateAllConditions,
   conditionToInfix,
 } from "./evaluateCondition";
 
@@ -560,6 +561,49 @@ describe("evaluateConditions", () => {
       },
     ];
     expect(evaluateConditions(branches, gameFlags)).toBe("complex");
+  });
+});
+
+describe("evaluateAllConditions", () => {
+  const gameFlags = {
+    team: "A",
+    role: "detective",
+  };
+
+  it("returns all matching branch ids", () => {
+    const branches: Branch[] = [
+      {
+        id: "1",
+        root: { type: "rule", id: "r1", flagKey: "team", operator: "equals", value: "B" },
+      },
+      {
+        id: "2",
+        root: { type: "rule", id: "r2", flagKey: "role", operator: "equals", value: "detective" },
+      },
+      {
+        id: "3",
+        root: { type: "rule", id: "r3", flagKey: "team", operator: "equals", value: "A" },
+      },
+    ];
+    expect(evaluateAllConditions(branches, gameFlags)).toEqual(["2", "3"]);
+  });
+
+  it("returns empty array when no branches match", () => {
+    const branches: Branch[] = [
+      {
+        id: "1",
+        root: { type: "rule", id: "r1", flagKey: "team", operator: "equals", value: "B" },
+      },
+      {
+        id: "2",
+        root: { type: "rule", id: "r2", flagKey: "role", operator: "equals", value: "admin" },
+      },
+    ];
+    expect(evaluateAllConditions(branches, gameFlags)).toEqual([]);
+  });
+
+  it("returns empty array for empty branches input", () => {
+    expect(evaluateAllConditions([], gameFlags)).toEqual([]);
   });
 });
 

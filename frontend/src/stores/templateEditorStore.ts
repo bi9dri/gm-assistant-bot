@@ -343,6 +343,7 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
             },
           ],
           hasDefaultBranch: true,
+          matchMode: "first",
         },
       };
     } else if (type === "RecordCombination") {
