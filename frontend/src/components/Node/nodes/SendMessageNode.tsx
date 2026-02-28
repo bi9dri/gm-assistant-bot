@@ -460,7 +460,7 @@ export const SendMessageNode = ({
                         resourceType="gameFlag"
                         value={target.value}
                         onChange={(newKey) => handleChannelTargetChange(index, newKey)}
-                        placeholder="フラグキー"
+                        placeholder="フラグ名"
                         disabled={isExecuteMode || isLoading || isExecuted}
                       />
                     )}

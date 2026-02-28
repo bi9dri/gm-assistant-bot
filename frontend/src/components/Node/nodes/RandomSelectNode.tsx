@@ -80,7 +80,7 @@ export const RandomSelectNode = ({
     }
 
     if (data.resultFlagKey.trim() === "") {
-      addToast({ message: "フラグキーを入力してください", status: "warning" });
+      addToast({ message: "フラグ名を入力してください", status: "warning" });
       return;
     }
 
@@ -145,7 +145,7 @@ export const RandomSelectNode = ({
         {!isExecuteMode && (
           <label className="form-control w-full mb-3">
             <div className="label">
-              <span className="label-text">フラグキー</span>
+              <span className="label-text">フラグ名</span>
             </div>
             <input
               type="text"
