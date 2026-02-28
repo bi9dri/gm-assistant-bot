@@ -176,6 +176,18 @@ describe("templateEditorStore", () => {
       });
     });
 
+    test("RandomSelectノードは正しい初期データを持つ", () => {
+      useTemplateEditorStore.getState().addNode("RandomSelect", position);
+
+      const node = useTemplateEditorStore.getState().nodes[0];
+      expect(node.type).toBe("RandomSelect");
+      expect(node.data).toEqual({
+        title: "ランダム選択",
+        items: [""],
+        resultFlagKey: "",
+      });
+    });
+
     test("ConditionalBranchノードは正しい初期データを持つ", () => {
       useTemplateEditorStore.getState().addNode("ConditionalBranch", position);
 
