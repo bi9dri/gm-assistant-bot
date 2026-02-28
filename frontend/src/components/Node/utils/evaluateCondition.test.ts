@@ -151,6 +151,105 @@ describe("evaluateCondition", () => {
       expect(evaluateCondition(condition, gameFlags)).toBe(false);
     });
   });
+
+  describe("valueType: flag", () => {
+    it("equals: returns true when two flags have the same value", () => {
+      const flags = { team: "A", alias: "A" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "team",
+        operator: "equals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(true);
+    });
+
+    it("equals: returns false when two flags have different values", () => {
+      const flags = { team: "A", alias: "B" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "team",
+        operator: "equals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(false);
+    });
+
+    it("notEquals: returns true when two flags have different values", () => {
+      const flags = { team: "A", alias: "B" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "team",
+        operator: "notEquals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(true);
+    });
+
+    it("notEquals: returns false when two flags have the same value", () => {
+      const flags = { team: "A", alias: "A" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "team",
+        operator: "notEquals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(false);
+    });
+
+    it("contains: returns true when flag value contains the referenced flag's value", () => {
+      const flags = { role: "detective", sub: "tect" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "role",
+        operator: "contains",
+        value: "sub",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(true);
+    });
+
+    it("contains: returns false when flag value does not contain the referenced flag's value", () => {
+      const flags = { role: "detective", sub: "admin" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "role",
+        operator: "contains",
+        value: "sub",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(false);
+    });
+
+    it("equals: treats missing referenced flag as empty string", () => {
+      const flags = { team: "" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "team",
+        operator: "equals",
+        value: "nonExistentFlag",
+        valueType: "flag",
+      };
+      // team is "" and nonExistentFlag resolves to "", so they are equal
+      expect(evaluateCondition(condition, flags)).toBe(true);
+    });
+
+    it("equals: returns false when flag does not exist even with flag valueType", () => {
+      const flags = { alias: "A" };
+      const condition: Condition = {
+        id: "1",
+        flagKey: "nonExistent",
+        operator: "equals",
+        value: "alias",
+        valueType: "flag",
+      };
+      expect(evaluateCondition(condition, flags)).toBe(false);
+    });
+  });
 });
 
 describe("evaluateConditions", () => {

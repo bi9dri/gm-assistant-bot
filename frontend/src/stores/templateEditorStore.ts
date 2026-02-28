@@ -316,7 +316,15 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
         position,
         data: {
           title: "条件分岐",
-          conditions: [{ id: crypto.randomUUID(), flagKey: "", operator: "equals", value: "" }],
+          conditions: [
+            {
+              id: crypto.randomUUID(),
+              flagKey: "",
+              operator: "equals",
+              value: "",
+              valueType: "literal",
+            },
+          ],
           hasDefaultBranch: true,
         },
       };
