@@ -1,30 +1,9 @@
 import { useEffect } from "react";
 
 import { FileSystem } from "@/fileSystem";
-import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
+import { collectFilePathsFromNodes } from "@/stores/nodeFilePaths";
+import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
-
-function collectAllFilePaths(nodes: FlowNode[]): string[] {
-  const paths: string[] = [];
-  for (const node of nodes) {
-    if (node.type === "SendMessage") {
-      for (const message of node.data.messages) {
-        for (const attachment of message.attachments) {
-          paths.push(attachment.filePath);
-        }
-      }
-    } else if (node.type === "CombinationSendMessage") {
-      for (const entry of node.data.entries) {
-        for (const message of entry.messages) {
-          for (const attachment of message.attachments) {
-            paths.push(attachment.filePath);
-          }
-        }
-      }
-    }
-  }
-  return paths;
-}
 
 export function useFileExistenceValidation() {
   const initialized = useTemplateEditorStore((state) => state.initialized);
@@ -44,7 +23,7 @@ export function useFileExistenceValidation() {
       }
 
       const { nodes, setMissingFilePaths } = useTemplateEditorStore.getState();
-      const allPaths = collectAllFilePaths(nodes);
+      const allPaths = collectFilePathsFromNodes(nodes);
       if (allPaths.length === 0) {
         setMissingFilePaths(new Set());
         return;

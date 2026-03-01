@@ -1,4 +1,12 @@
-import type { Node, Edge, NodeChange, EdgeChange, Connection, Viewport } from "@xyflow/react";
+import type {
+  Node,
+  Edge,
+  NodeChange,
+  EdgeChange,
+  Connection,
+  Viewport,
+  NodeRemoveChange,
+} from "@xyflow/react";
 import type { z } from "zod";
 
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
@@ -28,6 +36,9 @@ import {
   COMMENT_DEFAULTS,
   LABELED_GROUP_DEFAULTS,
 } from "@/components/Node";
+import { FileSystem } from "@/fileSystem";
+
+import { collectFilePathsFromNode, collectFilePathsFromNodes } from "./nodeFilePaths";
 
 export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
 export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
@@ -170,6 +181,20 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   missingFilePaths: new Set(),
 
   onNodesChange: (changes) => {
+    const removeChanges = changes.filter((c): c is NodeRemoveChange => c.type === "remove");
+    if (removeChanges.length > 0) {
+      const currentNodes = get().nodes;
+      const removedNodes = removeChanges
+        .map((c) => currentNodes.find((n) => n.id === c.id))
+        .filter((n): n is FlowNode => n !== undefined);
+      const paths = collectFilePathsFromNodes(removedNodes);
+      if (paths.length > 0) {
+        const fs = new FileSystem();
+        for (const path of paths) {
+          void fs.deleteFile(path).catch(() => {});
+        }
+      }
+    }
     set({
       nodes: applyNodeChanges(changes, get().nodes) as FlowNode[],
     });
@@ -454,10 +479,20 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
   },
 
   deleteNode: (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId);
     set({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
       edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
     });
+    if (node) {
+      const paths = collectFilePathsFromNode(node);
+      if (paths.length > 0) {
+        const fs = new FileSystem();
+        for (const path of paths) {
+          void fs.deleteFile(path).catch(() => {});
+        }
+      }
+    }
   },
 
   deleteEdges: (edgeIds) => {
