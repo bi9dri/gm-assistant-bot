@@ -23,6 +23,13 @@ export const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const computeSHA256 = async (data: Blob): Promise<string> => {
+  const buffer = await data.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray, (b) => b.toString(16).padStart(2, "0")).join("");
+};
+
 export const saveFileToOPFS = async (
   file: File,
   options: { templateId?: number; sessionId?: number },
@@ -39,11 +46,27 @@ export const saveFileToOPFS = async (
     throw new Error("templateIdまたはsessionIdが必要です");
   }
 
-  let basePath = `${baseDir}/${file.name}`;
+  const basePath = `${baseDir}/${file.name}`;
 
-  if (await fs.fileExists(basePath)) {
+  let existingFile: File | null = null;
+  try {
+    existingFile = await fs.readFile(basePath);
+  } catch {
+    // file doesn't exist
+  }
+
+  if (existingFile) {
+    const [existingHash, newHash] = await Promise.all([
+      computeSHA256(existingFile),
+      computeSHA256(file),
+    ]);
+    if (existingHash === newHash) {
+      return basePath;
+    }
     const randomDir = crypto.randomUUID().slice(0, 8);
-    basePath = `${baseDir}/${randomDir}/${file.name}`;
+    const newPath = `${baseDir}/${randomDir}/${file.name}`;
+    await fs.writeFile(newPath, file);
+    return newPath;
   }
 
   await fs.writeFile(basePath, file);
