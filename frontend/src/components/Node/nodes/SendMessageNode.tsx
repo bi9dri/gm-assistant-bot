@@ -679,12 +679,6 @@ export const SendMessageNode = ({
               + メッセージを追加
             </button>
           )}
-
-          {isExecuteMode && channels.length > 0 && (
-            <p className="text-xs text-base-content/60">
-              利用可能なチャンネル: {channels.map((c) => c.name).join(", ")}
-            </p>
-          )}
         </div>
       </BaseNodeContent>
 

@@ -343,13 +343,6 @@ export const CreateChannelNode = ({
                   </button>
                 )}
               </div>
-
-              {/* Show available roles in execute mode */}
-              {isExecuteMode && roles.length > 0 && (
-                <p className="text-xs text-base-content/60 mt-2">
-                  利用可能なロール: {roles.map((r) => r.name).join(", ")}
-                </p>
-              )}
             </div>
           ))}
         </div>
