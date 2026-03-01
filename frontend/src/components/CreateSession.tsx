@@ -4,25 +4,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { type MouseEvent, useEffect, useState } from "react";
 
 import { ApiClient } from "@/api";
-import { db } from "@/db";
+import { db, type ReactFlowData } from "@/db";
 import { type GuildSchema } from "@/db";
-import { FileSystem } from "@/fileSystem";
+import { FileSystem, convertFilePathsInReactFlowData } from "@/fileSystem";
 import { useToast } from "@/toast/ToastProvider";
-
-const convertFilePaths = (reactFlowData: string, templateId: number, sessionId: number): string => {
-  const data = JSON.parse(reactFlowData);
-  for (const node of data.nodes) {
-    if (node.data?.attachments) {
-      node.data.attachments = node.data.attachments.map(
-        (a: { filePath: string; fileName: string; fileSize: number }) => ({
-          ...a,
-          filePath: a.filePath.replace(`template/${templateId}/`, `session/${sessionId}/`),
-        }),
-      );
-    }
-  }
-  return JSON.stringify(data);
-};
 
 interface Props {
   onCreate?: (created: {}) => Promise<void>;
@@ -105,11 +90,11 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const fileSystem = new FileSystem();
       await fileSystem.copyTemplateFilesToSession(selectedTemplateId, newSessionId);
 
-      const convertedReactFlowData = convertFilePaths(
-        template.reactFlowData,
-        selectedTemplateId,
-        newSessionId,
+      const parsed: ReactFlowData = JSON.parse(template.reactFlowData);
+      const converted = convertFilePathsInReactFlowData(parsed, (filePath) =>
+        filePath.replace(`template/${selectedTemplateId}/`, `session/${newSessionId}/`),
       );
+      const convertedReactFlowData = JSON.stringify(converted);
       await db.GameSession.update(newSessionId, {
         reactFlowData: convertedReactFlowData,
       });
