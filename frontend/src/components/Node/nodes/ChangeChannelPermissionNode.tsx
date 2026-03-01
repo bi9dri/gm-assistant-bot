@@ -281,16 +281,6 @@ export const ChangeChannelPermissionNode = ({
               </button>
             )}
           </div>
-
-          {/* Show available roles and channels in execute mode */}
-          {isExecuteMode && (roles.length > 0 || channels.length > 0) && (
-            <div className="text-xs text-base-content/60 space-y-1">
-              {channels.length > 0 && (
-                <p>利用可能なチャンネル: {channels.map((c) => c.name).join(", ")}</p>
-              )}
-              {roles.length > 0 && <p>利用可能なロール: {roles.map((r) => r.name).join(", ")}</p>}
-            </div>
-          )}
         </div>
       </BaseNodeContent>
       <BaseNodeFooter>
