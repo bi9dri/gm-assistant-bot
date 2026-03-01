@@ -100,7 +100,8 @@ export function PortaledSelect({
       if (e.key === "Escape") setIsOpen(false);
     };
 
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      if (menuRef.current?.contains(e.target as Node)) return;
       setIsOpen(false);
     };
 
@@ -142,11 +143,7 @@ export function PortaledSelect({
         createPortal(
           <>
             {/* 背景オーバーレイ - クリックで閉じる */}
-            <div
-              className="fixed inset-0 z-9998"
-              onClick={() => setIsOpen(false)}
-              onWheel={() => setIsOpen(false)}
-            />
+            <div className="fixed inset-0 z-9998" onClick={() => setIsOpen(false)} />
             <ul
               ref={menuRef}
               className="menu flex-nowrap bg-base-100 shadow-lg rounded-box border border-base-300 z-9999 max-h-48 overflow-y-auto"
