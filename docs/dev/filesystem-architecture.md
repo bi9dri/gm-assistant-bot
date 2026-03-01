@@ -56,7 +56,13 @@ try {
 | `clearSessionFiles(sessionId)` | Recursively removes `session/{sessionId}/`. No-op if directory missing. |
 | `copyTemplateFilesToSession(templateId, sessionId)` | Deep-copies template files to session directory. No-op if template has no files. |
 | `exportTemplate(templateId)` | Bundles template JSON + OPFS files into a ZIP `Blob`. |
-| `importTemplate(zipFile)` | Restores a template from a ZIP file. |
+| `importTemplate(zipFile)` | Restores a template from a ZIP file. Handles both current and legacy ZIP formats. |
+
+### Module-level export
+
+| Function | Description |
+|----------|-------------|
+| `convertFilePathsInReactFlowData(reactFlowData, replacer)` | Immutably rewrites all `filePath` strings in `SendMessageNode` and `CombinationSendMessageNode` data using the provided replacer callback. Used internally by `exportTemplate` / `importTemplate`. |
 
 ---
 
