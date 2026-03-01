@@ -7,7 +7,56 @@ import {
   ZipWriter,
 } from "@zip.js/zip.js";
 
-import { db, Template } from "./db";
+import { db, Template, type ReactFlowData } from "./db";
+
+type Attachment = { filePath: string };
+type MessageWithAttachments = { attachments: Attachment[] };
+type EntryWithMessages = { messages: MessageWithAttachments[] };
+
+export function convertFilePathsInReactFlowData(
+  reactFlowData: ReactFlowData,
+  replacer: (filePath: string) => string,
+): ReactFlowData {
+  const convertAttachments = (attachments: Attachment[]) =>
+    attachments.map((a) => ({ ...a, filePath: replacer(a.filePath) }));
+
+  const convertMessages = (messages: MessageWithAttachments[]) =>
+    messages.map((msg) => ({
+      ...msg,
+      attachments: Array.isArray(msg.attachments)
+        ? convertAttachments(msg.attachments)
+        : msg.attachments,
+    }));
+
+  const newNodes = reactFlowData.nodes.map((node) => {
+    if (node.type === "SendMessage" && Array.isArray(node.data?.messages)) {
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          messages: convertMessages(node.data.messages as MessageWithAttachments[]),
+        },
+      };
+    }
+    if (node.type === "CombinationSendMessage" && Array.isArray(node.data?.entries)) {
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          entries: (node.data.entries as EntryWithMessages[]).map((entry) => ({
+            ...entry,
+            messages: Array.isArray(entry.messages)
+              ? convertMessages(entry.messages)
+              : entry.messages,
+          })),
+        },
+      };
+    }
+    return node;
+  });
+
+  return { ...reactFlowData, nodes: newNodes };
+}
 
 export class FileSystem {
   constructor() {
@@ -23,21 +72,29 @@ export class FileSystem {
     }
 
     const templateData = template.export();
+    const convertedTemplateData = {
+      ...templateData,
+      reactFlowData: convertFilePathsInReactFlowData(templateData.reactFlowData, (filePath) =>
+        filePath.replace(`template/${templateId}/`, "files/"),
+      ),
+    };
 
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
 
-    await zipWriter.add("template.json", new TextReader(JSON.stringify(templateData)));
+    await zipWriter.add("template.json", new TextReader(JSON.stringify(convertedTemplateData)));
 
     const root = await navigator.storage.getDirectory();
 
     const addFile = async (handle: FileSystemHandle) => {
-      const aPath = (await root.resolve(handle))?.join("/");
-      if (!aPath) {
+      const segments = await root.resolve(handle);
+      if (!segments) {
         throw new Error("ファイルのパス解決に失敗しました");
       }
+      // segments: ["template", "{id}", ...rest] → ZIP path: "files/" + rest
+      const zipPath = "files/" + segments.slice(2).join("/");
       const blob = await (handle as FileSystemFileHandle).getFile();
-      await zipWriter.add(aPath, new BlobReader(blob));
+      await zipWriter.add(zipPath, new BlobReader(blob));
     };
 
     const walkAndAddFiles = async (dir: FileSystemDirectoryHandle) => {
@@ -74,10 +131,10 @@ export class FileSystem {
     const zipFileReader = new BlobReader(zipFile);
     const zipReader = new ZipReader(zipFileReader);
 
-    const root = await navigator.storage.getDirectory();
-
     let templateData: unknown = null;
+    let oldTemplateId: number | null = null;
 
+    // First pass: read template.json and detect old-format IDs (backward compat)
     for await (const entry of zipReader.getEntriesGenerator()) {
       if (!entry.directory && entry.filename === "template.json") {
         const templateJson = await entry.getData(new TextWriter());
@@ -86,30 +143,57 @@ export class FileSystem {
         } catch {
           throw new Error("テンプレートデータが壊れています");
         }
-        break;
+      } else if (!entry.directory && entry.filename.startsWith("template/")) {
+        // Old format: template/{oldId}/file — extract the old ID
+        const parts = entry.filename.split("/");
+        if (parts.length >= 3) {
+          const id = parseInt(parts[1], 10);
+          if (!isNaN(id)) {
+            oldTemplateId = id;
+          }
+        }
       }
     }
 
     const template = await Template.import(templateData);
-    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
-    const td = await root.getDirectoryHandle("template", { create: true });
-    const dir = await td.getDirectoryHandle(`${template.id}`, { create: true });
+    const newId = template.id;
 
+    // Second pass: write files with paths converted to the new template ID
     for await (const entry of zipReader.getEntriesGenerator()) {
-      if (entry.filename === "template.json") {
+      if (entry.filename === "template.json" || entry.directory) {
         continue;
       }
-      if (entry.directory) {
-        await dir.getDirectoryHandle(entry.filename, { create: true });
-        continue;
+
+      let targetPath: string | null = null;
+      if (entry.filename.startsWith("files/")) {
+        // New format: files/xxx → template/{newId}/xxx
+        targetPath = `template/${newId}/${entry.filename.slice("files/".length)}`;
+      } else if (
+        oldTemplateId !== null &&
+        entry.filename.startsWith(`template/${oldTemplateId}/`)
+      ) {
+        // Old format (backward compat): template/{oldId}/xxx → template/{newId}/xxx
+        targetPath = `template/${newId}/${entry.filename.slice(`template/${oldTemplateId}/`.length)}`;
       }
+
+      if (!targetPath) continue;
 
       const file = await entry.getData(new BlobWriter());
-      const handle = await dir.getFileHandle(entry.filename, { create: true });
-      const w = await handle.createWritable();
-      await w.write(file);
-      await w.close();
+      await this.writeFile(targetPath, file);
     }
+
+    // Rewrite filePaths in reactFlowData to point to the new template ID
+    const oldReactFlowData = template.getParsedReactFlowData();
+    const newReactFlowData = convertFilePathsInReactFlowData(oldReactFlowData, (filePath) => {
+      if (filePath.startsWith("files/")) {
+        return `template/${newId}/${filePath.slice("files/".length)}`;
+      }
+      if (oldTemplateId !== null && filePath.startsWith(`template/${oldTemplateId}/`)) {
+        return `template/${newId}/${filePath.slice(`template/${oldTemplateId}/`.length)}`;
+      }
+      return filePath;
+    });
+    await template.update({ reactFlowData: newReactFlowData });
 
     return template;
   }
