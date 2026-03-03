@@ -2,7 +2,11 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 
 import type { ReactFlowData } from "./db";
 
-import { FileSystem, convertFilePathsInReactFlowData } from "./fileSystem";
+import {
+  FileSystem,
+  collectFilePathsFromReactFlowData,
+  convertFilePathsInReactFlowData,
+} from "./fileSystem";
 
 // 実際のファイルストレージを持つ拡張OPFSモック
 class MockFileSystemStorage {
@@ -280,6 +284,153 @@ describe("FileSystem", () => {
     test("テンプレートが見つからない場合はエラーをスローする", async () => {
       expect(fs.exportTemplate(999)).rejects.toThrow("テンプレートが見つかりません");
     });
+  });
+});
+
+describe("collectFilePathsFromReactFlowData", () => {
+  const makeReactFlowData = (nodes: unknown[]): ReactFlowData => ({
+    nodes,
+    edges: [],
+    viewport: { x: 0, y: 0, zoom: 1 },
+  });
+
+  test("SendMessageノードから全添付ファイルパスを収集する", () => {
+    const data = makeReactFlowData([
+      {
+        type: "SendMessage",
+        data: {
+          messages: [
+            {
+              content: "hello",
+              attachments: [
+                { fileName: "img.png", filePath: "template/1/img.png", fileSize: 100 },
+                { fileName: "doc.pdf", filePath: "template/1/a3f2c1b4/doc.pdf", fileSize: 200 },
+              ],
+            },
+            {
+              content: "world",
+              attachments: [{ fileName: "vid.mp4", filePath: "template/1/vid.mp4", fileSize: 300 }],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const result = collectFilePathsFromReactFlowData(data);
+
+    expect(result).toEqual([
+      "template/1/img.png",
+      "template/1/a3f2c1b4/doc.pdf",
+      "template/1/vid.mp4",
+    ]);
+  });
+
+  test("CombinationSendMessageノードから全添付ファイルパスを収集する", () => {
+    const data = makeReactFlowData([
+      {
+        type: "CombinationSendMessage",
+        data: {
+          entries: [
+            {
+              channelName: "general",
+              messages: [
+                {
+                  content: "hi",
+                  attachments: [
+                    { fileName: "img.png", filePath: "template/1/img.png", fileSize: 100 },
+                    { fileName: "doc.pdf", filePath: "template/1/doc.pdf", fileSize: 200 },
+                  ],
+                },
+              ],
+            },
+            {
+              channelName: "staff",
+              messages: [
+                {
+                  content: "yo",
+                  attachments: [
+                    { fileName: "vid.mp4", filePath: "template/1/vid.mp4", fileSize: 300 },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const result = collectFilePathsFromReactFlowData(data);
+
+    expect(result).toEqual(["template/1/img.png", "template/1/doc.pdf", "template/1/vid.mp4"]);
+  });
+
+  test("添付ファイルを持たないノードは無視される", () => {
+    const data = makeReactFlowData([{ type: "CreateRole", data: { title: "GM" } }]);
+
+    const result = collectFilePathsFromReactFlowData(data);
+
+    expect(result).toEqual([]);
+  });
+
+  test("複数ノード混在時に全ファイルパスを収集する", () => {
+    const data = makeReactFlowData([
+      {
+        type: "SendMessage",
+        data: {
+          messages: [
+            {
+              content: "a",
+              attachments: [{ fileName: "a.png", filePath: "template/1/a.png", fileSize: 100 }],
+            },
+          ],
+        },
+      },
+      { type: "CreateRole", data: { title: "GM" } },
+      {
+        type: "CombinationSendMessage",
+        data: {
+          entries: [
+            {
+              channelName: "ch",
+              messages: [
+                {
+                  content: "b",
+                  attachments: [{ fileName: "b.png", filePath: "template/1/b.png", fileSize: 200 }],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const result = collectFilePathsFromReactFlowData(data);
+
+    expect(result).toEqual(["template/1/a.png", "template/1/b.png"]);
+  });
+
+  test("同一パスの重複が含まれる場合もそのまま返す（重複排除は呼び出し元の責務）", () => {
+    const data = makeReactFlowData([
+      {
+        type: "SendMessage",
+        data: {
+          messages: [
+            {
+              content: "a",
+              attachments: [{ fileName: "img.png", filePath: "template/1/img.png", fileSize: 100 }],
+            },
+            {
+              content: "b",
+              attachments: [{ fileName: "img.png", filePath: "template/1/img.png", fileSize: 100 }],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const result = collectFilePathsFromReactFlowData(data);
+
+    expect(result).toEqual(["template/1/img.png", "template/1/img.png"]);
   });
 });
 
