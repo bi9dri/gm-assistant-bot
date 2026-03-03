@@ -13,6 +13,41 @@ type Attachment = { filePath: string };
 type MessageWithAttachments = { attachments: Attachment[] };
 type EntryWithMessages = { messages: MessageWithAttachments[] };
 
+const computeSHA256 = async (data: Blob): Promise<string> => {
+  const buffer = await data.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray, (b) => b.toString(16).padStart(2, "0")).join("");
+};
+
+export function collectFilePathsFromReactFlowData(reactFlowData: ReactFlowData): string[] {
+  const filePaths: string[] = [];
+  for (const node of reactFlowData.nodes) {
+    if (node.type === "SendMessage" && Array.isArray(node.data?.messages)) {
+      for (const msg of node.data.messages as MessageWithAttachments[]) {
+        if (Array.isArray(msg.attachments)) {
+          for (const a of msg.attachments) {
+            filePaths.push(a.filePath);
+          }
+        }
+      }
+    } else if (node.type === "CombinationSendMessage" && Array.isArray(node.data?.entries)) {
+      for (const entry of node.data.entries as EntryWithMessages[]) {
+        if (Array.isArray(entry.messages)) {
+          for (const msg of entry.messages) {
+            if (Array.isArray(msg.attachments)) {
+              for (const a of msg.attachments) {
+                filePaths.push(a.filePath);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return filePaths;
+}
+
 export function convertFilePathsInReactFlowData(
   reactFlowData: ReactFlowData,
   replacer: (filePath: string) => string,
@@ -72,11 +107,36 @@ export class FileSystem {
     }
 
     const templateData = template.export();
+
+    // Collect all file paths referenced in reactFlowData
+    const allFilePaths = collectFilePathsFromReactFlowData(templateData.reactFlowData);
+    // Deduplicate and sort by path length ascending (shorter = preferred canonical path)
+    const uniquePaths = [...new Set(allFilePaths)].sort((a, b) => a.length - b.length);
+
+    // Build content-hash → canonical path and path → canonical path maps
+    const hashToCanonical = new Map<string, string>();
+    const pathToCanonical = new Map<string, string>();
+    for (const filePath of uniquePaths) {
+      let file: File;
+      try {
+        file = await this.readFile(filePath);
+      } catch {
+        continue;
+      }
+      const hash = await computeSHA256(file);
+      if (!hashToCanonical.has(hash)) {
+        hashToCanonical.set(hash, filePath);
+      }
+      pathToCanonical.set(filePath, hashToCanonical.get(hash)!);
+    }
+
+    // Convert template data: deduplicate paths, then rewrite template/{id}/ → files/
     const convertedTemplateData = {
       ...templateData,
-      reactFlowData: convertFilePathsInReactFlowData(templateData.reactFlowData, (filePath) =>
-        filePath.replace(`template/${templateId}/`, "files/"),
-      ),
+      reactFlowData: convertFilePathsInReactFlowData(templateData.reactFlowData, (filePath) => {
+        const canonical = pathToCanonical.get(filePath) ?? filePath;
+        return canonical.replace(`template/${templateId}/`, "files/");
+      }),
     };
 
     const zipFileWriter = new BlobWriter();
@@ -84,45 +144,14 @@ export class FileSystem {
 
     await zipWriter.add("template.json", new TextReader(JSON.stringify(convertedTemplateData)));
 
-    const root = await navigator.storage.getDirectory();
-
-    const addFile = async (handle: FileSystemHandle) => {
-      const segments = await root.resolve(handle);
-      if (!segments) {
-        throw new Error("ファイルのパス解決に失敗しました");
-      }
-      // segments: ["template", "{id}", ...rest] → ZIP path: "files/" + rest
-      const zipPath = "files/" + segments.slice(2).join("/");
-      const blob = await (handle as FileSystemFileHandle).getFile();
-      await zipWriter.add(zipPath, new BlobReader(blob));
-    };
-
-    const walkAndAddFiles = async (dir: FileSystemDirectoryHandle) => {
-      for await (const handle of dir.values()) {
-        if (handle.kind === "file") {
-          await addFile(handle);
-          continue;
-        }
-        await walkAndAddFiles(handle as FileSystemDirectoryHandle);
-      }
-    };
-
-    let dir: FileSystemDirectoryHandle;
-    try {
-      // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
-      const td = await root.getDirectoryHandle("template");
-      dir = await td.getDirectoryHandle(`${templateId}`);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "NotFoundError") {
-        // No files to add
-        await zipWriter.close();
-        return zipFileWriter.getData();
-      }
-      console.error("Failed to get template directory:", e);
-      throw e;
+    // Add only canonical path files (skip duplicates)
+    for (const [filePath, canonical] of pathToCanonical) {
+      if (filePath !== canonical) continue;
+      const file = await this.readFile(filePath);
+      const zipPath = filePath.replace(`template/${templateId}/`, "files/");
+      await zipWriter.add(zipPath, new BlobReader(file));
     }
 
-    await walkAndAddFiles(dir);
     await zipWriter.close();
     return zipFileWriter.getData();
   }
