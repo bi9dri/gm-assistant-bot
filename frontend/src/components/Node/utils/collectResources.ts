@@ -107,6 +107,15 @@ export function collectResourcesBeforeNode(
           sourceNodeId: node.id,
         });
       }
+    } else if (node.type === "Counter") {
+      const data = node.data as { flagKey: string };
+      if (data.flagKey.trim()) {
+        resources.gameFlags.push({
+          key: data.flagKey.trim(),
+          values: [],
+          sourceNodeId: node.id,
+        });
+      }
     }
   }
 

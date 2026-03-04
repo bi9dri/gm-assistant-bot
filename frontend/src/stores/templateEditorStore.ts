@@ -19,6 +19,7 @@ import {
   type CombinationSendMessageDataSchema,
   type CommentDataSchema,
   type ConditionalBranchDataSchema,
+  type CounterDataSchema,
   type CreateCategoryDataSchema,
   type CreateChannelDataSchema,
   type CreateRoleDataSchema,
@@ -60,6 +61,7 @@ export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
 export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
 export type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
 export type RandomSelectNodeData = z.infer<typeof RandomSelectDataSchema>;
+export type CounterNodeData = z.infer<typeof CounterDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">
@@ -81,7 +83,8 @@ export type FlowNode =
   | Node<SendMessageNodeData, "SendMessage">
   | Node<SetGameFlagNodeData, "SetGameFlag">
   | Node<ShuffleAssignNodeData, "ShuffleAssign">
-  | Node<RandomSelectNodeData, "RandomSelect">;
+  | Node<RandomSelectNodeData, "RandomSelect">
+  | Node<CounterNodeData, "Counter">;
 
 // Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
@@ -131,6 +134,7 @@ interface TemplateEditorActions {
       | SetGameFlagNodeData
       | ShuffleAssignNodeData
       | RandomSelectNodeData
+      | CounterNodeData
     >,
   ) => void;
   addNode: (
@@ -154,7 +158,8 @@ interface TemplateEditorActions {
       | "SendMessage"
       | "SetGameFlag"
       | "ShuffleAssign"
-      | "RandomSelect",
+      | "RandomSelect"
+      | "Counter",
     position: { x: number; y: number },
   ) => void;
   expandBlueprint: (nodeId: string) => void;
@@ -441,6 +446,13 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
           items: [""],
           resultFlagKey: "",
         },
+      };
+    } else if (type === "Counter") {
+      newNode = {
+        id,
+        type,
+        position,
+        data: { title: "カウンター", flagKey: "", step: 1 },
       };
     } else {
       newNode = {

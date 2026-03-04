@@ -8,6 +8,7 @@ import {
   ChangeChannelPermissionNode,
   CommentNode,
   ConditionalBranchNode,
+  CounterNode,
   CreateCategoryNode,
   CreateChannelNode,
   CreateRoleNode,
@@ -105,6 +106,10 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     <RandomSelectNode {...props} mode={mode} />
   );
 
+  const CounterWithMode: ComponentType<NodeProps<any>> = (props) => (
+    <CounterNode {...props} mode={mode} />
+  );
+
   return {
     CreateCategory: CreateCategoryWithMode,
     CreateRole: CreateRoleWithMode,
@@ -126,5 +131,6 @@ export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
     SelectBranch: SelectBranchWithMode,
     ShuffleAssign: ShuffleAssignWithMode,
     RandomSelect: RandomSelectWithMode,
+    Counter: CounterWithMode,
   } as NodeTypes;
 }

@@ -34,6 +34,7 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   SelectBranch: NODE_WIDTHS.md,
   ShuffleAssign: NODE_WIDTHS.lg,
   RandomSelect: NODE_WIDTHS.md,
+  Counter: NODE_WIDTHS.md,
 } as const;
 
 // Comment node default dimensions
