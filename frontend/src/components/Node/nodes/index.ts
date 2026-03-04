@@ -52,3 +52,5 @@ export { SelectBranchNode, DataSchema as SelectBranchDataSchema } from "./Select
 export { ShuffleAssignNode, DataSchema as ShuffleAssignDataSchema } from "./ShuffleAssignNode";
 
 export { RandomSelectNode, DataSchema as RandomSelectDataSchema } from "./RandomSelectNode";
+
+export { CounterNode, DataSchema as CounterDataSchema } from "./CounterNode";

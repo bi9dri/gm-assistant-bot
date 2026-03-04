@@ -260,6 +260,46 @@ describe("collectResourcesBeforeNode", () => {
     });
   });
 
+  describe("gameFlags - CounterNode", () => {
+    it("CounterNode から flagKey を収集する（values は空配列）", () => {
+      const nodes = [
+        makeNode("counter-1", "Counter", { flagKey: "ラウンド数", step: 1 }),
+        makeNode("target", "ConditionalBranch", {}),
+      ];
+      const edges = [makeEdge("counter-1", "target")];
+
+      const result = collectResourcesBeforeNode("target", nodes, edges);
+
+      expect(result.gameFlags).toEqual([
+        { key: "ラウンド数", values: [], sourceNodeId: "counter-1" },
+      ]);
+    });
+
+    it("flagKey が空文字の場合はスキップする", () => {
+      const nodes = [
+        makeNode("counter-1", "Counter", { flagKey: "", step: 1 }),
+        makeNode("target", "ConditionalBranch", {}),
+      ];
+      const edges = [makeEdge("counter-1", "target")];
+
+      const result = collectResourcesBeforeNode("target", nodes, edges);
+
+      expect(result.gameFlags).toEqual([]);
+    });
+
+    it("flagKey がスペースのみの場合はスキップする", () => {
+      const nodes = [
+        makeNode("counter-1", "Counter", { flagKey: "   ", step: 1 }),
+        makeNode("target", "ConditionalBranch", {}),
+      ];
+      const edges = [makeEdge("counter-1", "target")];
+
+      const result = collectResourcesBeforeNode("target", nodes, edges);
+
+      expect(result.gameFlags).toEqual([]);
+    });
+  });
+
   describe("混在ケース", () => {
     it("3種のノードが混在する場合にすべて収集する", () => {
       const nodes = [
@@ -319,6 +359,46 @@ describe("collectResourcesBeforeNode", () => {
 
       expect(result.gameFlags).toHaveLength(4);
       expect(result.gameFlags.map((f) => f.key)).toEqual(["phase", "team", "role_Alice", "犯人"]);
+    });
+
+    it("5種のノードが混在する場合にすべて収集する（CounterNode を含む）", () => {
+      const nodes = [
+        makeNode("flag-1", "SetGameFlag", { flagKey: "phase", flagValue: "start" }),
+        makeNode("branch-1", "SelectBranch", {
+          flagName: "team",
+          options: [{ id: "1", label: "red" }],
+        }),
+        makeNode("shuffle-1", "ShuffleAssign", {
+          resultFlagPrefix: "role",
+          targets: ["Alice"],
+          items: ["Detective"],
+        }),
+        makeNode("random-1", "RandomSelect", {
+          resultFlagKey: "犯人",
+          items: ["Alice", "Bob"],
+        }),
+        makeNode("counter-1", "Counter", { flagKey: "ラウンド数", step: 1 }),
+        makeNode("target", "ConditionalBranch", {}),
+      ];
+      const edges = [
+        makeEdge("flag-1", "target"),
+        makeEdge("branch-1", "target"),
+        makeEdge("shuffle-1", "target"),
+        makeEdge("random-1", "target"),
+        makeEdge("counter-1", "target"),
+      ];
+
+      const result = collectResourcesBeforeNode("target", nodes, edges);
+
+      expect(result.gameFlags).toHaveLength(5);
+      expect(result.gameFlags.map((f) => f.key)).toEqual([
+        "phase",
+        "team",
+        "role_Alice",
+        "犯人",
+        "ラウンド数",
+      ]);
+      expect(result.gameFlags.find((f) => f.key === "ラウンド数")?.values).toEqual([]);
     });
   });
 
