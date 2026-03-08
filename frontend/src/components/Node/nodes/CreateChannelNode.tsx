@@ -1,5 +1,6 @@
 import { Position, type Node, type NodeProps } from "@xyflow/react";
 import { useEffect, useState } from "react";
+import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import z from "zod";
 
 import { ApiClient } from "@/api";
@@ -85,6 +86,20 @@ export const CreateChannelNode = ({
   const handleRemoveChannel = (index: number) => {
     const updatedChannels = data.channels.filter((_, i) => i !== index);
     updateNodeData(id, { channels: updatedChannels });
+  };
+
+  const handleMoveChannelUp = (index: number) => {
+    if (index === 0) return;
+    const updated = [...data.channels];
+    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+    updateNodeData(id, { channels: updated });
+  };
+
+  const handleMoveChannelDown = (index: number) => {
+    if (index === data.channels.length - 1) return;
+    const updated = [...data.channels];
+    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    updateNodeData(id, { channels: updated });
   };
 
   const handleAddRolePermission = (channelIndex: number) => {
@@ -270,14 +285,34 @@ export const CreateChannelNode = ({
                   <span className="text-xs">ボイス</span>
                 </label>
                 {!isExecuteMode && (
-                  <button
-                    type="button"
-                    className="nodrag btn btn-ghost btn-sm"
-                    onClick={() => handleRemoveChannel(channelIndex)}
-                    disabled={isLoading || isExecuted}
-                  >
-                    削除
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="nodrag btn btn-ghost btn-sm btn-square"
+                      onClick={() => handleMoveChannelUp(channelIndex)}
+                      disabled={isLoading || isExecuted || channelIndex === 0}
+                    >
+                      <HiChevronUp />
+                    </button>
+                    <button
+                      type="button"
+                      className="nodrag btn btn-ghost btn-sm btn-square"
+                      onClick={() => handleMoveChannelDown(channelIndex)}
+                      disabled={
+                        isLoading || isExecuted || channelIndex === data.channels.length - 1
+                      }
+                    >
+                      <HiChevronDown />
+                    </button>
+                    <button
+                      type="button"
+                      className="nodrag btn btn-ghost btn-sm"
+                      onClick={() => handleRemoveChannel(channelIndex)}
+                      disabled={isLoading || isExecuted}
+                    >
+                      削除
+                    </button>
+                  </>
                 )}
               </div>
 
