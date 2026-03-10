@@ -1,4 +1,4 @@
-import { REST, type RawFile } from "@discordjs/rest";
+import { DiscordAPIError, REST, type RawFile } from "@discordjs/rest";
 import {
   ChannelType,
   OverwriteType,
@@ -229,9 +229,19 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
     if (after) {
       query.append("after", after);
     }
-    const members = (await rest.get(Routes.guildMembers(data.guildId), {
-      query,
-    })) as RESTGetAPIGuildMemberResult[];
+    let members: RESTGetAPIGuildMemberResult[];
+    try {
+      members = (await rest.get(Routes.guildMembers(data.guildId), {
+        query,
+      })) as RESTGetAPIGuildMemberResult[];
+    } catch (e) {
+      if (e instanceof DiscordAPIError && e.code === 50001) {
+        throw new Error(
+          "ギルドメンバーの取得に失敗しました。Discord Developer Portal で「Server Members Intent」を有効にしてください",
+        );
+      }
+      throw e;
+    }
     if (members.length === 0) break;
     for (const member of members) {
       if (member.roles.includes(data.memberRoleId)) {
