@@ -1,9 +1,12 @@
-update npm packages
+---
+name: update-dependencies
+description: Update npm/bun packages and GitHub Actions dependencies. Use when asked to update dependencies, update packages, check for outdated packages, or update GitHub Actions workflows.
+---
 
 # 指示
-npm dependency packagesのアップデートをして
+npm dependency packagesおよびGitHub Actionsの依存関係をアップデートして
 
-# 手順
+# Part 1: npm パッケージの更新
 
 ## 1. アップデート対象の洗い出し
 root directoryで以下のコマンドを実行し、アップデート対象を洗い出す
@@ -133,7 +136,7 @@ Updated the following packages without code changes required:
 All packages include only bug fixes, type improvements, and minor enhancements.
 Type checks and tests pass successfully.
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 # プッシュ
 git push -u origin update-dependencies-safe-updates
@@ -188,7 +191,7 @@ gh issue create --title "chore: パッケージ名をバージョンにアップ
 - 参考資料
 - 関連PR/Issue
 
-# 注意事項
+# 注意事項（npm パッケージ）
 
 - モノレポ構成のため、backend/frontend各ディレクトリで個別にアップデート実行
 - 型定義パッケージ（@types/*）は基本的に安全にアップデート可能
@@ -208,4 +211,91 @@ gh issue create --title "chore: パッケージ名をバージョンにアップ
 - uses: oven-sh/setup-bun@<hash>  # vX.Y.Z
   with:
     bun-version: "X.Y.Z"
+```
+
+---
+
+# Part 2: GitHub Actions 依存関係の更新
+
+## 1. アップデート対象の洗い出し
+
+`pinact` で差分のみ表示し、更新対象を確認する（ファイル変更なし）：
+
+```bash
+pinact run -u --min-age 7 --diff
+```
+
+各アクションの現バージョンと最新バージョンを一覧で確認する。
+
+## 2. リリースノートの確認
+
+各アクションのGitHubリリースページをWebFetchで確認する：
+
+```
+WebFetch: https://github.com/org/action-name/releases
+```
+
+特に以下の点に注意：
+- Breaking changes
+- input/output の変更
+- ランナー要件の変更（requires-node バージョンなど）
+
+## 3. アクションの更新
+
+7日以上経過したバージョンのみを対象に更新する：
+
+```bash
+pinact run -u --min-age 7
+```
+
+これにより、`.github/workflows/*.yml` 内のアクション参照がコミットSHAとバージョンコメント付きで更新される：
+
+```yaml
+# 更新前
+- uses: actions/checkout@abc1234  # v3.0.0
+
+# 更新後
+- uses: actions/checkout@def5678  # v4.2.0
+```
+
+## 4. 検証
+
+コミットSHAとバージョンコメントの整合性を検証する：
+
+```bash
+pinact run --verify
+```
+
+エラーがあれば修正してから次のステップへ進む。
+
+## 5. PR作成
+
+npmパッケージ更新と同様のフォーマットでPRを作成する：
+
+```bash
+git checkout -b update-github-actions
+git add .github/workflows/
+git commit -m "chore: Update GitHub Actions dependencies
+
+Updated the following actions:
+- actions/checkout: v3 -> v4
+...
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+git push -u origin update-github-actions
+gh pr create --title "chore: Update GitHub Actions dependencies" --body "..."
+```
+
+**PRのdescriptionフォーマット：**
+
+```markdown
+## アップデート内容
+
+- actions/checkout: [v3.x.x](https://github.com/actions/checkout/releases/tag/v3.x.x) -> [v4.x.x](https://github.com/actions/checkout/releases/tag/v4.x.x)
+  - 変更内容の概要
+
+## 備考
+- アクション名は破壊的変更があるため、別issueで対応予定
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
