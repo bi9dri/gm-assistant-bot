@@ -102,7 +102,9 @@ export const ChangeChannelPermissionNode = ({
       return;
     }
 
-    const channel = channels.find((c) => c.name === data.channelName.trim());
+    const channel = channels.find(
+      (c) => c.name.toLowerCase() === data.channelName.trim().toLowerCase(),
+    );
     if (!channel) {
       addToast({
         message: `チャンネル「${data.channelName}」が見つかりません`,

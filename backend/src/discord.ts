@@ -139,7 +139,7 @@ export async function createCategory(token: string, data: CreateCategoryData) {
   const category = (await rest.post(Routes.guildChannels(data.guildId), {
     body: {
       type: ChannelType.GuildCategory,
-      name: data.name,
+      name: data.name.toLowerCase(),
       permission_overwrites: [
         {
           id: data.guildId,
@@ -160,7 +160,7 @@ export async function createChannel(token: string, data: CreateChannelData) {
   const channel = (await rest.post(Routes.guildChannels(data.guildId), {
     body: {
       type: data.type === "text" ? ChannelType.GuildText : ChannelType.GuildVoice,
-      name: data.name,
+      name: data.name.toLowerCase(),
       parent_id: data.parentCategoryId,
       permission_overwrites: [
         {

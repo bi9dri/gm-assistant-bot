@@ -312,7 +312,7 @@ export const CombinationSendMessageNode = ({
       const channelName = entry.channelName.trim();
       if (!channelName) continue;
 
-      const channel = channels.find((c) => c.name === channelName);
+      const channel = channels.find((c) => c.name.toLowerCase() === channelName.toLowerCase());
       if (channel) {
         resolvedEntries.push({ channelId: channel.id, messages: entry.messages });
       } else {
