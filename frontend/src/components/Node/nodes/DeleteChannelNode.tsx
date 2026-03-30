@@ -80,7 +80,7 @@ export const DeleteChannelNode = ({
     const targetChannels: ChannelData[] = [];
 
     for (const name of validNames) {
-      const found = sessionChannels.find((ch) => ch.name === name);
+      const found = sessionChannels.find((ch) => ch.name.toLowerCase() === name.toLowerCase());
       if (!found) {
         notFoundNames.push(name);
       } else {

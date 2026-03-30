@@ -330,7 +330,7 @@ export const SendMessageNode = ({
     const notFoundChannels: string[] = [];
 
     for (const channelName of resolvedChannelNames) {
-      const channel = channels.find((c) => c.name === channelName);
+      const channel = channels.find((c) => c.name.toLowerCase() === channelName.toLowerCase());
       if (channel) {
         targetChannels.push(channel);
       } else {
