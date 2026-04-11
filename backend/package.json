@@ -14,7 +14,7 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@discordjs/rest": "2.6.0",
+    "@discordjs/rest": "2.6.1",
     "@hono/zod-validator": "0.7.6",
     "discord-api-types": "0.38.42",
     "hono": "4.12.8",
