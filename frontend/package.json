@@ -23,7 +23,7 @@
     "@zip.js/zip.js": "2.8.26",
     "clsx": "2.1.1",
     "daisyui": "5.5.19",
-    "dexie": "4.3.0",
+    "dexie": "4.4.2",
     "dexie-react-hooks": "4.4.0",
     "hono": "4.12.8",
     "nanoid": "5.1.7",
