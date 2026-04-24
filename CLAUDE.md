@@ -1,132 +1,41 @@
 # Project Instructions for AI Assistant
 
-## Language
+## Code Comments
+- Don't restate what identifiers already convey. Keep comments only for Why (context/constraints), non-obvious logic, or TODO/FIXME.
 
-- **ユーザとの対話は日本語で行う** - All interactions with users should be in Japanese
-- コード内のコメントやドキュメントは英語でも可
-- エラーメッセージや技術的な説明は必要に応じて英語を含めても良い
+## TypeScript
+- Narrow discriminated unions via type guards: `if (node.type !== "XxxNode") return;`
 
-## General Guidelines
+## Runtime / Package Manager (Bun)
+- Use `bun install`, `bun run --bun <script>`, `bun <file>` — never npm/yarn/pnpm/node/ts-node.
+- Tests: `bun run --bun test`. No dotenv (Bun auto-loads `.env`).
+- `--filter` matches `package.json` `name` (not workspace dir). Wildcards ok: `--filter '*'`.
+- Coverage: `coveragePathIgnorePatterns` uses glob (not regex). Thresholds apply globally — exclude untestable files rather than lowering thresholds.
 
-### Code Comments
-- **冗長なコメントを書かない** - 識別子やコードから自明な内容を繰り返すコメントは不要
-- 避けるべきコメントの例:
-  - 関数名の言い換え: `// Add new message block` → `handleAddMessageBlock()` という関数名で十分
-  - コードの直訳: `// Get session roles from DB` → DBクエリであることは見れば分かる
-  - セクション区切り: `// Handlers for edit mode` → コードの構造から明らか
-- 書くべきコメント:
-  - **Why（なぜ）**: なぜその実装を選んだのか、背景や制約
-  - **非自明なロジック**: 複雑なアルゴリズムや業務ルールの説明
-  - **TODO/FIXME**: 後で対応が必要な箇所
+## Dependency Management
+- **Fixed versions only** — no `^` / `~`. Supply chain protection.
+- **Use versions ≥7 days old**, except for security updates. Avoids malicious releases caught shortly after publish. Tooling enforces this: `ncu --cooldown 7` for npm/bun, `pinact run -m 7` for GitHub Actions.
+- **GitHub Actions**: pin external actions to full commit SHA (never tags/branches). Run `pinact run -m 7` to auto-pin.
 
-### TypeScript Patterns
-- **Union type narrowing**: Use type guards for discriminated unions (e.g., `if (node.type !== "XxxNode") return;`)
+## Architecture
+Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Workers Static Assets), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack.
 
-### Runtime and Package Manager
-- Default to using **Bun** instead of Node.js
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun run --bun test` instead of `jest` or `vitest`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run --bun <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv
-- **`--filter` option**: Searches by package name (in `package.json`), not workspace name. Supports wildcards (e.g., `--filter '*'`)
-- **Coverage exclude patterns**: Use glob patterns in `coveragePathIgnorePatterns` (e.g., `"src/components/**"`), NOT regex
-- **Coverage thresholds**: Applied globally to all files - exclude untestable files rather than lowering thresholds
+## Docs (`/docs/dev`)
+- [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
+- [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
 
-### Dependency Management
-- **Use fixed versions only** (no `^` or `~` prefixes)
-- This is a security measure against supply chain attacks
-- When updating dependencies, always specify exact versions
+## Skills (`.claude/skills/`)
+- **node-creator** — MUST use when implementing a new `XxxNode`
+- **schema-migration** — MUST use when changing a node's DataSchema
+- **update-dependencies** — use when updating npm/bun packages or GitHub Actions
 
-### GitHub Actions Security
-- **External actions must be pinned to full commit SHA** (NOT tags or branches)
-- Example: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2`
-- See [GitHub Actions セキュリティルール](docs/dev/github-actions-rules.md) for details
-
-## Design Documentation
-
-### 開発者向けドキュメント (`/docs/dev`)
-- [ノードシステムアーキテクチャ](docs/dev/node-system-architecture.md) - **新しいノードを実装する際は必ず参照**。ノードの基本構造、実装パターン、チェックリストを含む
-- [テスト戦略](docs/dev/testing-strategy.md) - テストピラミッド、TDD ワークフロー、カバレッジ戦略、アンチパターン、実装ロードマップ
-- [GitHub Actions セキュリティルール](docs/dev/github-actions-rules.md) - ワークフローのセキュリティ規約。外部アクションは必ず固定ハッシュ値でピン留めすること
-
-### Skills（Claude Code スキル）
-- **node-creator**: 新しいノードタイプ（`XxxNode`）を実装する際は、**必ずこのスキルを利用すること**。スキルには実装チェックリスト、コンポーネントテンプレート、登録手順が含まれている。
-  - トリガー例: 「新しいノードを作成」「XxxNode を実装」「ノードタイプを追加」
-- **schema-migration**: ノードの DataSchema を変更する際は、**必ずこのスキルを利用すること**。スキルには Dexie マイグレーションのテンプレート、チェックリスト、変換パターン例が含まれている。
-  - トリガー例: 「スキーマを変更」「マイグレーションを追加」「DataSchemaを更新」「フィールドをリネーム」
-- **update-dependencies**: npm/bun パッケージおよび GitHub Actions の依存関係を更新する際に利用する。
-  - トリガー例: 「依存関係を更新」「パッケージをアップデート」「GitHub Actions を更新」
-
-## Project Architecture
-
-Bun workspaceを使用したモノレポ構成。
-
-### Frontend (`/frontend`)
-- **Framework**: React + TanStack Router (file-based routing)
-- **UI**: DaisyUI + Tailwind CSS v4
-- **Build**: Vite
-- **Deployment**: Cloudflare Workers Static Assets
-- **Data Persistence**: Dexie.js (IndexedDB) with Zod validation
-- **State Management**: Zustand
-- **Workflow Editor**: @xyflow/react
-
-### Backend (`/backend`)
-- **Framework**: Hono
-- **Deployment**: Cloudflare Workers
-- **Discord Integration**: @discordjs/rest + discord-api-types
-- **Validation**: Zod + @hono/zod-validator
-
-## Development Commands
-
-ルートディレクトリから実行:
-
-```bash
-bun run --bun dev         # 開発サーバー起動 (frontend: 3000, backend: 8787)
-bun run --bun build       # ビルド
-bun run --bun deploy      # Cloudflare Workersにデプロイ
-bun run --bun lint        # リンティング
-bun run --bun format      # フォーマット
-bun run --bun type-check  # 型チェック
-bun run --bun test        # テスト
-bun run knip              # 未使用エクスポート・ファイル・依存関係の検出
-```
-
-個別パッケージで実行:
-```bash
-bun run --bun --filter frontend dev
-bun run --bun --filter backend dev
-```
+## Commands
+See root `package.json` scripts. Run from repo root via `bun run --bun <script>`, or per-package via `bun run --bun --filter <pkg> <script>`.
 
 ## Development Workflow
-
-**重要**: コードを実装した後は、必ず以下のコマンドを順番に実行してエラーがないことを確認する：
-
-1. `bun run --bun test` - テストが通ることを確認
-2. `bun run --bun type-check` - 型エラーがないことを確認
-3. `bun run --bun format` - コードをフォーマット
-4. `bun run --bun lint` - lint エラーがないことを確認
-5. `bun run knip` - 未使用エクスポート・ファイル・依存関係がないことを確認
-
-すべてのコマンドが成功するまで、実装は完了とみなさない。
+After implementing, the task is not done until all of the following pass:
+1. `bun run --bun test` · 2. `bun run --bun type-check` · 3. `bun run --bun format` · 4. `bun run --bun lint` · 5. `bun run knip`
 
 ## Knowledge Management
-
-実装完了時、以下の条件に該当する場合はドキュメントを更新する：
-
-### CLAUDE.md の更新
-- プロジェクト構造に大きな変更があった場合（新しいディレクトリ、アーキテクチャ変更など）
-- 新しい開発規約やワークフローが追加された場合
-- 使用技術スタックに変更があった場合
-
-### docs/dev/ への知識保存
-以下のような再利用可能な知識が得られた場合、`/docs/dev/` に新しいドキュメントを作成または既存ドキュメントを更新する：
-
-- **実装パターン**: 繰り返し使用される実装パターンが確立された場合（例: `node-system-architecture.md`）
-- **トラブルシューティング**: 解決に時間がかかった問題とその解決方法
-- **設計判断**: 重要な設計判断とその理由（なぜその方法を選んだか）
-
-ドキュメント作成の判断基準:
-1. 将来同じような実装をする際に参照する価値があるか
-2. 他の開発者（または将来の自分）が同じ問題に直面する可能性があるか
-3. 情報がコード内のコメントだけでは不十分か
+- **Update CLAUDE.md** when project structure, dev conventions, or the tech stack changes materially.
+- **Add to `/docs/dev/`** for reusable implementation patterns, hard-won troubleshooting knowledge, or significant design decisions (and their rationale).
