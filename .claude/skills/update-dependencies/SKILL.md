@@ -2,9 +2,28 @@
 name: update-dependencies
 description: Update project dependencies following a structured process to ensure stability and security. This skill guides you through deep inspection, triage, and orchestrated updates of npm packages, with a focus on minimizing breaking changes and maintaining project integrity. Use this skill when you need to update dependencies while ensuring that the updates do not introduce breaking changes or security vulnerabilities.
 disable-model-invocation: true
+allowed-tools:
+  - Read
+  - Bash(bunx --bun ncu:*)
+  - Bash(pinact:*)
+  - Bash(bun audit)
+  - Bash(osv-scanner:*)
+  - Bash(gh:*)
+  - Write
+  - Edit
+  - Bash(git:*)
+  - Bash(bun install:*)
+  - Bash(bun add:*)
+  - Bash(bun info:*)
+  - Bash(bun run:*)
+  - Bash(grep:*)
+  - Bash(head:*)
+  - Bash(jq:*)
 ---
 
 update dependencies with following instructions
+
+use `jq` to parse JSON outputs and `grep` to filter for relevant information.
 
 ## Step 1: Deep Inspection & Security
 
@@ -42,12 +61,17 @@ Individual: likely to have impact → processed in a dedicated PR per package
 
 Based on the triage results, delegate update work to sub-agents.
 
+**All PRs, issues, and commit messages must be written in Japanese.**
+
 ### Batched updates
 
 Pass the list of Batched packages (identified in Step 2) to a single sub-agent. The sub-agent must not re-triage; it operates on the provided list.
 
 - Work in a single git worktree and produce a single PR.
-- Update packages one at a time, running tests after each update.
+- Update packages one at a time, running the following tests after each update:
+  ```
+  bun run --bun test && bun run --bun type-check && bun run --bun lint && bun run knip
+  ```
 - If tests pass, proceed to the next package (one commit per package).
 - If tests fail, do not create a commit for that package. Revert to the pre-update state with `git stash && bun install --frozen-lockfile` and skip the package.
 - Once all packages have been processed, create a PR containing only the packages that passed.
@@ -69,7 +93,7 @@ Packages classified as Individual (both originally Individual and those promoted
   - Code improvements that leverage new or improved APIs.
   - Replacement of deprecated APIs.
 - PR body: updated package, before/after versions, affected project code or behavior, summary of changes made, and rationale for any items left unaddressed.
-- If tests still fail after 5 fix attempts (one attempt = one cycle of code change → test run), create a GitHub Issue and a Draft PR, then stop.
+- If tests still fail after 5 fix attempts (one attempt = one cycle of code change → `bun run --bun test && bun run --bun type-check && bun run --bun lint && bun run knip`), create a GitHub Issue and a Draft PR, then stop.
   - Title: `[Package Name] from vA to vB`
   - Body: error details, the upstream change causing the impact, affected project code or behavior, and approaches attempted.
   - After creating the Issue, create a Draft PR and include a link to the Issue in its description.
