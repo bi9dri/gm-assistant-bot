@@ -53,6 +53,54 @@
       "last_modified": "2026-04-10T03:55:24Z",
       "resolved": "github:NixOS/nixpkgs/9d29d5f667d7467f98efc31881e824fa586c927e?lastModified=1775793324"
     },
+    "osv-scanner@2.3.3": {
+      "last_modified": "2026-04-16T08:46:55Z",
+      "resolved": "github:NixOS/nixpkgs/b86751bc4085f48661017fa226dee99fab6c651b#osv-scanner",
+      "source": "devbox-search",
+      "version": "2.3.3",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/26f8vzcwhq4aad9ddxbz4pymzz5lh6nx-osv-scanner-2.3.3",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/26f8vzcwhq4aad9ddxbz4pymzz5lh6nx-osv-scanner-2.3.3"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/dz891r0gzh2pw288dzj4pw7j590aykji-osv-scanner-2.3.3",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/dz891r0gzh2pw288dzj4pw7j590aykji-osv-scanner-2.3.3"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bhd8683zn3kdn2yy689vqaxl9kq05kd6-osv-scanner-2.3.3",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/bhd8683zn3kdn2yy689vqaxl9kq05kd6-osv-scanner-2.3.3"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vmzjbq55q6jn6i77i1vni6vd8nish9ak-osv-scanner-2.3.3",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/vmzjbq55q6jn6i77i1vni6vd8nish9ak-osv-scanner-2.3.3"
+        }
+      }
+    },
     "pinact@3.8.0": {
       "last_modified": "2026-03-21T07:29:51Z",
       "resolved": "github:NixOS/nixpkgs/09061f748ee21f68a089cd5d91ec1859cd93d0be#pinact",
