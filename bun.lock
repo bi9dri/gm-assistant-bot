@@ -21,7 +21,7 @@
         "@discordjs/rest": "2.6.1",
         "@hono/zod-validator": "0.7.6",
         "discord-api-types": "0.38.42",
-        "hono": "4.12.12",
+        "hono": "4.12.15",
         "zod": "4.3.6",
       },
       "devDependencies": {
@@ -44,7 +44,7 @@
         "daisyui": "5.5.19",
         "dexie": "4.4.2",
         "dexie-react-hooks": "4.4.0",
-        "hono": "4.12.12",
+        "hono": "4.12.15",
         "nanoid": "5.1.7",
         "react": "19.2.4",
         "react-dom": "19.2.4",
@@ -623,7 +623,7 @@
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
 
-    "hono": ["hono@4.12.12", "", {}, "sha512-p1JfQMKaceuCbpJKAPKVqyqviZdS0eUxH9v82oWo1kb9xjQ5wA6iP3FNVAPDFlz5/p7d45lO+BpSk1tuSZMF4Q=="],
+    "hono": ["hono@4.12.15", "", {}, "sha512-qM0jDhFEaCBb4TxoW7f53Qrpv9RBiayUHo0S52JudprkhvpjIrGoU1mnnr29Fvd1U335ZFPZQY1wlkqgfGXyLg=="],
 
     "is-binary-path": ["is-binary-path@2.1.0", "", { "dependencies": { "binary-extensions": "^2.0.0" } }, "sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw=="],
 
