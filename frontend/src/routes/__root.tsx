@@ -19,6 +19,10 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
+// VRT 中は TanStack Devtools をレンダリングしない: router-devtools-core が pendingMatches を読めず pageerror を出すため、
+// および devtools UI が screenshot に映り込むのを防ぐため
+const showDevtools = import.meta.env.VITE_MSW_ENABLED !== "true";
+
 function RootComponent() {
   const context = useRouteContext({ from: "__root__" }) as RootContext | undefined;
   const layoutMode = context?.layoutMode ?? "padded";
@@ -100,17 +104,19 @@ function RootComponent() {
             </aside>
           </div>
         </div>
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        {showDevtools && (
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+        )}
       </ToastProvider>
     </ThemeProvider>
   );
