@@ -217,7 +217,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3  # v2.1.2
       - run: bun install --frozen-lockfile
-      - run: bun run --bun type-check
+      - run: bun run --bun typecheck
       - run: bun run --bun test
       - run: bun run --bun lint
 ```
@@ -233,7 +233,7 @@ Place tests in same directory as target with `.test.ts` suffix (follows existing
 
 At each Phase completion, execute:
 1. `bun run --bun test` — All tests pass
-2. `bun run --bun type-check` — No type errors
+2. `bun run --bun typecheck` — No type errors
 3. `bun run --bun format` — Format
 4. `bun run --bun lint` — No lint errors
 5. Confirm threshold achievement in coverage report

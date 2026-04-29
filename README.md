@@ -33,7 +33,7 @@ bun run --bun dev
 ```bash
 bun run --bun lint        # リンティング
 bun run --bun format      # フォーマット
-bun run --bun type-check  # 型チェック
+bun run --bun typecheck   # 型チェック
 bun run --bun test        # テスト
 bun run --bun build       # ビルド
 bun run --bun deploy      # Cloudflare Workersにデプロイ

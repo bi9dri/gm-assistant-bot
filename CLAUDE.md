@@ -34,7 +34,7 @@ See root `package.json` scripts. Run from repo root via `bun run --bun <script>`
 
 ## Development Workflow
 After implementing, the task is not done until all of the following pass:
-1. `bun run --bun test` · 2. `bun run --bun type-check` · 3. `bun run --bun format` · 4. `bun run --bun lint` · 5. `bun run knip`
+1. `bun run --bun test` · 2. `bun run --bun typecheck` · 3. `bun run --bun format` · 4. `bun run --bun lint` · 5. `bun run knip`
 
 ## Knowledge Management
 - **Update CLAUDE.md** when project structure, dev conventions, or the tech stack changes materially.
