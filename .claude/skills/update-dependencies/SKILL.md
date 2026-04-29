@@ -70,7 +70,7 @@ Pass the list of Batched packages (identified in Step 2) to a single sub-agent. 
 - Work in a single git worktree and produce a single PR.
 - Update packages one at a time, running the following tests after each update:
   ```
-  bun run --bun test && bun run --bun type-check && bun run --bun lint && bun run knip
+  bun run --bun test && bun run --bun typecheck && bun run --bun lint && bun run knip
   ```
 - If tests pass, proceed to the next package (one commit per package).
 - If tests fail, do not create a commit for that package. Revert to the pre-update state with `git stash && bun install --frozen-lockfile` and skip the package.
@@ -93,7 +93,7 @@ Packages classified as Individual (both originally Individual and those promoted
   - Code improvements that leverage new or improved APIs.
   - Replacement of deprecated APIs.
 - PR body: updated package, before/after versions, affected project code or behavior, summary of changes made, and rationale for any items left unaddressed.
-- If tests still fail after 5 fix attempts (one attempt = one cycle of code change → `bun run --bun test && bun run --bun type-check && bun run --bun lint && bun run knip`), create a GitHub Issue and a Draft PR, then stop.
+- If tests still fail after 5 fix attempts (one attempt = one cycle of code change → `bun run --bun test && bun run --bun typecheck && bun run --bun lint && bun run knip`), create a GitHub Issue and a Draft PR, then stop.
   - Title: `[Package Name] from vA to vB`
   - Body: error details, the upstream change causing the impact, affected project code or behavior, and approaches attempted.
   - After creating the Issue, create a Draft PR and include a link to the Issue in its description.

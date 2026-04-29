@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "bun --filter '*' lint",
     "format": "bun --filter '*' format",
-    "type-check": "bun --filter '*' type-check",
+    "typecheck": "bun --filter '*' typecheck",
     "dev": "bun --filter '*' dev",
     "build": "bun --filter '*' build",
     "deploy": "bun --filter '*' deploy",

@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "oxlint && oxfmt --check ./src ./test",
     "format": "oxlint --fix && oxfmt --write ./src ./test",
-    "type-check": "oxlint --type-aware --type-check",
+    "typecheck": "oxlint --type-aware --type-check",
     "dev": "vite --port 3000",
     "build": "vite build && tsc",
     "preview": "vite preview",
