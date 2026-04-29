@@ -23,7 +23,9 @@ declare module "@tanstack/react-router" {
 async function bootstrap() {
   if (import.meta.env.VITE_MSW_ENABLED === "true") {
     const { worker } = await import("./mocks/browser");
-    await worker.start({ onUnhandledRequest: "bypass" });
+    await worker.start({
+      onUnhandledRequest: import.meta.env.VITE_MSW_STRICT === "true" ? "error" : "warn",
+    });
   }
 
   const rootElement = document.getElementById("app");
@@ -37,4 +39,6 @@ async function bootstrap() {
   }
 }
 
-void bootstrap();
+bootstrap().catch((err: unknown) => {
+  console.error("[bootstrap] fatal error", err);
+});

@@ -26,8 +26,8 @@ export default defineConfig({
   webServer: {
     command: "bun run --bun dev",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    env: { VITE_MSW_ENABLED: "true" },
+    reuseExistingServer: false,
+    env: { VITE_MSW_ENABLED: "true", VITE_MSW_STRICT: "true" },
     timeout: 60_000,
   },
 });
