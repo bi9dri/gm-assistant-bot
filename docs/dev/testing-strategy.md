@@ -97,7 +97,7 @@ Test multiple patterns of same logic efficiently. Use for `resolveDynamicValue` 
 3. [Green]    Write minimal implementation code
 4. [Run]      Confirm test passes
 5. [Refactor] Refactoring
-6. [Verify]   test → type-check → format → lint all pass
+6. [Verify]   test → typecheck → format → lint all pass
 ```
 
 ### AI Development Notes
@@ -164,7 +164,7 @@ Test multiple patterns of same logic efficiently. Use for `resolveDynamicValue` 
 | Zod schema boundaries | `frontend/src/db/schemas.test.ts` (new) | ~10 |
 
 **CI Pipeline:**
-- `.github/workflows/ci.yml` (new) — test → type-check → lint
+- `.github/workflows/ci.yml` (new) — test → typecheck → lint
 
 ### Projections
 
