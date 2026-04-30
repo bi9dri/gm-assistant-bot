@@ -11,6 +11,7 @@
 - Tests: `bun run --bun test`. No dotenv (Bun auto-loads `.env`).
 - `--filter` matches `package.json` `name` (not workspace dir). Wildcards ok: `--filter '*'`.
 - Coverage: `coveragePathIgnorePatterns` uses glob (not regex). Thresholds apply globally — exclude untestable files rather than lowering thresholds.
+- **VRT (Playwright) は Node 専用**。`--bun` を付けると bun ランタイムが node 呼び出しまで shim して playwright がハングする。`bun run --filter gm-assistant-bot-frontend test:vrt` で実行する (`--bun` を付けない)。
 
 ## Dependency Management
 - **Fixed versions only** — no `^` / `~`. Supply chain protection.
@@ -23,6 +24,7 @@ Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Worker
 ## Docs (`/docs/dev`)
 - [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
+- [vrt.md](docs/dev/vrt.md) — Playwright + MSW による Visual Regression Test の構成と実行方法
 
 ## Skills (`.claude/skills/`)
 - **node-creator** — MUST use when implementing a new `XxxNode`

@@ -3,6 +3,9 @@
   "tags": [
     "-lintignore"
   ],
+  "ignore": [
+    "frontend/public/mockServiceWorker.js"
+  ],
   "workspaces": {
     ".": {}
   }
