@@ -1,2 +1,2 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://gm-assistant-bot-api.bidri.dev; img-src 'self' data: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://www.googletagmanager.com 'sha256-AEp7fPy6lEZUibfBm5EpRgaohKT5eg4TQXX2teIY7nY='; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:
