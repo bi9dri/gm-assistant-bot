@@ -1,7 +1,8 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { Outlet, createRootRoute, useRouteContext } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useRouteContext, useRouter } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { useEffect } from "react";
 import { FaDiscord } from "react-icons/fa";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { SiSessionize } from "react-icons/si";
@@ -10,6 +11,10 @@ import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
 import { ToastProvider } from "@/toast/ToastProvider";
+
+declare global {
+  function gtag(...args: unknown[]): void;
+}
 
 interface RootContext {
   layoutMode: "padded" | "full-height";
@@ -22,6 +27,14 @@ export const Route = createRootRoute({
 function RootComponent() {
   const context = useRouteContext({ from: "__root__" }) as RootContext | undefined;
   const layoutMode = context?.layoutMode ?? "padded";
+  const router = useRouter();
+
+  useEffect(() => {
+    gtag("event", "page_view", { page_path: window.location.pathname + window.location.search });
+    return router.subscribe("onResolved", () => {
+      gtag("event", "page_view", { page_path: window.location.pathname + window.location.search });
+    });
+  }, [router]);
 
   return (
     <ThemeProvider>
