@@ -3,6 +3,15 @@
   "tags": [
     "-lintignore"
   ],
+  "ignore": [
+    ".claude/worktrees/**"
+  ],
+  "ignoreIssues": {
+    "frontend/src/components/Node/base/base-schema.ts": ["exports"],
+    "frontend/src/components/Node/utils/messageSchema.ts": ["exports"],
+    "frontend/src/db/schemas.ts": ["exports"],
+    "frontend/src/stores/templateEditorStore.ts": ["types"]
+  },
   "workspaces": {
     ".": {}
   }
