@@ -68,7 +68,7 @@ Screenshots must be deterministic to be meaningful. The following must always ho
 - Set `prefers-reduced-motion` on the browser context
 
 ### Known Workaround
-Starting the VRT dev server with the Bun runtime (`bun --bun`) hits an Internal Server Error caused by the Tailwind + `@tailwindcss/vite` + DaisyUI plugin combination. The `webServer.command` in `frontend/playwright.config.ts` therefore **does not** include `--bun`. The reason and reproduction conditions are documented as a comment in that file — always consult it before modifying the config.
+Starting the VRT dev server under the Bun runtime hits an Internal Server Error / startup hang caused by the Tailwind + `@tailwindcss/vite` + DaisyUI plugin combination. The `webServer.command` in `frontend/playwright.config.ts` therefore spawns vite via `node node_modules/.bin/vite` so the `--bun` flag from the parent `bun run --bun --filter ... test:vrt` invocation does not propagate into the child process. The reason and reproduction conditions are documented as a comment in that file — always consult it before modifying the config.
 
 ### Snapshot Operations
 - Commit baselines to git

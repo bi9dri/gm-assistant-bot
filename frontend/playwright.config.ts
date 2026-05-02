@@ -24,9 +24,11 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    // `--bun` 不使用: Bun runtime だと @tailwindcss/vite が daisyui plugin の
-    // CSS を読み取れず Internal server error になるため (再現: bun@1.3.11 + tailwindcss@4.2.4 + daisyui@5.5.19)。
-    command: "bun run dev",
+    // node 明示: 親プロセスが `bun run --bun ...` 経由のとき --bun が子プロセスに
+    // 伝播し、vite が Bun runtime で起動して @tailwindcss/vite が daisyui plugin の
+    // CSS を読み取れず Internal server error / 起動 hang になるため
+    // (再現: bun@1.3.11 + tailwindcss@4.2.4 + daisyui@5.5.19)。
+    command: "node node_modules/.bin/vite --port 3000",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

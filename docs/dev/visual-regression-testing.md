@@ -62,9 +62,9 @@ This is the canonical reconciliation path: **CI's rendering is the source of tru
 
 `@playwright/test` in `frontend/package.json` and the `container.image` tag in `.github/workflows/ci.yml` **must** be updated together. A version mismatch ships a different chromium build and breaks every baseline at once. Pin both to the same `vX.Y.Z` and regenerate baselines via the recovery flow above.
 
-### `webServer` crash with Internal Server Error during VRT
+### `webServer` hangs / Internal Server Error during VRT
 
-This is the documented Tailwind + `@tailwindcss/vite` + DaisyUI Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately uses `bun run dev` (not `bun run --bun dev`); do not "fix" this without re-reading the comment in that file.
+This is the documented Tailwind + `@tailwindcss/vite` + DaisyUI Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately spawns vite via `node node_modules/.bin/vite` (not `bun run dev`) so the `--bun` flag from `bun run --bun --filter ... test:vrt` does not propagate into the dev server child process. Do not "fix" this back to `bun run dev` without re-reading the comment in that file.
 
 ### Artifact contains no PNGs, only `trace.zip`
 
