@@ -5,6 +5,12 @@ import ReactDOM from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
+async function enableMockingIfNeeded(): Promise<void> {
+  if (!import.meta.env.DEV || import.meta.env.VITE_USE_MSW !== "true") return;
+  const { worker } = await import("../test/vrt/msw/browser");
+  await worker.start({ onUnhandledRequest: "bypass" });
+}
+
 const router = createRouter({
   routeTree,
   context: {},
@@ -20,12 +26,14 @@ declare module "@tanstack/react-router" {
   }
 }
 
-const rootElement = document.getElementById("app");
-if (rootElement && !rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  );
-}
+void enableMockingIfNeeded().then(() => {
+  const rootElement = document.getElementById("app");
+  if (rootElement && !rootElement.innerHTML) {
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+      <StrictMode>
+        <RouterProvider router={router} />
+      </StrictMode>,
+    );
+  }
+});
