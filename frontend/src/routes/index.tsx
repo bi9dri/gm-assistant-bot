@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
 function RouteComponent() {
   return (
     <>
-      <h1>GameMaster's Assistant bot (GMAssistant)へようこそ！</h1>
+      <h1 style={{ color: "#ff0066" }}>GameMaster's Assistant bot (GMAssistant)へようこそ！</h1>
     </>
   );
 }
