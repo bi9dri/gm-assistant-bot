@@ -199,7 +199,7 @@ Do not duplicate config **values** in this doc — files are the source of truth
 |------|----------|
 | Unit / Integration | Co-located in `src/`, `*.test.ts(x)` |
 | VRT | `frontend/test/vrt/*.vrt.ts` |
-| Storybook stories | `frontend/test/stories/**/*.stories.@(ts|tsx|mdx)` |
+| Storybook stories | `frontend/test/stories/**/*.stories.@(ts\|tsx\|mdx)` |
 
 ---
 
