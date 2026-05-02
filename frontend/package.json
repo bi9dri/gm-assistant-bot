@@ -10,7 +10,6 @@
     "dev": "vite --port 3000",
     "build": "vite build && tsc",
     "preview": "vite preview",
-    "deploy": "bun run --bun build && wrangler deploy",
     "test": "bun test",
     "test:vrt": "playwright test",
     "storybook": "storybook dev -p 6006",
