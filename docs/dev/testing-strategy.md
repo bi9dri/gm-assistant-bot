@@ -2,9 +2,9 @@
 
 ## Overview
 
-AI-driven code generation is central to development, requiring maximized test coverage to ensure generated code quality. Currently, frontend has ~5 test files (125 test cases, ~45% coverage). Backend has no tests. No CI test execution.
+AI-driven code generation is central to development; generated code quality must be backed by sustained high test coverage. This document defines the current strategy combining Unit, Integration, and Visual Regression Test (VRT) layers, on top of the Test Pyramid and TDD.
 
-This strategy establishes comprehensive testing based on the Test Pyramid and TDD, targeting 90%+ coverage while maintaining healthy Code to Test Ratio.
+VRT was introduced via Issue [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) using Playwright + MSW + Storybook. Baselines are unified on Linux Docker; Chromium only.
 
 ---
 
@@ -12,228 +12,208 @@ This strategy establishes comprehensive testing based on the Test Pyramid and TD
 
 ```
     ┌─────────┐
-    │  E2E    │  → Not in current scope (Phase N+1)
+    │   VRT   │  Playwright + MSW; freeze appearance as fixtures
+    │(Visual) │  Routes / React Flow editor / Storybook stories × light/dark
     ├─────────┤
-    │ Integra-│  25% — Hono route handlers, DB migrations,
-    │  tion   │       store+DB integration
+    │ Integra-│  Hono `app.request()`, fake-indexeddb, etc.
+    │  tion   │  store ↔ DB collaboration, route handler + schema
     ├─────────┤
-    │         │  75% — Pure functions, store actions, Zod schemas,
-    │  Unit   │       DB models, API clients, backend utilities
+    │  Unit   │  pure functions / store actions / Zod schema boundaries / DB model logic
     └─────────┘
 ```
 
-### Unit Test Definition
-Tests single function/module/store action without external dependencies. All external dependencies are mocked.
+### Unit Test
+Verifies a single function / module / store action with all external dependencies mocked.
 
-### Integration Test Definition
-Tests collaboration between 2+ modules. Uses fake-indexeddb or Hono's `app.request()`, but mocks Discord API.
+### Integration Test
+Verifies collaboration between two or more modules. Uses `fake-indexeddb` or Hono's `app.request()`, but mocks Discord API and other external I/O.
 
-### E2E (Deferred to Phase N+1)
-- Current Unit + Integration tests provide sufficient coverage
-- Future consideration: Playwright for critical paths (template import/export, session creation→execution flow)
+### VRT (Visual Regression Test)
+**Visual regression detection only.** Detects changes in CSS / Tailwind / DaisyUI / React Flow / layout by diffing against baseline screenshots. Logic, state transitions, and API correctness are the responsibility of Unit / Integration tests — never VRT.
+
+---
+
+## VRT
+
+### Purpose
+- Tailwind + DaisyUI usage makes CSS-driven visual breakage easy to introduce
+- The React Flow-based template editor is highly susceptible to visual regressions in node rendering, connections, and layout
+- Provide a CI safety net that catches visual diffs
+
+### Scope
+Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141).
+
+- **All routes** (template / session / bot)
+- **React Flow template editor** (empty state / single representative node / multiple nodes connected by edges)
+- **Individual components via Storybook stories**
+- **light / dark theme matrix**
+
+### Stack
+| Item | Decision |
+|------|----------|
+| Browser | Chromium only |
+| Snapshot strategy | Playwright's standard `toHaveScreenshot` + git commit |
+| OS-difference handling | Update baselines in the same Linux environment as CI (Playwright official Docker recommended) |
+| External dependency mocking | MSW pins Discord OAuth and the entire `/api`. Activated by passing env `VITE_USE_MSW=true` to the dev server |
+| Component isolation | Storybook + `@storybook/addon-themes`'s `data-theme` decorator for light/dark switching |
+
+### Determinism Principles
+Screenshots must be deterministic to be meaningful. The following must always hold project-wide:
+
+- Disable animations (`animations: "disabled"`) and hide caret (`caret: "hide"`)
+- Keep `maxDiffPixelRatio` conservative; do not let small diffs slip through
+- Mask dynamic elements (timestamps, random IDs, counters) or pin them with a fixed seed
+- Wait for `document.fonts.ready` before capturing
+- Pin React Flow viewport by explicitly calling `fitView`
+- Set `prefers-reduced-motion` on the browser context
+
+### Known Workaround
+Starting the VRT dev server with the Bun runtime (`bun --bun`) hits an Internal Server Error caused by the Tailwind + `@tailwindcss/vite` + DaisyUI plugin combination. The `webServer.command` in `frontend/playwright.config.ts` therefore **does not** include `--bun`. The reason and reproduction conditions are documented as a comment in that file — always consult it before modifying the config.
+
+### Snapshot Operations
+- Commit baselines to git
+- Layout: auto-organized next to `frontend/test/vrt/{name}.vrt.ts` as `*.vrt.ts-snapshots/{arg}-{projectName}-{platform}{ext}`
+- Update baselines in the same Linux environment as CI. Updating from local macOS or similar mass-produces false positives from pixel differences
+- CI integration (fail on diff in PRs / upload diff PNGs as artifacts) and the baseline update workflow are owned by **Issue [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144)** and the upcoming `docs/dev/visual-regression-testing.md`
+
+### What VRT Does Not Cover
+- Logic verification after a button click (Unit / Integration responsibility)
+- Correctness of API response parsing (covered by backend Unit tests)
+- Fine-grained assertions (do not use `toHaveText` and similar in VRT — screenshot diffing is sufficient)
 
 ---
 
 ## Coverage Strategy
 
-### Target Metrics
+Coverage is a **guideline**, not a hard requirement. Chasing 100% generates low-value tests (re-export coverage, exhaustive JSX branches, etc.) and degrades the Code-to-Test Ratio. Set realistic thresholds.
 
-| Metric     | Target |
-|------------|--------|
-| Lines      | 90%    |
-| Functions  | 95%    |
-| Statements | 90%    |
+### Direction
 
-Target 90-95% instead of 100% to avoid coverage-first approach that generates low-value tests (re-export coverage, exhaustive JSX branches) and worsens Code to Test Ratio.
+| Metric | Direction |
+|--------|-----------|
+| Lines | Keep high |
+| Statements | Keep high |
+| Functions | Allowed to be lower (UI-side helpers cannot always be excluded cleanly) |
 
-### Coverage Exclusions
-- `routeTree.gen.ts` — Auto-generated
-- `main.tsx` — Entry point (boot only)
-- `**/index.ts` — Re-export only files
-- `routes/__root.tsx` — Root layout
+The actual thresholds live in `frontend/bunfig.toml` / `backend/bunfig.toml` and are the source of truth. Do not duplicate them in this doc (avoids drift).
 
-### 100% Target Code (logic correctness = app reliability)
-- `stores/templateEditorStore.ts`
-- `components/Node/utils/DynamicValue.ts`
-- `db/models/Template.ts`, `db/models/GameSession.ts`
-- `api.ts`, `fileSystem.ts`
-- `backend/src/discord.ts`, `backend/src/index.ts`, `backend/src/schemas.ts`
+### High-Coverage Targets
+Code where logical correctness directly drives application reliability:
 
-### Low Coverage Acceptable
-- `routes/*.tsx` — UI composition only
-- `theme/*.tsx`, `toast/` — Visual display only
-- Entity-only DB models (`DiscordBot.ts`, `Guild.ts`, `Category.ts`, `Channel.ts`, `Role.ts`) — No logic
+- store actions (template editor state transitions)
+- node utility functions (dynamic value resolution, condition evaluation, resource collection, shuffle, etc.)
+- Zod schema boundary values / transformations / errors
+- DB model logic (non-entity-only models)
+- Backend Discord integration / Hono route handlers / schemas
+
+### Low-Coverage Acceptable (or Excluded)
+- Route components (`routes/*.tsx`), theme, toast, and other display-only code → **covered by VRT instead**
+- Logic-free DB entity models
+- `database.ts` Dexie upgrade callback (hard to test due to Dexie internal API dependencies)
+- `api.ts` (covered indirectly by backend tests)
+- `fileSystem.ts` and OPFS-dependent helpers (mostly external API dependent)
+- React contexts / hooks
+
+The actual exclusion patterns live in `frontend/bunfig.toml`'s `coveragePathIgnorePatterns`.
 
 ---
 
-## Code to Test Ratio Guidelines
+## Code-to-Test Ratio
 
-**Target ratio: 1:1.5～1:2.0** (1.5～2 lines of test per line of production code)
+**Target: 1:1.5–1:2.0** (1.5 to 2 lines of test per line of production code)
 
 ### Efficiency Techniques
 
-#### a. Test Data Factories (`frontend/test/factories.ts`)
-Manage test data centrally, write only diffs in each test. Consolidates local helpers from existing `GameSession.test.ts`.
+- **Test data factories**: consolidate fixtures shared across tests in one place
+- **Parameterized tests** (`test.each`): batch the many patterns of a single logic (each dynamic value type, Zod boundary values)
 
-#### b. Parameterized Tests (`test.each`)
-Test multiple patterns of same logic efficiently. Use for `resolveDynamicValue` 5 types and Zod schema boundary values.
+### What Not to Test
 
-#### c. What NOT to Test
 | Target | Reason |
 |--------|--------|
-| Zod schema "happy path only" tests | Repeats schema definition. Test boundaries/transformations/errors only |
-| React Flow internal behavior | Library guarantees |
-| Static text existence checks | Low regression detection power |
-| console.log/error output | Non-essential side effects |
+| Zod schema "happy path only" tests | Mirror of the schema definition. Test boundaries / transformations / errors only |
+| React Flow internals | Library guarantees |
+| Static text existence checks | Low regression-detection power |
+| `console.log` / `console.error` output | Non-essential side effect |
 
 ---
 
-## TDD Workflow (AI Development)
+## TDD Workflow (AI-Development Premise)
 
 ### Basic Flow
 ```
-1. [Red]      Write test first — Define expected behavior
-2. [Run]      bun run --bun test to confirm failure
-3. [Green]    Write minimal implementation code
-4. [Run]      Confirm test passes
-5. [Refactor] Refactoring
-6. [Verify]   test → typecheck → format → lint all pass
+1. [Red]      Write the test first — define expected behavior
+2. [Run]      bun run --bun test, confirm failure
+3. [Green]    Write minimal implementation
+4. [Run]      Confirm pass
+5. [Refactor] Refactor
+6. [Verify]   test → typecheck → format → lint → knip all pass
 ```
 
-### AI Development Notes
-- **Red phase is critical**: Opportunity to verify AI understands "expected behavior"
-- **Green phase**: AI tends to output complete implementation at once → consciously constrain to minimal implementation
-- **Refactor phase**: AI-generated code tends to be verbose → actively slim down
+### Notes for AI Development
+- **Red phase is critical**: this is where you verify the AI correctly understands the expected behavior
+- **Green phase**: AI tends to dump a complete solution at once → consciously constrain it to a minimal implementation
+- **Refactor phase**: AI-generated code tends to be verbose → actively slim it down
 
 ### Application Timing
-- **New feature**: Test → Implementation → Verification
-- **Bug fix**: Add reproduction test → Fix → Confirm no regression
-- **Refactoring**: No test changes → Code changes → Confirm tests pass
+- **New feature**: test → implementation → verification
+- **Bug fix**: add reproduction test → fix → confirm no regression
+- **Refactor**: no test changes → code changes → confirm tests still pass
 
 ---
 
 ## Anti-Patterns
 
-1. **Zod schema "mirror" tests** — Parse valid value to confirm same value returns → Test boundaries/transformation logic/errors only
-2. **Implementation detail tests** — Spy on Zustand's internal `setState` → Test results (state changes)
-3. **Async timing dependencies** — Wait with `setTimeout` → Make deterministic with `Date.now` mock
-4. **Discord API over-mocking** — Test REST client internal structure → Test input/output correspondence
-5. **Component existence tests** — Check static text → Test state changes from user operations
+### Cross-Layer
+1. **Zod schema "mirror" tests** — parsing a valid value just to confirm it round-trips → test boundaries / transformations / errors only
+2. **Implementation-detail tests** — spying on Zustand's internal `setState` → test results (state changes) instead
+3. **Async timing dependencies** — waiting via `setTimeout` → make it deterministic by mocking `Date.now`, etc.
+4. **Discord API over-mocking** — testing the REST client's internal structure → test only input/output correspondence
+5. **Component existence tests** — checking static text → test state transitions driven by user interaction
+
+### VRT-Specific
+6. **Capturing dynamic elements without masking** — timestamps / random values / mid-animation frames cause flakiness
+7. **Capturing React Flow without fixing the viewport** — without `fitView` (or equivalent) zoom/pan drift triggers diffs
+8. **Multiple Storybook screenshots without changing `args`** — the story has no purpose
+9. **Fine-grained assertions in VRT** — keep `toHaveText`-style checks in Unit/Integration. Screenshot diffing is enough for VRT
 
 ---
 
-## Implementation Roadmap
+## Where Infrastructure Settings Live
 
-### Phase 1: Foundation + High-Value Unit Tests ✅
+Do not duplicate config **values** in this doc — files are the source of truth. This keeps the doc from drifting when values change.
 
-**Infrastructure:**
-- `frontend/bunfig.toml` — Add coverage config
-- `backend/bunfig.toml` — Create new (coverage config)
-- `backend/package.json` — Add `"test": "bun test"` script
-- `frontend/test/factories.ts` — Create test data factory
-
-**Tests Added (Frontend):**
-
-| Target | Test File | Est. Cases |
-|--------|-----------|------------|
-| `expandBlueprint()` | `stores/templateEditorStore.test.ts` (append) | ~15 |
-| `resolveDynamicValue()` | `components/Node/utils/DynamicValue.test.ts` (new) | ~10 |
-| RecordCombination pure functions | `components/Node/utils/recordCombination.test.ts` (new) | ~18 |
-| `fisherYatesShuffle()` | `components/Node/utils/shuffle.test.ts` (new) | ~5 |
-
-**Source Code Changes:**
-- Extract `getFilteredTargetOptions`, `validatePair` from `RecordCombinationNode.tsx` to `recordCombination.ts`
-- Extract `fisherYatesShuffle` from `ShuffleAssignNode.tsx` to `shuffle.ts`
-
-### Phase 2: Backend Tests
-
-| Target | Test File | Est. Cases |
-|--------|-----------|------------|
-| Utility functions | `backend/src/discord.test.ts` (new) | ~10 |
-| Zod schema boundaries | `backend/src/schemas.test.ts` (new) | ~15 |
-| Hono route handlers | `backend/src/index.test.ts` (new) | ~20 |
-
-**Source Code Changes:**
-- Export utility functions in `discord.ts`
-
-### Phase 3: Frontend Remaining Coverage + CI
-
-| Target | Test File | Est. Cases |
-|--------|-----------|------------|
-| DB migrations | `frontend/src/db/database.test.ts` (new) | ~6 |
-| Zod schema boundaries | `frontend/src/db/schemas.test.ts` (new) | ~10 |
-
-**CI Pipeline:**
-- `.github/workflows/ci.yml` (new) — test → typecheck → lint
-
-### Projections
-
-| | New Test Files | Est. Test Cases | Coverage |
-|---|---|---|---|
-| Phase 1 | 3 new + 1 append | ~48 | ~80% |
-| Phase 2 | 3 new | ~45 | ~85% |
-| Phase 3 | 2 new + CI | ~16 | 90%+ |
-| **Total** | **8 new** | **~109** | **90%+** |
-
-Combined with existing 125 cases = total ~234 test cases.
-
----
-
-## Infrastructure Settings
-
-### `frontend/bunfig.toml`
-```toml
-[test]
-preload = ["./test/unit.setup.ts"]
-coverage = true
-coverageReporter = ["text", "lcov"]
-coverageDir = "./coverage"
-coverageThreshold = { lines = 0.9, functions = 0.95, statements = 0.9 }
-coverageSkipTestFiles = true
-```
-
-### `backend/bunfig.toml` (New)
-```toml
-[test]
-coverage = true
-coverageReporter = ["text", "lcov"]
-coverageDir = "./coverage"
-coverageThreshold = { lines = 0.9, functions = 0.95, statements = 0.9 }
-coverageSkipTestFiles = true
-```
-
-### `.github/workflows/ci.yml` (New)
-```yaml
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      - uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3  # v2.1.2
-      - run: bun install --frozen-lockfile
-      - run: bun run --bun typecheck
-      - run: bun run --bun test
-      - run: bun run --bun lint
-```
-
-> Note: Hash values unified with those currently used in `deploy-frontend.yml`.
+| Config | Location | Role |
+|--------|----------|------|
+| Frontend coverage thresholds / exclusions | `frontend/bunfig.toml` | `coverageThreshold` / `coveragePathIgnorePatterns` |
+| Backend coverage | `backend/bunfig.toml` | Coverage enabled (thresholds to be added later) |
+| Unit test preload | `frontend/test/unit.setup.ts` | Clear Dexie tables / OPFS in-memory mock |
+| VRT config | `frontend/playwright.config.ts` | testDir / Chromium / determinism / `webServer` |
+| VRT MSW | `frontend/test/vrt/msw/{handlers.ts, browser.ts}` | Per-test handler overrides extend `frontend/test/vrt/fixtures.ts` |
+| Storybook | `frontend/.storybook/{main.ts, preview.ts}` | Isolation for VRT. `viteFinal` deliberately does not spread `vite.config.ts` (avoids tanstackRouter / MSW middleware / devtools conflicts) |
+| CI | `.github/workflows/ci.yml` | typecheck → test → lint. VRT job to be added per [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144) |
 
 ### Test File Placement Convention
-Place tests in same directory as target with `.test.ts` suffix (follows existing pattern).
+
+| Kind | Location |
+|------|----------|
+| Unit / Integration | Co-located in `src/`, `*.test.ts(x)` |
+| VRT | `frontend/test/vrt/*.vrt.ts` |
+| Storybook stories | `frontend/test/stories/**/*.stories.@(ts\|tsx\|mdx)` |
 
 ---
 
 ## Verification Method
 
-At each Phase completion, execute:
-1. `bun run --bun test` — All tests pass
-2. `bun run --bun typecheck` — No type errors
-3. `bun run --bun format` — Format
-4. `bun run --bun lint` — No lint errors
-5. Confirm threshold achievement in coverage report
+Aligned with the Development Workflow in CLAUDE.md. After implementation, the task is not done until **all** of the following pass:
+
+1. `bun run --bun test` — all tests pass
+2. `bun run --bun typecheck` — no type errors
+3. `bun run --bun format` — formatted
+4. `bun run --bun lint` — no lint errors
+5. `bun run knip` — no unused code detected
+
+VRT-only verification (optional):
+
+- `bun run --bun --filter gm-assistant-bot-frontend test:vrt`
+- The canonical baseline-update command and Linux Docker procedure are defined in [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144) and the upcoming `docs/dev/visual-regression-testing.md`
