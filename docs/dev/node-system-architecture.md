@@ -1,206 +1,99 @@
-# ノードベースワークフローシステム アーキテクチャ
+# Node-Based Workflow System Architecture
 
-> このドキュメントは、新しいノードタイプを実装する際の参照用です。
+> Read this before implementing a new node type. For step-by-step implementation procedures, see `.claude/skills/node-creator/SKILL.md`.
 
-## 概要
+## Overview
 
-このプロジェクトは、TRPG/マーダーミステリーセッション管理のためのノードベースワークフローシステムを実装しています。React Flow (@xyflow/react) を使用し、ノードの編集（テンプレート作成）と実行（セッション管理）の2つのモードをサポートします。
+A node-based workflow system for managing TRPG / murder-mystery sessions. Built on React Flow (`@xyflow/react`). Nodes operate in two modes:
 
----
+- **Edit mode** — Template authoring. Data is editable. No execute button. No execution context.
+- **Execute mode** — Session runtime. Data is read-only. Execute button is shown. Execution context is provided.
 
-## 既存ノードタイプ一覧
-
-| ノードタイプ | 役割 | 幅 |
-|-------------|------|-----|
-| CreateCategory | Discord カテゴリを作成 | md (256px) |
-| CreateRole | Discord ロールを複数作成 | md |
-| CreateChannel | テキスト/ボイスチャンネル作成＆権限設定 | lg (480px) |
-| DeleteCategory | カテゴリの削除 | md |
-| DeleteRole | ロール削除（全体または指定） | md |
-| DeleteChannel | チャンネル削除（指定名） | md |
-| ChangeChannelPermission | チャンネル権限を更新 | md |
-| AddRoleToRoleMembers | ロールメンバーに別のロール付与 | md |
-| SendMessage | チャンネルへメッセージ送信＆ファイル添付 | lg |
-| Blueprint | マーダーミステリー基本セット（展開ノード） | lg |
-| SetGameFlag | セッションのゲームフラグ設定 | md |
-| RecordCombination | 組み合わせペアを記録 | lg |
-| Kanban | カンバンボード | xl (640px) |
-| LabeledGroup | ノードをグループ化するコンテナ | xl |
-| Comment | ワークフロー内のコメント | md |
+The full list of node types lives in `frontend/src/components/Node/nodes/`. It changes frequently and is intentionally not enumerated here.
 
 ---
 
-## ノードの基本構造
+## Node basics
 
-### ベーススキーマ
+### Base schema
 
-すべてのノードは `BaseNodeDataSchema` を拡張します。
+Every node extends `BaseNodeDataSchema`:
 
-```typescript
+```ts
 // frontend/src/components/Node/base/base-schema.ts
 export const BaseNodeDataSchema = z.object({
-  executedAt: z.coerce.date().optional(),  // 実行完了時刻
+  executedAt: z.coerce.date().optional(), // set when execution completes
 });
 ```
 
-### ノード幅の定義
+By convention each node also defines a `title: z.string().default(...)` field for the inline-editable header.
 
-```typescript
-export const NODE_WIDTHS = {
-  sm: 192,  // 12 × 16px
-  md: 256,  // 16 × 16px（標準）
-  lg: 480,  // 30 × 16px（複雑なノード用）
-  xl: 640,  // 40 × 16px（グループノード用）
-} as const;
+### Width and content height
+
+```ts
+// frontend/src/components/Node/base/base-schema.ts
+const NODE_WIDTHS = {
+  sm: 192, // 12 × 16
+  md: 256, // 16 × 16 (default)
+  lg: 480, // 30 × 16 (complex nodes)
+  xl: 640, // 40 × 16 (group nodes)
+};
 
 export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
-  CreateRole: NODE_WIDTHS.md,
-  CreateChannel: NODE_WIDTHS.lg,
-  // ... 新しいノードもここに追加
+  /* one entry per node type */
+};
+
+export const NODE_CONTENT_HEIGHTS = {
+  sm: 200,
+  md: 300,
+  lg: 400,
 };
 ```
 
-### コンテンツ高さの定義
-
-```typescript
-export const NODE_CONTENT_HEIGHTS = {
-  sm: 200,  // 小さいノード
-  md: 300,  // 標準ノード
-  lg: 400,  // 大きい/複雑なノード
-} as const;
-```
+Add an entry to `NODE_TYPE_WIDTHS` when introducing a new node type.
 
 ---
 
-## ノードコンポーネントの実装パターン
+## Node component pattern
 
-### 基本構造
+Skeleton only. The full template lives in `.claude/skills/node-creator/SKILL.md`.
 
-```typescript
-// frontend/src/components/Node/nodes/ExampleNode.tsx
+```tsx
 import { Position, type Node, type NodeProps } from "@xyflow/react";
-import { useState } from "react";
 import z from "zod";
 
-import { useTemplateEditorStore } from "@/stores/templateEditorStore";
-import { useToast } from "@/toast/ToastProvider";
-
 import {
-  BaseHandle,
-  BaseNode,
-  BaseNodeContent,
-  BaseNodeFooter,
-  BaseNodeHeader,
-  BaseNodeHeaderTitle,
-  EditableTitle,
-  cn,
-  BaseNodeDataSchema,
-  NODE_CONTENT_HEIGHTS,
-  NODE_TYPE_WIDTHS,
+  BaseHandle, BaseNode, BaseNodeContent, BaseNodeFooter,
+  BaseNodeHeader, BaseNodeHeaderTitle, EditableTitle,
+  BaseNodeDataSchema, NODE_CONTENT_HEIGHTS, NODE_TYPE_WIDTHS,
 } from "../base";
 import { useNodeExecutionOptional } from "../contexts";
 
-// 1. スキーマ定義
 export const DataSchema = BaseNodeDataSchema.extend({
-  title: z.string().default("ノードのデフォルトタイトル"),  // 編集可能タイトル
-  // ノード固有のデータフィールド
-  myField: z.string(),
+  title: z.string().default("Default title"),
+  // node-specific fields
 });
 
 type ExampleNodeData = Node<z.infer<typeof DataSchema>, "Example">;
 
-// 2. コンポーネント定義
 export const ExampleNode = ({
-  id,
-  data,
-  mode = "edit",
+  id, data, mode = "edit",
 }: NodeProps<ExampleNodeData> & { mode?: "edit" | "execute" }) => {
-  const updateNodeData = useTemplateEditorStore((state) => state.updateNodeData);
-  const executionContext = useNodeExecutionOptional();
-  const { addToast } = useToast();
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  // 3. データ更新ハンドラ
-  const handleTitleChange = (newTitle: string) => {
-    updateNodeData(id, { title: newTitle });
-  };
-
-  const handleFieldChange = (newValue: string) => {
-    updateNodeData(id, { myField: newValue });
-  };
-
-  // 4. 実行ハンドラ（execute mode用）
-  const handleExecute = async () => {
-    if (!executionContext) {
-      addToast({ message: "実行コンテキストがありません", status: "error" });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Discord API呼び出しなど
-      // await client.doSomething();
-
-      // 成功時
-      updateNodeData(id, { executedAt: new Date() });
-      addToast({ message: "実行完了", status: "success" });
-    } catch (error) {
-      addToast({ message: "実行失敗", status: "error" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const isExecuteMode = mode === "execute";
   const isExecuted = !!data.executedAt;
+  // In execute mode, fetch context with useNodeExecutionOptional()
 
-  // 5. レンダリング
   return (
-    <BaseNode
-      width={NODE_TYPE_WIDTHS.Example}
-      className={cn("bg-base-300", data.executedAt && "border-success bg-success/10")}
-    >
+    <BaseNode width={NODE_TYPE_WIDTHS.Example}>
       <BaseNodeHeader>
-        {isExecuteMode ? (
-          <BaseNodeHeaderTitle>{data.title || "ノードのデフォルトタイトル"}</BaseNodeHeaderTitle>
-        ) : (
-          <EditableTitle
-            title={data.title}
-            defaultTitle="ノードのデフォルトタイトル"
-            onTitleChange={handleTitleChange}
-          />
-        )}
+        {isExecuteMode
+          ? <BaseNodeHeaderTitle>{data.title}</BaseNodeHeaderTitle>
+          : <EditableTitle title={data.title} defaultTitle="Default title" onTitleChange={/* ... */} />}
       </BaseNodeHeader>
-
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
-        {/* Edit mode: 編集可能なフォーム */}
-        {/* Execute mode: 読み取り専用の表示 */}
-        <input
-          type="text"
-          className="nodrag input input-bordered w-full"
-          value={data.myField}
-          onChange={(e) => handleFieldChange(e.target.value)}
-          disabled={isExecuteMode || isLoading || isExecuted}
-        />
+        {/* edit / display UI */}
       </BaseNodeContent>
-
-      {/* Execute mode時のみフッター表示 */}
-      {isExecuteMode && (
-        <BaseNodeFooter>
-          <button
-            type="button"
-            className="nodrag btn btn-primary"
-            onClick={handleExecute}
-            disabled={isLoading || isExecuted}
-          >
-            {isLoading && <span className="loading loading-spinner loading-sm" />}
-            実行
-          </button>
-        </BaseNodeFooter>
-      )}
-
-      {/* 接続ハンドル */}
+      {isExecuteMode && <BaseNodeFooter>{/* execute button */}</BaseNodeFooter>}
       <BaseHandle id="target-1" type="target" position={Position.Left} />
       <BaseHandle id="source-1" type="source" position={Position.Right} />
     </BaseNode>
@@ -208,44 +101,41 @@ export const ExampleNode = ({
 };
 ```
 
----
+### Base components
 
-## UIコンポーネント
+Re-exported from `frontend/src/components/Node/base/`:
 
-### BaseNode コンポーネント群
+| Name | Purpose |
+|------|---------|
+| `BaseNode` | Top-level node container |
+| `BaseNodeHeader` / `BaseNodeHeaderTitle` | Header |
+| `BaseNodeContent` | Scrollable body (controlled by `maxHeight`) |
+| `BaseNodeFooter` | Footer (execute button etc.) |
+| `BaseHandle` / `LabeledHandle` | Connection handles |
+| `EditableTitle` | Inline-editable title for edit mode |
+| `cn` | Class-name join utility |
 
-```typescript
-// frontend/src/components/Node/base/base-node.tsx
-export function BaseNode({ className, width, style, ...props })
-export function BaseNodeHeader({ className, ...props })
-export function BaseNodeHeaderTitle({ className, ...props })
-export function BaseNodeContent({ className, maxHeight, ...props })
-export function BaseNodeFooter({ className, ...props })
-export function BaseHandle({ className, ...props })
-export function LabeledHandle({ title, position, ...props })
-```
+### Important CSS classes
 
-### 重要なクラス
-
-- `nodrag`: React Flow のドラッグを無効化（input要素などに必須）
-- `bg-base-300`: 標準の背景色
-- `border-success bg-success/10`: 実行完了時のスタイル
+- `nodrag` — Disables React Flow drag. **Required** on `input`, `textarea`, `button`, and other interactive elements.
+- `bg-base-300` — Default background.
+- `border-success bg-success/10` — Conventional style applied when `data.executedAt` is set.
 
 ---
 
-## Edit Mode vs Execute Mode
+## Edit mode vs execute mode
 
-| 観点 | Edit Mode | Execute Mode |
-|------|-----------|--------------|
-| 用途 | テンプレート設計時 | セッション実行時 |
-| データ編集 | 可能 | 不可（表示のみ） |
-| 実行ボタン | 非表示 | 表示 |
-| 削除ボタン | 表示 | 非表示 |
-| 実行コンテキスト | なし | あり（guildId, sessionId, bot等） |
+| Aspect | Edit mode | Execute mode |
+|--------|-----------|--------------|
+| Purpose | Template authoring | Session runtime |
+| Data editing | Allowed | Read-only |
+| Execute button | Hidden | Shown |
+| Delete button | Shown | Hidden |
+| Execution context | None | Provided |
 
-### 実行コンテキスト
+### Execution context
 
-```typescript
+```ts
 // frontend/src/components/Node/contexts/NodeExecutionContext.tsx
 interface NodeExecutionContextValue {
   guildId: string;
@@ -255,258 +145,136 @@ interface NodeExecutionContextValue {
 }
 ```
 
----
-
-## ストア統合
-
-### templateEditorStore.ts への追加手順
-
-1. **型のインポート**
-```typescript
-import type { ExampleDataSchema } from "@/components/Node";
-```
-
-2. **型定義の追加**
-```typescript
-export type ExampleNodeData = z.infer<typeof ExampleDataSchema>;
-```
-
-3. **FlowNode union型への追加**
-```typescript
-export type FlowNode =
-  | Node<ExampleNodeData, "Example">
-  | // ... 既存の型
-```
-
-4. **addNode関数への追加**
-```typescript
-} else if (type === "Example") {
-  newNode = {
-    id,
-    type,
-    position,
-    data: {
-      title: "ノードのデフォルトタイトル",
-      myField: "",
-    },
-  };
-}
-```
-
-5. **updateNodeData の型にも追加**
-```typescript
-updateNodeData: (
-  nodeId: string,
-  data: Partial<
-    | ExampleNodeData
-    | // ... 既存の型
-  >,
-) => void;
-```
-
-6. **addNode の type 引数にも追加**
-```typescript
-addNode: (
-  type:
-    | "Example"
-    | // ... 既存の型
-  position: { x: number; y: number },
-) => void;
-```
+Nodes call `useNodeExecutionOptional()` to obtain it. The return value can be `null`, so guard before use.
 
 ---
 
-## node-wrapper.tsx への登録
+## DynamicValue system
 
-```typescript
-// frontend/src/components/Node/base/node-wrapper.tsx
-import { ExampleNode } from "../nodes/ExampleNode";
+Resolves node parameters dynamically — literals, session names, role/channel references, and game flags — through a single discriminated union.
 
-export function createNodeTypes(mode: "edit" | "execute" = "edit"): NodeTypes {
-  const ExampleWithMode: ComponentType<NodeProps<any>> = (props) => (
-    <ExampleNode {...props} mode={mode} />
-  );
-
-  return {
-    Example: ExampleWithMode,
-    // ... 既存のノード
-  };
-}
-```
-
----
-
-## TemplateEditor.tsx への追加
-
-```typescript
-// frontend/src/components/TemplateEditor.tsx
-const NODE_CATEGORIES = [
-  {
-    category: "カテゴリ名",
-    nodes: [
-      { type: "Example", label: "サンプルノード" },
-      // ...
-    ],
-  },
-  // ...
-] as const;
-```
-
----
-
-## 新しいノード実装のチェックリスト
-
-1. [ ] `frontend/src/components/Node/nodes/NewNode.tsx` を作成
-   - DataSchema を定義
-   - コンポーネントを実装
-2. [ ] `frontend/src/components/Node/base/base-schema.ts` に幅を追加
-   - `NODE_TYPE_WIDTHS` に追加
-3. [ ] `frontend/src/components/Node/base/node-wrapper.tsx` に登録
-   - インポート追加
-   - `createNodeTypes` 関数内で mode を注入
-4. [ ] `frontend/src/components/Node/nodes/index.ts` にエクスポート追加
-   - ノードコンポーネントと DataSchema をエクスポート
-5. [ ] `frontend/src/stores/templateEditorStore.ts` を更新
-   - 型インポート
-   - 型定義追加
-   - FlowNode union型に追加
-   - addNode 関数に初期データ追加
-   - updateNodeData の型に追加
-6. [ ] `frontend/src/components/TemplateEditor.tsx` に追加
-   - `NODE_CATEGORIES` に追加
-
----
-
-## DynamicValue システム
-
-ノードのパラメータを動的に解決するシステム。
-
-```typescript
+```ts
 // frontend/src/components/Node/utils/DynamicValue.ts
 export const DynamicValueSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("literal"), value: z.string() }),
   z.object({ type: z.literal("session.name") }),
+  z.object({ type: z.literal("roleRef"), roleName: z.string() }),
+  z.object({ type: z.literal("channelRef"), channelName: z.string() }),
+  z.object({ type: z.literal("gameFlag"), flagKey: z.string() }),
 ]);
 
-export function resolveDynamicValue(
-  value: DynamicValue,
-  context: { sessionName?: string },
-): string {
-  switch (value.type) {
-    case "literal":
-      return value.value;
-    case "session.name":
-      return context.sessionName ?? "";
-  }
+export interface DynamicValueContext {
+  sessionName?: string;
+  roles?: Map<string, string>;       // roleName -> roleId
+  channels?: Map<string, string>;    // channelName -> channelId
+  gameFlags?: Record<string, string>;
 }
+
+export function resolveDynamicValue(value: DynamicValue, context: DynamicValueContext): string;
 ```
 
-**使用例（CreateCategoryNode）:**
-```typescript
-export const DataSchema = BaseNodeDataSchema.extend({
-  categoryName: DynamicValueSchema,
-});
-```
+Use `DynamicValueSchema` directly as a node field, then call `resolveDynamicValue` at execute time. Adding a new variant requires updating three places: the schema, `DynamicValueContext`, and `resolveDynamicValue`.
 
 ---
 
-## データ永続化
+## Persistence
 
-### ReactFlowData
+Nodes are persisted to IndexedDB via Dexie.js using the React Flow data shape:
 
-```typescript
+```ts
 export const ReactFlowDataSchema = z.object({
   nodes: z.array(z.any()),
   edges: z.array(z.any()),
-  viewport: z.object({
-    x: z.number(),
-    y: z.number(),
-    zoom: z.number(),
-  }),
+  viewport: z.object({ x: z.number(), y: z.number(), zoom: z.number() }),
 });
 ```
 
-- ノードデータは `GameSession.reactFlowData` に JSON 文字列として保存
-- Dexie.js (IndexedDB) を使用
+- Stored on both `Template.reactFlowData` and `GameSession.reactFlowData`.
+- `nodes` is typed as `z.any()`, so each node's `DataSchema` is responsible for validating its own payload at read time.
 
 ---
 
-## 実行フロー
+## Execution flow
 
-1. **検証**: 入力データチェック
-2. **解決**: ロール名→ID変換など参照データ取得
-3. **API呼び出し**: Discord API を通じて実行
-4. **DB保存**: 作成したリソース情報を DB に記録
-5. **ステート更新**: `executedAt` タイムスタンプを設定
-6. **トースト通知**: 実行結果をユーザーに通知
+1. **Validate** — Check inputs.
+2. **Resolve** — Use `resolveDynamicValue` to translate role/channel names to IDs, etc.
+3. **Call** — Hit Discord API.
+4. **Persist** — Record the created resource in the DB.
+5. **Update state** — `updateNodeData(id, { executedAt: new Date() })`.
+6. **Toast** — Notify the user of the result.
 
-### プログレス表示パターン
+### Progress reporting pattern
 
-```typescript
+For nodes that loop (e.g. creating multiple roles), keep a progress counter in state and render a `<progress>` element:
+
+```tsx
 const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-// ループ処理中
 for (let i = 0; i < items.length; i++) {
   setProgress({ current: i + 1, total: items.length });
-  // 処理
+  // work
 }
 
-// UI
 {isLoading && (
-  <progress
-    className="progress progress-primary w-full"
-    value={progress.current}
-    max={progress.total}
-  />
+  <progress className="progress progress-primary w-full"
+    value={progress.current} max={progress.total} />
 )}
 ```
 
 ---
 
-## DataSchema 変更とマイグレーション
+## DataSchema changes and migrations
 
-ノードの `DataSchema` を変更した場合、既存の IndexedDB データとの互換性を保つために Dexie マイグレーションが必要になる。
+### Policy
 
-### 設計方針
+Schema changes are handled via **Dexie DB versioning** (`this.version(N).upgrade()`), not at app startup. This guarantees a one-time, deterministic transformation of stored records.
 
-DataSchema の変更は **DB レベルのマイグレーション** で対応する（アプリ起動時の変換ロジックではなく）。Dexie のバージョニング機構を使うことで、一度だけ確実にデータを変換できる。
+### Key files
 
-### マイグレーション履歴
+| File | Role |
+|------|------|
+| `frontend/src/db/database.ts` | Dexie migration definitions |
+| `frontend/src/db/schemas.ts` | DB table type definitions |
+| `frontend/src/components/Node/nodes/{NodeName}Node.tsx` | The `DataSchema` being changed |
 
-| DB version | 変更内容 |
-|-----------|---------|
-| v1 → v2 | `SendMessageNode.channelName` (string) → `channelNames` (string[]) / `CreateCategoryNode.categoryName` → DynamicValue 型へ |
-| v2 → v3 | `SendMessageNode.channelNames` (string[]) → `channelTargets` (ChannelTarget[]) |
+### Things to watch
 
-### 仕組み（4ステップ）
+- Both `Template` and `GameSession` carry `reactFlowData`. Migrate **both** tables with `modify()`.
+- Define the old shape as a separate `z.object({ ... })` and use `safeParse` to detect legacy records — skip records that already match the new shape.
+- After conversion, `delete node.data.oldField` to remove obsolete keys.
 
-1. **旧スキーマ定義**: `z.object({ ... })` で移行前のデータ形を定義する
-2. **safeParse で条件分岐**: 旧スキーマにマッチするレコードのみ変換する（新スキーマのデータはスキップ）
-3. **両テーブルを移行**: `Template` と `GameSession` の両方に `reactFlowData` が含まれるため、両方を `modify()` する
-4. **旧フィールドを delete**: 変換後は `delete node.data.oldField` で不要フィールドを削除する
+### Procedure
 
-### キーファイル
-
-| ファイル | 役割 |
-|---------|------|
-| `frontend/src/db/database.ts` | Dexie マイグレーション定義（`this.version(N).upgrade()`） |
-| `frontend/src/db/schemas.ts` | DB テーブルの型定義 |
-| `frontend/src/components/Node/nodes/{NodeName}Node.tsx` | ノードの `DataSchema`（変更対象） |
-
-> スキーマ変更の実装手順は [`.claude/skills/schema-migration/SKILL.md`](../../.claude/skills/schema-migration/SKILL.md) を参照。
+See `.claude/skills/schema-migration/SKILL.md` for full templates and worked examples (rename, string → discriminated union, array element type change).
 
 ---
 
-## 関連ファイル
+## Adding a new node type
 
-| ファイル | 説明 |
-|---------|------|
-| `frontend/src/components/Node/base/base-node.tsx` | UIプリミティブ |
-| `frontend/src/components/Node/base/base-schema.ts` | 共通スキーマ・定数 |
-| `frontend/src/components/Node/base/editable-title.tsx` | インライン編集タイトルコンポーネント |
-| `frontend/src/components/Node/base/node-wrapper.tsx` | ノードタイプ登録 |
-| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | 実行コンテキスト |
-| `frontend/src/components/Node/utils/DynamicValue.ts` | 動的値システム |
-| `frontend/src/components/Node/nodes/` | 全ノード実装（20種類） |
-| `frontend/src/stores/templateEditorStore.ts` | Zustandストア |
-| `frontend/src/components/TemplateEditor.tsx` | エディタ本体 |
+These files must be edited. None of this is automated by type inference — every list is enumerated by hand.
+
+- `frontend/src/components/Node/nodes/{NodeName}Node.tsx` — create
+- `frontend/src/components/Node/nodes/index.ts` — re-export
+- `frontend/src/components/Node/base/base-schema.ts` — add to `NODE_TYPE_WIDTHS`
+- `frontend/src/components/Node/base/node-wrapper.tsx` — register in `createNodeTypes` (injects `mode`)
+- `frontend/src/stores/templateEditorStore.ts` — extend the `FlowNode` union, the `addNode` switch, and `updateNodeData`'s parameter type (three separate sites)
+- `frontend/src/components/TemplateEditor.tsx` — add to `NODE_CATEGORIES`
+
+**For the full procedure and code templates, follow `.claude/skills/node-creator/SKILL.md`.**
+
+---
+
+## Reference files
+
+| File | Description |
+|------|-------------|
+| `frontend/src/components/Node/base/base-node.tsx` | UI primitives |
+| `frontend/src/components/Node/base/base-schema.ts` | Shared schema and width/height constants |
+| `frontend/src/components/Node/base/editable-title.tsx` | Inline-editable title |
+| `frontend/src/components/Node/base/node-wrapper.tsx` | Node-type registration with `mode` injection |
+| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | Execution context provider |
+| `frontend/src/components/Node/utils/DynamicValue.ts` | DynamicValue system |
+| `frontend/src/components/Node/nodes/` | All node implementations |
+| `frontend/src/stores/templateEditorStore.ts` | Zustand store |
+| `frontend/src/components/TemplateEditor.tsx` | Editor entry point |
+| `frontend/src/db/database.ts` | Dexie DB and migrations |
