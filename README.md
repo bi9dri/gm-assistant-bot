@@ -15,7 +15,7 @@ Bun workspace monorepo:
 
 | パッケージ | スタック | デプロイ先 |
 | --- | --- | --- |
-| `frontend/` | React + Vite + TanStack Router + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | Cloudflare Workers Static Assets |
+| `frontend/` | React + Vite + TanStack Router + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | GitHub Pages |
 | `backend/` | Hono + Zod + discord.js | Cloudflare Workers |
 
 詳細は `docs/dev/` を参照:
@@ -64,7 +64,6 @@ bun run --bun test        # テスト
 bun run --bun typecheck   # 型チェック
 bun run --bun lint        # lint
 bun run --bun format      # format
-bun run --bun deploy      # Cloudflare Workers にデプロイ
 bun run knip              # 未使用 export / dep の検出
 bun run ncu               # 依存更新チェック (cooldown 7 日)
 ```
@@ -81,13 +80,14 @@ bun run ncu               # 依存更新チェック (cooldown 7 日)
 
 ## デプロイ
 
-Cloudflare アカウントと wrangler 認証 (`wrangler login`) が必要。
+- **frontend**: `main` への push で GitHub Actions (`.github/workflows/deploy-frontend.yml`) が走り、GitHub Pages に自動デプロイされる。
+- **backend**: Cloudflare Workers に `gm-assistant-bot-api` としてデプロイ。Cloudflare アカウントと `wrangler login` が必要。
 
-```bash
-bun run --bun deploy
-```
+  ```bash
+  bun run --bun --filter gm-assistant-bot-backend deploy
+  ```
 
-frontend は `gm-assistant-bot-web`、backend は `gm-assistant-bot-api` として Cloudflare Workers にデプロイされる。custom domain は各 `wrangler.toml` を参照。
+  custom domain は `backend/wrangler.toml` を参照。
 
 ## ライセンス
 
