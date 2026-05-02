@@ -36,6 +36,30 @@ jobs:
         with:
           bun-version: "1.3.11"
       - run: bun install --frozen-lockfile
+      - name: Diagnose vite startup (temporary)
+        working-directory: frontend
+        run: |
+          set +e
+          echo "=== versions ==="
+          node --version || echo "no node"
+          bun --version
+          ls -la node_modules/.bin/vite || echo "no vite bin"
+          echo "=== launch dev for 45s ==="
+          bun run dev > /tmp/vite.log 2>&1 &
+          VITE_PID=$!
+          for i in 1 2 3 4 5 6 7 8 9; do
+            sleep 5
+            echo "--- t=$((i*5))s ---"
+            tail -30 /tmp/vite.log 2>/dev/null
+            if curl -fsS http://localhost:3000 -o /dev/null; then
+              echo "200 OK at t=$((i*5))s"; break
+            fi
+          done
+          echo "=== final log ==="
+          cat /tmp/vite.log
+          kill -9 $VITE_PID 2>/dev/null
+          sleep 2
+          exit 0
       - run: bun run --bun --filter gm-assistant-bot-frontend test:vrt
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
