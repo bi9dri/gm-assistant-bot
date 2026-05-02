@@ -74,7 +74,7 @@ Starting the VRT dev server with the Bun runtime (`bun --bun`) hits an Internal 
 - Commit baselines to git
 - Layout: auto-organized next to `frontend/test/vrt/{name}.vrt.ts` as `*.vrt.ts-snapshots/{arg}-{projectName}-{platform}{ext}`
 - Update baselines in the same Linux environment as CI. Updating from local macOS or similar mass-produces false positives from pixel differences
-- CI integration (fail on diff in PRs / upload diff PNGs as artifacts) and the baseline update workflow are owned by **Issue [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144)** and the upcoming `docs/dev/visual-regression-testing.md`
+- CI integration (fail on diff in PRs / upload diff PNGs as artifacts) and the baseline update workflow live in [`docs/dev/visual-regression-testing.md`](./visual-regression-testing.md)
 
 ### What VRT Does Not Cover
 - Logic verification after a button click (Unit / Integration responsibility)
@@ -191,7 +191,7 @@ Do not duplicate config **values** in this doc — files are the source of truth
 | VRT config | `frontend/playwright.config.ts` | testDir / Chromium / determinism / `webServer` |
 | VRT MSW | `frontend/test/vrt/msw/{handlers.ts, browser.ts}` | Per-test handler overrides extend `frontend/test/vrt/fixtures.ts` |
 | Storybook | `frontend/.storybook/{main.ts, preview.ts}` | Isolation for VRT. `viteFinal` deliberately does not spread `vite.config.ts` (avoids tanstackRouter / MSW middleware / devtools conflicts) |
-| CI | `.github/workflows/ci.yml` | typecheck → test → lint. VRT job to be added per [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144) |
+| CI | `.github/workflows/ci.yml` | `check` job (typecheck → test → lint) and `vrt` job (Playwright Docker container) run in parallel. See [`visual-regression-testing.md`](./visual-regression-testing.md) for VRT operations |
 
 ### Test File Placement Convention
 
@@ -216,4 +216,4 @@ Aligned with the Development Workflow in CLAUDE.md. After implementation, the ta
 VRT-only verification (optional):
 
 - `bun run --bun --filter gm-assistant-bot-frontend test:vrt`
-- The canonical baseline-update command and Linux Docker procedure are defined in [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144) and the upcoming `docs/dev/visual-regression-testing.md`
+- Baseline updates and the CI artifact recovery flow are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)
