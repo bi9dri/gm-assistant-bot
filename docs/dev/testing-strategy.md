@@ -53,7 +53,7 @@ Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/is
 |------|----------|
 | Browser | Chromium only |
 | Snapshot strategy | Playwright's standard `toHaveScreenshot` + git commit |
-| OS-difference handling | Update baselines in the same Linux environment as CI (Playwright official Docker recommended) |
+| OS-difference handling | CI runs on `ubuntu-latest` natively; baselines are committed under the `-linux.png` key. Local Linux (incl. WSL) usually matches; if not, use the CI artifact recovery flow in [`visual-regression-testing.md`](./visual-regression-testing.md) |
 | External dependency mocking | MSW pins Discord OAuth and the entire `/api`. Activated by passing env `VITE_USE_MSW=true` to the dev server |
 | Component isolation | Storybook + `@storybook/addon-themes`'s `data-theme` decorator for light/dark switching |
 
@@ -68,7 +68,7 @@ Screenshots must be deterministic to be meaningful. The following must always ho
 - Set `prefers-reduced-motion` on the browser context
 
 ### Known Workaround
-Starting the VRT dev server under the Bun runtime hits an Internal Server Error / startup hang caused by the Tailwind + `@tailwindcss/vite` + DaisyUI plugin combination. The `webServer.command` in `frontend/playwright.config.ts` therefore spawns vite via `node node_modules/.bin/vite` so the `--bun` flag from the parent `bun run --bun --filter ... test:vrt` invocation does not propagate into the child process. The reason and reproduction conditions are documented as a comment in that file — always consult it before modifying the config.
+Starting the VRT dev server with the Bun runtime (`bun --bun`) hits an Internal Server Error caused by the Tailwind + `@tailwindcss/vite` + DaisyUI plugin combination. The `webServer.command` in `frontend/playwright.config.ts` therefore **does not** include `--bun`. The reason and reproduction conditions are documented as a comment in that file — always consult it before modifying the config.
 
 ### Snapshot Operations
 - Commit baselines to git
@@ -191,7 +191,7 @@ Do not duplicate config **values** in this doc — files are the source of truth
 | VRT config | `frontend/playwright.config.ts` | testDir / Chromium / determinism / `webServer` |
 | VRT MSW | `frontend/test/vrt/msw/{handlers.ts, browser.ts}` | Per-test handler overrides extend `frontend/test/vrt/fixtures.ts` |
 | Storybook | `frontend/.storybook/{main.ts, preview.ts}` | Isolation for VRT. `viteFinal` deliberately does not spread `vite.config.ts` (avoids tanstackRouter / MSW middleware / devtools conflicts) |
-| CI | `.github/workflows/ci.yml` | `check` job (typecheck → test → lint) and `vrt` job (Playwright Docker container) run in parallel. See [`visual-regression-testing.md`](./visual-regression-testing.md) for VRT operations |
+| CI | `.github/workflows/ci.yml` | `check` job (typecheck → test → lint) and `vrt` job (`ubuntu-latest` + Playwright with chromium binary cache) run in parallel. See [`visual-regression-testing.md`](./visual-regression-testing.md) for VRT operations |
 
 ### Test File Placement Convention
 

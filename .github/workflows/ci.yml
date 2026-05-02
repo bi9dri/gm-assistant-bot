@@ -24,18 +24,25 @@ jobs:
 
   vrt:
     runs-on: ubuntu-latest
-    # Image tag MUST match frontend/package.json `@playwright/test` version.
-    # Bumping one without the other will break every baseline.
-    container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      # Playwright image is minimal; setup-bun extracts a .zip and needs unzip.
-      - run: apt-get update && apt-get install -y --no-install-recommends unzip
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
         with:
           bun-version: "1.3.11"
       - run: bun install --frozen-lockfile
+      # Cache Playwright browser binaries (~280MB chromium). Key on lockfile
+      # so cache invalidates whenever @playwright/test version changes.
+      - id: playwright-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: frontend
+        run: bun x playwright install --with-deps chromium
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: frontend
+        run: bun x playwright install-deps chromium
       - run: bun run --bun --filter gm-assistant-bot-frontend test:vrt
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

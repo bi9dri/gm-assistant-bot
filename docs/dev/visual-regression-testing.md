@@ -12,9 +12,13 @@ bun run --bun --filter gm-assistant-bot-frontend test:vrt
 
 Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` (see `frontend/playwright.config.ts`). Chromium only.
 
-## Updating baselines (local)
+The first local run also needs the chromium binary:
 
-Local updates do **not** require Docker:
+```bash
+bun --cwd frontend x playwright install chromium
+```
+
+## Updating baselines (local)
 
 ```bash
 bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
@@ -22,9 +26,9 @@ git add frontend/test/vrt
 git commit -m "chore(vrt): update baselines"
 ```
 
-Snapshots are written to `frontend/test/vrt/{name}.vrt.ts-snapshots/{arg}-{projectName}-{platform}.png`. Since CI is Linux, only the `-linux.png` set is consumed by CI; other platforms are ignored.
+Snapshots are written to `frontend/test/vrt/{name}.vrt.ts-snapshots/{arg}-{projectName}-{platform}.png`. CI runs on Linux so only the `-linux.png` set is consumed by CI; other platforms are ignored.
 
-If your local Linux environment renders identically to the CI Playwright Docker image, this is enough. When it does not (font / libfontconfig / chromium-build differences), use the recovery flow below — **don't** try to chase pixel parity locally.
+If your local Linux render matches the GitHub `ubuntu-latest` runner this is enough. When pixels diverge (font / fontconfig / chromium-libdeps differences), use the recovery flow below — **do not** chase pixel parity locally.
 
 ## Updating baselines from CI artifact (recovery flow)
 
@@ -50,21 +54,22 @@ This is the canonical reconciliation path: **CI's rendering is the source of tru
 `.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the existing `check` job:
 
 - Triggered on `push` to `main` and on every `pull_request` to `main`
-- Runs inside `mcr.microsoft.com/playwright:v1.59.1-noble` to fix OS / font / chromium-build pixel parity
-- Bun is installed inside the container; the dev server is launched by `playwright.config.ts`'s `webServer`
+- Runs natively on `ubuntu-latest` (no container) so the env mirrors a typical local Linux / WSL setup
+- Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `bun.lock`); on miss `bun x playwright install --with-deps chromium` populates it. On hit `bun x playwright install-deps chromium` only installs system libs
+- Vite dev server is launched by `playwright.config.ts`'s `webServer`
 - On failure, `frontend/test-results/` is uploaded as the `vrt-diff` artifact
   - Contents: `*-actual.png`, `*-expected.png`, `*-diff.png`, Playwright trace
   - `retention-days: 14`
 
 ## Troubleshooting
 
-### `vrt` job fails the moment Playwright bumps
+### `vrt` job mass-fails the moment Playwright bumps
 
-`@playwright/test` in `frontend/package.json` and the `container.image` tag in `.github/workflows/ci.yml` **must** be updated together. A version mismatch ships a different chromium build and breaks every baseline at once. Pin both to the same `vX.Y.Z` and regenerate baselines via the recovery flow above.
+A new `@playwright/test` ships a new chromium build, which renders pixels differently. Bump first, then regenerate baselines via the recovery flow above. The browser cache key is `bun.lock` so the new chromium downloads automatically.
 
 ### `webServer` hangs / Internal Server Error during VRT
 
-This is the documented Tailwind + `@tailwindcss/vite` + DaisyUI Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately spawns vite via `node node_modules/.bin/vite` (not `bun run dev`) so the `--bun` flag from `bun run --bun --filter ... test:vrt` does not propagate into the dev server child process. Do not "fix" this back to `bun run dev` without re-reading the comment in that file.
+Documented Tailwind + `@tailwindcss/vite` + DaisyUI + Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately uses `bun run dev` (not `bun run --bun dev`) so vite executes via its node shebang. Do not "fix" this without re-reading the comment in that file.
 
 ### Artifact contains no PNGs, only `trace.zip`
 
