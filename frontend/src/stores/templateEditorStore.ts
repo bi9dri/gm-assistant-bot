@@ -41,27 +41,27 @@ import { FileSystem } from "@/fileSystem";
 
 import { collectFilePathsFromNode, collectFilePathsFromNodes } from "./nodeFilePaths";
 
-export type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
-export type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
-export type CombinationSendMessageNodeData = z.infer<typeof CombinationSendMessageDataSchema>;
-export type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
-export type CommentNodeData = z.infer<typeof CommentDataSchema>;
-export type ConditionalBranchNodeData = z.infer<typeof ConditionalBranchDataSchema>;
-export type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
-export type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
-export type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
-export type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
-export type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
-export type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
-export type KanbanNodeData = z.infer<typeof KanbanDataSchema>;
-export type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
-export type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
-export type SelectBranchNodeData = z.infer<typeof SelectBranchDataSchema>;
-export type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
-export type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
-export type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
-export type RandomSelectNodeData = z.infer<typeof RandomSelectDataSchema>;
-export type CounterNodeData = z.infer<typeof CounterDataSchema>;
+type AddRoleToRoleMembersNodeData = z.infer<typeof AddRoleToRoleMembersDataSchema>;
+type BlueprintNodeData = z.infer<typeof BlueprintDataSchema>;
+type CombinationSendMessageNodeData = z.infer<typeof CombinationSendMessageDataSchema>;
+type ChangeChannelPermissionNodeData = z.infer<typeof ChangeChannelPermissionDataSchema>;
+type CommentNodeData = z.infer<typeof CommentDataSchema>;
+type ConditionalBranchNodeData = z.infer<typeof ConditionalBranchDataSchema>;
+type CreateCategoryNodeData = z.infer<typeof CreateCategoryDataSchema>;
+type CreateChannelNodeData = z.infer<typeof CreateChannelDataSchema>;
+type CreateRoleNodeData = z.infer<typeof CreateRoleDataSchema>;
+type DeleteCategoryNodeData = z.infer<typeof DeleteCategoryDataSchema>;
+type DeleteChannelNodeData = z.infer<typeof DeleteChannelDataSchema>;
+type DeleteRoleNodeData = z.infer<typeof DeleteRoleDataSchema>;
+type KanbanNodeData = z.infer<typeof KanbanDataSchema>;
+type LabeledGroupNodeData = z.infer<typeof LabeledGroupDataSchema>;
+type RecordCombinationNodeData = z.infer<typeof RecordCombinationDataSchema>;
+type SelectBranchNodeData = z.infer<typeof SelectBranchDataSchema>;
+type SendMessageNodeData = z.infer<typeof SendMessageDataSchema>;
+type SetGameFlagNodeData = z.infer<typeof SetGameFlagDataSchema>;
+type ShuffleAssignNodeData = z.infer<typeof ShuffleAssignDataSchema>;
+type RandomSelectNodeData = z.infer<typeof RandomSelectDataSchema>;
+type CounterNodeData = z.infer<typeof CounterDataSchema>;
 
 export type FlowNode =
   | Node<AddRoleToRoleMembersNodeData, "AddRoleToRoleMembers">

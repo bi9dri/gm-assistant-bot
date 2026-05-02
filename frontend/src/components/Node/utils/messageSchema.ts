@@ -2,7 +2,7 @@ import z from "zod";
 
 import { FileSystem } from "@/fileSystem";
 
-export const AttachmentSchema = z.object({
+const AttachmentSchema = z.object({
   fileName: z.string(),
   filePath: z.string(),
   fileSize: z.number(),

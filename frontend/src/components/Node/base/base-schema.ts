@@ -5,7 +5,7 @@ export const BaseNodeDataSchema = z.object({
 });
 
 // Node width constants (multiples of 16px)
-export const NODE_WIDTHS = {
+const NODE_WIDTHS = {
   sm: 192, // 12 × 16
   md: 256, // 16 × 16
   lg: 480, // 30 × 16

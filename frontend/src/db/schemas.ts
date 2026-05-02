@@ -4,7 +4,7 @@ import z from "zod";
 // Basic Entity Schemas
 // ========================================
 
-export const DiscordBotSchema = z.object({
+const DiscordBotSchema = z.object({
   id: z.string().nonempty().trim(),
   name: z.string().nonempty().trim(),
   token: z.string().nonempty().trim(),
@@ -17,13 +17,13 @@ export const GuildSchema = z.object({
   icon: z.url().optional(),
 });
 
-export const CategorySchema = z.object({
+const CategorySchema = z.object({
   id: z.string().nonempty().trim(),
   sessionId: z.number().int(),
   name: z.string().nonempty().trim(),
 });
 
-export const ChannelSchema = z.object({
+const ChannelSchema = z.object({
   id: z.string().nonempty().trim(),
   sessionId: z.number().int(),
   name: z.string().nonempty().trim(),
@@ -32,7 +32,7 @@ export const ChannelSchema = z.object({
   readerRoleIds: z.array(z.string()),
 });
 
-export const RoleSchema = z.object({
+const RoleSchema = z.object({
   id: z.string().nonempty().trim(),
   guildId: z.string().nonempty().trim(),
   sessionId: z.number().int().optional(),
@@ -67,7 +67,7 @@ export const defaultReactFlowData: ReactFlowData = {
 // Complex Entity Schemas (with JSON fields)
 // ========================================
 
-export const GameSessionSchema = z.object({
+const GameSessionSchema = z.object({
   id: z.number().int(),
   name: z.string().nonempty().trim(),
   guildId: z.string().nonempty().trim(),
@@ -78,7 +78,7 @@ export const GameSessionSchema = z.object({
   lastUsedAt: z.date(),
 });
 
-export const TemplateSchema = z.object({
+const TemplateSchema = z.object({
   id: z.number().int(),
   name: z.string().nonempty().trim(),
   gameFlags: z.string(), // JSON encoded
