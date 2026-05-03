@@ -13,7 +13,8 @@
     "test": "bun test",
     "test:vrt": "playwright test",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "storybook:serve-static": "bun test/vrt/serve-storybook-static.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "4.2.4",

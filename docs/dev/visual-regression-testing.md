@@ -1,16 +1,34 @@
 # Visual Regression Testing (VRT)
 
-Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142) and the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144).
+Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), and the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147).
 
 For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to update baselines**.
+
+## Layout
+
+Two Playwright projects, both chromium-only:
+
+- `chromium` — Routes / full-page flows. Tests live in `frontend/test/vrt/*.vrt.ts`. webServer = Vite dev server (:3000) with `VITE_USE_MSW=true`.
+- `chromium-storybook` — Individual component snapshots via Storybook iframes. Tests live in `frontend/test/vrt/storybook/*.vrt.ts`. webServer = a tiny Bun-based static server (:6007) serving `frontend/storybook-static/`.
+
+The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one snapshot per story — no test file edits needed.
 
 ## Local execution
 
 ```bash
+# Routes / full-page VRT only
+bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium
+
+# Storybook component VRT (build static first)
+bun run --bun --filter gm-assistant-bot-frontend build-storybook
+bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-storybook
+
+# Both
+bun run --bun --filter gm-assistant-bot-frontend build-storybook
 bun run --bun --filter gm-assistant-bot-frontend test:vrt
 ```
 
-Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` (see `frontend/playwright.config.ts`). Chromium only.
+Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` and the Storybook static server (see `frontend/playwright.config.ts`). Chromium only.
 
 The first local run also needs the chromium binary:
 
@@ -79,7 +97,16 @@ The test failed for a non-snapshot reason (e.g., dev server timeout, route 404).
 
 If you regenerate locally and CI keeps failing on the same snapshot, stop syncing from local — switch entirely to the CI artifact recovery flow. Mixing the two sources is what causes ping-pong updates.
 
+## Adding a Storybook component VRT
+
+1. Create `frontend/test/stories/Node/nodes/<Name>.stories.tsx` (or any path under `frontend/test/stories/`). Use `renderSingleNode` from `_render.tsx` to wrap React Flow custom nodes in a minimal `<ReactFlow>` instance — direct `<Component {...} />` won't render handles correctly.
+2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the snapshot becomes deterministic).
+3. Run `bun run --bun --filter gm-assistant-bot-frontend build-storybook` then `... test:vrt --update-snapshots` to generate the baseline png.
+4. Commit both the `*.stories.tsx` and the new `frontend/test/vrt/storybook/components.vrt.ts-snapshots/<id>-chromium-linux.png`.
+
+`<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Node/Nodes/SendMessage` + `MultipleMessages` → `node-nodes-sendmessage--multiple-messages`. Verify the actual id in `frontend/storybook-static/index.json` after building.
+
 ## Future work
 
 - PR-comment-triggered automatic baseline updates (e.g., `/update-snapshots` bot reply that opens a follow-up commit). Out of scope for [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144).
-- Storybook story snapshots and React Flow editor scenes (per [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) scope) will be added as separate VRT files; this document does not change for that work.
+- light/dark theme パラメタライズ snapshot 二重化 (現状は light のみ)。`@storybook/addon-themes` の `withThemeByDataAttribute` decorator は既に入っているので、Playwright 側で `data-theme` を切り替える decorator パターンを足せば実現可能。
