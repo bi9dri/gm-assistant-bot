@@ -1,7 +1,13 @@
 import { expect, test } from "./fixtures";
 import { FIXTURE_BOTS, FIXTURE_GUILDS, FIXTURE_SESSIONS } from "./seed";
 
-test("session detail — populated", async ({ page, seedDb }) => {
+test("session detail — populated", async ({ page, seedDb }, testInfo) => {
+  // React Flow viewer (`.react-flow__viewport`) は mobile レイアウト下では描画されない。
+  // Mobile UX 対応は別 issue で扱う。
+  testInfo.skip(
+    testInfo.project.name === "chromium-mobile",
+    "React Flow viewer is desktop-only; mobile UX is out of scope.",
+  );
   const session = FIXTURE_SESSIONS[0]!;
   await seedDb({
     sessions: [session],

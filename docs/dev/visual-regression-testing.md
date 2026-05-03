@@ -1,29 +1,54 @@
 # Visual Regression Testing (VRT)
 
-Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), and the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147).
+Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147), and the Desktop / Mobile viewport matrix from [#171](https://github.com/bi9dri/gm-assistant-bot/issues/171).
 
 For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to update baselines**.
 
-## Layout
+## Project matrix
 
-Two Playwright projects, both chromium-only:
+VRT runs three Playwright projects in parallel (all chromium-only):
 
-- `chromium` — Routes / full-page flows. Tests live in `frontend/test/vrt/*.vrt.ts`. webServer = Vite dev server (:3000) with `VITE_USE_MSW=true`.
-- `chromium-storybook` — Individual component snapshots via Storybook iframes. Tests live in `frontend/test/vrt/storybook/*.vrt.ts`. webServer = a tiny Bun-based static server (:6007) serving `frontend/storybook-static/`.
+| Project name         | Scope                                       | Base URL                | Viewport                                     |
+| -------------------- | ------------------------------------------- | ----------------------- | -------------------------------------------- |
+| `chromium-desktop`   | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                     |
+| `chromium-mobile`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`)  |
+| `chromium-storybook` | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                     |
+
+`chromium-mobile` spreads `devices["iPhone 13"]` for the viewport / `isMobile` / `hasTouch` / `deviceScaleFactor` traits, but overrides `defaultBrowserType: "chromium"` because CI only caches the chromium binary.
+
+Snapshots are stored as `{arg}-{projectName}-{platform}.png` via `snapshotPathTemplate`, so desktop and mobile baselines coexist without conflict (e.g. `home-chromium-desktop-linux.png` / `home-chromium-mobile-linux.png`). The CI `vrt-diff` artifact is split by project automatically — no CI changes required when projects are added.
+
+The mobile project exists to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
+
+### Tests skipped on `chromium-mobile`
+
+React Flow を使う route は touch UI と小幅 viewport を想定しておらず、mobile レイアウトでは `.react-flow__viewport` が描画されない。Mobile UX 対応は別 issue で扱う方針なので、以下を `testInfo.skip(...)` で mobile project からのみ skip している:
+
+- `template-editor.vrt.ts` — full file (4 tests)
+- `template-new.vrt.ts` — full file (1 test)
+- `session-detail.vrt.ts` — `populated` only (`not found` は mobile でも実行)
+- `template-detail.vrt.ts` — `populated` only (`not found` は mobile でも実行)
+
+Mobile UX 対応 (responsive React Flow) が入った段階で各 file の `testInfo.skip(...)` を外して mobile baseline を追加する。
+
+The `chromium-storybook` project stays desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the baseline count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
 The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one snapshot per story — no test file edits needed.
 
 ## Local execution
 
 ```bash
-# Routes / full-page VRT only
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium
+# Routes / full-page VRT (desktop only)
+bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop
+
+# Routes / full-page VRT (mobile only)
+bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile
 
 # Storybook component VRT (build static first)
 bun run --bun --filter gm-assistant-bot-frontend build-storybook
 bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-storybook
 
-# Both
+# All three projects
 bun run --bun --filter gm-assistant-bot-frontend build-storybook
 bun run --bun --filter gm-assistant-bot-frontend test:vrt
 ```
@@ -39,7 +64,13 @@ bun --cwd frontend x playwright install chromium
 ## Updating baselines (local)
 
 ```bash
+# All projects (desktop + mobile + storybook)
 bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+
+# Single project — useful when only one viewport is intentionally diverging
+bun run --bun --filter gm-assistant-bot-frontend test:vrt -- \
+  --update-snapshots --project=chromium-mobile
+
 git add frontend/test/vrt
 git commit -m "chore(vrt): update baselines"
 ```
@@ -59,8 +90,8 @@ Use this when local baselines pass locally but `vrt` fails in CI with rendering 
    ```bash
    # inside the unzipped artifact
    # path layout: test-results/<test-id>/<arg>-<projectName>-<platform>-actual.png
-   cp test-results/.../home-chromium-linux-actual.png \
-      frontend/test/vrt/home.vrt.ts-snapshots/home-chromium-linux.png
+   cp test-results/.../home-chromium-desktop-linux-actual.png \
+      frontend/test/vrt/home.vrt.ts-snapshots/home-chromium-desktop-linux.png
    ```
 
 4. Commit the updated baseline and push. CI should now be green.

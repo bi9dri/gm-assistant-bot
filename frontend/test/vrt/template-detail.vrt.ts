@@ -1,7 +1,13 @@
 import { expect, test } from "./fixtures";
 import { FIXTURE_TEMPLATES } from "./seed";
 
-test("template detail — populated", async ({ page, seedDb }) => {
+test("template detail — populated", async ({ page, seedDb }, testInfo) => {
+  // React Flow viewer (`.react-flow__viewport`) は mobile レイアウト下では描画されない。
+  // Mobile UX 対応は別 issue で扱う。
+  testInfo.skip(
+    testInfo.project.name === "chromium-mobile",
+    "React Flow viewer is desktop-only; mobile UX is out of scope.",
+  );
   const template = FIXTURE_TEMPLATES[0]!;
   await seedDb({ templates: [template] });
   await page.goto(`/template/${template.id}`);
