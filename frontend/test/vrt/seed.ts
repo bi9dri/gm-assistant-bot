@@ -115,3 +115,155 @@ export const FIXTURE_GUILDS: SeedGuild[] = [
     icon: "https://cdn.discordapp.com/embed/avatars/1.png",
   },
 ];
+
+// VRT 用の Template editor (React Flow) ノード fixture。
+// viewport は {x:0, y:0, zoom:1} に固定して fitView を不要にし、
+// snapshot を決定的にする。
+const editorReactFlowData = (input: { nodes: unknown[]; edges: unknown[] }): string =>
+  JSON.stringify({
+    nodes: input.nodes,
+    edges: input.edges,
+    viewport: { x: 0, y: 0, zoom: 1 },
+  });
+
+const SINGLE_CREATE_ROLE_NODE = {
+  id: "CreateRole-1",
+  type: "CreateRole",
+  position: { x: 80, y: 60 },
+  data: { roles: ["GM", "プレイヤー"] },
+};
+
+const SINGLE_SEND_MESSAGE_NODE = {
+  id: "SendMessage-1",
+  type: "SendMessage",
+  position: { x: 80, y: 60 },
+  data: {
+    messages: [{ content: "事件発生のお知らせ", attachments: [] }],
+    channelTargets: [{ type: "channelName", value: "general" }],
+  },
+};
+
+const SINGLE_CONDITIONAL_BRANCH_NODE = {
+  id: "ConditionalBranch-1",
+  type: "ConditionalBranch",
+  position: { x: 80, y: 60 },
+  data: {
+    conditions: [
+      {
+        id: "cond-1",
+        root: {
+          type: "rule",
+          id: "rule-1",
+          flagKey: "team",
+          operator: "equals",
+          value: "red",
+          valueType: "literal",
+        },
+      },
+    ],
+  },
+};
+
+const CONNECTED_FLOW_NODES = [
+  {
+    id: "CreateRole-1",
+    type: "CreateRole",
+    position: { x: 60, y: 80 },
+    data: { roles: ["GM", "プレイヤー"] },
+  },
+  {
+    id: "SendMessage-1",
+    type: "SendMessage",
+    position: { x: 380, y: 80 },
+    data: {
+      messages: [{ content: "事件発生のお知らせ", attachments: [] }],
+      channelTargets: [{ type: "channelName", value: "general" }],
+    },
+  },
+  {
+    id: "ConditionalBranch-1",
+    type: "ConditionalBranch",
+    position: { x: 60, y: 380 },
+    data: {
+      conditions: [
+        {
+          id: "cond-1",
+          root: {
+            type: "rule",
+            id: "rule-1",
+            flagKey: "team",
+            operator: "equals",
+            value: "red",
+            valueType: "literal",
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: "Comment-1",
+    type: "Comment",
+    position: { x: 600, y: 480 },
+    width: 256,
+    height: 120,
+    data: { comment: "シナリオの導入フェーズ" },
+  },
+];
+
+const CONNECTED_FLOW_EDGES = [
+  {
+    id: "edge-cr-sm",
+    source: "CreateRole-1",
+    sourceHandle: "source-1",
+    target: "SendMessage-1",
+    targetHandle: "target-1",
+  },
+  {
+    id: "edge-sm-cb",
+    source: "SendMessage-1",
+    sourceHandle: "source-1",
+    target: "ConditionalBranch-1",
+    targetHandle: "target-1",
+  },
+];
+
+export const FIXTURE_EDITOR_TEMPLATES: SeedTemplate[] = [
+  {
+    id: 103,
+    name: "VRT 単独 CreateRole",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: editorReactFlowData({ nodes: [SINGLE_CREATE_ROLE_NODE], edges: [] }),
+    createdAtIso: "2026-01-10T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-15T15:30:00.000+09:00",
+  },
+  {
+    id: 104,
+    name: "VRT 単独 SendMessage",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: editorReactFlowData({ nodes: [SINGLE_SEND_MESSAGE_NODE], edges: [] }),
+    createdAtIso: "2026-01-10T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-15T15:30:00.000+09:00",
+  },
+  {
+    id: 105,
+    name: "VRT 単独 ConditionalBranch",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: editorReactFlowData({
+      nodes: [SINGLE_CONDITIONAL_BRANCH_NODE],
+      edges: [],
+    }),
+    createdAtIso: "2026-01-10T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-15T15:30:00.000+09:00",
+  },
+  {
+    id: 106,
+    name: "VRT 接続フロー",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: editorReactFlowData({
+      nodes: CONNECTED_FLOW_NODES,
+      edges: CONNECTED_FLOW_EDGES,
+    }),
+    createdAtIso: "2026-01-10T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-15T15:30:00.000+09:00",
+  },
+];
