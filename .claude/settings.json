@@ -1,5 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Edit(**/.env*)",
+      "Write(**/.env*)",
+      "Read(**/.dev.vars)",
+      "Edit(**/.dev.vars)",
+      "Write(**/.dev.vars)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -34,19 +44,10 @@
       }
     ]
   },
-  "permissions": {
-    "deny": [
-      "Read(**/.env*)",
-      "Edit(**/.env*)",
-      "Write(**/.env*)",
-      "Read(**/.dev.vars)",
-      "Edit(**/.dev.vars)",
-      "Write(**/.dev.vars)"
-    ]
-  },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "context-mode@context-mode": true
+    "context-mode@context-mode": true,
+    "frontend-design@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "context-mode": {

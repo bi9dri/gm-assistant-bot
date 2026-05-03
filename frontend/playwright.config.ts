@@ -21,6 +21,9 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
+    timezoneId: "Asia/Tokyo",
+    locale: "ja-JP",
+    viewport: { width: 1280, height: 720 },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
