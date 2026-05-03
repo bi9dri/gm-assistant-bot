@@ -62,7 +62,33 @@ interface VrtFixtures {
   seedDb: (payload: SeedPayload) => Promise<void>;
 }
 
-export const test = base.extend<VrtFixtures>({
+/**
+ * playwright.config.ts の `project.use.theme` 経由で worker scope に渡される。
+ * - `localStorage.theme` を介して ThemeProvider の `data-theme` (DaisyUI) を制御
+ * - `colorScheme` (use 側) は `prefers-color-scheme` を介して Tailwind `dark:` バリアントを制御
+ *
+ * 両者を同時に揃えないと `data-theme="dark"` だが `dark:bg-...` が効かない不整合が発生する。
+ */
+export interface VrtWorkerOptions {
+  theme: "light" | "dark";
+}
+
+export const test = base.extend<VrtFixtures, VrtWorkerOptions>({
+  theme: ["light", { option: true, scope: "worker" }],
+
+  context: async ({ context, theme }, use) => {
+    // ThemeProvider は module-load 時に `localStorage.getItem("theme")` を読むため、
+    // page スクリプト実行前に initScript で localStorage を仕込む必要がある。
+    await context.addInitScript((t) => {
+      try {
+        localStorage.setItem("theme", t);
+      } catch {
+        // ignore — Playwright context では throw しない想定
+      }
+    }, theme);
+    await use(context);
+  },
+
   seedDb: async ({ page }, use) => {
     await page.goto("/");
     await page.waitForFunction(() => "__vrtDb" in window);
