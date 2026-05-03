@@ -22,18 +22,38 @@ export default defineConfig({
     trace: "on-first-retry",
     timezoneId: "Asia/Tokyo",
     locale: "ja-JP",
-    viewport: { width: 1280, height: 720 },
+    // viewport は project 側で指定 (mobile は devices["iPhone 13"] が決める)。
   },
   projects: [
     {
-      name: "chromium",
+      name: "chromium-desktop",
       testIgnore: "**/storybook/**",
-      use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:3000" },
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:3000",
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
+      name: "chromium-mobile",
+      testIgnore: "**/storybook/**",
+      use: {
+        ...devices["iPhone 13"],
+        // iPhone 13 device は webkit デフォルト。CI は chromium のみキャッシュしているため
+        // mobile emulation (viewport / isMobile / hasTouch / deviceScaleFactor) だけ流用して
+        // browser engine は chromium に固定する。
+        defaultBrowserType: "chromium",
+        baseURL: "http://localhost:3000",
+      },
     },
     {
       name: "chromium-storybook",
       testMatch: "**/storybook/**/*.vrt.ts",
-      use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:6007" },
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:6007",
+        viewport: { width: 1280, height: 720 },
+      },
     },
   ],
   webServer: [

@@ -1,6 +1,17 @@
 import { expect, test } from "./fixtures";
 import { FIXTURE_EDITOR_TEMPLATES } from "./seed";
 
+// React Flow ベースの editor は touch UI と小幅 viewport を想定していない
+// (handle ドラッグ・ノード幅・サイドパネル)。Mobile UX 対応は別 issue で扱う。
+// 空 destructure は Playwright が「fixture を要求しない」と認識するための慣用形。
+// oxlint-disable-next-line no-empty-pattern
+test.beforeEach(({}, testInfo) => {
+  testInfo.skip(
+    testInfo.project.name === "chromium-mobile",
+    "Template editor (React Flow) is desktop-only; mobile UX is out of scope.",
+  );
+});
+
 const [singleCreateRole, singleSendMessage, singleConditionalBranch, connectedFlow] =
   FIXTURE_EDITOR_TEMPLATES;
 
