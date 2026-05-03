@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
-export default defineConfig({
+import type { VrtWorkerOptions } from "./test/vrt/fixtures";
+
+const THEMES = ["light", "dark"] as const satisfies readonly VrtWorkerOptions["theme"][];
+
+export default defineConfig<{}, VrtWorkerOptions>({
   testDir: "./test/vrt",
   testMatch: "**/*.vrt.ts",
   fullyParallel: true,
@@ -16,6 +20,8 @@ export default defineConfig({
       caret: "hide",
     },
   },
+  // {projectName} に theme suffix が含まれるので light/dark の baseline は自動的に分離される
+  // (例: `home-chromium-desktop-light-linux.png` / `home-chromium-desktop-dark-linux.png`)。
   snapshotPathTemplate:
     "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   use: {
@@ -24,18 +30,23 @@ export default defineConfig({
     locale: "ja-JP",
     // viewport は project 側で指定 (mobile は devices["iPhone 13"] が決める)。
   },
-  projects: [
+  // Project は viewport (desktop / mobile / storybook) × theme (light / dark) のマトリクス。
+  // theme 制御は二重: `colorScheme` で `prefers-color-scheme` (Tailwind `dark:` バリアント用)、
+  // `theme` worker option で `localStorage.theme` (DaisyUI `data-theme` 属性用)。
+  projects: THEMES.flatMap((theme) => [
     {
-      name: "chromium-desktop",
+      name: `chromium-desktop-${theme}`,
       testIgnore: "**/storybook/**",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: "http://localhost:3000",
         viewport: { width: 1280, height: 720 },
+        colorScheme: theme,
+        theme,
       },
     },
     {
-      name: "chromium-mobile",
+      name: `chromium-mobile-${theme}`,
       testIgnore: "**/storybook/**",
       use: {
         ...devices["iPhone 13"],
@@ -44,18 +55,22 @@ export default defineConfig({
         // browser engine は chromium に固定する。
         defaultBrowserType: "chromium",
         baseURL: "http://localhost:3000",
+        colorScheme: theme,
+        theme,
       },
     },
     {
-      name: "chromium-storybook",
+      name: `chromium-storybook-${theme}`,
       testMatch: "**/storybook/**/*.vrt.ts",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: "http://localhost:6007",
         viewport: { width: 1280, height: 720 },
+        colorScheme: theme,
+        theme,
       },
     },
-  ],
+  ]),
   webServer: [
     {
       // `--bun` 不使用: Bun runtime だと @tailwindcss/vite が daisyui plugin の

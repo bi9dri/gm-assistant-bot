@@ -7,7 +7,7 @@ import { FIXTURE_EDITOR_TEMPLATES } from "./seed";
 // oxlint-disable-next-line no-empty-pattern
 test.beforeEach(({}, testInfo) => {
   testInfo.skip(
-    testInfo.project.name === "chromium-mobile",
+    testInfo.project.name.startsWith("chromium-mobile"),
     "Template editor (React Flow) is desktop-only; mobile UX is out of scope.",
   );
 });
