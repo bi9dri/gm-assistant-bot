@@ -26,10 +26,5 @@
     "oxlint-tsgolint": "0.22.1",
     "typescript": "6.0.3",
     "wrangler": "4.87.0"
-  },
-  "overrides": {
-    "picomatch": "2.3.2",
-    "seroval": "1.5.4",
-    "diff": "8.0.4"
   }
 }
