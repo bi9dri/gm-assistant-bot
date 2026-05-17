@@ -100,21 +100,21 @@ Packages classified as Individual (both originally Individual and those promoted
 
 ## Special cases
 
-### Updating bun itself
+### Updating Bun itself
 
-When updating bun, keep all of the following in sync to the same version in the same commit:
+When updating Bun, update all of the following to the same version in a single commit:
 
 - `devbox.json` — `packages[].bun@X.Y.Z`
 - `package.json` (root) — `packageManager: "bun@X.Y.Z"`
-- `package.json` (each workspace) — `devDependencies["@types/bun"]`
+- `package.json` (each workspace) — `devDependencies["@types/bun"]: "X.Y.Z"`
 
-GitHub Actions does **not** need to be updated: `oven-sh/setup-bun` auto-detects the version from the root `package.json` `packageManager` field when `bun-version` is omitted. Do not add `bun-version` to workflows.
+The `bun-version` input of `oven-sh/setup-bun` does **not** need to be set: the action auto-detects the version from the root `package.json` `packageManager` field when `bun-version` is omitted. Do not add `bun-version` to workflows.
 
-### `overrides` / `resolutions`
+### `overrides`
 
-Do not use `overrides` (or `resolutions`) as a default remediation strategy. Resolve issues by updating the direct dependency whenever possible. Use `overrides` only when **both** of the following hold:
+Do not use `overrides` (`resolutions` in Yarn) as a default remediation strategy. Resolve issues by updating the direct dependency whenever possible. Use `overrides` only when **both** of the following apply:
 
 1. The issue cannot be resolved by updating a direct dependency (e.g., the upstream maintainer has not released a fix yet).
 2. A critical (severe) vulnerability has been reported against the transitive dependency.
 
-When `overrides` is used exceptionally, record the rationale (linked advisory, why a direct update is not viable, and removal conditions) in the PR description.
+When `overrides` is used as an exception, document the rationale (linked advisory, why a direct update is not viable, and removal conditions) in the PR description.
