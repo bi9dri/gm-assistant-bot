@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "direnv export bash > \"$CLAUDE_ENV_FILE\""
+            "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then ( cd \"$CLAUDE_PROJECT_DIR\" && devbox shellenv --init-hook=false ) > \"$CLAUDE_ENV_FILE\"; else direnv export bash > \"$CLAUDE_ENV_FILE\"; fi"
           }
         ]
       }
