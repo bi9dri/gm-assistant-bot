@@ -21,7 +21,7 @@
         "@discordjs/rest": "2.6.1",
         "@hono/zod-validator": "0.7.6",
         "discord-api-types": "0.38.47",
-        "hono": "4.12.15",
+        "hono": "4.12.18",
         "zod": "4.3.6",
       },
       "devDependencies": {
@@ -44,7 +44,7 @@
         "daisyui": "5.5.19",
         "dexie": "4.4.2",
         "dexie-react-hooks": "4.4.0",
-        "hono": "4.12.15",
+        "hono": "4.12.18",
         "nanoid": "5.1.9",
         "react": "19.2.5",
         "react-dom": "19.2.5",
@@ -811,7 +811,7 @@
 
     "headers-polyfill": ["headers-polyfill@5.0.1", "", { "dependencies": { "@types/set-cookie-parser": "^2.4.10", "set-cookie-parser": "^3.0.1" } }, "sha512-1TJ6Fih/b8h5TIcv+1+Hw0PDQWJTKDKzFZzcKOiW1wJza3XoAQlkCuXLbymPYB8+ZQyw8mHvdw560e8zVFIWyA=="],
 
-    "hono": ["hono@4.12.15", "", {}, "sha512-qM0jDhFEaCBb4TxoW7f53Qrpv9RBiayUHo0S52JudprkhvpjIrGoU1mnnr29Fvd1U335ZFPZQY1wlkqgfGXyLg=="],
+    "hono": ["hono@4.12.18", "", {}, "sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ=="],
 
     "indent-string": ["indent-string@4.0.0", "", {}, "sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg=="],
 
