@@ -97,3 +97,18 @@ Packages classified as Individual (both originally Individual and those promoted
   - Title: `[Package Name] from vA to vB`
   - Body: error details, the upstream change causing the impact, affected project code or behavior, and approaches attempted.
   - After creating the Issue, create a Draft PR and include a link to the Issue in its description.
+
+## Special cases
+
+### Updating bun itself
+
+When updating bun, keep `devbox.json` (`packages[].bun@X.Y.Z`) and `package.json` (`packageManager: "bun@X.Y.Z"`) in sync. Both must reference the same version in the same commit.
+
+### `overrides` / `resolutions`
+
+Do not use `overrides` (or `resolutions`) as a default remediation strategy. Resolve issues by updating the direct dependency whenever possible. Use `overrides` only when **both** of the following hold:
+
+1. The issue cannot be resolved by updating a direct dependency (e.g., the upstream maintainer has not released a fix yet).
+2. A critical (severe) vulnerability has been reported against the transitive dependency.
+
+When `overrides` is used exceptionally, record the rationale (linked advisory, why a direct update is not viable, and removal conditions) in the PR description.
