@@ -97,3 +97,24 @@ Packages classified as Individual (both originally Individual and those promoted
   - Title: `[Package Name] from vA to vB`
   - Body: error details, the upstream change causing the impact, affected project code or behavior, and approaches attempted.
   - After creating the Issue, create a Draft PR and include a link to the Issue in its description.
+
+## Special cases
+
+### Updating Bun itself
+
+When updating Bun, update all of the following to the same version in a single commit:
+
+- `devbox.json` — `packages[].bun@X.Y.Z`
+- `package.json` (root) — `packageManager: "bun@X.Y.Z"`
+- `package.json` (each workspace) — `devDependencies["@types/bun"]: "X.Y.Z"`
+
+The `bun-version` input of `oven-sh/setup-bun` does **not** need to be set: the action auto-detects the version from the root `package.json` `packageManager` field when `bun-version` is omitted. Do not add `bun-version` to workflows.
+
+### `overrides`
+
+Do not use `overrides` (`resolutions` in Yarn) as a default remediation strategy. Resolve issues by updating the direct dependency whenever possible. Use `overrides` only when **both** of the following apply:
+
+1. The issue cannot be resolved by updating a direct dependency (e.g., the upstream maintainer has not released a fix yet).
+2. A critical (severe) vulnerability has been reported against the transitive dependency.
+
+When `overrides` is used as an exception, document the rationale (linked advisory, why a direct update is not viable, and removal conditions) in the PR description.
