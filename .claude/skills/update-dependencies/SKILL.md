@@ -102,7 +102,12 @@ Packages classified as Individual (both originally Individual and those promoted
 
 ### Updating bun itself
 
-When updating bun, keep `devbox.json` (`packages[].bun@X.Y.Z`) and `package.json` (`packageManager: "bun@X.Y.Z"`) in sync. Both must reference the same version in the same commit.
+When updating bun, keep all of the following in sync to the same version in the same commit:
+
+- `devbox.json` — `packages[].bun@X.Y.Z`
+- `package.json` (root) — `packageManager: "bun@X.Y.Z"`
+- `package.json` (each workspace) — `devDependencies["@types/bun"]`
+- `.github/workflows/*.yml` — `with.bun-version` for every `oven-sh/setup-bun` step
 
 ### `overrides` / `resolutions`
 
