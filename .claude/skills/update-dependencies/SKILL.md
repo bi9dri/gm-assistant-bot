@@ -25,6 +25,11 @@ update dependencies with following instructions
 
 use `jq` to parse JSON outputs and `grep` to filter for relevant information.
 
+## Constraints
+
+- bun 自体をアップデートする場合は、`devbox.json` の `packages` 内 `bun@x.y.z` と `package.json` の `packageManager` を同期させる（両者のバージョンを必ず一致させる）。
+- `overrides` は基本的に使用しない。直接依存ライブラリのアップデートで解決できない、かつ重大な脆弱性が報告されている場合に限り、例外的に `overrides` 等を使って対応する。
+
 ## Step 1: Deep Inspection & Security
 
 1. Sync the environment with `bun install --frozen-lockfile`
