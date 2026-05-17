@@ -107,7 +107,8 @@ When updating bun, keep all of the following in sync to the same version in the 
 - `devbox.json` — `packages[].bun@X.Y.Z`
 - `package.json` (root) — `packageManager: "bun@X.Y.Z"`
 - `package.json` (each workspace) — `devDependencies["@types/bun"]`
-- `.github/workflows/*.yml` — `with.bun-version` for every `oven-sh/setup-bun` step
+
+GitHub Actions does **not** need to be updated: `oven-sh/setup-bun` auto-detects the version from the root `package.json` `packageManager` field when `bun-version` is omitted. Do not add `bun-version` to workflows.
 
 ### `overrides` / `resolutions`
 
