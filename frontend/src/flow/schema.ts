@@ -297,4 +297,5 @@ export const FlowDataSchema = z.object({
   sections: z.array(SectionSchema),
 });
 
-type Step = z.infer<typeof StepSchema>;
+export type Step = z.infer<typeof StepSchema>;
+export type FlowData = z.infer<typeof FlowDataSchema>;
