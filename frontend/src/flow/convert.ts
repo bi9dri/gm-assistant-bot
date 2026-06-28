@@ -17,6 +17,25 @@ type ConversionWarning = {
   nodeId?: string;
 };
 
+// Zod の検証失敗を「path: 理由」の短い要約にする。どのフィールドがなぜ落ちたか特定するため
+function summarizeIssues(error: z.ZodError): string {
+  return error.issues
+    .map((issue) => {
+      const path = issue.path.map((segment) => segment.toString()).join(".");
+      return path === "" ? issue.message : `${path}: ${issue.message}`;
+    })
+    .join("; ");
+}
+
+// 検証前の生オブジェクトから文字列フィールドを best-effort で取り出す (warning メッセージ用)
+function rawStringField(raw: unknown, key: string): string | undefined {
+  if (raw !== null && typeof raw === "object" && key in raw) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (typeof value === "string") return value;
+  }
+  return undefined;
+}
+
 const RFNodeSchema = z.object({
   id: z.string(),
   type: z.string(),
@@ -76,6 +95,9 @@ const DEFAULT_ARM_ID = "default";
 // 仮想終端。合流点が無い (全枝が末端まで流れる) ことを表す
 const EXIT = Symbol("exit");
 type JoinPoint = string | typeof EXIT;
+
+// ラベルが空の LabeledGroup 用。未分類 (グループ非所属) とは区別できる既定タイトル
+const UNTITLED_GROUP_TITLE = "グループ (無題)";
 
 const sizeOf = (node: RFNode) => ({
   width: node.measured?.width ?? node.width ?? node.style?.width ?? 0,
@@ -137,11 +159,43 @@ const SelectBranchDataSchema = z.object({
   selectedValue: z.string().optional(),
 });
 
-function armLabel(root: unknown, index: number): string {
+// 1 つの条件枝を Branch の arm 候補へ変換する。条件式が読めない場合はラベルを
+// 「条件N」へフォールバックしつつ、喪失内容を警告で surface する。
+function toBranchArm(
+  condition: { id: string; root: unknown },
+  index: number,
+  nodeId: string,
+  warnings: ConversionWarning[],
+): { id: string; label: string; condition: unknown; steps: never[] } {
   try {
-    return conditionToInfix(root as ConditionNode);
-  } catch {
-    return `条件${index + 1}`;
+    return {
+      id: condition.id,
+      label: conditionToInfix(condition.root as ConditionNode),
+      condition: condition.root,
+      steps: [],
+    };
+  } catch (error) {
+    // error.name を残し、ZodError 以外の想定外例外型 (TypeError 等) を後から識別可能にする
+    const errorName = error instanceof Error ? error.constructor.name : "UnknownError";
+    const detail = error instanceof Error ? error.message : String(error);
+    if (condition.root === undefined) {
+      // condition root 欠落の枝は BranchArmSchema.condition が optional なため検証を通り、
+      // 「条件なし = 無条件デフォルト(else)枝」に化ける。ラベルだけでなく意味論の変化を警告する
+      warnings.push({
+        nodeId,
+        message: `分岐の条件${
+          index + 1
+        }を読み取れなかったため、この枝はデフォルト(無条件)枝になりました。手動で条件を再設定してください (${errorName}: ${detail})`,
+      });
+    } else {
+      warnings.push({
+        nodeId,
+        message: `分岐の条件${index + 1}を読めなかったため「条件${
+          index + 1
+        }」と表示します (${errorName}: ${detail})`,
+      });
+    }
+    return { id: condition.id, label: `条件${index + 1}`, condition: condition.root, steps: [] };
   }
 }
 
@@ -154,16 +208,13 @@ type BranchArmCandidate = {
 
 // ノード → ステップ候補 (parse 前の生データ)。分岐 2 種は統合 Branch 型へ再構成し、
 // それ以外は data のフィールド名が新スキーマと同じためそのまま引き継ぐ。
-function toStepCandidate(node: RFNode): Record<string, unknown> {
+function toStepCandidate(node: RFNode, warnings: ConversionWarning[]): Record<string, unknown> {
   if (node.type === "ConditionalBranch") {
     const data = ConditionalBranchDataSchema.parse(node.data);
     const branches: BranchArmCandidate[] = [
-      ...data.conditions.map((condition, index) => ({
-        id: condition.id,
-        label: armLabel(condition.root, index),
-        condition: condition.root,
-        steps: [],
-      })),
+      ...data.conditions.map((condition, index) =>
+        toBranchArm(condition, index, node.id, warnings),
+      ),
       ...(data.hasDefaultBranch ? [{ id: DEFAULT_ARM_ID, label: "デフォルト", steps: [] }] : []),
     ];
     // 旧実装は「どの条件にもマッチせずデフォルト枝が実行された」とき空配列を記録する
@@ -309,20 +360,14 @@ function buildStructure(
 
   const makeEntry = (node: RFNode): CandidateEntry | null => {
     try {
-      const candidate = toStepCandidate(node);
-      // 分岐は枝を埋めた後 (セクション組み立て時) に検証する
-      if (node.type !== "ConditionalBranch" && !StepSchema.safeParse(candidate).success) {
-        warnings.push({
-          nodeId: node.id,
-          message: `ノード「${titleOf(node)}」のデータが不正なためスキップしました`,
-        });
-        return null;
-      }
-      return { node, candidate };
-    } catch {
+      return { node, candidate: toStepCandidate(node, warnings) };
+    } catch (error) {
+      // ZodError はデータ不整合なので best-effort スキップ。それ以外 (TypeError 等の
+      // プログラミングエラー) は握りつぶさず再 throw する
+      if (!(error instanceof z.ZodError)) throw error;
       warnings.push({
         nodeId: node.id,
-        message: `ノード「${titleOf(node)}」のデータを変換できなかったためスキップしました`,
+        message: `ノード「${titleOf(node)}」のデータを変換できなかったためスキップしました: ${summarizeIssues(error)}`,
       });
       return null;
     }
@@ -356,8 +401,21 @@ function buildStructure(
         continue;
       }
       if (entry) {
-        sink.push(entry);
-        all.push(entry);
+        // 最上位チェーンの不正ステップは Comment 吸収後にセクション組み立てで検証し、
+        // 失われたメモを警告へ残す。枝の中など非最上位では即時に検証して捨て、不正な
+        // 1 ステップが親分岐ごと巻き込んで落とされるのを防ぐ
+        const validation = sink === topLevel ? null : StepSchema.safeParse(entry.candidate);
+        if (validation === null || validation.success) {
+          sink.push(entry);
+          all.push(entry);
+        } else {
+          warnings.push({
+            nodeId: node.id,
+            message: `ノード「${titleOf(node)}」のデータが不正なためスキップしました: ${summarizeIssues(
+              validation.error,
+            )}`,
+          });
+        }
       }
       const targets = (outgoing.get(nodeId) ?? []).map((edge) => edge.target);
       if (targets.length > 1) {
@@ -462,7 +520,10 @@ export function convertReactFlowToFlowData(input: unknown): {
     if (result.success) {
       nodes.push(result.data);
     } else {
-      warnings.push({ message: "ノードを読み取れなかったためスキップしました" });
+      warnings.push({
+        nodeId: rawStringField(rawNode, "id"),
+        message: `ノードを読み取れなかったためスキップしました: ${summarizeIssues(result.error)}`,
+      });
     }
   }
   const edges: RFEdge[] = [];
@@ -471,7 +532,15 @@ export function convertReactFlowToFlowData(input: unknown): {
     if (result.success) {
       edges.push(result.data);
     } else {
-      warnings.push({ message: "接続を読み取れなかったためスキップしました" });
+      const source = rawStringField(rawEdge, "source");
+      const target = rawStringField(rawEdge, "target");
+      const endpoints =
+        source !== undefined || target !== undefined
+          ? ` (${source ?? "?"} → ${target ?? "?"})`
+          : "";
+      warnings.push({
+        message: `エッジ${endpoints}を読み取れなかったためスキップしました: ${summarizeIssues(result.error)}`,
+      });
     }
   }
 
@@ -500,7 +569,17 @@ export function convertReactFlowToFlowData(input: unknown): {
     sectionMemos.set(key, appendMemo(sectionMemos.get(key) ?? "", text));
   };
   for (const comment of comments) {
-    const text = typeof comment.data.comment === "string" ? comment.data.comment : "";
+    const rawComment = comment.data.comment;
+    // 値は存在するが非文字列 (数値/オブジェクト等) は黙って捨てず warning にする。
+    // 欠落 (undefined) / null / 空文字は正規スキップとして無警告
+    if (rawComment !== undefined && rawComment !== null && typeof rawComment !== "string") {
+      warnings.push({
+        nodeId: comment.id,
+        message: "Comment の本文が文字列でないため取り込めませんでした",
+      });
+      continue;
+    }
+    const text = typeof rawComment === "string" ? rawComment : "";
     if (text === "") continue;
     const groupKey = groupKeyOf(comment);
     const scope =
@@ -520,9 +599,23 @@ export function convertReactFlowToFlowData(input: unknown): {
 
   // Blueprint はウィザード (Phase 4) に移行するためステップ化せず、所属セクションの memo に残す
   for (const blueprint of blueprints) {
+    // data は z.record(z.unknown()) で素通しのため、循環参照や BigInt 等で stringify が throw し得る。
+    // 1 個の壊れた Blueprint で変換全体 (収集済み warnings ごと) をクラッシュさせないよう握る
+    let parametersText: string;
+    try {
+      parametersText = JSON.stringify(blueprint.data.parameters ?? {});
+    } catch (error) {
+      parametersText = "(パラメータを文字列化できませんでした)";
+      warnings.push({
+        nodeId: blueprint.id,
+        message: `Blueprint「${titleOf(blueprint)}」のパラメータを文字列化できませんでした: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      });
+    }
     addSectionMemo(
       groupKeyOf(blueprint),
-      `⚠️ Blueprint「${titleOf(blueprint)}」はウィザードに移行されるためステップ化されませんでした。パラメータ: ${JSON.stringify(blueprint.data.parameters ?? {})}`,
+      `⚠️ Blueprint「${titleOf(blueprint)}」はウィザードに移行されるためステップ化されませんでした。パラメータ: ${parametersText}`,
     );
     warnings.push({
       nodeId: blueprint.id,
@@ -533,22 +626,31 @@ export function convertReactFlowToFlowData(input: unknown): {
   // 実行順を保ったまま、所属グループが切り替わるごとにセクションを区切る
   const groupById = new Map(groups.map((group) => [group.id, group]));
   const sectionTitle = (group: RFNode | undefined) => {
-    const label = group?.data.label;
-    return typeof label === "string" && label !== "" ? label : UNGROUPED_TITLE;
+    if (group === undefined) return UNGROUPED_TITLE;
+    const label = group.data.label;
+    return typeof label === "string" && label !== "" ? label : UNTITLED_GROUP_TITLE;
   };
   const sections: { id: string; title: string; memo: string; steps: Step[] }[] = [];
   const runCount = new Map<string | typeof UNGROUPED, number>();
+  // セクション化されたグループ。ここに載らないグループはラベルが失われるため後で警告する
+  const realizedGroupIds = new Set<string>();
   let currentKey: string | typeof UNGROUPED | null = null;
   for (const { node, candidate } of topLevel) {
     const stepResult = StepSchema.safeParse(candidate);
     if (!stepResult.success) {
+      // 吸収済み Comment の memo はこのステップと共に失われるため、内容を warning に残す
+      const lostMemo =
+        typeof candidate.memo === "string" && candidate.memo !== "" ? candidate.memo : undefined;
       warnings.push({
         nodeId: node.id,
-        message: `ノード「${titleOf(node)}」のデータが不正なためスキップしました`,
+        message: `ノード「${titleOf(node)}」のデータが不正なためスキップしました: ${summarizeIssues(
+          stepResult.error,
+        )}${lostMemo === undefined ? "" : ` (失われたメモ: ${lostMemo})`}`,
       });
       continue;
     }
     const key = groupKeyOf(node);
+    if (key !== UNGROUPED) realizedGroupIds.add(key);
     if (key !== currentKey || sections.length === 0) {
       currentKey = key;
       const run = (runCount.get(key) ?? 0) + 1;
@@ -576,6 +678,7 @@ export function convertReactFlowToFlowData(input: unknown): {
 
   // セクション宛 memo (グループ内 Comment / Blueprint) を反映。該当セクションが無ければ作る
   for (const [key, memo] of sectionMemos) {
+    if (key !== UNGROUPED) realizedGroupIds.add(key);
     const baseId = key === UNGROUPED ? "ungrouped" : key;
     let section = sections.find((candidate) => candidate.id === String(baseId));
     if (!section) {
@@ -584,6 +687,18 @@ export function convertReactFlowToFlowData(input: unknown): {
       sections.push(section);
     }
     section.memo = appendMemo(section.memo, memo);
+  }
+
+  // 直接の所属ノードを持たないグループ (例: ネストの外側グループや空グループ) はセクション化
+  // されずラベルが失われる。他のスキップは全て警告される方針に合わせ、ここも warning を残す
+  for (const group of groups) {
+    if (realizedGroupIds.has(group.id)) continue;
+    const label = group.data.label;
+    const labelText = typeof label === "string" && label !== "" ? `「${label}」` : "(無題)";
+    warnings.push({
+      nodeId: group.id,
+      message: `グループ${labelText}は所属するノードが無いためセクション化されず、ラベルが失われました`,
+    });
   }
 
   return { flowData: FlowDataSchema.parse({ version: 1, sections }), warnings };
