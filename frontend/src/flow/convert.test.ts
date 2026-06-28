@@ -103,11 +103,62 @@ describe("convertReactFlowToFlowData: 異常系", () => {
     expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
   });
 
+  // 合流点計算 (computePostDominators) は逆トポロジカル走査で ipdom を辿るため、
+  // 循環ノードでは ipdom が閉路を成しハングしうる。以下は完了する (ハングしない) ことを検証する
+  test("分岐ノードの一方の枝が循環に入っても変換は完了し、循環を警告する", () => {
+    const br = setFlag({ x: 0, y: 0 }, "Br");
+    const a = setFlag({ x: -100, y: 100 }, "A");
+    const p = setFlag({ x: 100, y: 100 }, "P");
+    const b = setFlag({ x: -100, y: 200 }, "B");
+    const { flowData, warnings } = convert(
+      [br, a, p, b],
+      [edge(br, a), edge(br, p), edge(a, b), edge(b, a)],
+    );
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["A", "B", "Br", "P"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
+  test("ステップノードの自己ループでも変換は完了し、循環を警告する", () => {
+    const x = setFlag({ x: 0, y: 0 }, "X");
+    const a = setFlag({ x: -100, y: 100 }, "A");
+    const p = setFlag({ x: 100, y: 100 }, "P");
+    const { flowData, warnings } = convert([x, a, p], [edge(x, a), edge(x, p), edge(a, a)]);
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["A", "P", "X"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
+  test("互いに素な循環へ分岐する場合でも変換は完了し、循環を警告する", () => {
+    const x = setFlag({ x: 0, y: 0 }, "X");
+    const c1 = setFlag({ x: -100, y: 100 }, "C1");
+    const c2 = setFlag({ x: -100, y: 200 }, "C2");
+    const d1 = setFlag({ x: 100, y: 100 }, "D1");
+    const d2 = setFlag({ x: 100, y: 200 }, "D2");
+    const { flowData, warnings } = convert(
+      [x, c1, c2, d1, d2],
+      [edge(x, c1), edge(x, d1), edge(c1, c2), edge(c2, c1), edge(d1, d2), edge(d2, d1)],
+    );
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["C1", "C2", "D1", "D2", "X"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
   test("読み取れないノードはスキップして警告を返す", () => {
     const { flowData, warnings } = convert([{ id: "broken" }, setFlag({ x: 0, y: 0 }, "A")]);
 
     expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["A"]);
     expect(warnings).toHaveLength(1);
+  });
+
+  test("読み取れないエッジはスキップして警告を返す", () => {
+    const a = setFlag({ x: 0, y: 0 }, "A");
+    const { warnings } = convert([a], [{ id: "broken-edge" }]);
+
+    expect(warnings.some((w) => w.message.includes("接続を読み取れなかった"))).toBe(true);
   });
 
   test("新スキーマの検証に失敗するノードはスキップして警告を返す", () => {

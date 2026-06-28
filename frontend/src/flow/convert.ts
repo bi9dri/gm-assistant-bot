@@ -249,25 +249,25 @@ function computePostDominators(
   outgoing: Map<string, RFEdge[]>,
 ): Map<string, JoinPoint> {
   const ipdom = new Map<string, JoinPoint>();
-  const depth = new Map<JoinPoint, number>([[EXIT, 0]]);
-  const depthOf = (node: JoinPoint) => depth.get(node) ?? 0;
   const climb = (node: JoinPoint): JoinPoint => (node === EXIT ? EXIT : (ipdom.get(node) ?? EXIT));
+  // ipdom チェーン上の最近共通祖先 (LCA)。循環ノード (末尾に足された循環部) では
+  // ipdom が閉路を成しうるため、閉路を検知したら合流点なしの EXIT へ縮退する
   const intersect = (aIn: JoinPoint, bIn: JoinPoint): JoinPoint => {
-    let a = aIn;
-    let b = bIn;
-    while (a !== b) {
-      const da = depthOf(a);
-      const db = depthOf(b);
-      if (da > db) {
-        a = climb(a);
-      } else if (db > da) {
-        b = climb(b);
-      } else {
-        a = climb(a);
-        b = climb(b);
-      }
+    const ancestors = new Set<JoinPoint>();
+    let a: JoinPoint = aIn;
+    while (!ancestors.has(a)) {
+      ancestors.add(a);
+      if (a === EXIT) break;
+      a = climb(a);
     }
-    return a;
+    let b: JoinPoint = bIn;
+    const seen = new Set<JoinPoint>();
+    while (!ancestors.has(b)) {
+      if (b === EXIT || seen.has(b)) return EXIT;
+      seen.add(b);
+      b = climb(b);
+    }
+    return b;
   };
 
   for (const node of [...order].reverse()) {
@@ -280,7 +280,6 @@ function computePostDominators(
       }
     }
     ipdom.set(node.id, join);
-    depth.set(node.id, depthOf(join) + 1);
   }
   return ipdom;
 }
@@ -469,7 +468,11 @@ export function convertReactFlowToFlowData(input: unknown): {
   const edges: RFEdge[] = [];
   for (const rawEdge of parsed.edges) {
     const result = RFEdgeSchema.safeParse(rawEdge);
-    if (result.success) edges.push(result.data);
+    if (result.success) {
+      edges.push(result.data);
+    } else {
+      warnings.push({ message: "接続を読み取れなかったためスキップしました" });
+    }
   }
 
   const groups = nodes.filter((node) => node.type === "LabeledGroup");
