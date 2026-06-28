@@ -263,6 +263,254 @@ describe("convertReactFlowToFlowData: 分岐ノード", () => {
   });
 });
 
+describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
+  const group = (
+    label: string,
+    pos: { x: number; y: number },
+    size: { width: number; height: number },
+  ) => rfNode("LabeledGroup", { label }, pos, { style: size });
+  const comment = (
+    data: Record<string, unknown>,
+    pos: { x: number; y: number },
+    size = { width: 200, height: 100 },
+  ) => rfNode("Comment", data, pos, { style: size });
+
+  test("グループ内 Comment は空間的に近い別グループのステップではなく同グループのステップに付く", () => {
+    const g1 = group("G1", { x: 0, y: 0 }, { width: 400, height: 400 });
+    const g2 = group("G2", { x: 0, y: 400 }, { width: 400, height: 400 });
+    const inG1 = setFlag({ x: 50, y: 50 }, "G1ステップ");
+    const inG2 = setFlag({ x: 50, y: 420 }, "G2ステップ");
+    // Comment 中心 (150, 300) は g1 内だが、空間的には g2 のステップの方が近い
+    const c = comment({ comment: "G1向けメモ" }, { x: 50, y: 250 });
+    const { flowData } = convert([g1, g2, inG1, inG2, c]);
+
+    const g1Section = flowData.sections.find((s) => s.title === "G1");
+    const g2Section = flowData.sections.find((s) => s.title === "G2");
+    expect(g1Section?.steps[0].memo).toBe("G1向けメモ");
+    expect(g2Section?.steps[0].memo).toBe("");
+  });
+
+  test("ConditionalBranch の hasDefaultBranch:false ではデフォルト枝が付かない", () => {
+    const cond = rfNode(
+      "ConditionalBranch",
+      {
+        title: "分岐",
+        conditions: [
+          {
+            id: "c1",
+            root: { type: "rule", id: "r1", flagKey: "x", operator: "exists", value: "" },
+          },
+        ],
+        hasDefaultBranch: false,
+      },
+      { x: 0, y: 0 },
+    );
+    const { flowData } = convert([cond]);
+    const branch = flowData.sections[0].steps[0];
+    if (branch.type !== "Branch") throw new Error("Branch であるべき");
+    expect(branch.branches).toHaveLength(1);
+    expect(branch.branches.every((arm) => arm.label !== "デフォルト")).toBe(true);
+  });
+
+  test("SelectBranch: selectedValue が非マッチ / 不在のとき executedBranchIds は undefined", () => {
+    const noMatch = rfNode(
+      "SelectBranch",
+      {
+        title: "選1",
+        options: [{ id: "o1", label: "A" }],
+        flagName: "f",
+        selectedValue: "存在しない",
+      },
+      { x: 0, y: 0 },
+    );
+    const { flowData } = convert([noMatch]);
+    const b1 = flowData.sections[0].steps[0];
+    if (b1.type !== "Branch") throw new Error("Branch であるべき");
+    expect(b1.executedBranchIds).toBeUndefined();
+
+    const absent = rfNode(
+      "SelectBranch",
+      { title: "選2", options: [{ id: "o1", label: "A" }], flagName: "f" },
+      { x: 0, y: 0 },
+    );
+    const { flowData: f2 } = convert([absent]);
+    const b2 = f2.sections[0].steps[0];
+    if (b2.type !== "Branch") throw new Error("Branch であるべき");
+    expect(b2.executedBranchIds).toBeUndefined();
+  });
+
+  test("不正な ConditionalBranch data は toStepCandidate の catch でスキップし警告する (nodeId 付き)", () => {
+    const bad = rfNode(
+      "ConditionalBranch",
+      { title: "壊", conditions: "配列ではない" },
+      { x: 0, y: 0 },
+    );
+    const { flowData, warnings } = convert([bad]);
+
+    expect(flowData.sections.flatMap((s) => s.steps)).toHaveLength(0);
+    expect(
+      warnings.some((w) => w.nodeId === bad.id && w.message.includes("変換できなかった")),
+    ).toBe(true);
+  });
+
+  test("不正な SelectBranch data は toStepCandidate の catch でスキップし警告する (nodeId 付き)", () => {
+    const bad = rfNode("SelectBranch", { title: "壊", options: 5 }, { x: 0, y: 0 });
+    const { flowData, warnings } = convert([bad]);
+
+    expect(flowData.sections.flatMap((s) => s.steps)).toHaveLength(0);
+    expect(
+      warnings.some((w) => w.nodeId === bad.id && w.message.includes("変換できなかった")),
+    ).toBe(true);
+  });
+
+  test("後続ステップを持たない終端 ConditionalBranch では ⚠️ メモもフラット化警告も出ない", () => {
+    const cond = rfNode(
+      "ConditionalBranch",
+      {
+        title: "終端分岐",
+        conditions: [
+          {
+            id: "c1",
+            root: { type: "rule", id: "r1", flagKey: "x", operator: "exists", value: "" },
+          },
+        ],
+        hasDefaultBranch: true,
+      },
+      { x: 0, y: 0 },
+    );
+    // 後続はステップではない Blueprint のみ。フラット化判定はステップ宛エッジだけを数える
+    const bp = rfNode("Blueprint", { title: "BP", parameters: {} }, { x: 0, y: 300 });
+    const { flowData, warnings } = convert([cond, bp], [edge(cond, bp)]);
+
+    const branch = flowData.sections[0].steps[0];
+    if (branch.type !== "Branch") throw new Error("Branch であるべき");
+    expect(branch.memo).toBe("");
+    expect(warnings.some((w) => w.message.includes("フラット化"))).toBe(false);
+  });
+
+  test("armLabel: 条件 root 欠落の枝はラベル「条件1」にフォールバックし、デフォルト枝化を警告する", () => {
+    const cond = rfNode(
+      "ConditionalBranch",
+      { title: "壊れ分岐", conditions: [{ id: "c1", root: undefined }], hasDefaultBranch: false },
+      { x: 0, y: 0 },
+    );
+    const { flowData, warnings } = convert([cond]);
+
+    const branch = flowData.sections[0].steps[0];
+    if (branch.type !== "Branch") throw new Error("Branch であるべき");
+    expect(branch.branches[0].label).toBe("条件1");
+    // condition が undefined のままなのでデフォルト(無条件)枝に化けている
+    expect(branch.branches[0].condition).toBeUndefined();
+    const w = warnings.find((w) => w.nodeId === cond.id);
+    expect(w?.message).toContain("条件1");
+    expect(w?.message).toContain("デフォルト(無条件)枝");
+    expect(w?.message).toContain("手動で条件を再設定");
+  });
+
+  test("armLabel: 定義済みだが不正な条件 root はラベルフォールバックし error.name 付きで警告する", () => {
+    const cond = rfNode(
+      "ConditionalBranch",
+      {
+        title: "壊れ条件",
+        conditions: [{ id: "c1", root: { broken: true } }],
+        hasDefaultBranch: false,
+      },
+      { x: 0, y: 0 },
+    );
+    const { warnings } = convert([cond]);
+
+    const w = warnings.find(
+      (w) => w.nodeId === cond.id && w.message.includes("条件1を読めなかった"),
+    );
+    expect(w).toBeDefined();
+    expect(w?.message).toContain("TypeError");
+  });
+
+  test("armLabel: 正常な条件式は infix 文字列をラベルにする", () => {
+    const cond = rfNode(
+      "ConditionalBranch",
+      {
+        title: "分岐",
+        conditions: [
+          {
+            id: "c1",
+            root: { type: "rule", id: "r1", flagKey: "chapter", operator: "equals", value: "1" },
+          },
+        ],
+        hasDefaultBranch: false,
+      },
+      { x: 0, y: 0 },
+    );
+    const { flowData } = convert([cond]);
+
+    const branch = flowData.sections[0].steps[0];
+    if (branch.type !== "Branch") throw new Error("Branch であるべき");
+    expect(branch.branches[0].label).toBe('chapter eq "1"');
+  });
+
+  test("source/target が欠落した不正なエッジは警告付きで捨て、変換自体は成功する", () => {
+    const a = setFlag({ x: 0, y: 0 }, "A");
+    const b = setFlag({ x: 0, y: 100 }, "B");
+    const badEdge = { id: "bad", source: "only-source" };
+    const { flowData, warnings } = convert([a, b], [badEdge, edge(a, b)]);
+
+    expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["A", "B"]);
+    expect(
+      warnings.some((w) => w.message.includes("エッジ") && w.message.includes("読み取れ")),
+    ).toBe(true);
+  });
+
+  test("検証に失敗するステップへ吸収された Comment はメモ消失を警告に含める", () => {
+    const invalid = rfNode(
+      "ShuffleAssign",
+      { title: "壊", items: [], targets: [], resultFlagPrefix: "" },
+      { x: 0, y: 0 },
+    );
+    const c = comment({ comment: "大事なメモ" }, { x: 0, y: 120 });
+    const { flowData, warnings } = convert([invalid, c]);
+
+    expect(flowData.sections.flatMap((s) => s.steps)).toHaveLength(0);
+    const w = warnings.find((w) => w.nodeId === invalid.id);
+    expect(w?.message).toContain("失われたメモ");
+    expect(w?.message).toContain("大事なメモ");
+  });
+
+  test("ラベルが空のグループのセクションタイトルは「未分類」と区別される", () => {
+    const g = group("", { x: 0, y: 0 }, { width: 400, height: 300 });
+    const inside = setFlag({ x: 50, y: 50 }, "中");
+    const { flowData } = convert([g, inside]);
+
+    expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["中"]);
+    expect(flowData.sections[0].title).not.toBe("未分類");
+    expect(flowData.sections[0].title).toBe("グループ (無題)");
+  });
+
+  test("直接の所属ノードを持たない外側グループはラベル喪失を警告する", () => {
+    const outer = group("外側", { x: 0, y: 0 }, { width: 1000, height: 1000 });
+    const inner = group("内側", { x: 100, y: 100 }, { width: 300, height: 300 });
+    const node = setFlag({ x: 150, y: 150 }, "N");
+    const { flowData, warnings } = convert([outer, inner, node]);
+
+    // 内側グループにだけ所属する。外側はセクション化されない
+    expect(flowData.sections.map((s) => s.title)).toEqual(["内側"]);
+    expect(
+      warnings.some((w) => w.nodeId === outer.id && w.message.includes("ラベルが失われ")),
+    ).toBe(true);
+    expect(warnings.some((w) => w.nodeId === inner.id)).toBe(false);
+  });
+
+  test("Comment 本文が非文字列なら無言で捨てず警告する (空 Comment は無警告)", () => {
+    const step = setFlag({ x: 0, y: 0 }, "A");
+    const badComment = comment({ comment: { nested: true } }, { x: 0, y: 120 });
+    const emptyComment = comment({ comment: "" }, { x: 0, y: 240 });
+    const { flowData, warnings } = convert([step, badComment, emptyComment]);
+
+    expect(warnings.some((w) => w.nodeId === badComment.id)).toBe(true);
+    expect(warnings.some((w) => w.nodeId === emptyComment.id)).toBe(false);
+    expect(flowData.sections[0].steps[0].memo).toBe("");
+  });
+});
+
 describe("convertReactFlowToFlowData: Blueprint", () => {
   test("Blueprint はステップ化せず、セクション memo に内容を残して警告する", () => {
     const bp = rfNode(
@@ -285,5 +533,21 @@ describe("convertReactFlowToFlowData: Blueprint", () => {
     expect(flowData.sections[0].memo).toContain("Blueprint");
     expect(flowData.sections[0].memo).toContain("characterNames");
     expect(warnings.some((w) => w.nodeId === bp.id)).toBe(true);
+  });
+
+  test("循環参照を含む parameters でも全体はクラッシュせず、警告付きで変換が成功する", () => {
+    const params: Record<string, unknown> = { name: "x" };
+    params.self = params;
+    const bp = rfNode("Blueprint", { title: "循環", parameters: params }, { x: 0, y: 0 });
+    const step = setFlag({ x: 0, y: 200 }, "次");
+
+    const { flowData, warnings } = convert([bp, step]);
+
+    expect(flowData.version).toBe(1);
+    expect(flowData.sections.flatMap((s) => s.steps).map((s) => s.title)).toEqual(["次"]);
+    expect(
+      warnings.some((w) => w.nodeId === bp.id && w.message.includes("文字列化できませんでした")),
+    ).toBe(true);
+    expect(flowData.sections.some((s) => s.memo.includes("文字列化できませんでした"))).toBe(true);
   });
 });
