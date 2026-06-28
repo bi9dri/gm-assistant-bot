@@ -103,11 +103,64 @@ describe("convertReactFlowToFlowData: 異常系", () => {
     expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
   });
 
+  // 合流点計算 (computePostDominators) は逆トポロジカル走査で ipdom を辿るため、
+  // 循環ノードでは ipdom が閉路を成しハングしうる。以下は完了する (ハングしない) ことを検証する
+  test("分岐ノードの一方の枝が循環に入っても変換は完了し、循環を警告する", () => {
+    const br = setFlag({ x: 0, y: 0 }, "Br");
+    const a = setFlag({ x: -100, y: 100 }, "A");
+    const p = setFlag({ x: 100, y: 100 }, "P");
+    const b = setFlag({ x: -100, y: 200 }, "B");
+    const { flowData, warnings } = convert(
+      [br, a, p, b],
+      [edge(br, a), edge(br, p), edge(a, b), edge(b, a)],
+    );
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["A", "B", "Br", "P"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
+  test("ステップノードの自己ループでも変換は完了し、循環を警告する", () => {
+    const x = setFlag({ x: 0, y: 0 }, "X");
+    const a = setFlag({ x: -100, y: 100 }, "A");
+    const p = setFlag({ x: 100, y: 100 }, "P");
+    const { flowData, warnings } = convert([x, a, p], [edge(x, a), edge(x, p), edge(a, a)]);
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["A", "P", "X"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
+  test("互いに素な循環へ分岐する場合でも変換は完了し、循環を警告する", () => {
+    const x = setFlag({ x: 0, y: 0 }, "X");
+    const c1 = setFlag({ x: -100, y: 100 }, "C1");
+    const c2 = setFlag({ x: -100, y: 200 }, "C2");
+    const d1 = setFlag({ x: 100, y: 100 }, "D1");
+    const d2 = setFlag({ x: 100, y: 200 }, "D2");
+    const { flowData, warnings } = convert(
+      [x, c1, c2, d1, d2],
+      [edge(x, c1), edge(x, d1), edge(c1, c2), edge(c2, c1), edge(d1, d2), edge(d2, d1)],
+    );
+
+    const titles = flowData.sections.flatMap((s) => s.steps.map((step) => step.title)).sort();
+    expect(titles).toEqual(["C1", "C2", "D1", "D2", "X"]);
+    expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
+  });
+
   test("読み取れないノードはスキップして警告を返す", () => {
     const { flowData, warnings } = convert([{ id: "broken" }, setFlag({ x: 0, y: 0 }, "A")]);
 
     expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["A"]);
     expect(warnings).toHaveLength(1);
+  });
+
+  test("読み取れないエッジはスキップして警告を返す", () => {
+    const a = setFlag({ x: 0, y: 0 }, "A");
+    const { warnings } = convert([a], [{ id: "broken-edge" }]);
+
+    expect(
+      warnings.some((w) => w.message.includes("エッジ") && w.message.includes("読み取れ")),
+    ).toBe(true);
   });
 
   test("新スキーマの検証に失敗するノードはスキップして警告を返す", () => {
@@ -223,8 +276,8 @@ describe("convertReactFlowToFlowData: 分岐ノード", () => {
     expect(after.title).toBe("次");
   });
 
-  test("ConditionalBranch は auto モードに変換し、後続はフラット化 + 警告 (ネスト化は PR3)", () => {
-    const cond = rfNode(
+  const conditionalBranch = (overrides: Record<string, unknown> = {}) =>
+    rfNode(
       "ConditionalBranch",
       {
         title: "章で分岐",
@@ -235,31 +288,217 @@ describe("convertReactFlowToFlowData: 分岐ノード", () => {
           },
         ],
         hasDefaultBranch: true,
-        matchMode: "all",
-        evaluatedConditionIds: ["c1"],
+        matchMode: "first",
+        ...overrides,
       },
       { x: 0, y: 0 },
     );
-    const left = setFlag({ x: -100, y: 200 }, "枝1側");
-    const right = setFlag({ x: 100, y: 250 }, "デフォルト側");
+
+  const getBranch = (step: { type: string }) => {
+    if (step.type !== "Branch") throw new Error("Branch であるべき");
+    return step as Extract<
+      ReturnType<
+        typeof convertReactFlowToFlowData
+      >["flowData"]["sections"][number]["steps"][number],
+      { type: "Branch" }
+    >;
+  };
+
+  test("ConditionalBranch は枝の内容をネストし、合流点以降は分岐の後に続く", () => {
+    const cond = conditionalBranch({ matchMode: "all", evaluatedConditionIds: ["c1"] });
+    const a = setFlag({ x: -100, y: 200 }, "枝1の中");
+    const b = setFlag({ x: 100, y: 200 }, "デフォルトの中");
+    const join = setFlag({ x: 0, y: 400 }, "合流後");
     const { flowData, warnings } = convert(
-      [cond, left, right],
-      [edge(cond, left, "source-cond-c1"), edge(cond, right, "source-default")],
+      [cond, a, b, join],
+      [
+        edge(cond, a, "source-cond-c1"),
+        edge(cond, b, "source-default"),
+        edge(a, join),
+        edge(b, join),
+      ],
     );
 
+    expect(warnings).toEqual([]);
     const steps = flowData.sections[0].steps;
-    const branch = steps[0];
-    if (branch.type !== "Branch") throw new Error("Branch であるべき");
+    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "合流後"]);
+    const branch = getBranch(steps[0]);
     expect(branch.mode).toBe("auto");
     expect(branch.matchMode).toBe("all");
     expect(branch.executedBranchIds).toEqual(["c1"]);
-    expect(branch.branches).toHaveLength(2);
     expect(branch.branches[0].condition).toBeDefined();
+    expect(branch.branches[0].steps.map((s) => s.title)).toEqual(["枝1の中"]);
     expect(branch.branches[1].condition).toBeUndefined();
-    expect(branch.branches.every((b) => b.steps.length === 0)).toBe(true);
-    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "枝1側", "デフォルト側"]);
-    expect(warnings.some((w) => w.nodeId === cond.id)).toBe(true);
+    expect(branch.branches[1].steps.map((s) => s.title)).toEqual(["デフォルトの中"]);
+  });
+
+  test("合流点へ直接つながる枝は空のまま残る", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "枝1の中");
+    const join = setFlag({ x: 0, y: 400 }, "合流後");
+    const { flowData, warnings } = convert(
+      [cond, a, join],
+      [edge(cond, a, "source-cond-c1"), edge(cond, join, "source-default"), edge(a, join)],
+    );
+
+    expect(warnings).toEqual([]);
+    const steps = flowData.sections[0].steps;
+    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "合流後"]);
+    const branch = getBranch(steps[0]);
+    expect(branch.branches[0].steps.map((s) => s.title)).toEqual(["枝1の中"]);
+    expect(branch.branches[1].steps).toEqual([]);
+  });
+
+  test("枝の途中で合流する場合は合流点以降を分岐の後ろへ出す", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "枝1の中");
+    const tail = setFlag({ x: 0, y: 400 }, "共有テール");
+    const last = setFlag({ x: 0, y: 600 }, "最後");
+    const { flowData, warnings } = convert(
+      [cond, a, tail, last],
+      [
+        edge(cond, a, "source-cond-c1"),
+        edge(cond, tail, "source-default"),
+        edge(a, tail),
+        edge(tail, last),
+      ],
+    );
+
+    expect(warnings).toEqual([]);
+    const steps = flowData.sections[0].steps;
+    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "共有テール", "最後"]);
+    expect(getBranch(steps[0]).branches[0].steps.map((s) => s.title)).toEqual(["枝1の中"]);
+  });
+
+  test("分岐の中に分岐をネストできる", () => {
+    const outer = conditionalBranch({ title: "外側" });
+    const inner = conditionalBranch({ title: "内側" });
+    inner.position = { x: 0, y: 200 };
+    const a = setFlag({ x: -100, y: 400 }, "内側の枝1");
+    const b = setFlag({ x: 100, y: 400 }, "内側のデフォルト");
+    const join = setFlag({ x: 0, y: 600 }, "合流後");
+    const { flowData, warnings } = convert(
+      [outer, inner, a, b, join],
+      [
+        edge(outer, inner, "source-cond-c1"),
+        edge(outer, join, "source-default"),
+        edge(inner, a, "source-cond-c1"),
+        edge(inner, b, "source-default"),
+        edge(a, join),
+        edge(b, join),
+      ],
+    );
+
+    expect(warnings).toEqual([]);
+    const steps = flowData.sections[0].steps;
+    expect(steps.map((s) => s.title)).toEqual(["外側", "合流後"]);
+    const outerBranch = getBranch(steps[0]);
+    const innerBranch = getBranch(outerBranch.branches[0].steps[0]);
+    expect(innerBranch.title).toBe("内側");
+    expect(innerBranch.branches[0].steps.map((s) => s.title)).toEqual(["内側の枝1"]);
+    expect(innerBranch.branches[1].steps.map((s) => s.title)).toEqual(["内側のデフォルト"]);
+  });
+
+  test("デフォルト枝の実行 (evaluatedConditionIds が空) は default 枝の実行として引き継ぐ", () => {
+    const cond = conditionalBranch({
+      evaluatedConditionIds: [],
+      executedAt: "2026-06-01T00:00:00.000Z",
+    });
+    const { flowData } = convert([cond]);
+
+    const branch = getBranch(flowData.sections[0].steps[0]);
+    expect(branch.executedBranchIds).toEqual(["default"]);
+    expect(branch.executedAt).toEqual(new Date("2026-06-01T00:00:00.000Z"));
+  });
+
+  test("同じ枝ハンドルに複数の接続がある場合はフラット化 + ⚠️ メモ + 警告にフォールバックする", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "A");
+    const b = setFlag({ x: 100, y: 200 }, "B");
+    const { flowData, warnings } = convert(
+      [cond, a, b],
+      [edge(cond, a, "source-cond-c1"), edge(cond, b, "source-cond-c1")],
+    );
+
+    const steps = flowData.sections[0].steps;
+    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "A", "B"]);
+    const branch = getBranch(steps[0]);
+    expect(branch.branches.every((arm) => arm.steps.length === 0)).toBe(true);
     expect(branch.memo).toContain("⚠️");
+    expect(warnings.some((w) => w.nodeId === cond.id)).toBe(true);
+  });
+
+  test("対応する枝が無いハンドルの接続はフラット化して警告する", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "枝1の中");
+    const zombie = setFlag({ x: 100, y: 200 }, "迷子");
+    const { flowData, warnings } = convert(
+      [cond, a, zombie],
+      [edge(cond, a, "source-cond-c1"), edge(cond, zombie, "source-cond-removed")],
+    );
+
+    const steps = flowData.sections[0].steps;
+    expect(steps.map((s) => s.title)).toEqual(["章で分岐", "迷子"]);
+    expect(getBranch(steps[0]).branches[0].steps.map((s) => s.title)).toEqual(["枝1の中"]);
+    expect(warnings.some((w) => w.nodeId === cond.id)).toBe(true);
+  });
+
+  test("エッジの並び順に関係なく合流点を検出する", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "枝1の中");
+    const join = setFlag({ x: 0, y: 400 }, "合流後");
+    const { flowData, warnings } = convert(
+      [cond, a, join],
+      [edge(cond, join, "source-default"), edge(cond, a, "source-cond-c1"), edge(a, join)],
+    );
+
+    expect(warnings).toEqual([]);
+    expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["章で分岐", "合流後"]);
+    expect(getBranch(flowData.sections[0].steps[0]).branches[0].steps.map((s) => s.title)).toEqual([
+      "枝1の中",
+    ]);
+  });
+
+  test("条件ツリーが壊れている分岐はスキップして警告する", () => {
+    const cond = conditionalBranch({ conditions: [{ id: "c1", root: null }] });
+    const { flowData, warnings } = convert([cond]);
+
+    expect(flowData.sections).toEqual([]);
+    expect(warnings.some((w) => w.nodeId === cond.id)).toBe(true);
+  });
+
+  test("分岐データ自体が壊れている場合はスキップし、接続は辿る", () => {
+    const cond = conditionalBranch({ conditions: "broken" });
+    const next = setFlag({ x: 0, y: 200 }, "次");
+    const { flowData, warnings } = convert([cond, next], [edge(cond, next, "source-cond-c1")]);
+
+    expect(flowData.sections[0].steps.map((s) => s.title)).toEqual(["次"]);
+    expect(warnings.some((w) => w.nodeId === cond.id)).toBe(true);
+  });
+
+  test("分岐以外のノードに複数の接続がある場合は最初のみ辿り、残りは末尾に回す", () => {
+    const s = setFlag({ x: 0, y: 0 }, "S");
+    const a = setFlag({ x: 0, y: 200 }, "A");
+    const b = setFlag({ x: 100, y: 200 }, "B");
+    const { flowData, warnings } = convert([s, a, b], [edge(s, a), edge(s, b)]);
+
+    expect(flowData.sections[0].steps.map((step) => step.title)).toEqual(["S", "A", "B"]);
+    expect(warnings.some((w) => w.nodeId === s.id)).toBe(true);
+  });
+
+  test("Comment はネストされた枝の中のステップにも吸収される", () => {
+    const cond = conditionalBranch();
+    const a = setFlag({ x: 0, y: 200 }, "枝1の中");
+    const c = rfNode(
+      "Comment",
+      { comment: "枝メモ" },
+      { x: 0, y: 220 },
+      { style: { width: 100, height: 50 } },
+    );
+    const { flowData } = convert([cond, a, c], [edge(cond, a, "source-cond-c1")]);
+
+    const branch = getBranch(flowData.sections[0].steps[0]);
+    expect(branch.branches[0].steps[0].memo).toBe("枝メモ");
   });
 });
 
@@ -388,7 +627,7 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     expect(warnings.some((w) => w.message.includes("フラット化"))).toBe(false);
   });
 
-  test("armLabel: 条件 root 欠落の枝はラベル「条件1」にフォールバックし、デフォルト枝化を警告する", () => {
+  test("toBranchArm: 条件 root 欠落の枝はラベル「条件1」にフォールバックし、デフォルト枝化を警告する", () => {
     const cond = rfNode(
       "ConditionalBranch",
       { title: "壊れ分岐", conditions: [{ id: "c1", root: undefined }], hasDefaultBranch: false },
@@ -407,7 +646,7 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     expect(w?.message).toContain("手動で条件を再設定");
   });
 
-  test("armLabel: 定義済みだが不正な条件 root はラベルフォールバックし error.name 付きで警告する", () => {
+  test("toBranchArm: 定義済みだが不正な条件 root はラベルフォールバックし error.name 付きで警告する", () => {
     const cond = rfNode(
       "ConditionalBranch",
       {
@@ -426,7 +665,7 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     expect(w?.message).toContain("TypeError");
   });
 
-  test("armLabel: 正常な条件式は infix 文字列をラベルにする", () => {
+  test("toBranchArm: 正常な条件式は infix 文字列をラベルにする", () => {
     const cond = rfNode(
       "ConditionalBranch",
       {

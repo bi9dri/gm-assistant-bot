@@ -9,7 +9,8 @@ import type { FlowData, Step } from "./schema";
 import { FlowDataSchema, StepSchema } from "./schema";
 
 // reactFlowData (グラフ) → FlowData (ステップツリー) のベストエフォート変換器。
-// 変換しきれない構造は捨てずにフラット化し、⚠️ メモと警告で手直しを促す。
+// 分岐は最近共通合流点 (immediate post-dominator) を検出して branches[].steps にネストし、
+// 変換しきれない構造は捨てずにフラット化 + ⚠️ メモと警告で手直しを促す。
 
 type ConversionWarning = {
   message: string;
@@ -89,6 +90,12 @@ const STEP_NODE_TYPES = new Set([
 
 const UNGROUPED = Symbol("ungrouped");
 const UNGROUPED_TITLE = "未分類";
+const DEFAULT_ARM_ID = "default";
+
+// 仮想終端。合流点が無い (全枝が末端まで流れる) ことを表す
+const EXIT = Symbol("exit");
+type JoinPoint = string | typeof EXIT;
+
 // ラベルが空の LabeledGroup 用。未分類 (グループ非所属) とは区別できる既定タイトル
 const UNTITLED_GROUP_TITLE = "グループ (無題)";
 
@@ -132,47 +139,6 @@ function findContainingGroup(node: RFNode, groups: RFNode[]): RFNode | undefined
     }
   }
   return innermost;
-}
-
-// エッジを尊重したトポロジカル順 (Kahn 法)。同時に実行可能なノードは座標 (y, x) 順。
-// 循環で残ったノードは座標順で末尾に足し、警告を返す。
-function orderStepNodes(
-  stepNodes: RFNode[],
-  edges: RFEdge[],
-  warnings: ConversionWarning[],
-): RFNode[] {
-  const byId = new Map(stepNodes.map((node) => [node.id, node]));
-  const outgoing = new Map<string, string[]>();
-  const inDegree = new Map<string, number>(stepNodes.map((node) => [node.id, 0]));
-  for (const edge of edges) {
-    if (!byId.has(edge.source) || !byId.has(edge.target)) continue;
-    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge.target]);
-    inDegree.set(edge.target, (inDegree.get(edge.target) ?? 0) + 1);
-  }
-
-  const ready = stepNodes.filter((node) => inDegree.get(node.id) === 0).sort(byPosition);
-  const ordered: RFNode[] = [];
-  while (ready.length > 0) {
-    const node = ready.shift() as RFNode;
-    ordered.push(node);
-    const becameReady: RFNode[] = [];
-    for (const targetId of outgoing.get(node.id) ?? []) {
-      const remaining = (inDegree.get(targetId) ?? 0) - 1;
-      inDegree.set(targetId, remaining);
-      if (remaining === 0) becameReady.push(byId.get(targetId) as RFNode);
-    }
-    // 直後に実行可能になったノードを優先しつつ、複数あれば座標順で先頭に挿入する
-    ready.unshift(...becameReady.sort(byPosition));
-  }
-
-  if (ordered.length < stepNodes.length) {
-    const leftover = stepNodes.filter((node) => !ordered.includes(node)).sort(byPosition);
-    warnings.push({
-      message: `循環した接続があるため ${leftover.length} 個のノードを末尾に配置しました`,
-    });
-    ordered.push(...leftover);
-  }
-  return ordered;
 }
 
 function titleOf(node: RFNode): string {
@@ -233,11 +199,31 @@ function toBranchArm(
   }
 }
 
+type BranchArmCandidate = {
+  id: string;
+  label: string;
+  condition?: unknown;
+  steps: unknown[];
+};
+
 // ノード → ステップ候補 (parse 前の生データ)。分岐 2 種は統合 Branch 型へ再構成し、
 // それ以外は data のフィールド名が新スキーマと同じためそのまま引き継ぐ。
 function toStepCandidate(node: RFNode, warnings: ConversionWarning[]): Record<string, unknown> {
   if (node.type === "ConditionalBranch") {
     const data = ConditionalBranchDataSchema.parse(node.data);
+    const branches: BranchArmCandidate[] = [
+      ...data.conditions.map((condition, index) =>
+        toBranchArm(condition, index, node.id, warnings),
+      ),
+      ...(data.hasDefaultBranch ? [{ id: DEFAULT_ARM_ID, label: "デフォルト", steps: [] }] : []),
+    ];
+    // 旧実装は「どの条件にもマッチせずデフォルト枝が実行された」とき空配列を記録する
+    const executedBranchIds =
+      data.evaluatedConditionIds === undefined
+        ? undefined
+        : data.evaluatedConditionIds.length === 0 && data.hasDefaultBranch
+          ? [DEFAULT_ARM_ID]
+          : data.evaluatedConditionIds;
     return {
       id: node.id,
       type: "Branch",
@@ -245,13 +231,8 @@ function toStepCandidate(node: RFNode, warnings: ConversionWarning[]): Record<st
       executedAt: node.data.executedAt,
       mode: "auto",
       matchMode: data.matchMode,
-      branches: [
-        ...data.conditions.map((condition, index) =>
-          toBranchArm(condition, index, node.id, warnings),
-        ),
-        ...(data.hasDefaultBranch ? [{ id: "default", label: "デフォルト", steps: [] }] : []),
-      ],
-      executedBranchIds: data.evaluatedConditionIds,
+      branches,
+      executedBranchIds,
     };
   }
   if (node.type === "SelectBranch") {
@@ -269,6 +250,261 @@ function toStepCandidate(node: RFNode, warnings: ConversionWarning[]): Record<st
     };
   }
   return { ...node.data, id: node.id, type: node.type, title: titleOf(node) };
+}
+
+type CandidateEntry = { node: RFNode; candidate: Record<string, unknown> };
+
+// エッジ順 (Kahn 法) のトポロジカル順。循環で並べきれないノードは警告して座標順で末尾に足す
+function topologicalOrder(
+  stepNodes: RFNode[],
+  edges: RFEdge[],
+  warnings: ConversionWarning[],
+): RFNode[] {
+  const byId = new Map(stepNodes.map((node) => [node.id, node]));
+  const outgoing = new Map<string, string[]>();
+  const inDegree = new Map<string, number>(stepNodes.map((node) => [node.id, 0]));
+  for (const edge of edges) {
+    if (!byId.has(edge.source) || !byId.has(edge.target)) continue;
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge.target]);
+    inDegree.set(edge.target, (inDegree.get(edge.target) ?? 0) + 1);
+  }
+
+  const ready = stepNodes.filter((node) => inDegree.get(node.id) === 0).sort(byPosition);
+  const ordered: RFNode[] = [];
+  while (ready.length > 0) {
+    const node = ready.shift() as RFNode;
+    ordered.push(node);
+    const becameReady: RFNode[] = [];
+    for (const targetId of outgoing.get(node.id) ?? []) {
+      const remaining = (inDegree.get(targetId) ?? 0) - 1;
+      inDegree.set(targetId, remaining);
+      if (remaining === 0) becameReady.push(byId.get(targetId) as RFNode);
+    }
+    ready.unshift(...becameReady.sort(byPosition));
+  }
+
+  if (ordered.length < stepNodes.length) {
+    const leftover = stepNodes.filter((node) => !ordered.includes(node)).sort(byPosition);
+    warnings.push({
+      message: `循環した接続があるため ${leftover.length} 個のノードを末尾に配置しました`,
+    });
+    ordered.push(...leftover);
+  }
+  return ordered;
+}
+
+// 各ノードの最近共通合流点 (immediate post-dominator)。
+// 後続が無いノードは EXIT。前提: order は (循環部を末尾に足した) トポロジカル順
+function computePostDominators(
+  order: RFNode[],
+  outgoing: Map<string, RFEdge[]>,
+): Map<string, JoinPoint> {
+  const ipdom = new Map<string, JoinPoint>();
+  const climb = (node: JoinPoint): JoinPoint => (node === EXIT ? EXIT : (ipdom.get(node) ?? EXIT));
+  // ipdom チェーン上の最近共通祖先 (LCA)。循環ノード (末尾に足された循環部) では
+  // ipdom が閉路を成しうるため、閉路を検知したら合流点なしの EXIT へ縮退する
+  const intersect = (aIn: JoinPoint, bIn: JoinPoint): JoinPoint => {
+    const ancestors = new Set<JoinPoint>();
+    let a: JoinPoint = aIn;
+    while (!ancestors.has(a)) {
+      ancestors.add(a);
+      if (a === EXIT) break;
+      a = climb(a);
+    }
+    let b: JoinPoint = bIn;
+    const seen = new Set<JoinPoint>();
+    while (!ancestors.has(b)) {
+      if (b === EXIT || seen.has(b)) return EXIT;
+      seen.add(b);
+      b = climb(b);
+    }
+    return b;
+  };
+
+  for (const node of [...order].reverse()) {
+    const successors = [...new Set((outgoing.get(node.id) ?? []).map((edge) => edge.target))];
+    let join: JoinPoint = EXIT;
+    if (successors.length > 0) {
+      join = successors[0];
+      for (const successor of successors.slice(1)) {
+        join = intersect(join, successor);
+      }
+    }
+    ipdom.set(node.id, join);
+  }
+  return ipdom;
+}
+
+// グラフを再帰的に歩き、分岐は合流点までを branches[].steps にネストした候補ツリーを作る。
+// topLevel はセクション割り当て対象、all はメモ吸収 (Comment) の対象
+function buildStructure(
+  stepNodes: RFNode[],
+  edges: RFEdge[],
+  warnings: ConversionWarning[],
+): { topLevel: CandidateEntry[]; all: CandidateEntry[] } {
+  const byId = new Map(stepNodes.map((node) => [node.id, node]));
+  const stepEdges = edges.filter((edge) => byId.has(edge.source) && byId.has(edge.target));
+  const outgoing = new Map<string, RFEdge[]>();
+  const hasIncoming = new Set<string>();
+  for (const edge of stepEdges) {
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge]);
+    hasIncoming.add(edge.target);
+  }
+
+  const order = topologicalOrder(stepNodes, stepEdges, warnings);
+  const ipdom = computePostDominators(order, outgoing);
+
+  const topLevel: CandidateEntry[] = [];
+  const all: CandidateEntry[] = [];
+  const consumed = new Set<string>();
+
+  const makeEntry = (node: RFNode): CandidateEntry | null => {
+    try {
+      return { node, candidate: toStepCandidate(node, warnings) };
+    } catch (error) {
+      // ZodError はデータ不整合なので best-effort スキップ。それ以外 (TypeError 等の
+      // プログラミングエラー) は握りつぶさず再 throw する
+      if (!(error instanceof z.ZodError)) throw error;
+      warnings.push({
+        nodeId: node.id,
+        message: `ノード「${titleOf(node)}」のデータを変換できなかったためスキップしました: ${summarizeIssues(error)}`,
+      });
+      return null;
+    }
+  };
+
+  const walkChain = (
+    startId: string | null,
+    stops: ReadonlySet<string>,
+    sink: CandidateEntry[],
+  ) => {
+    let cur = startId;
+    while (cur !== null && !stops.has(cur)) {
+      if (consumed.has(cur)) {
+        warnings.push({
+          nodeId: cur,
+          message: "複雑な接続のため、一部の接続を辿りませんでした",
+        });
+        break;
+      }
+      const nodeId = cur;
+      const node = byId.get(nodeId);
+      if (!node) break;
+      consumed.add(nodeId);
+
+      const entry = makeEntry(node);
+      if (entry && node.type === "ConditionalBranch") {
+        sink.push(entry);
+        all.push(entry);
+        const join = buildBranch(entry, sink, stops);
+        cur = join === EXIT ? null : join;
+        continue;
+      }
+      if (entry) {
+        // 最上位チェーンの不正ステップは Comment 吸収後にセクション組み立てで検証し、
+        // 失われたメモを警告へ残す。枝の中など非最上位では即時に検証して捨て、不正な
+        // 1 ステップが親分岐ごと巻き込んで落とされるのを防ぐ
+        const validation = sink === topLevel ? null : StepSchema.safeParse(entry.candidate);
+        if (validation === null || validation.success) {
+          sink.push(entry);
+          all.push(entry);
+        } else {
+          warnings.push({
+            nodeId: node.id,
+            message: `ノード「${titleOf(node)}」のデータが不正なためスキップしました: ${summarizeIssues(
+              validation.error,
+            )}`,
+          });
+        }
+      }
+      const targets = (outgoing.get(nodeId) ?? []).map((edge) => edge.target);
+      if (targets.length > 1) {
+        warnings.push({
+          nodeId,
+          message: `「${titleOf(node)}」に複数の接続があるため、最初の接続のみを辿りました`,
+        });
+      }
+      cur = targets[0] ?? null;
+    }
+  };
+
+  // 分岐の各枝を合流点までネストする。ハンドルが解釈できない構造は
+  // フラット化 (親チェーンへ展開) + ⚠️ メモにフォールバックする
+  const buildBranch = (
+    entry: CandidateEntry,
+    sink: CandidateEntry[],
+    stops: ReadonlySet<string>,
+  ): JoinPoint => {
+    const node = entry.node;
+    const branchEdges = outgoing.get(node.id) ?? [];
+    const arms = entry.candidate.branches as BranchArmCandidate[];
+
+    const edgesOf = (arm: BranchArmCandidate) => {
+      const handle = arm.id === DEFAULT_ARM_ID ? "source-default" : `source-cond-${arm.id}`;
+      return branchEdges.filter((edge) => edge.sourceHandle === handle);
+    };
+
+    // 未結線の枝は「そこで流れが終わる」ため、合流点は存在しない (EXIT) とみなす。
+    // そうしないと唯一の後続が合流点扱いになり、枝の中身が分岐の外へ巻き上がってしまう
+    const hasUnwiredArm = arms.some((arm) => edgesOf(arm).length === 0);
+    const join: JoinPoint = hasUnwiredArm ? EXIT : (ipdom.get(node.id) ?? EXIT);
+    const armStops = join === EXIT ? stops : new Set([...stops, join]);
+
+    if (arms.some((arm) => edgesOf(arm).length > 1)) {
+      entry.candidate.memo = appendMemo(
+        (entry.candidate.memo as string | undefined) ?? "",
+        "⚠️ 分岐の枝を自動ネスト化できなかったため、後続ステップをフラットに並べています。枝の内容を手動で移動してください。",
+      );
+      warnings.push({
+        nodeId: node.id,
+        message: `分岐「${titleOf(node)}」の後続をフラット化しました`,
+      });
+      for (const edge of branchEdges) {
+        walkChain(edge.target, armStops, sink);
+      }
+      return join;
+    }
+
+    const knownEdges = new Set(arms.flatMap((arm) => edgesOf(arm)));
+    for (const arm of arms) {
+      const target = edgesOf(arm)[0]?.target ?? null;
+      if (target === null || target === join) continue;
+      const armSink: CandidateEntry[] = [];
+      walkChain(target, armStops, armSink);
+      arm.steps = armSink.map((armEntry) => armEntry.candidate);
+    }
+
+    const leftovers = branchEdges.filter((edge) => !knownEdges.has(edge));
+    if (leftovers.length > 0) {
+      warnings.push({
+        nodeId: node.id,
+        message: `分岐「${titleOf(node)}」に対応する枝が見つからない接続があるため、フラットに並べました`,
+      });
+      for (const edge of leftovers) {
+        walkChain(edge.target, armStops, sink);
+      }
+    }
+    return join;
+  };
+
+  const noStops: ReadonlySet<string> = new Set();
+  const roots = stepNodes.filter((node) => !hasIncoming.has(node.id)).sort(byPosition);
+  for (const root of roots) {
+    walkChain(root.id, noStops, topLevel);
+  }
+
+  // 異常な構造 (循環・辿れなかった接続) で残ったノードの受け皿。データは捨てない
+  let warnedLeftover = false;
+  while (consumed.size < stepNodes.length) {
+    const remaining = stepNodes.filter((node) => !consumed.has(node.id)).sort(byPosition);
+    if (!warnedLeftover) {
+      warnings.push({ message: "接続を辿れなかったステップを末尾に配置しました" });
+      warnedLeftover = true;
+    }
+    walkChain(remaining[0].id, noStops, topLevel);
+  }
+
+  return { topLevel, all };
 }
 
 export function convertReactFlowToFlowData(input: unknown): {
@@ -323,46 +559,8 @@ export function convertReactFlowToFlowData(input: unknown): {
     }
   }
 
-  const ordered = orderStepNodes(stepNodes, edges, warnings);
+  const { topLevel, all } = buildStructure(stepNodes, edges, warnings);
   const groupKeyOf = (node: RFNode) => findContainingGroup(node, groups)?.id ?? UNGROUPED;
-
-  // ステップ候補を組み立て、検証に失敗したものは捨てて警告にする
-  const candidates: { node: RFNode; candidate: Record<string, unknown> }[] = [];
-  for (const node of ordered) {
-    try {
-      candidates.push({ node, candidate: toStepCandidate(node, warnings) });
-    } catch (error) {
-      // ZodError はデータ不整合なので best-effort スキップ。それ以外 (TypeError 等の
-      // プログラミングエラー) は握りつぶさず再 throw する
-      if (!(error instanceof z.ZodError)) throw error;
-      warnings.push({
-        nodeId: node.id,
-        message: `ノード「${titleOf(node)}」のデータを変換できなかったためスキップしました: ${summarizeIssues(error)}`,
-      });
-    }
-  }
-
-  // ConditionalBranch の後続はネスト化せずフラットに並ぶ (合流点検出は後続 PR)。
-  // フラット化対象はステップノード宛のエッジのみ。Comment/Blueprint/未知ノード宛しか
-  // 無い終端分岐で警告・⚠️ メモが誤発火するのを防ぐ
-  const stepNodeIds = new Set(stepNodes.map((node) => node.id));
-  const stepOutgoingCount = new Map<string, number>();
-  for (const edge of edges) {
-    if (!stepNodeIds.has(edge.target)) continue;
-    stepOutgoingCount.set(edge.source, (stepOutgoingCount.get(edge.source) ?? 0) + 1);
-  }
-  for (const { node, candidate } of candidates) {
-    if (node.type === "ConditionalBranch" && (stepOutgoingCount.get(node.id) ?? 0) > 0) {
-      candidate.memo = appendMemo(
-        (candidate.memo as string | undefined) ?? "",
-        "⚠️ 分岐の枝を自動ネスト化できなかったため、後続ステップをフラットに並べています。枝の内容を手動で移動してください。",
-      );
-      warnings.push({
-        nodeId: node.id,
-        message: `分岐「${titleOf(node)}」の後続をフラット化しました`,
-      });
-    }
-  }
 
   // Comment の吸収: グループ内なら同グループ内の最近接ステップ、いなければセクション memo へ。
   // グループ外なら全ステップ中の最近接へ
@@ -385,9 +583,7 @@ export function convertReactFlowToFlowData(input: unknown): {
     if (text === "") continue;
     const groupKey = groupKeyOf(comment);
     const scope =
-      groupKey === UNGROUPED
-        ? candidates
-        : candidates.filter(({ node }) => groupKeyOf(node) === groupKey);
+      groupKey === UNGROUPED ? all : all.filter(({ node }) => groupKeyOf(node) === groupKey);
     const nearest = [...scope].sort(
       (a, b) => distance(a.node, comment) - distance(b.node, comment),
     )[0];
@@ -439,7 +635,7 @@ export function convertReactFlowToFlowData(input: unknown): {
   // セクション化されたグループ。ここに載らないグループはラベルが失われるため後で警告する
   const realizedGroupIds = new Set<string>();
   let currentKey: string | typeof UNGROUPED | null = null;
-  for (const { node, candidate } of candidates) {
+  for (const { node, candidate } of topLevel) {
     const stepResult = StepSchema.safeParse(candidate);
     if (!stepResult.success) {
       // 吸収済み Comment の memo はこのステップと共に失われるため、内容を warning に残す
