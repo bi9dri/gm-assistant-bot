@@ -22,6 +22,7 @@ Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Worker
 
 ## Docs (`/docs/dev`)
 - [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
+- [step-list-editor-architecture.md](docs/dev/step-list-editor-architecture.md) — **required reading before any issue #182 Phase 1–5 work** (React Flow → step-list editor migration; pins the cross-cutting decisions)
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
 
 ## Skills (`.claude/skills/`)
