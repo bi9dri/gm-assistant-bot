@@ -69,7 +69,9 @@ export const DetailPanel = () => {
             <span className="label-text">実行後に次のステップを自動実行</span>
           </label>
         </div>
-        {StepDetailPanel !== undefined && (
+        {StepDetailPanel === undefined ? (
+          <p className="text-sm text-warning">未対応のステップタイプです: {step.type}</p>
+        ) : (
           <>
             <div className="divider my-0" />
             <StepDetailPanel step={step} onChange={handleChange} />

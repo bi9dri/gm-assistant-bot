@@ -91,6 +91,30 @@ export const Branch = story(
     ],
   }),
 );
+// auto モード: 条件付き枝が ConditionTreeEditor を描画する経路を VRT で押さえる。
+// 決定的にするため id は固定 (generateId / randomUUID を介さない)。
+export const BranchAuto = story(
+  stepFor("Branch", {
+    mode: "auto",
+    matchMode: "first",
+    branches: [
+      {
+        id: "b1",
+        label: "赤チーム",
+        condition: {
+          type: "rule",
+          id: "r1",
+          flagKey: "team",
+          operator: "equals",
+          value: "red",
+          valueType: "literal",
+        },
+        steps: [],
+      },
+      { id: "b2", label: "デフォルト", steps: [] },
+    ],
+  }),
+);
 export const Kanban = story(stepFor("Kanban", {}));
 export const Counter = story(stepFor("Counter", { flagKey: "round", step: 1 }));
 export const ShuffleAssign = story(

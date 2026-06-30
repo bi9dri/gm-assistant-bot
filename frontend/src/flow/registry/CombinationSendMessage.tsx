@@ -3,13 +3,14 @@ import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { MessageBlocksEditor } from "../components/MessageBlocksEditor";
+import { generateId } from "../ids";
 import { CombinationSendMessageStepSchema, type CombinationSendMessageStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type Entry = CombinationSendMessageStep["entries"][number];
 
 const newEntry = (): Entry => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   channelName: "",
   messages: [{ content: "", attachments: [] }],
   collapsed: false,

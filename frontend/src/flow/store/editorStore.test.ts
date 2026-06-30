@@ -54,6 +54,54 @@ describe("editorStore", () => {
     expect(useEditorStore.getState().selectedStepId).toBeNull();
   });
 
+  test("親 Branch を removeStep すると枝内の選択中の子も解除される", () => {
+    useEditorStore.setState({
+      flowData: {
+        version: 1,
+        sections: [
+          {
+            id: "s1",
+            title: "S1",
+            memo: "",
+            collapsed: false,
+            steps: [
+              {
+                id: "br",
+                type: "Branch",
+                title: "",
+                memo: "",
+                autoAdvance: false,
+                mode: "select",
+                matchMode: "first",
+                flagName: "",
+                branches: [
+                  {
+                    id: "arm1",
+                    label: "A1",
+                    steps: [
+                      {
+                        id: "child",
+                        type: "SetGameFlag",
+                        title: "",
+                        memo: "",
+                        autoAdvance: false,
+                        flagKey: "k",
+                        flagValue: "v",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      selectedStepId: "child",
+    });
+    useEditorStore.getState().removeStep("br");
+    expect(useEditorStore.getState().selectedStepId).toBeNull();
+  });
+
   test("moveStep は同一セクション内で並べ替える", () => {
     const store = useEditorStore.getState();
     store.addStep("SetGameFlag", { container: sectionContainer("s1"), index: 0 });
@@ -79,6 +127,15 @@ describe("editorStore", () => {
     expect(useEditorStore.getState().flowData.sections[0]?.collapsed).toBe(true);
     store.removeSection(s2);
     expect(useEditorStore.getState().flowData.sections).toHaveLength(1);
+  });
+
+  test("removeSection は削除セクション内の選択中 step を解除する", () => {
+    useEditorStore
+      .getState()
+      .addStep("SetGameFlag", { container: sectionContainer("s1"), index: 0 });
+    expect(useEditorStore.getState().selectedStepId).not.toBeNull();
+    useEditorStore.getState().removeSection("s1");
+    expect(useEditorStore.getState().selectedStepId).toBeNull();
   });
 
   test("setGameFlag / removeGameFlag", () => {

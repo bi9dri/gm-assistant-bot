@@ -51,7 +51,10 @@ export const MessageBlocksEditor = ({ messages, onChange, nodeId }: MessageBlock
   const handleRemoveMessageBlock = (messageIndex: number) => {
     const fs = new FileSystem();
     for (const attachment of messages[messageIndex].attachments) {
-      void fs.deleteFile(attachment.filePath).catch(() => {});
+      // ベストエフォート削除。失敗しても処理は続けるが、孤児ファイルの調査用にログは残す。
+      void fs.deleteFile(attachment.filePath).catch((error: unknown) => {
+        console.error("Failed to delete attachment file:", error);
+      });
     }
     onChange(messages.filter((_, i) => i !== messageIndex));
   };
@@ -114,6 +117,10 @@ export const MessageBlocksEditor = ({ messages, onChange, nodeId }: MessageBlock
       await fs.deleteFile(attachment.filePath);
     } catch (error) {
       console.error("Failed to delete file:", error);
+      addToast({
+        message: "ファイルの削除に失敗しましたが、一覧からは除外しました",
+        status: "warning",
+      });
     }
     onChange(
       messages.map((message, i) =>

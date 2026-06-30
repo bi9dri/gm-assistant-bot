@@ -3,6 +3,8 @@ import type { ConditionNode, GroupNode, RuleNode } from "@/components/Node/utils
 import { FlagValueSelector } from "@/components/Node/utils/FlagValueSelector";
 import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
+import { generateId } from "../ids";
+
 // ConditionalBranchNode から抽出した条件ツリーエディタ (React Flow 非依存)。
 // 単一の ConditionNode (rule | group) を controlled に再帰編集する。
 // store / Handle / エッジ操作には触れず、value -> onChange のみを行う。
@@ -25,7 +27,7 @@ const getGroupBorderColor = (depth: number): string =>
 // 「条件を追加」「グループに子を追加」で生成する空ルール。id は採番する。
 export const createDefaultRule = (): RuleNode => ({
   type: "rule",
-  id: crypto.randomUUID(),
+  id: generateId(),
   flagKey: "",
   operator: "equals",
   value: "",
@@ -181,7 +183,7 @@ function GroupEditor({ nodeId, group, onChange, onRemove, depth }: GroupEditorPr
   const handleAddGroup = () => {
     const newGroup: GroupNode = {
       type: "group",
-      id: crypto.randomUUID(),
+      id: generateId(),
       logic: "and",
       children: [createDefaultRule()],
     };
@@ -277,7 +279,7 @@ function ConditionNodeEditor({
       onChange={onChange}
       onRemove={onRemove}
       onWrapInGroup={() => {
-        onChange({ type: "group", id: crypto.randomUUID(), logic: "and", children: [node] });
+        onChange({ type: "group", id: generateId(), logic: "and", children: [node] });
       }}
     />
   );

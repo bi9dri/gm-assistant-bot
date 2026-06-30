@@ -1,3 +1,4 @@
+import { generateId } from "../ids";
 import { RecordCombinationStepSchema, type RecordCombinationStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
 
@@ -18,7 +19,7 @@ const OptionListEditor = ({ label, items, onItemsChange }: OptionListEditorProps
   };
 
   const handleAdd = () => {
-    onItemsChange([...items, { id: crypto.randomUUID(), label: "" }]);
+    onItemsChange([...items, { id: generateId(), label: "" }]);
   };
 
   const handleRemove = (index: number) => {

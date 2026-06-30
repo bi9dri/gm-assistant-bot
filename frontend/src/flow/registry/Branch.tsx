@@ -1,9 +1,10 @@
 import { ConditionTreeEditor, createDefaultRule } from "../components/ConditionTreeEditor";
+import { generateId } from "../ids";
 import { BranchStepSchema, type BranchArm, type BranchStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
 
 const createArm = (label: string): BranchArm => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   label,
   steps: [],
 });
@@ -14,8 +15,24 @@ const BranchDetailPanel = ({ step, onChange }: DetailPanelProps<BranchStep>) => 
       branches: step.branches.map((arm, i) => (i === index ? { ...arm, ...patch } : arm)),
     });
 
-  const addArm = () =>
-    onChange({ branches: [...step.branches, createArm(`枝${step.branches.length + 1}`)] });
+  const addArm = () => {
+    const label = `枝${step.branches.length + 1}`;
+    if (step.mode === "select") {
+      onChange({ branches: [...step.branches, createArm(label)] });
+      return;
+    }
+    // auto モード: 新規枝は条件付きで追加し、末尾にデフォルト枝 (条件なし) があれば
+    // その手前に挿入する (schema: デフォルト枝は末尾に1つまで)。
+    const newArm: BranchArm = { ...createArm(label), condition: createDefaultRule() };
+    const branches = [...step.branches];
+    const lastArm = branches[branches.length - 1];
+    const insertAt =
+      lastArm !== undefined && lastArm.condition === undefined
+        ? branches.length - 1
+        : branches.length;
+    branches.splice(insertAt, 0, newArm);
+    onChange({ branches });
+  };
 
   const removeArm = (index: number) =>
     onChange({ branches: step.branches.filter((_, i) => i !== index) });
@@ -29,7 +46,15 @@ const BranchDetailPanel = ({ step, onChange }: DetailPanelProps<BranchStep>) => 
       });
       return;
     }
-    onChange({ mode });
+    // auto モード: デフォルト枝 (条件なし) は末尾 1 つだけ許される。末尾以外で条件が
+    // 無い枝にはプレースホルダ条件を補い、デフォルト枝の重複で保存不能になるのを防ぐ。
+    const lastIndex = step.branches.length - 1;
+    onChange({
+      mode,
+      branches: step.branches.map((arm, i) =>
+        i === lastIndex ? arm : { ...arm, condition: arm.condition ?? createDefaultRule() },
+      ),
+    });
   };
 
   const canRemoveArm = step.branches.length > 1;
@@ -155,7 +180,7 @@ export const BranchEntry = defineStep<BranchStep>({
     mode: "auto",
     matchMode: "first",
     flagName: "",
-    branches: [{ id: crypto.randomUUID(), label: "枝1", steps: [] }],
+    branches: [{ id: generateId(), label: "枝1", steps: [] }],
   }),
   summary: (step) => {
     const count = step.branches.length;

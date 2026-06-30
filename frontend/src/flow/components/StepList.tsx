@@ -17,6 +17,7 @@ import type { StepContainer } from "../treeOps";
 
 import { getEntry } from "../registry";
 import { useEditorStore } from "../store/editorStore";
+import { AddStepMenu } from "./AddStepMenu";
 
 const CATEGORY_LABEL: Record<StepRegistryEntry["category"], string> = {
   action: "操作",
@@ -100,6 +101,10 @@ const StepRow = memo(({ step }: StepRowProps) => {
               <StepList
                 container={{ kind: "branchArm", branchStepId: step.id, armId: arm.id }}
                 steps={arm.steps}
+              />
+              <AddStepMenu
+                container={{ kind: "branchArm", branchStepId: step.id, armId: arm.id }}
+                index={arm.steps.length}
               />
             </div>
           ))}

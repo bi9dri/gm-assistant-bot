@@ -57,6 +57,28 @@ const makeFlow = (): FlowData => ({
   ],
 });
 
+// s1: [ outer{ outerArm:[ inner{ innerArm:[x] } ] } ] — Branch を arm に入れ子にする
+const makeNestedFlow = (): FlowData => ({
+  version: 1,
+  sections: [
+    {
+      id: "s1",
+      title: "S1",
+      memo: "",
+      collapsed: false,
+      steps: [
+        branch("outer", [
+          {
+            id: "outerArm",
+            label: "Outer",
+            steps: [branch("inner", [{ id: "innerArm", label: "Inner", steps: [leaf("x")] }])],
+          },
+        ]),
+      ],
+    },
+  ],
+});
+
 const stepIds = (flow: FlowData, sectionId: string): string[] =>
   findSection(flow, sectionId)?.steps.map((step) => step.id) ?? [];
 
@@ -220,6 +242,17 @@ describe("moveStep", () => {
     const flow = makeFlow();
     const next = moveStep(flow, "br", {
       container: { kind: "branchArm", branchStepId: "br", armId: "arm1" },
+      index: 0,
+    });
+    expect(next).toBe(flow); // no-op
+  });
+
+  test("子孫の分岐枝の中へも移動できない (再帰的な循環防止)", () => {
+    // outer を、その内側にある inner の枝へ移そうとするとツリーが自己包含する。
+    // collectBranchIds が {outer, inner} を再帰収集して阻止する。
+    const flow = makeNestedFlow();
+    const next = moveStep(flow, "outer", {
+      container: { kind: "branchArm", branchStepId: "inner", armId: "innerArm" },
       index: 0,
     });
     expect(next).toBe(flow); // no-op

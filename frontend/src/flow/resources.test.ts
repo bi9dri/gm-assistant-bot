@@ -138,3 +138,66 @@ describe("collectResourcesFromFlow", () => {
     expect(resources.gameFlags.some((flag) => flag.key === "winner")).toBe(true);
   });
 });
+
+// auto モード分岐は select と異なり flagName を持たず、枝ラベルも values にしない。
+const autoFlow: FlowData = {
+  version: 1,
+  sections: [
+    {
+      id: "s1",
+      title: "",
+      memo: "",
+      collapsed: false,
+      steps: [
+        {
+          id: "ab1",
+          type: "Branch",
+          title: "",
+          memo: "",
+          autoAdvance: false,
+          mode: "auto",
+          matchMode: "first",
+          flagName: "ignoredFlag",
+          branches: [
+            {
+              id: "arm1",
+              label: "条件枝",
+              condition: {
+                type: "rule",
+                id: "rule1",
+                flagKey: "team",
+                operator: "equals",
+                value: "red",
+                valueType: "literal",
+              },
+              steps: [
+                {
+                  id: "sg1",
+                  type: "SetGameFlag",
+                  title: "",
+                  memo: "",
+                  autoAdvance: false,
+                  flagKey: "innerFlag",
+                  flagValue: "1",
+                },
+              ],
+            },
+            { id: "arm2", label: "デフォルト枝", steps: [] },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+describe("collectResourcesFromFlow (auto モード分岐)", () => {
+  const resources = collectResourcesFromFlow(autoFlow);
+
+  test("auto モードは flagName を gameFlag に出さない", () => {
+    expect(resources.gameFlags.some((flag) => flag.key === "ignoredFlag")).toBe(false);
+  });
+
+  test("auto モードでも枝内のステップは再帰的に収集する", () => {
+    expect(resources.gameFlags.some((flag) => flag.key === "innerFlag")).toBe(true);
+  });
+});

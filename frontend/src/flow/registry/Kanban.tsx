@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HiDotsVertical, HiPencil, HiTrash } from "react-icons/hi";
 
+import { generateId } from "../ids";
 import { KanbanStepSchema, type KanbanStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
 
@@ -267,7 +268,7 @@ const KanbanDetailPanel = ({ step, onChange }: DetailPanelProps<KanbanStep>) => 
   };
 
   const handleAddColumn = () => {
-    onChange({ columns: [...columns, { id: crypto.randomUUID(), label: "新しい列" }] });
+    onChange({ columns: [...columns, { id: generateId(), label: "新しい列" }] });
   };
 
   const handleColumnLabelChange = (columnId: string, newLabel: string) => {
@@ -282,7 +283,7 @@ const KanbanDetailPanel = ({ step, onChange }: DetailPanelProps<KanbanStep>) => 
   };
 
   const handleAddCard = (columnId: string) => {
-    const newCard: KanbanItem = { id: crypto.randomUUID(), label: "" };
+    const newCard: KanbanItem = { id: generateId(), label: "" };
     onChange({
       cards: [...cards, newCard],
       initialPlacements: [...initialPlacements, { cardId: newCard.id, columnId }],
