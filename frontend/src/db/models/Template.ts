@@ -2,6 +2,7 @@ import { Entity } from "dexie";
 
 import type { FlowData } from "@/flow/schema";
 
+import { reactFlowToFlowData } from "@/flow/migrate";
 import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
 
 import type { DB } from "../database";
@@ -153,9 +154,13 @@ export class Template extends Entity<DB> {
     }
 
     const template = await Template.create(validated.name);
+    // flowData は reactFlowData から導出する (両者のファイルパスは常に一致させる)。
+    // インポート経路のパス書き換え (files/ → template/{id}/) は fileSystem.ts の
+    // importTemplate が reactFlowData / flowData 双方に対して行う。
     await template.update({
       gameFlags: validated.gameFlags,
       reactFlowData: validated.reactFlowData,
+      flowData: reactFlowToFlowData(validated.reactFlowData),
     });
 
     return template;

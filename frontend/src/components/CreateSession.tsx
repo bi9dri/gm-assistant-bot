@@ -3,10 +3,13 @@ import type z from "zod";
 import { useLiveQuery } from "dexie-react-hooks";
 import { type MouseEvent, useEffect, useState } from "react";
 
+import type { FlowData } from "@/flow/schema";
+
 import { ApiClient } from "@/api";
 import { db, type ReactFlowData } from "@/db";
 import { type GuildSchema } from "@/db";
 import { FileSystem, convertFilePathsInReactFlowData } from "@/fileSystem";
+import { convertFilePathsInFlowData } from "@/flow/filePaths";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {
@@ -81,8 +84,8 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         guildId: selectedGuildId,
         botId: selectedBotId,
         gameFlags: template.gameFlags,
+        // reactFlowData / flowData ともパスは下の update で session/{id}/ へ書き換える
         reactFlowData: template.reactFlowData,
-        // flowData 内のファイルパス書き換えは新ランナー (Phase 3) で対応するため、ここでは複製のみ
         flowData: template.flowData,
         createdAt: new Date(),
         lastUsedAt: new Date(),
@@ -92,13 +95,20 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const fileSystem = new FileSystem();
       await fileSystem.copyTemplateFilesToSession(selectedTemplateId, newSessionId);
 
+      // reactFlowData と flowData はファイルパスを共有するため、同じ replacer で両方書き換える
+      const replaceFilePath = (filePath: string) =>
+        filePath.replace(`template/${selectedTemplateId}/`, `session/${newSessionId}/`);
       const parsed: ReactFlowData = JSON.parse(template.reactFlowData);
-      const converted = convertFilePathsInReactFlowData(parsed, (filePath) =>
-        filePath.replace(`template/${selectedTemplateId}/`, `session/${newSessionId}/`),
+      const convertedReactFlowData = JSON.stringify(
+        convertFilePathsInReactFlowData(parsed, replaceFilePath),
       );
-      const convertedReactFlowData = JSON.stringify(converted);
+      const parsedFlow: FlowData = JSON.parse(template.flowData);
+      const convertedFlowData = JSON.stringify(
+        convertFilePathsInFlowData(parsedFlow, replaceFilePath),
+      );
       await db.GameSession.update(newSessionId, {
         reactFlowData: convertedReactFlowData,
+        flowData: convertedFlowData,
       });
 
       addToast({

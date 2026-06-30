@@ -8,6 +8,7 @@ import {
 } from "@zip.js/zip.js";
 
 import { db, Template, type ReactFlowData } from "./db";
+import { convertFilePathsInFlowData } from "./flow/filePaths";
 
 type Attachment = { filePath: string };
 type MessageWithAttachments = { attachments: Attachment[] };
@@ -211,9 +212,9 @@ export class FileSystem {
       await this.writeFile(targetPath, file);
     }
 
-    // Rewrite filePaths in reactFlowData to point to the new template ID
-    const oldReactFlowData = template.getParsedReactFlowData();
-    const newReactFlowData = convertFilePathsInReactFlowData(oldReactFlowData, (filePath) => {
+    // Rewrite filePaths to point to the new template ID. reactFlowData / flowData は
+    // パスを共有するため同じ replacer で両方書き換える。
+    const replaceFilePath = (filePath: string) => {
       if (filePath.startsWith("files/")) {
         return `template/${newId}/${filePath.slice("files/".length)}`;
       }
@@ -221,8 +222,13 @@ export class FileSystem {
         return `template/${newId}/${filePath.slice(`template/${oldTemplateId}/`.length)}`;
       }
       return filePath;
-    });
-    await template.update({ reactFlowData: newReactFlowData });
+    };
+    const newReactFlowData = convertFilePathsInReactFlowData(
+      template.getParsedReactFlowData(),
+      replaceFilePath,
+    );
+    const newFlowData = convertFilePathsInFlowData(template.getParsedFlowData(), replaceFilePath);
+    await template.update({ reactFlowData: newReactFlowData, flowData: newFlowData });
 
     return template;
   }

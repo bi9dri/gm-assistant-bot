@@ -156,7 +156,7 @@ describe("Template", () => {
     test("flowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const template = await Template.create("Test");
 
-      const invalidData = { version: 2 } as unknown as Parameters<
+      const invalidData = { version: 1, sections: "nope" } as unknown as Parameters<
         typeof template.update
       >[0]["flowData"];
 
@@ -193,6 +193,32 @@ describe("Template", () => {
 
       expect(template.name).toBe("Imported Template");
       expect(template.getParsedGameFlags()).toEqual({ key: "value" });
+    });
+
+    test("reactFlowDataからflowDataを導出して保存する", async () => {
+      const exportData = {
+        version: 1,
+        name: "Imported",
+        gameFlags: {},
+        reactFlowData: {
+          nodes: [
+            {
+              id: "n1",
+              type: "SetGameFlag",
+              position: { x: 0, y: 0 },
+              data: { title: "A", flagKey: "k", flagValue: "v" },
+            },
+          ],
+          edges: [],
+          viewport: { x: 0, y: 0, zoom: 1 },
+        },
+      };
+
+      const template = await Template.import(exportData);
+
+      const flowData = template.getParsedFlowData();
+      expect(flowData.sections.length).toBeGreaterThan(0);
+      expect(flowData.sections[0].steps[0].title).toBe("A");
     });
 
     test("サポートされていないバージョンの場合はエラーをスローする", async () => {

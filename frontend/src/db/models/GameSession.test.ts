@@ -164,7 +164,7 @@ describe("GameSession", () => {
     test("flowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const session = await createTestSession({});
 
-      const invalidData = { version: 2 } as unknown as Parameters<
+      const invalidData = { version: 1, sections: "nope" } as unknown as Parameters<
         typeof session.update
       >[0]["flowData"];
 
