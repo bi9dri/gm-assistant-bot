@@ -239,9 +239,16 @@ The new editor ships on **separate routes** and runs alongside React Flow until 
   existing `getParsedReactFlowData` / `update` pattern).
 - Bulk-convert existing records via the next Dexie version (`this.version(7).upgrade`) using
   `convertReactFlowToFlowData`. **Keep `reactFlowData`** (old UI + backup); do not delete it.
-- Surface converter `warnings` so the user can fix flattened structures. Decide where warnings
-  live (e.g. an injected `⚠️` memo on the affected step/section) during Phase 1 design.
+- Surface converter `warnings` so the user can fix flattened structures. **Resolved (Phase 1):**
+  `foldWarningsIntoFlowData` in `flow/migrate.ts` folds them into `⚠️` memos — a `nodeId`-matched
+  warning is appended to that step's `memo` (recursing into `branches[].steps`); the rest (global
+  warnings / unrealized groups) are aggregated into the first section's `memo`, or a synthetic
+  `conversion-warnings` section if the flow has none. Nothing is dropped.
 - **Use the `schema-migration` skill** for the Dexie work. Migrate both tables with `modify()`.
+  **Implemented:** the per-record transform (`migrateRecordToFlowData`) and the both-tables
+  `modify()` routine (`applyFlowDataMigration`) live in `flow/migrate.ts` (pure, unit-tested);
+  `database.ts`'s `version(7).upgrade` is a thin caller. `migrateRecordToFlowData` is idempotent:
+  a record that already holds valid `flowData` is kept as-is, so re-running is safe.
 
 ---
 

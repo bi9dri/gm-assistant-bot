@@ -1,5 +1,9 @@
 import { describe, test, expect, spyOn } from "bun:test";
 
+import type { FlowData } from "@/flow/schema";
+
+import { defaultFlowData } from "@/flow/schema";
+
 import { defaultReactFlowData } from "../schemas";
 import { Template } from "./Template";
 
@@ -127,6 +131,48 @@ describe("Template", () => {
       consoleSpy.mockRestore();
 
       expect(parsed).toEqual(defaultReactFlowData);
+    });
+  });
+
+  describe("flowData", () => {
+    test("create時にdefaultFlowDataが設定される", async () => {
+      const template = await Template.create("Test");
+
+      expect(template.getParsedFlowData()).toEqual(defaultFlowData);
+    });
+
+    test("flowDataをZodバリデーション付きで更新する", async () => {
+      const template = await Template.create("Test");
+      const flowData: FlowData = {
+        version: 1,
+        sections: [{ id: "s1", title: "S1", memo: "", collapsed: false, steps: [] }],
+      };
+
+      await template.update({ flowData });
+
+      expect(template.getParsedFlowData()).toEqual(flowData);
+    });
+
+    test("flowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
+      const template = await Template.create("Test");
+
+      const invalidData = { version: 2 } as unknown as Parameters<
+        typeof template.update
+      >[0]["flowData"];
+
+      expect(template.update({ flowData: invalidData })).rejects.toThrow();
+    });
+
+    test("無効なJSONの場合はdefaultFlowDataを返す", async () => {
+      const template = await Template.create("Test");
+
+      template.flowData = "not valid json";
+
+      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const parsed = template.getParsedFlowData();
+      consoleSpy.mockRestore();
+
+      expect(parsed).toEqual(defaultFlowData);
     });
   });
 

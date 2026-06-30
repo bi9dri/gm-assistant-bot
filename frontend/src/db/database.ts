@@ -18,6 +18,8 @@ import type {
   TemplateData,
 } from "./schemas";
 
+import { applyFlowDataMigration } from "../flow/migrate";
+
 const ReactFlowNodeSchema = z.looseObject({
   type: z.string().optional(),
   data: z.record(z.string(), z.unknown()).optional(),
@@ -310,5 +312,16 @@ export class DB extends Dexie {
           session.reactFlowData = migrateReactFlowData(session.reactFlowData);
         });
     });
+
+    // issue #182 Phase 1: ステップリスト型エディタ用の flowData を追加。既存の
+    // reactFlowData を best-effort 変換して両テーブルへ付与する。reactFlowData は
+    // 旧 UI + バックアップとして保持する (削除しない)。
+    this.version(7)
+      .stores({
+        GameSession:
+          "++id, name, guildId, botId, gameFlags, reactFlowData, flowData, createdAt, lastUsedAt",
+        Template: "++id, name, gameFlags, reactFlowData, flowData, createdAt, updatedAt",
+      })
+      .upgrade(applyFlowDataMigration);
   }
 }

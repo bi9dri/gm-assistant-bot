@@ -299,3 +299,7 @@ export const FlowDataSchema = z.object({
 
 export type Step = z.infer<typeof StepSchema>;
 export type FlowData = z.infer<typeof FlowDataSchema>;
+
+// 空の FlowData。新規作成時の初期値、およびパース失敗時のフォールバック
+// (defaultReactFlowData と同じ役割)。
+export const defaultFlowData: FlowData = { version: 1, sections: [] };

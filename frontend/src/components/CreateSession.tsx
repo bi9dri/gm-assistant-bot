@@ -82,6 +82,8 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         botId: selectedBotId,
         gameFlags: template.gameFlags,
         reactFlowData: template.reactFlowData,
+        // flowData 内のファイルパス書き換えは新ランナー (Phase 3) で対応するため、ここでは複製のみ
+        flowData: template.flowData,
         createdAt: new Date(),
         lastUsedAt: new Date(),
       });
