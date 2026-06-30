@@ -47,6 +47,10 @@ export const StepsEditor = ({ template }: { template: Template }) => {
         // Template.update が parse で throw して編集が無言で失われるのを防ぎ、「未保存」を明示する。
         const parsed = FlowDataSchema.safeParse(flowData);
         if (!parsed.success) {
+          // 「未保存」を sticky に保つ。直前の save 成功で予約された自動消去タイマーに
+          // この警告を消されないようクリアする。
+          if (savedTimeout !== null) clearTimeout(savedTimeout);
+          savedTimeout = null;
           setSaveState("invalid");
           return;
         }
@@ -59,6 +63,9 @@ export const StepsEditor = ({ template }: { template: Template }) => {
           })
           .catch((error: unknown) => {
             console.error("Failed to autosave flowData:", error);
+            // 「保存に失敗」も sticky に保つ (同上)。
+            if (savedTimeout !== null) clearTimeout(savedTimeout);
+            savedTimeout = null;
             setSaveState("error");
           });
       }, AUTOSAVE_DEBOUNCE_MS);
