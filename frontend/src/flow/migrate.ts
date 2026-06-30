@@ -79,8 +79,9 @@ export function foldWarningsIntoFlowData(
 // メモへ畳み込む。変換が throw した場合 (例: 形が不正で ConvertInputSchema が ZodError、
 // または converter のバグ) は、空フローを無言で返さず、ログを残しつつ警告メモ付きの
 // 空フローにフォールバックする (本 PR の「捨てずに surface」方針)。
-// upgrade トランザクション内で呼ばれるため再 throw しない (throw すると DB の version
-// 移行ごと中断し、アプリが開けなくなる)。
+// migration の upgrade トランザクションと Template.import の両方から呼ばれる。再 throw
+// しないのは、upgrade では DB の version 移行ごと中断してアプリが開けなくなり、import では
+// Template.create 済みの半端なレコードが取り残されるため。失敗はログ + メモで surface する。
 export function reactFlowToFlowData(input: unknown): FlowData {
   try {
     const { flowData, warnings } = convertReactFlowToFlowData(input ?? {});
@@ -99,7 +100,8 @@ export function reactFlowToFlowData(input: unknown): FlowData {
 // レコード 1 件に保存する flowData JSON 文字列を決める。
 // - 既に妥当な flowData を持つ (already-new) なら冪等にそのまま返す
 // - それ以外は reactFlowData を変換して返す (警告はメモへ畳み込み済み)
-// - reactFlowData が JSON として壊れていれば空の defaultFlowData にフォールバック
+// - reactFlowData が JSON として壊れていれば、警告メモ付きの空フローにフォールバック
+//   (変換失敗時と同じく「捨てずに surface」する)
 export function migrateRecordToFlowData(reactFlowData: unknown, existingFlowData: unknown): string {
   if (typeof existingFlowData === "string" && existingFlowData !== "") {
     try {
@@ -116,7 +118,14 @@ export function migrateRecordToFlowData(reactFlowData: unknown, existingFlowData
     input = typeof reactFlowData === "string" ? JSON.parse(reactFlowData) : reactFlowData;
   } catch (error) {
     console.error("flowData migration: reactFlowData が不正な JSON です", error);
-    return JSON.stringify(defaultFlowData);
+    const detail = error instanceof Error ? error.message : String(error);
+    return JSON.stringify(
+      foldWarningsIntoFlowData(defaultFlowData, [
+        {
+          message: `reactFlowData が不正な JSON のため空のフローにフォールバックしました: ${detail}`,
+        },
+      ]),
+    );
   }
 
   return JSON.stringify(reactFlowToFlowData(input));

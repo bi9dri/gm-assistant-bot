@@ -197,10 +197,12 @@ describe("migrateRecordToFlowData", () => {
     expect(parsed.sections[0].steps[0].title).toBe("D");
   });
 
-  test("reactFlowData が壊れた JSON なら defaultFlowData を返す", () => {
+  test("reactFlowData が壊れた JSON なら警告メモ付きの空フローにフォールバックする", () => {
     const result = silencingErrors(() => migrateRecordToFlowData("not json", undefined));
 
-    expect(JSON.parse(result)).toEqual(defaultFlowData);
+    const parsed = FlowDataSchema.parse(JSON.parse(result));
+    const memos = parsed.sections.map((s) => s.memo).join("\n");
+    expect(memos).toContain("不正な JSON");
   });
 
   test("reactFlowData が有効 JSON だが非グラフなら空フロー + 警告にフォールバックする", () => {
