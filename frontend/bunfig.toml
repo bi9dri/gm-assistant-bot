@@ -41,6 +41,10 @@ coveragePathIgnorePatterns = [
   # saveFileToOPFS が FileSystem (OPFS) に依存するため除外
   "src/components/Node/utils/messageSchema.ts",
 
+  # step-list editor の React コンポーネント (registry の DetailPanel 含む) — VRT でカバー
+  "src/flow/components/**",
+  "src/flow/registry/*.tsx",
+
   # テストセットアップ
   "test/**",
 ]
