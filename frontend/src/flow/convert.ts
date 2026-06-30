@@ -12,7 +12,7 @@ import { FlowDataSchema, StepSchema } from "./schema";
 // 分岐は最近共通合流点 (immediate post-dominator) を検出して branches[].steps にネストし、
 // 変換しきれない構造は捨てずにフラット化 + ⚠️ メモと警告で手直しを促す。
 
-type ConversionWarning = {
+export type ConversionWarning = {
   message: string;
   nodeId?: string;
 };

@@ -1,5 +1,9 @@
 import { describe, test, expect, spyOn } from "bun:test";
 
+import type { FlowData } from "@/flow/schema";
+
+import { defaultFlowData } from "@/flow/schema";
+
 import { defaultReactFlowData } from "../schemas";
 import { Template } from "./Template";
 
@@ -130,6 +134,48 @@ describe("Template", () => {
     });
   });
 
+  describe("flowData", () => {
+    test("create時にdefaultFlowDataが設定される", async () => {
+      const template = await Template.create("Test");
+
+      expect(template.getParsedFlowData()).toEqual(defaultFlowData);
+    });
+
+    test("flowDataをZodバリデーション付きで更新する", async () => {
+      const template = await Template.create("Test");
+      const flowData: FlowData = {
+        version: 1,
+        sections: [{ id: "s1", title: "S1", memo: "", collapsed: false, steps: [] }],
+      };
+
+      await template.update({ flowData });
+
+      expect(template.getParsedFlowData()).toEqual(flowData);
+    });
+
+    test("flowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
+      const template = await Template.create("Test");
+
+      const invalidData = { version: 1, sections: "nope" } as unknown as Parameters<
+        typeof template.update
+      >[0]["flowData"];
+
+      expect(template.update({ flowData: invalidData })).rejects.toThrow();
+    });
+
+    test("無効なJSONの場合はdefaultFlowDataを返す", async () => {
+      const template = await Template.create("Test");
+
+      template.flowData = "not valid json";
+
+      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const parsed = template.getParsedFlowData();
+      consoleSpy.mockRestore();
+
+      expect(parsed).toEqual(defaultFlowData);
+    });
+  });
+
   describe("import", () => {
     test("バージョン1の有効なテンプレートをインポートする", async () => {
       const exportData = {
@@ -147,6 +193,32 @@ describe("Template", () => {
 
       expect(template.name).toBe("Imported Template");
       expect(template.getParsedGameFlags()).toEqual({ key: "value" });
+    });
+
+    test("reactFlowDataからflowDataを導出して保存する", async () => {
+      const exportData = {
+        version: 1,
+        name: "Imported",
+        gameFlags: {},
+        reactFlowData: {
+          nodes: [
+            {
+              id: "n1",
+              type: "SetGameFlag",
+              position: { x: 0, y: 0 },
+              data: { title: "A", flagKey: "k", flagValue: "v" },
+            },
+          ],
+          edges: [],
+          viewport: { x: 0, y: 0, zoom: 1 },
+        },
+      };
+
+      const template = await Template.import(exportData);
+
+      const flowData = template.getParsedFlowData();
+      expect(flowData.sections.length).toBeGreaterThan(0);
+      expect(flowData.sections[0].steps[0].title).toBe("A");
     });
 
     test("サポートされていないバージョンの場合はエラーをスローする", async () => {

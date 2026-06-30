@@ -1,5 +1,9 @@
 import { Entity } from "dexie";
 
+import type { FlowData } from "@/flow/schema";
+
+import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
+
 import type { DB } from "../database";
 
 import { db } from "../instance";
@@ -19,6 +23,7 @@ export class GameSession extends Entity<DB> {
   readonly botId!: string;
   gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
+  flowData!: string; // JSON encoded string
   readonly createdAt!: Date;
   lastUsedAt!: Date;
 
@@ -30,8 +35,9 @@ export class GameSession extends Entity<DB> {
     name?: string;
     gameFlags?: GameFlags;
     reactFlowData?: ReactFlowData;
+    flowData?: FlowData;
   }): Promise<void> {
-    const { name, gameFlags, reactFlowData } = options;
+    const { name, gameFlags, reactFlowData, flowData } = options;
 
     const updateData: Partial<GameSessionData> = {
       lastUsedAt: new Date(),
@@ -51,6 +57,11 @@ export class GameSession extends Entity<DB> {
       updateData.reactFlowData = JSON.stringify(reactFlowData);
     }
 
+    if (flowData !== undefined) {
+      FlowDataSchema.parse(flowData);
+      updateData.flowData = JSON.stringify(flowData);
+    }
+
     await db.GameSession.update(this.id, updateData);
 
     if (name !== undefined) {
@@ -61,6 +72,9 @@ export class GameSession extends Entity<DB> {
     }
     if (reactFlowData !== undefined) {
       this.reactFlowData = JSON.stringify(reactFlowData);
+    }
+    if (flowData !== undefined) {
+      this.flowData = JSON.stringify(flowData);
     }
     if (updateData.lastUsedAt) {
       this.lastUsedAt = updateData.lastUsedAt;
@@ -84,6 +98,16 @@ export class GameSession extends Entity<DB> {
     } catch (error) {
       console.error("Failed to parse reactFlowData:", error);
       return defaultReactFlowData;
+    }
+  }
+
+  getParsedFlowData(): FlowData {
+    try {
+      const parsed = JSON.parse(this.flowData);
+      return FlowDataSchema.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse flowData:", error);
+      return defaultFlowData;
     }
   }
 }

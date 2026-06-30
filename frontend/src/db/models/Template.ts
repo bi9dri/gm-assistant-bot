@@ -1,5 +1,10 @@
 import { Entity } from "dexie";
 
+import type { FlowData } from "@/flow/schema";
+
+import { reactFlowToFlowData } from "@/flow/migrate";
+import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
+
 import type { DB } from "../database";
 
 import { db } from "../instance";
@@ -19,6 +24,7 @@ export class Template extends Entity<DB> {
   name!: string;
   gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
+  flowData!: string; // JSON encoded string
   readonly createdAt!: Date;
   updatedAt!: Date;
 
@@ -27,6 +33,7 @@ export class Template extends Entity<DB> {
       name: name.trim(),
       gameFlags: JSON.stringify({}),
       reactFlowData: JSON.stringify(defaultReactFlowData),
+      flowData: JSON.stringify(defaultFlowData),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -50,8 +57,9 @@ export class Template extends Entity<DB> {
     name?: string;
     gameFlags?: GameFlags;
     reactFlowData?: ReactFlowData;
+    flowData?: FlowData;
   }): Promise<void> {
-    const { name, gameFlags, reactFlowData } = options;
+    const { name, gameFlags, reactFlowData, flowData } = options;
 
     const updateData: Partial<TemplateData> = {
       updatedAt: new Date(),
@@ -71,6 +79,11 @@ export class Template extends Entity<DB> {
       updateData.reactFlowData = JSON.stringify(reactFlowData);
     }
 
+    if (flowData !== undefined) {
+      FlowDataSchema.parse(flowData);
+      updateData.flowData = JSON.stringify(flowData);
+    }
+
     await db.Template.update(this.id, updateData);
 
     if (name !== undefined) {
@@ -81,6 +94,9 @@ export class Template extends Entity<DB> {
     }
     if (reactFlowData !== undefined) {
       this.reactFlowData = JSON.stringify(reactFlowData);
+    }
+    if (flowData !== undefined) {
+      this.flowData = JSON.stringify(flowData);
     }
     if (updateData.updatedAt) {
       this.updatedAt = updateData.updatedAt;
@@ -111,6 +127,16 @@ export class Template extends Entity<DB> {
     }
   }
 
+  getParsedFlowData(): FlowData {
+    try {
+      const parsed = JSON.parse(this.flowData);
+      return FlowDataSchema.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse flowData:", error);
+      return defaultFlowData;
+    }
+  }
+
   export(): TemplateExport {
     return {
       version: 1,
@@ -128,9 +154,13 @@ export class Template extends Entity<DB> {
     }
 
     const template = await Template.create(validated.name);
+    // flowData は reactFlowData から導出する (両者のファイルパスは常に一致させる)。
+    // インポート経路のパス書き換え (files/ → template/{id}/) は fileSystem.ts の
+    // importTemplate が reactFlowData / flowData 双方に対して行う。
     await template.update({
       gameFlags: validated.gameFlags,
       reactFlowData: validated.reactFlowData,
+      flowData: reactFlowToFlowData(validated.reactFlowData),
     });
 
     return template;

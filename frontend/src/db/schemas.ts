@@ -74,6 +74,7 @@ const GameSessionSchema = z.object({
   botId: z.string().nonempty().trim(),
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
+  flowData: z.string(), // JSON encoded (issue #182 step-list editor)
   createdAt: z.date(),
   lastUsedAt: z.date(),
 });
@@ -83,6 +84,7 @@ const TemplateSchema = z.object({
   name: z.string().nonempty().trim(),
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
+  flowData: z.string(), // JSON encoded (issue #182 step-list editor)
   createdAt: z.date(),
   updatedAt: z.date(),
 });

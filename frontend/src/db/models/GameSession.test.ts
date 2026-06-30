@@ -1,6 +1,10 @@
 import { createTestSession } from "#test/factories";
 import { describe, test, expect, spyOn } from "bun:test";
 
+import type { FlowData } from "@/flow/schema";
+
+import { defaultFlowData } from "@/flow/schema";
+
 import { defaultReactFlowData } from "../schemas";
 
 describe("GameSession", () => {
@@ -135,6 +139,48 @@ describe("GameSession", () => {
       consoleSpy.mockRestore();
 
       expect(parsed).toEqual(defaultReactFlowData);
+    });
+  });
+
+  describe("flowData", () => {
+    test("createTestSessionはdefaultFlowDataを持つ", async () => {
+      const session = await createTestSession({});
+
+      expect(session.getParsedFlowData()).toEqual(defaultFlowData);
+    });
+
+    test("flowDataをZodバリデーション付きで更新する", async () => {
+      const session = await createTestSession({});
+      const flowData: FlowData = {
+        version: 1,
+        sections: [{ id: "s1", title: "S1", memo: "", collapsed: false, steps: [] }],
+      };
+
+      await session.update({ flowData });
+
+      expect(session.getParsedFlowData()).toEqual(flowData);
+    });
+
+    test("flowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
+      const session = await createTestSession({});
+
+      const invalidData = { version: 1, sections: "nope" } as unknown as Parameters<
+        typeof session.update
+      >[0]["flowData"];
+
+      expect(session.update({ flowData: invalidData })).rejects.toThrow();
+    });
+
+    test("無効なJSONの場合はdefaultFlowDataを返す", async () => {
+      const session = await createTestSession({});
+
+      session.flowData = "not valid json";
+
+      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const parsed = session.getParsedFlowData();
+      consoleSpy.mockRestore();
+
+      expect(parsed).toEqual(defaultFlowData);
     });
   });
 });
