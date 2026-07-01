@@ -88,13 +88,15 @@ export const generateWizardFlow = (
       type: "text" as const,
       rolePermissions: commonRoles.map((roleName) => ({ roleName, canWrite: true })),
     })),
-    // キャラクター個別チャンネル: 本人が書き込み可、観戦は閲覧のみ
+    // キャラクター個別チャンネル: 本人が書き込み可、観戦ロールは閲覧のみ。
+    // 観戦ロールは接頭辞付きで作られる (例: "事件観戦") ため spectatorRole を参照する
+    // (旧 Blueprint はここを "観戦" 固定にしており、接頭辞ありだと存在しないロールを指していた)。
     ...validCharacters.map((name) => ({
       name,
       type: "text" as const,
       rolePermissions: [
         { roleName: name, canWrite: true },
-        { roleName: "観戦", canWrite: false },
+        { roleName: spectatorRole, canWrite: false },
       ],
     })),
     // ボイスチャンネル: PL・観戦がアクセス可

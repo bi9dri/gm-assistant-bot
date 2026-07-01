@@ -85,6 +85,38 @@ describe("generateWizardFlow", () => {
     ]);
   });
 
+  it("カテゴリ接頭辞があると各チャンネル権限も接頭辞付き観戦ロールを参照する", () => {
+    const channelStep = findStep(
+      setupStepsOf({
+        characterNames: ["探偵"],
+        sharedTextChannels: ["全体"],
+        categoryName: "事件",
+      }),
+      "CreateChannel",
+    );
+    if (channelStep?.type !== "CreateChannel") throw new Error("unreachable");
+
+    // 共通チャンネル: 接頭辞付き PL / 観戦。キャラチャンネル: 接頭辞付き観戦を閲覧のみ。
+    expect(channelStep.channels).toEqual([
+      {
+        name: "全体",
+        type: "text",
+        rolePermissions: [
+          { roleName: "事件PL", canWrite: true },
+          { roleName: "事件観戦", canWrite: true },
+        ],
+      },
+      {
+        name: "探偵",
+        type: "text",
+        rolePermissions: [
+          { roleName: "探偵", canWrite: true },
+          { roleName: "事件観戦", canWrite: false },
+        ],
+      },
+    ]);
+  });
+
   it("作成対象チャンネルが無ければ CreateChannel を省く", () => {
     expect(findStep(setupStepsOf({}), "CreateChannel")).toBeUndefined();
   });

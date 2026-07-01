@@ -138,7 +138,11 @@ export const TemplateWizard = ({
             min={MIN_VOICE_CHANNEL_COUNT}
             max={MAX_VOICE_CHANNEL_COUNT}
             value={params.voiceChannelCount}
-            onChange={(evt) => update("voiceChannelCount", Number(evt.target.value))}
+            onChange={(evt) => {
+              // 空欄や不正入力で NaN が state に載ると preview が黙って 0 本になるため 0 に丸める。
+              const parsed = Number(evt.target.value);
+              update("voiceChannelCount", Number.isFinite(parsed) ? parsed : 0);
+            }}
           />
         </label>
 
