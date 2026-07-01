@@ -200,7 +200,7 @@ const RecordCombinationStepSchema = StepBaseSchema.extend({
 
 // ---- 分岐ステップ (旧 ConditionalBranch / SelectBranch を統合) ----
 
-type BranchArm = {
+export type BranchArm = {
   id: string;
   label: string;
   // auto モードの評価条件。未指定の枝はデフォルト枝 (else) として末尾にのみ置ける
@@ -303,3 +303,45 @@ export type FlowData = z.infer<typeof FlowDataSchema>;
 // 空の FlowData。新規作成時の初期値、およびパース失敗時のフォールバック
 // (defaultReactFlowData と同じ役割)。
 export const defaultFlowData: FlowData = { version: 1, sections: [] };
+
+// ---- ステップタイプ別 schema / 型の re-export ----
+// registry (flow/registry/*) の各エントリが per-type schema を保持するために公開する。
+// 定義そのものは上の Phase 0 のものを変更しない。
+export {
+  AddRoleToRoleMembersStepSchema,
+  BranchStepSchema,
+  ChangeChannelPermissionStepSchema,
+  CombinationSendMessageStepSchema,
+  CounterStepSchema,
+  CreateCategoryStepSchema,
+  CreateChannelStepSchema,
+  CreateRoleStepSchema,
+  DeleteCategoryStepSchema,
+  DeleteChannelStepSchema,
+  DeleteRoleStepSchema,
+  KanbanStepSchema,
+  RandomSelectStepSchema,
+  RecordCombinationStepSchema,
+  SendMessageStepSchema,
+  SetGameFlagStepSchema,
+  ShuffleAssignStepSchema,
+};
+
+// 個別ステップ型。`Extract<Step, { type: "X" }>` の別名で、各 registry module / DetailPanel が使う。
+export type CreateRoleStep = Extract<Step, { type: "CreateRole" }>;
+export type DeleteRoleStep = Extract<Step, { type: "DeleteRole" }>;
+export type CreateCategoryStep = Extract<Step, { type: "CreateCategory" }>;
+export type DeleteCategoryStep = Extract<Step, { type: "DeleteCategory" }>;
+export type CreateChannelStep = Extract<Step, { type: "CreateChannel" }>;
+export type DeleteChannelStep = Extract<Step, { type: "DeleteChannel" }>;
+export type ChangeChannelPermissionStep = Extract<Step, { type: "ChangeChannelPermission" }>;
+export type AddRoleToRoleMembersStep = Extract<Step, { type: "AddRoleToRoleMembers" }>;
+export type SendMessageStep = Extract<Step, { type: "SendMessage" }>;
+export type CombinationSendMessageStep = Extract<Step, { type: "CombinationSendMessage" }>;
+export type SetGameFlagStep = Extract<Step, { type: "SetGameFlag" }>;
+export type KanbanStep = Extract<Step, { type: "Kanban" }>;
+export type CounterStep = Extract<Step, { type: "Counter" }>;
+export type ShuffleAssignStep = Extract<Step, { type: "ShuffleAssign" }>;
+export type RandomSelectStep = Extract<Step, { type: "RandomSelect" }>;
+export type RecordCombinationStep = Extract<Step, { type: "RecordCombination" }>;
+export type BranchStep = Extract<Step, { type: "Branch" }>;
