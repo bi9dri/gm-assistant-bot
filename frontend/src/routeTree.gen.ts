@@ -19,6 +19,7 @@ import { Route as SessionNewRouteImport } from './routes/session/new'
 import { Route as SessionIdRouteImport } from './routes/session/$id'
 import { Route as BotNewRouteImport } from './routes/bot/new'
 import { Route as TemplateIdStepsRouteImport } from './routes/template/$id.steps'
+import { Route as SessionIdStepsRouteImport } from './routes/session/$id.steps'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,42 +71,50 @@ const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
   path: '/steps',
   getParentRoute: () => TemplateIdRoute,
 } as any)
+const SessionIdStepsRoute = SessionIdStepsRouteImport.update({
+  id: '/steps',
+  path: '/steps',
+  getParentRoute: () => SessionIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRoute
+  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/bot/': typeof BotIndexRoute
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
+  '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRoute
+  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/bot': typeof BotIndexRoute
   '/session': typeof SessionIndexRoute
   '/template': typeof TemplateIndexRoute
+  '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRoute
+  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/bot/': typeof BotIndexRoute
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
+  '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/bot/'
     | '/session/'
     | '/template/'
+    | '/session/$id/steps'
     | '/template/$id/steps'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/bot'
     | '/session'
     | '/template'
+    | '/session/$id/steps'
     | '/template/$id/steps'
   id:
     | '__root__'
@@ -144,13 +155,14 @@ export interface FileRouteTypes {
     | '/bot/'
     | '/session/'
     | '/template/'
+    | '/session/$id/steps'
     | '/template/$id/steps'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BotNewRoute: typeof BotNewRoute
-  SessionIdRoute: typeof SessionIdRoute
+  SessionIdRoute: typeof SessionIdRouteWithChildren
   SessionNewRoute: typeof SessionNewRoute
   TemplateIdRoute: typeof TemplateIdRouteWithChildren
   TemplateNewRoute: typeof TemplateNewRoute
@@ -231,8 +243,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplateIdStepsRouteImport
       parentRoute: typeof TemplateIdRoute
     }
+    '/session/$id/steps': {
+      id: '/session/$id/steps'
+      path: '/steps'
+      fullPath: '/session/$id/steps'
+      preLoaderRoute: typeof SessionIdStepsRouteImport
+      parentRoute: typeof SessionIdRoute
+    }
   }
 }
+
+interface SessionIdRouteChildren {
+  SessionIdStepsRoute: typeof SessionIdStepsRoute
+}
+
+const SessionIdRouteChildren: SessionIdRouteChildren = {
+  SessionIdStepsRoute: SessionIdStepsRoute,
+}
+
+const SessionIdRouteWithChildren = SessionIdRoute._addFileChildren(
+  SessionIdRouteChildren,
+)
 
 interface TemplateIdRouteChildren {
   TemplateIdStepsRoute: typeof TemplateIdStepsRoute
@@ -249,7 +280,7 @@ const TemplateIdRouteWithChildren = TemplateIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BotNewRoute: BotNewRoute,
-  SessionIdRoute: SessionIdRoute,
+  SessionIdRoute: SessionIdRouteWithChildren,
   SessionNewRoute: SessionNewRoute,
   TemplateIdRoute: TemplateIdRouteWithChildren,
   TemplateNewRoute: TemplateNewRoute,

@@ -53,4 +53,34 @@ export const AddRoleToRoleMembersEntry = defineStep<AddRoleToRoleMembersStep>({
     return member !== "" && add !== "" ? `ロール付与: ${member} → ${add}` : "ロール付与 (未設定)";
   },
   DetailPanel: AddRoleToRoleMembersDetailPanel,
+  execute: async (step, ctx) => {
+    const memberRoleName = step.memberRoleName.trim();
+    const addRoleName = step.addRoleName.trim();
+    if (memberRoleName === "")
+      return { status: "error", message: "対象メンバーのロール名を入力してください" };
+    if (addRoleName === "")
+      return { status: "error", message: "付与するロール名を入力してください" };
+
+    const memberRole = ctx.resources.roles.find((role) => role.name === memberRoleName);
+    if (memberRole === undefined) {
+      return { status: "error", message: `ロール「${memberRoleName}」が存在しません` };
+    }
+    const addRole = ctx.resources.roles.find((role) => role.name === addRoleName);
+    if (addRole === undefined) {
+      return { status: "error", message: `ロール「${addRoleName}」が存在しません` };
+    }
+
+    try {
+      await ctx.discord.addRoleToRoleMembers({
+        memberRoleId: memberRole.id,
+        addRoleId: addRole.id,
+      });
+      return {
+        status: "success",
+        message: `「${memberRoleName}」に「${addRoleName}」を付与しました`,
+      };
+    } catch {
+      return { status: "error", message: "ロールの付与に失敗しました" };
+    }
+  },
 });

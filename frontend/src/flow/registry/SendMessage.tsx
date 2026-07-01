@@ -2,6 +2,7 @@ import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { MessageBlocksEditor } from "../components/MessageBlocksEditor";
 import { SendMessageStepSchema, type SendMessageStep } from "../schema";
+import { findChannelByName, sendMessageBlocks } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type ChannelTarget = SendMessageStep["channelTargets"][number];
@@ -139,4 +140,50 @@ export const SendMessageEntry = defineStep<SendMessageStep>({
     return `メッセージ送信: ${dest}へ ${step.messages.length}通`;
   },
   DetailPanel: SendMessageDetailPanel,
+  execute: async (step, ctx) => {
+    const hasValidMessage = step.messages.some(
+      (message) => message.content.trim() !== "" || message.attachments.length > 0,
+    );
+    if (!hasValidMessage)
+      return { status: "error", message: "メッセージまたはファイルを指定してください" };
+
+    const flags = ctx.flags.get();
+    const resolvedNames: string[] = [];
+    for (const target of step.channelTargets) {
+      const value = target.value.trim();
+      if (value === "") continue;
+      if (target.type === "channelName") {
+        resolvedNames.push(value);
+      } else {
+        const resolved = flags[value];
+        if (resolved === undefined) {
+          return { status: "error", message: `フラグ「${value}」が設定されていません` };
+        }
+        resolvedNames.push(resolved);
+      }
+    }
+    if (resolvedNames.length === 0) {
+      return { status: "error", message: "少なくとも1つのチャンネルを指定してください" };
+    }
+
+    const targetChannels: typeof ctx.resources.channels = [];
+    const notFound: string[] = [];
+    for (const name of resolvedNames) {
+      const channel = findChannelByName(ctx.resources.channels, name);
+      if (channel === undefined) notFound.push(name);
+      else targetChannels.push(channel);
+    }
+    if (notFound.length > 0) {
+      return { status: "error", message: `チャンネルが見つかりません: ${notFound.join(", ")}` };
+    }
+
+    try {
+      for (const channel of targetChannels) {
+        await sendMessageBlocks(ctx.discord, channel.id, step.messages);
+      }
+      return { status: "success", message: `${targetChannels.length}個のチャンネルに送信しました` };
+    } catch {
+      return { status: "error", message: "メッセージの送信に失敗しました" };
+    }
+  },
 });

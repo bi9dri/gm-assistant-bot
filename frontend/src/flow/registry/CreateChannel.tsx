@@ -3,6 +3,7 @@ import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { ResourceSelector } from "@/components/Node/utils";
 
 import { CreateChannelStepSchema, type CreateChannelStep } from "../schema";
+import { resolveRolePermissions } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type ChannelItem = CreateChannelStep["channels"][number];
@@ -196,4 +197,58 @@ export const CreateChannelEntry = defineStep<CreateChannelStep>({
     return names.length > 0 ? `チャンネル作成: ${names.join(", ")}` : "チャンネル作成 (未設定)";
   },
   DetailPanel: CreateChannelDetailPanel,
+  execute: async (step, ctx) => {
+    const category = ctx.resources.categories[0];
+    if (category === undefined) {
+      return {
+        status: "error",
+        message: "カテゴリが存在しません。先にカテゴリを作成してください。",
+      };
+    }
+
+    const validChannels = step.channels.filter((channel) => channel.name.trim() !== "");
+    if (validChannels.length === 0)
+      return { status: "error", message: "作成するチャンネルがありません" };
+
+    const missing = [
+      ...new Set(
+        validChannels.flatMap(
+          (channel) => resolveRolePermissions(ctx.resources.roles, channel.rolePermissions).missing,
+        ),
+      ),
+    ];
+    if (missing.length > 0) {
+      return { status: "error", message: `ロールが見つかりません: ${missing.join(", ")}` };
+    }
+
+    const failed: string[] = [];
+    for (const channelData of validChannels) {
+      const { writerRoleIds, readerRoleIds } = resolveRolePermissions(
+        ctx.resources.roles,
+        channelData.rolePermissions,
+      );
+      try {
+        const channel = await ctx.discord.createChannel({
+          parentCategoryId: category.id,
+          name: channelData.name,
+          type: channelData.type,
+          writerRoleIds,
+          readerRoleIds,
+        });
+        await ctx.resources.addChannel({
+          id: channel.id,
+          name: channel.name,
+          type: channelData.type,
+          writerRoleIds,
+          readerRoleIds,
+        });
+      } catch {
+        failed.push(channelData.name);
+      }
+    }
+    if (failed.length > 0) {
+      return { status: "error", message: `チャンネルの作成に失敗しました: ${failed.join(", ")}` };
+    }
+    return { status: "success", message: `${validChannels.length}件のチャンネルを作成しました` };
+  },
 });

@@ -1,6 +1,7 @@
 import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { ChangeChannelPermissionStepSchema, type ChangeChannelPermissionStep } from "../schema";
+import { findChannelByName, resolveRolePermissions } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type RolePermission = ChangeChannelPermissionStep["rolePermissions"][number];
@@ -114,4 +115,33 @@ export const ChangeChannelPermissionEntry = defineStep<ChangeChannelPermissionSt
     return `権限変更: ${channel} (${count}件)`;
   },
   DetailPanel: ChangeChannelPermissionDetailPanel,
+  execute: async (step, ctx) => {
+    const channelName = step.channelName.trim();
+    if (channelName === "") return { status: "error", message: "チャンネル名を入力してください" };
+
+    const channel = findChannelByName(ctx.resources.channels, channelName);
+    if (channel === undefined) {
+      return { status: "error", message: `チャンネル「${channelName}」が見つかりません` };
+    }
+
+    const { writerRoleIds, readerRoleIds, missing } = resolveRolePermissions(
+      ctx.resources.roles,
+      step.rolePermissions,
+    );
+    if (missing.length > 0) {
+      return { status: "error", message: `ロールが見つかりません: ${missing.join(", ")}` };
+    }
+
+    try {
+      await ctx.discord.changeChannelPermissions({
+        channelId: channel.id,
+        writerRoleIds,
+        readerRoleIds,
+      });
+      await ctx.resources.updateChannel(channel.id, { writerRoleIds, readerRoleIds });
+      return { status: "success", message: `「${channel.name}」の権限を変更しました` };
+    } catch {
+      return { status: "error", message: "権限の変更に失敗しました" };
+    }
+  },
 });

@@ -47,4 +47,12 @@ export const SetGameFlagEntry = defineStep<SetGameFlagStep>({
       ? `フラグ設定: ${step.flagKey} = ${step.flagValue.trim() !== "" ? step.flagValue : "(空)"}`
       : "フラグ設定 (未設定)",
   DetailPanel: SetGameFlagDetailPanel,
+  execute: async (step, ctx) => {
+    const key = step.flagKey.trim();
+    if (key === "") return { status: "error", message: "フラグ名を入力してください" };
+
+    const value = step.flagValue.trim();
+    await ctx.flags.set({ [key]: value });
+    return { status: "success", message: `フラグ「${key}」を設定しました` };
+  },
 });

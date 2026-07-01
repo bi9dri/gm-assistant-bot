@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { z } from "zod";
 
+import type { ExecuteContext, ExecuteResult } from "../engine/types";
 import type { Step } from "../schema";
 
 // DetailPanel は「dumb な controlled component」: step と onChange(patch) のみを受け取り、
@@ -25,7 +26,10 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // PURE。リスト 1 行の要約テキスト。レンダリング無しで unit-test する。
   summary: (step: S) => string;
   DetailPanel: ComponentType<DetailPanelProps<S>>;
-  // execute 関数 (自動 Discord 実行) は Phase 3 で追加。tool/branch は持たない (GM 手動操作のみ)。
+  // 自動実行 (Validate → Resolve → Call → Persist)。PURE-ish で context 越しに副作用を行う
+  // ため、context をモックすれば unit-test できる。tool (category: "tool") は持たない
+  // (GM が手動操作するのみ)。action / branch のみ定義する。
+  execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
 }
 
 // 具体ステップ型の entry を union 型 (StepRegistryEntry<Step>) に格納するためのヘルパ。
@@ -38,4 +42,7 @@ export const defineStep = <S extends Step>(entry: StepRegistryEntry<S>): StepReg
   // React component は反変のため unknown 経由が必要。summary の引数キャストと違いここは
   // 局所化止まり (whole-object の as unknown as は回避)。
   DetailPanel: entry.DetailPanel as unknown as ComponentType<DetailPanelProps>,
+  // execute も step 引数が反変。summary と同様に引数キャストへ閉じ込める。
+  // ランタイムは type が一致する entry しか引かれないため安全。
+  execute: entry.execute === undefined ? undefined : (step, ctx) => entry.execute!(step as S, ctx),
 });

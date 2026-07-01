@@ -72,4 +72,43 @@ export const DeleteRoleEntry = defineStep<DeleteRoleStep>({
     return names.length > 0 ? `ロール削除: ${names.join(", ")}` : "ロール削除 (未設定)";
   },
   DetailPanel: DeleteRoleDetailPanel,
+  execute: async (step, ctx) => {
+    const sessionRoles = ctx.resources.roles;
+
+    // resources.roles を splice する removeRole と反復が競合しないよう、対象はコピーで持つ。
+    let targets: typeof sessionRoles;
+    if (step.deleteAll) {
+      if (sessionRoles.length === 0)
+        return { status: "error", message: "削除するロールがありません" };
+      targets = [...sessionRoles];
+    } else {
+      const validNames = nonEmpty(step.roleNames);
+      if (validNames.length === 0)
+        return { status: "error", message: "ロール名を入力してください" };
+      const notFound: string[] = [];
+      targets = [];
+      for (const name of validNames) {
+        const found = sessionRoles.find((role) => role.name === name);
+        if (found === undefined) notFound.push(name);
+        else targets.push(found);
+      }
+      if (notFound.length > 0) {
+        return { status: "error", message: `ロールが見つかりません: ${notFound.join(", ")}` };
+      }
+    }
+
+    const failed: string[] = [];
+    for (const role of targets) {
+      try {
+        await ctx.discord.deleteRole(role.id);
+        await ctx.resources.removeRole(role.id);
+      } catch {
+        failed.push(role.name);
+      }
+    }
+    if (failed.length > 0) {
+      return { status: "error", message: `ロールの削除に失敗しました: ${failed.join(", ")}` };
+    }
+    return { status: "success", message: `${targets.length}件のロールを削除しました` };
+  },
 });

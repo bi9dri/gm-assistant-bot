@@ -5,6 +5,7 @@ import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 import { MessageBlocksEditor } from "../components/MessageBlocksEditor";
 import { generateId } from "../ids";
 import { CombinationSendMessageStepSchema, type CombinationSendMessageStep } from "../schema";
+import { findChannelByName, sendMessageBlocks } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type Entry = CombinationSendMessageStep["entries"][number];
@@ -110,4 +111,38 @@ export const CombinationSendMessageEntry = defineStep<CombinationSendMessageStep
     return configured > 0 ? `組み合わせ送信: ${configured} グループ` : "組み合わせ送信 (未設定)";
   },
   DetailPanel: CombinationSendMessageDetailPanel,
+  execute: async (step, ctx) => {
+    const resolved: { channelId: string; messages: (typeof step.entries)[number]["messages"] }[] =
+      [];
+    const notFound: string[] = [];
+    for (const entry of step.entries) {
+      const channelName = entry.channelName.trim();
+      if (channelName === "") continue;
+      const channel = findChannelByName(ctx.resources.channels, channelName);
+      if (channel === undefined) notFound.push(channelName);
+      else resolved.push({ channelId: channel.id, messages: entry.messages });
+    }
+    if (notFound.length > 0) {
+      return { status: "error", message: `チャンネルが見つかりません: ${notFound.join(", ")}` };
+    }
+    if (resolved.length === 0)
+      return { status: "error", message: "送信先チャンネルを指定してください" };
+
+    const hasValidMessage = resolved.some((entry) =>
+      entry.messages.some(
+        (message) => message.content.trim() !== "" || message.attachments.length > 0,
+      ),
+    );
+    if (!hasValidMessage)
+      return { status: "error", message: "メッセージまたはファイルを指定してください" };
+
+    try {
+      for (const { channelId, messages } of resolved) {
+        await sendMessageBlocks(ctx.discord, channelId, messages);
+      }
+      return { status: "success", message: `${resolved.length}グループにメッセージを送信しました` };
+    } catch {
+      return { status: "error", message: "メッセージの送信に失敗しました" };
+    }
+  },
 });

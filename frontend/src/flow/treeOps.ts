@@ -82,6 +82,22 @@ const isSelfOrDescendantContainer = (moved: Step, container: StepContainer): boo
   return ids.has(container.branchStepId);
 };
 
+// Branch の全枝の子孫ステップの実行痕跡 (executedAt / 入れ子 Branch の executedBranchIds) を消す。
+// Branch を再実行する際、以前 descend した (今回は選ばれない) 枝の子が実行済みのまま孤立する
+// のを防ぐ。draft を in-place で書き換える前提で updateStepById の produce 内から呼ぶ。
+export const clearDescendantExecution = (step: Step): void => {
+  if (step.type !== "Branch") return;
+  for (const arm of step.branches) {
+    for (const child of arm.steps) {
+      child.executedAt = undefined;
+      if (child.type === "Branch") {
+        child.executedBranchIds = undefined;
+        clearDescendantExecution(child);
+      }
+    }
+  }
+};
+
 export const updateStepById = (flow: FlowData, id: string, patch: (step: Step) => void): FlowData =>
   produce(flow, (draft) => {
     const step = findStep(draft as FlowData, id);

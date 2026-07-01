@@ -54,4 +54,22 @@ export const CreateRoleEntry = defineStep<CreateRoleStep>({
     return roles.length > 0 ? `ロール作成: ${roles.join(", ")}` : "ロール作成 (未設定)";
   },
   DetailPanel: CreateRoleDetailPanel,
+  execute: async (step, ctx) => {
+    const validRoles = nonEmpty(step.roles);
+    if (validRoles.length === 0) return { status: "error", message: "作成するロールがありません" };
+
+    const failed: string[] = [];
+    for (const name of validRoles) {
+      try {
+        const role = await ctx.discord.createRole(name);
+        await ctx.resources.addRole({ id: role.id, name: role.name });
+      } catch {
+        failed.push(name);
+      }
+    }
+    if (failed.length > 0) {
+      return { status: "error", message: `ロールの作成に失敗しました: ${failed.join(", ")}` };
+    }
+    return { status: "success", message: `${validRoles.length}件のロールを作成しました` };
+  },
 });
