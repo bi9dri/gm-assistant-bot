@@ -90,13 +90,14 @@ describe("generateWizardFlow", () => {
       setupStepsOf({
         characterNames: ["探偵"],
         sharedTextChannels: ["全体"],
+        voiceChannelCount: 1,
         categoryName: "事件",
       }),
       "CreateChannel",
     );
     if (channelStep?.type !== "CreateChannel") throw new Error("unreachable");
 
-    // 共通チャンネル: 接頭辞付き PL / 観戦。キャラチャンネル: 接頭辞付き観戦を閲覧のみ。
+    // 共通チャンネル・VC: 接頭辞付き PL / 観戦。キャラチャンネル: 接頭辞付き観戦を閲覧のみ。
     expect(channelStep.channels).toEqual([
       {
         name: "全体",
@@ -112,6 +113,14 @@ describe("generateWizardFlow", () => {
         rolePermissions: [
           { roleName: "探偵", canWrite: true },
           { roleName: "事件観戦", canWrite: false },
+        ],
+      },
+      {
+        name: "VC-1",
+        type: "voice",
+        rolePermissions: [
+          { roleName: "事件PL", canWrite: true },
+          { roleName: "事件観戦", canWrite: true },
         ],
       },
     ]);
