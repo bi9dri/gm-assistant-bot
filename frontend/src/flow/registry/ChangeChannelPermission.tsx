@@ -1,6 +1,7 @@
 import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { ChangeChannelPermissionStepSchema, type ChangeChannelPermissionStep } from "../schema";
+import { findChannelByName, resolveRolePermissions } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type RolePermission = ChangeChannelPermissionStep["rolePermissions"][number];
@@ -118,33 +119,17 @@ export const ChangeChannelPermissionEntry = defineStep<ChangeChannelPermissionSt
     const channelName = step.channelName.trim();
     if (channelName === "") return { status: "error", message: "チャンネル名を入力してください" };
 
-    const channel = ctx.resources.channels.find(
-      (item) => item.name.toLowerCase() === channelName.toLowerCase(),
-    );
+    const channel = findChannelByName(ctx.resources.channels, channelName);
     if (channel === undefined) {
       return { status: "error", message: `チャンネル「${channelName}」が見つかりません` };
     }
 
-    const roleNameToId = new Map(ctx.resources.roles.map((role) => [role.name, role.id]));
-    const missing = [
-      ...new Set(
-        step.rolePermissions
-          .map((perm) => perm.roleName.trim())
-          .filter((name) => name !== "" && !roleNameToId.has(name)),
-      ),
-    ];
+    const { writerRoleIds, readerRoleIds, missing } = resolveRolePermissions(
+      ctx.resources.roles,
+      step.rolePermissions,
+    );
     if (missing.length > 0) {
       return { status: "error", message: `ロールが見つかりません: ${missing.join(", ")}` };
-    }
-
-    const writerRoleIds: string[] = [];
-    const readerRoleIds: string[] = [];
-    for (const perm of step.rolePermissions) {
-      const roleName = perm.roleName.trim();
-      if (roleName === "") continue;
-      const roleId = roleNameToId.get(roleName);
-      if (roleId === undefined) continue;
-      (perm.canWrite ? writerRoleIds : readerRoleIds).push(roleId);
     }
 
     try {

@@ -29,12 +29,14 @@ const flowOf = (...steps: Step[]): FlowData => ({
 const makeRunner = (
   initial: FlowData,
   results: Record<string, ExecuteResult> = {},
+  canAutoRun: (step: Step) => boolean = () => true,
 ): StepRunner & { order: string[] } => {
   let flow = initial;
   const order: string[] = [];
   return {
     order,
     getFlow: () => flow,
+    canAutoRun,
     runOne: async (id) => {
       order.push(id);
       const result = results[id] ?? { status: "success", message: "" };
@@ -103,5 +105,31 @@ describe("runChain", () => {
     const results = await runChain(runner, "ghost");
     expect(runner.order).toEqual([]);
     expect(results).toEqual([]);
+  });
+
+  test("連鎖先が実行済みなら再実行せず停止する (副作用の二重発火防止)", async () => {
+    const runner = makeRunner(
+      flowOf(step("a", { autoAdvance: true }), step("b", { executedAt: new Date() }), step("c")),
+    );
+    await runChain(runner, "a");
+    // a は開始ステップなので実行、b は実行済みなので停止。
+    expect(runner.order).toEqual(["a"]);
+  });
+
+  test("開始ステップ自身は実行済みでも再実行する (GM の明示操作)", async () => {
+    const runner = makeRunner(flowOf(step("a", { executedAt: new Date() }), step("b")));
+    await runChain(runner, "a");
+    expect(runner.order).toEqual(["a"]);
+  });
+
+  test("連鎖先が自動実行不可 (canAutoRun=false) なら手前で停止する", async () => {
+    const runner = makeRunner(
+      flowOf(step("a", { autoAdvance: true }), step("b", { autoAdvance: true }), step("c")),
+      {},
+      (step) => step.id !== "b",
+    );
+    await runChain(runner, "a");
+    // a は実行、b は自動実行不可なので停止 (エラーにしない)。
+    expect(runner.order).toEqual(["a"]);
   });
 });

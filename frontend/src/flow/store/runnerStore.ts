@@ -79,15 +79,20 @@ export const useRunnerStore = create<RunnerStore>()((set) => ({
   markStepExecuted: (id, patch) =>
     set((state) => {
       const flowData = treeOps.updateStepById(state.flowData, id, (step) => {
-        step.executedAt = new Date();
-        if (patch.executedBranchIds !== undefined && step.type === "Branch") {
-          step.executedBranchIds = patch.executedBranchIds;
+        if (step.type === "Branch") {
+          // 再実行に備え、以前 descend した枝の子孫の実行痕跡を先にリセットしてから枝を確定する。
+          treeOps.clearDescendantExecution(step);
+          if (patch.executedBranchIds !== undefined)
+            step.executedBranchIds = patch.executedBranchIds;
         }
+        step.executedAt = new Date();
       });
       return {
         flowData,
         skippedStepIds: state.skippedStepIds.filter((skipped) => skipped !== id),
-        cursorId: advanceCursor(flowData, id),
+        // cursor は「推奨位置」を実行したときだけ前進させる。任意ステップの re-run/実行で
+        // GM の現在位置を巻き戻さない。
+        cursorId: state.cursorId === id ? advanceCursor(flowData, id) : state.cursorId,
       };
     }),
 
@@ -96,7 +101,8 @@ export const useRunnerStore = create<RunnerStore>()((set) => ({
       skippedStepIds: state.skippedStepIds.includes(id)
         ? state.skippedStepIds
         : [...state.skippedStepIds, id],
-      cursorId: advanceCursor(state.flowData, id),
+      // cursor 位置のステップをスキップしたときだけ前進させる。
+      cursorId: state.cursorId === id ? advanceCursor(state.flowData, id) : state.cursorId,
     })),
 
   updateStep: (id, patch) =>

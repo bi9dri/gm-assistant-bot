@@ -1,31 +1,13 @@
 import clsx from "clsx";
 import { memo } from "react";
 
-import type { StepRegistryEntry } from "../registry/types";
 import type { BranchStep, Step } from "../schema";
 import type { RunHandlers } from "./types";
 
 import { getEntry } from "../registry";
+import { CATEGORY_CLASS, CATEGORY_LABEL } from "../registry/category";
 import { useRunnerStore } from "../store/runnerStore";
-
-const CATEGORY_LABEL: Record<StepRegistryEntry["category"], string> = {
-  action: "操作",
-  tool: "ツール",
-  branch: "分岐",
-};
-
-const CATEGORY_CLASS: Record<StepRegistryEntry["category"], string> = {
-  action: "badge-primary",
-  tool: "badge-secondary",
-  branch: "badge-accent",
-};
-
-// 直接 [実行] ボタンを出すのは action と auto 分岐のみ。select 分岐は枝選択が必要なので
-// 詳細パネルで実行し、tool は GM が手動操作するため実行ボタンを持たない。
-const canRunDirectly = (step: Step): boolean => {
-  if (step.type === "Branch") return step.mode === "auto";
-  return getEntry(step.type)?.category === "action";
-};
+import { canRunStep } from "./canRun";
 
 interface RunnerStepRowProps {
   step: Step;
@@ -82,7 +64,7 @@ const RunnerStepRow = memo(({ step, handlers }: RunnerStepRowProps) => {
           </span>
         )}
         {isExecuted ? (
-          canRunDirectly(step) && (
+          canRunStep(step) && (
             <button
               type="button"
               className="btn btn-ghost btn-xs shrink-0"
@@ -97,7 +79,7 @@ const RunnerStepRow = memo(({ step, handlers }: RunnerStepRowProps) => {
           )
         ) : (
           <>
-            {canRunDirectly(step) && (
+            {canRunStep(step) && (
               <button
                 type="button"
                 className="btn btn-primary btn-xs shrink-0"

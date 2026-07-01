@@ -11,25 +11,13 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { memo } from "react";
 
-import type { StepRegistryEntry } from "../registry/types";
 import type { Step } from "../schema";
 import type { StepContainer } from "../treeOps";
 
 import { getEntry } from "../registry";
+import { CATEGORY_CLASS, CATEGORY_LABEL } from "../registry/category";
 import { useEditorStore } from "../store/editorStore";
 import { AddStepMenu } from "./AddStepMenu";
-
-const CATEGORY_LABEL: Record<StepRegistryEntry["category"], string> = {
-  action: "操作",
-  tool: "ツール",
-  branch: "分岐",
-};
-
-const CATEGORY_CLASS: Record<StepRegistryEntry["category"], string> = {
-  action: "badge-primary",
-  tool: "badge-secondary",
-  branch: "badge-accent",
-};
 
 interface StepRowProps {
   step: Step;

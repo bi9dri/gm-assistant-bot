@@ -3,6 +3,7 @@ import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { ResourceSelector } from "@/components/Node/utils";
 
 import { CreateChannelStepSchema, type CreateChannelStep } from "../schema";
+import { resolveRolePermissions } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type ChannelItem = CreateChannelStep["channels"][number];
@@ -209,13 +210,10 @@ export const CreateChannelEntry = defineStep<CreateChannelStep>({
     if (validChannels.length === 0)
       return { status: "error", message: "作成するチャンネルがありません" };
 
-    const roleNameToId = new Map(ctx.resources.roles.map((role) => [role.name, role.id]));
     const missing = [
       ...new Set(
-        validChannels.flatMap((channel) =>
-          channel.rolePermissions
-            .map((perm) => perm.roleName.trim())
-            .filter((name) => name !== "" && !roleNameToId.has(name)),
+        validChannels.flatMap(
+          (channel) => resolveRolePermissions(ctx.resources.roles, channel.rolePermissions).missing,
         ),
       ),
     ];
@@ -225,15 +223,10 @@ export const CreateChannelEntry = defineStep<CreateChannelStep>({
 
     const failed: string[] = [];
     for (const channelData of validChannels) {
-      const writerRoleIds: string[] = [];
-      const readerRoleIds: string[] = [];
-      for (const perm of channelData.rolePermissions) {
-        const roleName = perm.roleName.trim();
-        if (roleName === "") continue;
-        const roleId = roleNameToId.get(roleName);
-        if (roleId === undefined) continue;
-        (perm.canWrite ? writerRoleIds : readerRoleIds).push(roleId);
-      }
+      const { writerRoleIds, readerRoleIds } = resolveRolePermissions(
+        ctx.resources.roles,
+        channelData.rolePermissions,
+      );
       try {
         const channel = await ctx.discord.createChannel({
           parentCategoryId: category.id,

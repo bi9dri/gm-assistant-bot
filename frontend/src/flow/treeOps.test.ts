@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { FlowData, Step } from "./schema";
 
 import {
+  clearDescendantExecution,
   findSection,
   findStep,
   insertSection,
@@ -301,5 +302,32 @@ describe("section ops", () => {
     const flow = makeFlow();
     removeSection(flow, "s1");
     expect(flow.sections.map((s) => s.id)).toEqual(["s1", "s2"]);
+  });
+});
+
+describe("clearDescendantExecution", () => {
+  test("Branch の全枝の子孫の executedAt と入れ子 Branch の executedBranchIds を消す", () => {
+    const nested = branch("nested", [
+      { id: "n1", label: "N1", steps: [{ ...leaf("deep"), executedAt: new Date() }] },
+    ]);
+    if (nested.type === "Branch") nested.executedBranchIds = ["n1"];
+    const outer = branch("outer", [
+      { id: "o1", label: "O1", steps: [{ ...leaf("c"), executedAt: new Date() }, nested] },
+      { id: "o2", label: "O2", steps: [] },
+    ]);
+    clearDescendantExecution(outer);
+    if (outer.type !== "Branch") throw new Error("expected branch");
+    const c = outer.branches[0]?.steps[0];
+    const nestedAfter = outer.branches[0]?.steps[1];
+    expect(c?.executedAt).toBeUndefined();
+    expect(nestedAfter?.type === "Branch" ? nestedAfter.executedBranchIds : "x").toBeUndefined();
+    const deep = nestedAfter?.type === "Branch" ? nestedAfter.branches[0]?.steps[0] : undefined;
+    expect(deep?.executedAt).toBeUndefined();
+  });
+
+  test("Branch 以外は何もしない", () => {
+    const step = { ...leaf("x"), executedAt: new Date() };
+    clearDescendantExecution(step);
+    expect(step.executedAt).toBeInstanceOf(Date);
   });
 });

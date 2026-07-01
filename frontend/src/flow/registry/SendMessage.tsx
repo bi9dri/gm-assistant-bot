@@ -2,6 +2,7 @@ import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { MessageBlocksEditor } from "../components/MessageBlocksEditor";
 import { SendMessageStepSchema, type SendMessageStep } from "../schema";
+import { findChannelByName, sendMessageBlocks } from "./channelHelpers";
 import { defineStep, type DetailPanelProps } from "./types";
 
 type ChannelTarget = SendMessageStep["channelTargets"][number];
@@ -168,9 +169,7 @@ export const SendMessageEntry = defineStep<SendMessageStep>({
     const targetChannels: typeof ctx.resources.channels = [];
     const notFound: string[] = [];
     for (const name of resolvedNames) {
-      const channel = ctx.resources.channels.find(
-        (item) => item.name.toLowerCase() === name.toLowerCase(),
-      );
+      const channel = findChannelByName(ctx.resources.channels, name);
       if (channel === undefined) notFound.push(name);
       else targetChannels.push(channel);
     }
@@ -180,17 +179,7 @@ export const SendMessageEntry = defineStep<SendMessageStep>({
 
     try {
       for (const channel of targetChannels) {
-        for (const message of step.messages) {
-          if (message.content.trim() === "" && message.attachments.length === 0) continue;
-          await ctx.discord.sendMessage({
-            channelId: channel.id,
-            content: message.content,
-            attachments: message.attachments.map((attachment) => ({
-              filePath: attachment.filePath,
-              fileName: attachment.fileName,
-            })),
-          });
-        }
+        await sendMessageBlocks(ctx.discord, channel.id, step.messages);
       }
       return { status: "success", message: `${targetChannels.length}個のチャンネルに送信しました` };
     } catch {

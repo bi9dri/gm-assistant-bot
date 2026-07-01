@@ -13,6 +13,7 @@ import { loadResourceStore } from "../engine/resourceStore";
 import { getEntry } from "../registry";
 import { useRunnerStore } from "../store/runnerStore";
 import { findStep } from "../treeOps";
+import { canRunStep } from "./canRun";
 
 interface RunOptions {
   // Branch select モードで GM が選んだ枝 (arm) id。開始ステップにのみ適用される。
@@ -28,10 +29,9 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
     async (stepId: string, options: RunOptions = {}): Promise<void> => {
       if (useRunnerStore.getState().runningStepId !== null) return;
 
-      const entry = getEntry(
-        findStep(useRunnerStore.getState().flowData, stepId)?.type ?? "Branch",
-      );
-      if (entry?.execute === undefined) {
+      const startStep = findStep(useRunnerStore.getState().flowData, stepId);
+      if (startStep === undefined) return;
+      if (getEntry(startStep.type)?.execute === undefined) {
         addToast({ message: "このステップは自動実行できません", status: "warning" });
         return;
       }
@@ -41,6 +41,7 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
 
       const runner: StepRunner = {
         getFlow: () => useRunnerStore.getState().flowData,
+        canAutoRun: canRunStep,
         runOne: async (id) => {
           const step = findStep(useRunnerStore.getState().flowData, id);
           if (step === undefined) return { status: "error", message: "ステップが見つかりません" };
@@ -59,7 +60,9 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
             discord: gateway,
             resources,
             flags: {
-              get: () => useRunnerStore.getState().gameFlags,
+              // FlagStore 契約はスナップショット。store の内部オブジェクトを直接返さず
+              // コピーを返し、execute() が誤って書き換えても store を壊さないようにする。
+              get: () => ({ ...useRunnerStore.getState().gameFlags }),
               set: async (patch) => {
                 useRunnerStore.getState().setFlags(patch);
               },
@@ -81,13 +84,12 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
       try {
         const results = await runChain(runner, stepId);
         const failure = results.find((result) => result.status === "error");
+        const last = results[results.length - 1];
         if (failure !== undefined) {
           addToast({ message: failure.message, status: "error" });
-        } else {
-          const last = results[results.length - 1];
+        } else if (last !== undefined) {
           addToast({
-            message:
-              last?.message !== undefined && last.message !== "" ? last.message : "実行しました",
+            message: last.message !== "" ? last.message : "実行しました",
             status: "success",
             durationSeconds: 5,
           });

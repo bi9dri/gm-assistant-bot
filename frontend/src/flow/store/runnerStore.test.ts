@@ -65,6 +65,32 @@ describe("markStepExecuted", () => {
     expect(state.cursorId).toBe("a1");
   });
 
+  test("cursor 以外のステップを再実行しても cursor を巻き戻さない", () => {
+    useRunnerStore.getState().initialize(flowOf(step("a"), step("b"), step("c")), {});
+    useRunnerStore.getState().setCursor("c");
+    useRunnerStore.getState().markStepExecuted("a", {});
+    // cursor は c のまま (a は cursor ではない)。
+    expect(useRunnerStore.getState().cursorId).toBe("c");
+  });
+
+  test("Branch 再実行時に旧枝の子孫の実行痕跡をリセットする", () => {
+    const branch = step("br", {
+      type: "Branch",
+      mode: "auto",
+      matchMode: "first",
+      flagName: "",
+      branches: [
+        { id: "arm-a", label: "A", steps: [step("a1", { executedAt: new Date() })] },
+        { id: "arm-b", label: "B", steps: [step("b1")] },
+      ],
+    });
+    useRunnerStore.getState().initialize(flowOf(branch), {});
+    // 枝 B を選んで再実行 → 旧枝 A の子 a1 の executedAt が消える。
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
+    const stored = findStep(useRunnerStore.getState().flowData, "a1");
+    expect(stored?.executedAt).toBeUndefined();
+  });
+
   test("スキップ済みを実行したら skipped から外す", () => {
     useRunnerStore.getState().initialize(flowOf(step("a"), step("b")), {});
     useRunnerStore.getState().skipStep("a");
