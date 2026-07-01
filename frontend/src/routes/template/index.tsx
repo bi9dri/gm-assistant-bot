@@ -58,6 +58,9 @@ function RouteComponent() {
       <Link to="/template/new" className="btn btn-primary ml-8 mb-4">
         新しいテンプレートを作成
       </Link>
+      <Link to="/template/wizard" className="btn btn-secondary ml-2 mb-4">
+        ウィザードで作成
+      </Link>
       <button onClick={handleImportClick} className="btn btn-info ml-2 mb-4">
         インポート
       </button>
