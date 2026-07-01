@@ -114,4 +114,49 @@ export const ChangeChannelPermissionEntry = defineStep<ChangeChannelPermissionSt
     return `権限変更: ${channel} (${count}件)`;
   },
   DetailPanel: ChangeChannelPermissionDetailPanel,
+  execute: async (step, ctx) => {
+    const channelName = step.channelName.trim();
+    if (channelName === "") return { status: "error", message: "チャンネル名を入力してください" };
+
+    const channel = ctx.resources.channels.find(
+      (item) => item.name.toLowerCase() === channelName.toLowerCase(),
+    );
+    if (channel === undefined) {
+      return { status: "error", message: `チャンネル「${channelName}」が見つかりません` };
+    }
+
+    const roleNameToId = new Map(ctx.resources.roles.map((role) => [role.name, role.id]));
+    const missing = [
+      ...new Set(
+        step.rolePermissions
+          .map((perm) => perm.roleName.trim())
+          .filter((name) => name !== "" && !roleNameToId.has(name)),
+      ),
+    ];
+    if (missing.length > 0) {
+      return { status: "error", message: `ロールが見つかりません: ${missing.join(", ")}` };
+    }
+
+    const writerRoleIds: string[] = [];
+    const readerRoleIds: string[] = [];
+    for (const perm of step.rolePermissions) {
+      const roleName = perm.roleName.trim();
+      if (roleName === "") continue;
+      const roleId = roleNameToId.get(roleName);
+      if (roleId === undefined) continue;
+      (perm.canWrite ? writerRoleIds : readerRoleIds).push(roleId);
+    }
+
+    try {
+      await ctx.discord.changeChannelPermissions({
+        channelId: channel.id,
+        writerRoleIds,
+        readerRoleIds,
+      });
+      await ctx.resources.updateChannel(channel.id, { writerRoleIds, readerRoleIds });
+      return { status: "success", message: `「${channel.name}」の権限を変更しました` };
+    } catch {
+      return { status: "error", message: "権限の変更に失敗しました" };
+    }
+  },
 });

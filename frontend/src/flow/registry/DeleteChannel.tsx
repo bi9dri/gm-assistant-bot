@@ -60,4 +60,36 @@ export const DeleteChannelEntry = defineStep<DeleteChannelStep>({
     return names.length > 0 ? `チャンネル削除: ${names.join(", ")}` : "チャンネル削除 (未設定)";
   },
   DetailPanel: DeleteChannelDetailPanel,
+  execute: async (step, ctx) => {
+    const validNames = nonEmpty(step.channelNames);
+    if (validNames.length === 0)
+      return { status: "error", message: "チャンネル名を入力してください" };
+
+    const notFound: string[] = [];
+    const targets: typeof ctx.resources.channels = [];
+    for (const name of validNames) {
+      const found = ctx.resources.channels.find(
+        (channel) => channel.name.toLowerCase() === name.toLowerCase(),
+      );
+      if (found === undefined) notFound.push(name);
+      else targets.push(found);
+    }
+    if (notFound.length > 0) {
+      return { status: "error", message: `チャンネルが見つかりません: ${notFound.join(", ")}` };
+    }
+
+    const failed: string[] = [];
+    for (const channel of targets) {
+      try {
+        await ctx.discord.deleteChannel(channel.id);
+        await ctx.resources.removeChannel(channel.id);
+      } catch {
+        failed.push(channel.name);
+      }
+    }
+    if (failed.length > 0) {
+      return { status: "error", message: `チャンネルの削除に失敗しました: ${failed.join(", ")}` };
+    }
+    return { status: "success", message: `${targets.length}件のチャンネルを削除しました` };
+  },
 });

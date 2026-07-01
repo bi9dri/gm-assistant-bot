@@ -1,4 +1,5 @@
 import { ConditionTreeEditor, createDefaultRule } from "../components/ConditionTreeEditor";
+import { selectAutoArms } from "../engine/branch";
 import { generateId } from "../ids";
 import { BranchStepSchema, type BranchArm, type BranchStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
@@ -191,4 +192,34 @@ export const BranchEntry = defineStep<BranchStep>({
     return `分岐(自動): ${count}枝`;
   },
   DetailPanel: BranchDetailPanel,
+  // Branch は「どの枝 (arm) に descend するか」を返す。engine が返り値の branchArmIds を
+  // executedBranchIds として刻み、その枝の子ステップを実行順序に開く。
+  execute: async (step, ctx) => {
+    if (step.mode === "select") {
+      const armId = ctx.branchChoice;
+      if (armId === undefined) return { status: "error", message: "枝を選択してください" };
+      const arm = step.branches.find((branch) => branch.id === armId);
+      if (arm === undefined) return { status: "error", message: "選択された枝が見つかりません" };
+      const flagName = step.flagName.trim();
+      if (flagName !== "") await ctx.flags.set({ [flagName]: arm.label });
+      return {
+        status: "success",
+        message: `「${arm.label}」を選択しました`,
+        branchArmIds: [armId],
+      };
+    }
+
+    const armIds = selectAutoArms(step, ctx.flags.get());
+    if (armIds.length === 0) {
+      return { status: "success", message: "マッチする枝がありませんでした", branchArmIds: [] };
+    }
+    const labels = armIds
+      .map((id) => step.branches.find((arm) => arm.id === id)?.label ?? "")
+      .filter((label) => label !== "");
+    return {
+      status: "success",
+      message: `${labels.join(", ")} に分岐しました`,
+      branchArmIds: armIds,
+    };
+  },
 });
