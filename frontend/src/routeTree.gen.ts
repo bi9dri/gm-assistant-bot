@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplateIndexRouteImport } from './routes/template/index'
 import { Route as SessionIndexRouteImport } from './routes/session/index'
 import { Route as BotIndexRouteImport } from './routes/bot/index'
+import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
 import { Route as TemplateNewRouteImport } from './routes/template/new'
 import { Route as TemplateIdRouteImport } from './routes/template/$id'
 import { Route as SessionNewRouteImport } from './routes/session/new'
@@ -39,6 +40,11 @@ const SessionIndexRoute = SessionIndexRouteImport.update({
 const BotIndexRoute = BotIndexRouteImport.update({
   id: '/bot/',
   path: '/bot/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplateWizardRoute = TemplateWizardRouteImport.update({
+  id: '/template/wizard',
+  path: '/template/wizard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplateNewRoute = TemplateNewRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
+  '/template/wizard': typeof TemplateWizardRoute
   '/bot/': typeof BotIndexRoute
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
+  '/template/wizard': typeof TemplateWizardRoute
   '/bot': typeof BotIndexRoute
   '/session': typeof SessionIndexRoute
   '/template': typeof TemplateIndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/session/new': typeof SessionNewRoute
   '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
+  '/template/wizard': typeof TemplateWizardRoute
   '/bot/': typeof BotIndexRoute
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/session/new'
     | '/template/$id'
     | '/template/new'
+    | '/template/wizard'
     | '/bot/'
     | '/session/'
     | '/template/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/session/new'
     | '/template/$id'
     | '/template/new'
+    | '/template/wizard'
     | '/bot'
     | '/session'
     | '/template'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/session/new'
     | '/template/$id'
     | '/template/new'
+    | '/template/wizard'
     | '/bot/'
     | '/session/'
     | '/template/'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   SessionNewRoute: typeof SessionNewRoute
   TemplateIdRoute: typeof TemplateIdRouteWithChildren
   TemplateNewRoute: typeof TemplateNewRoute
+  TemplateWizardRoute: typeof TemplateWizardRoute
   BotIndexRoute: typeof BotIndexRoute
   SessionIndexRoute: typeof SessionIndexRoute
   TemplateIndexRoute: typeof TemplateIndexRoute
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       path: '/bot'
       fullPath: '/bot/'
       preLoaderRoute: typeof BotIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/wizard': {
+      id: '/template/wizard'
+      path: '/template/wizard'
+      fullPath: '/template/wizard'
+      preLoaderRoute: typeof TemplateWizardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/template/new': {
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionNewRoute: SessionNewRoute,
   TemplateIdRoute: TemplateIdRouteWithChildren,
   TemplateNewRoute: TemplateNewRoute,
+  TemplateWizardRoute: TemplateWizardRoute,
   BotIndexRoute: BotIndexRoute,
   SessionIndexRoute: SessionIndexRoute,
   TemplateIndexRoute: TemplateIndexRoute,
