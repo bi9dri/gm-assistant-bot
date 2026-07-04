@@ -85,6 +85,13 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
             <Link to="/template/$id" params={{ id: id.toString() }} className="btn btn-primary">
               編集
             </Link>
+            <Link
+              to="/template/$id/steps"
+              params={{ id: id.toString() }}
+              className="btn btn-secondary"
+            >
+              ステップ編集
+            </Link>
             <button onClick={handleExport} className="btn btn-info">
               エクスポート
             </button>

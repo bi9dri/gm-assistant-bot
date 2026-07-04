@@ -36,29 +36,25 @@ export const DetailPanel = () => {
     <TemplateResourcesOverrideProvider value={resources}>
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-2">
-          <label className="form-control">
-            <div className="label">
-              <span className="label-text">タイトル</span>
-            </div>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">タイトル</legend>
             <input
-              className="input input-bordered input-sm"
+              className="input w-full"
               value={step.title}
               placeholder="ステップ名"
               onChange={(event) => handleChange({ title: event.target.value })}
             />
-          </label>
-          <label className="form-control">
-            <div className="label">
-              <span className="label-text">メモ</span>
-            </div>
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">メモ</legend>
             <textarea
-              className="textarea textarea-bordered textarea-sm"
+              className="textarea w-full"
               rows={2}
               value={step.memo}
               placeholder="GM 向けメモ"
               onChange={(event) => handleChange({ memo: event.target.value })}
             />
-          </label>
+          </fieldset>
           <label className="label w-fit cursor-pointer gap-2">
             <input
               type="checkbox"
@@ -66,7 +62,7 @@ export const DetailPanel = () => {
               checked={step.autoAdvance}
               onChange={(event) => handleChange({ autoAdvance: event.target.checked })}
             />
-            <span className="label-text">実行後に次のステップを自動実行</span>
+            実行後に次のステップを自動実行
           </label>
         </div>
         {StepDetailPanel === undefined ? (

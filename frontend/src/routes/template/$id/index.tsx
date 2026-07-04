@@ -7,7 +7,7 @@ import { Template } from "@/db";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 import { useToast } from "@/toast/ToastProvider";
 
-export const Route = createFileRoute("/template/$id")({
+export const Route = createFileRoute("/template/$id/")({
   component: RouteComponent,
   beforeLoad: () => {
     return {

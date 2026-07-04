@@ -15,12 +15,12 @@ import { Route as SessionIndexRouteImport } from './routes/session/index'
 import { Route as BotIndexRouteImport } from './routes/bot/index'
 import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
 import { Route as TemplateNewRouteImport } from './routes/template/new'
-import { Route as TemplateIdRouteImport } from './routes/template/$id'
 import { Route as SessionNewRouteImport } from './routes/session/new'
-import { Route as SessionIdRouteImport } from './routes/session/$id'
 import { Route as BotNewRouteImport } from './routes/bot/new'
-import { Route as TemplateIdStepsRouteImport } from './routes/template/$id.steps'
-import { Route as SessionIdStepsRouteImport } from './routes/session/$id.steps'
+import { Route as TemplateIdIndexRouteImport } from './routes/template/$id/index'
+import { Route as SessionIdIndexRouteImport } from './routes/session/$id/index'
+import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps'
+import { Route as SessionIdStepsRouteImport } from './routes/session/$id/steps'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,19 +52,9 @@ const TemplateNewRoute = TemplateNewRouteImport.update({
   path: '/template/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplateIdRoute = TemplateIdRouteImport.update({
-  id: '/template/$id',
-  path: '/template/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SessionNewRoute = SessionNewRouteImport.update({
   id: '/session/new',
   path: '/session/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SessionIdRoute = SessionIdRouteImport.update({
-  id: '/session/$id',
-  path: '/session/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BotNewRoute = BotNewRouteImport.update({
@@ -72,23 +62,31 @@ const BotNewRoute = BotNewRouteImport.update({
   path: '/bot/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
+  id: '/template/$id/',
+  path: '/template/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SessionIdIndexRoute = SessionIdIndexRouteImport.update({
+  id: '/session/$id/',
+  path: '/session/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
-  id: '/steps',
-  path: '/steps',
-  getParentRoute: () => TemplateIdRoute,
+  id: '/template/$id/steps',
+  path: '/template/$id/steps',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SessionIdStepsRoute = SessionIdStepsRouteImport.update({
-  id: '/steps',
-  path: '/steps',
-  getParentRoute: () => SessionIdRoute,
+  id: '/session/$id/steps',
+  path: '/session/$id/steps',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
-  '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/template/wizard': typeof TemplateWizardRoute
   '/bot/': typeof BotIndexRoute
@@ -96,13 +94,13 @@ export interface FileRoutesByFullPath {
   '/template/': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
+  '/session/$id/': typeof SessionIdIndexRoute
+  '/template/$id/': typeof TemplateIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
-  '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/template/wizard': typeof TemplateWizardRoute
   '/bot': typeof BotIndexRoute
@@ -110,14 +108,14 @@ export interface FileRoutesByTo {
   '/template': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
+  '/session/$id': typeof SessionIdIndexRoute
+  '/template/$id': typeof TemplateIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bot/new': typeof BotNewRoute
-  '/session/$id': typeof SessionIdRouteWithChildren
   '/session/new': typeof SessionNewRoute
-  '/template/$id': typeof TemplateIdRouteWithChildren
   '/template/new': typeof TemplateNewRoute
   '/template/wizard': typeof TemplateWizardRoute
   '/bot/': typeof BotIndexRoute
@@ -125,15 +123,15 @@ export interface FileRoutesById {
   '/template/': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
+  '/session/$id/': typeof SessionIdIndexRoute
+  '/template/$id/': typeof TemplateIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/bot/new'
-    | '/session/$id'
     | '/session/new'
-    | '/template/$id'
     | '/template/new'
     | '/template/wizard'
     | '/bot/'
@@ -141,13 +139,13 @@ export interface FileRouteTypes {
     | '/template/'
     | '/session/$id/steps'
     | '/template/$id/steps'
+    | '/session/$id/'
+    | '/template/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/bot/new'
-    | '/session/$id'
     | '/session/new'
-    | '/template/$id'
     | '/template/new'
     | '/template/wizard'
     | '/bot'
@@ -155,13 +153,13 @@ export interface FileRouteTypes {
     | '/template'
     | '/session/$id/steps'
     | '/template/$id/steps'
+    | '/session/$id'
+    | '/template/$id'
   id:
     | '__root__'
     | '/'
     | '/bot/new'
-    | '/session/$id'
     | '/session/new'
-    | '/template/$id'
     | '/template/new'
     | '/template/wizard'
     | '/bot/'
@@ -169,19 +167,23 @@ export interface FileRouteTypes {
     | '/template/'
     | '/session/$id/steps'
     | '/template/$id/steps'
+    | '/session/$id/'
+    | '/template/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BotNewRoute: typeof BotNewRoute
-  SessionIdRoute: typeof SessionIdRouteWithChildren
   SessionNewRoute: typeof SessionNewRoute
-  TemplateIdRoute: typeof TemplateIdRouteWithChildren
   TemplateNewRoute: typeof TemplateNewRoute
   TemplateWizardRoute: typeof TemplateWizardRoute
   BotIndexRoute: typeof BotIndexRoute
   SessionIndexRoute: typeof SessionIndexRoute
   TemplateIndexRoute: typeof TemplateIndexRoute
+  SessionIdStepsRoute: typeof SessionIdStepsRoute
+  TemplateIdStepsRoute: typeof TemplateIdStepsRoute
+  SessionIdIndexRoute: typeof SessionIdIndexRoute
+  TemplateIdIndexRoute: typeof TemplateIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -228,25 +230,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplateNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/template/$id': {
-      id: '/template/$id'
-      path: '/template/$id'
-      fullPath: '/template/$id'
-      preLoaderRoute: typeof TemplateIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/session/new': {
       id: '/session/new'
       path: '/session/new'
       fullPath: '/session/new'
       preLoaderRoute: typeof SessionNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/$id': {
-      id: '/session/$id'
-      path: '/session/$id'
-      fullPath: '/session/$id'
-      preLoaderRoute: typeof SessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bot/new': {
@@ -256,58 +244,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BotNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/template/$id/': {
+      id: '/template/$id/'
+      path: '/template/$id'
+      fullPath: '/template/$id/'
+      preLoaderRoute: typeof TemplateIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/session/$id/': {
+      id: '/session/$id/'
+      path: '/session/$id'
+      fullPath: '/session/$id/'
+      preLoaderRoute: typeof SessionIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/template/$id/steps': {
       id: '/template/$id/steps'
-      path: '/steps'
+      path: '/template/$id/steps'
       fullPath: '/template/$id/steps'
       preLoaderRoute: typeof TemplateIdStepsRouteImport
-      parentRoute: typeof TemplateIdRoute
+      parentRoute: typeof rootRouteImport
     }
     '/session/$id/steps': {
       id: '/session/$id/steps'
-      path: '/steps'
+      path: '/session/$id/steps'
       fullPath: '/session/$id/steps'
       preLoaderRoute: typeof SessionIdStepsRouteImport
-      parentRoute: typeof SessionIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface SessionIdRouteChildren {
-  SessionIdStepsRoute: typeof SessionIdStepsRoute
-}
-
-const SessionIdRouteChildren: SessionIdRouteChildren = {
-  SessionIdStepsRoute: SessionIdStepsRoute,
-}
-
-const SessionIdRouteWithChildren = SessionIdRoute._addFileChildren(
-  SessionIdRouteChildren,
-)
-
-interface TemplateIdRouteChildren {
-  TemplateIdStepsRoute: typeof TemplateIdStepsRoute
-}
-
-const TemplateIdRouteChildren: TemplateIdRouteChildren = {
-  TemplateIdStepsRoute: TemplateIdStepsRoute,
-}
-
-const TemplateIdRouteWithChildren = TemplateIdRoute._addFileChildren(
-  TemplateIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BotNewRoute: BotNewRoute,
-  SessionIdRoute: SessionIdRouteWithChildren,
   SessionNewRoute: SessionNewRoute,
-  TemplateIdRoute: TemplateIdRouteWithChildren,
   TemplateNewRoute: TemplateNewRoute,
   TemplateWizardRoute: TemplateWizardRoute,
   BotIndexRoute: BotIndexRoute,
   SessionIndexRoute: SessionIndexRoute,
   TemplateIndexRoute: TemplateIndexRoute,
+  SessionIdStepsRoute: SessionIdStepsRoute,
+  TemplateIdStepsRoute: TemplateIdStepsRoute,
+  SessionIdIndexRoute: SessionIdIndexRoute,
+  TemplateIdIndexRoute: TemplateIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

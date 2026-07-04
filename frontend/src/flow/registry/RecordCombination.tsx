@@ -78,7 +78,7 @@ const RecordCombinationDetailPanel = ({
       <div className="bg-base-200 rounded-box p-3 space-y-2">
         <div className="text-sm font-medium">設定</div>
 
-        <div className="form-control">
+        <div className="flex flex-col gap-1">
           <label className="label cursor-pointer justify-start gap-2 py-1">
             <input
               type="radio"

@@ -222,9 +222,15 @@ The per-step `execute()` functions must be unit-testable by mocking the Discord 
 
 The new editor ships on **separate routes** and runs alongside React Flow until validated.
 
-- Existing React Flow routes stay untouched: `routes/template/$id.tsx`, `routes/session/$id.tsx`.
-- New step-list routes (convention): `routes/template/$id.steps.tsx`, `routes/session/$id.steps.tsx`
-  (TanStack Router). Old routes read `reactFlowData`; new routes read `flowData`.
+- Both UIs live under a **`$id/` directory route**, one file per view:
+  `routes/template/$id/index.tsx` (React Flow, `/template/$id`) + `routes/template/$id/steps.tsx`
+  (step-list, `/template/$id/steps`), and the same pair under `routes/session/$id/`.
+  Old views read `reactFlowData`; new views read `flowData`.
+  - **Do not** use the flat `routes/template/$id.steps.tsx` form: it nests the steps route under
+    `$id.tsx`, which renders its React Flow editor with no `<Outlet/>`, so the child never shows
+    (the "broken route" from #182). The directory form has no `$id.tsx` layout, so TanStack
+    synthesizes a pathless parent that renders `<Outlet/>` and both views resolve as siblings.
+  - Discoverability: `TemplateCard` / `SessionCard` link to the `/steps` view alongside the old one.
 - New-UI edits write **only** `flowData`. The old UI is reference-only; divergence between
   `flowData` and `reactFlowData` is accepted during coexistence.
 - Phase 5 deletes React Flow, the old node implementations, the old routes, and `reactFlowData`

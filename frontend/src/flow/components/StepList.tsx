@@ -59,7 +59,11 @@ const StepRow = memo(({ step }: StepRowProps) => {
           </span>
         )}
         <span className="flex-1 truncate text-sm">
-          {entry !== undefined ? entry.summary(step) : step.type}
+          {step.title.trim() !== ""
+            ? step.title
+            : entry !== undefined
+              ? entry.summary(step)
+              : step.type}
         </span>
         {step.autoAdvance && (
           <span className="badge badge-ghost badge-sm shrink-0" title="実行後に次を自動実行">
