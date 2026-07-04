@@ -67,6 +67,13 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
             <Link to="/session/$id" params={{ id: id.toString() }} className="btn btn-primary">
               詳細を見る
             </Link>
+            <Link
+              to="/session/$id/steps"
+              params={{ id: id.toString() }}
+              className="btn btn-secondary"
+            >
+              ステップ実行
+            </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">
               削除
             </label>

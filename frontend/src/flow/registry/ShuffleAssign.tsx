@@ -7,18 +7,16 @@ const ShuffleAssignDetailPanel = ({ step, onChange }: DetailPanelProps<ShuffleAs
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="form-control w-full">
-        <div className="label">
-          <span className="label-text">フラグのプレフィックス</span>
-        </div>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">フラグのプレフィックス</legend>
         <input
           type="text"
-          className="input input-bordered w-full"
+          className="input w-full"
           value={step.resultFlagPrefix}
           onChange={(evt) => onChange({ resultFlagPrefix: evt.target.value })}
           placeholder="例: 没情報"
         />
-      </label>
+      </fieldset>
 
       <div>
         <div className="label">

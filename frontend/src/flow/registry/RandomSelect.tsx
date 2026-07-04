@@ -6,18 +6,16 @@ const RandomSelectDetailPanel = ({ step, onChange }: DetailPanelProps<RandomSele
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="form-control w-full">
-        <div className="label">
-          <span className="label-text">フラグ名</span>
-        </div>
+      <fieldset className="fieldset">
+        <legend className="fieldset-legend">フラグ名</legend>
         <input
           type="text"
-          className="input input-bordered w-full"
+          className="input w-full"
           value={step.resultFlagKey}
           onChange={(evt) => onChange({ resultFlagKey: evt.target.value })}
           placeholder="例: 犯人"
         />
-      </label>
+      </fieldset>
 
       <div>
         <div className="label">

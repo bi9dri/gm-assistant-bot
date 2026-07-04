@@ -56,7 +56,11 @@ const RunnerStepRow = memo(({ step, handlers }: RunnerStepRowProps) => {
           </span>
         )}
         <span className={clsx("flex-1 truncate text-sm", skipped && "line-through opacity-50")}>
-          {entry !== undefined ? entry.summary(step) : step.type}
+          {step.title.trim() !== ""
+            ? step.title
+            : entry !== undefined
+              ? entry.summary(step)
+              : step.type}
         </span>
         {step.autoAdvance && (
           <span className="badge badge-ghost badge-sm shrink-0" title="実行後に次を自動実行">

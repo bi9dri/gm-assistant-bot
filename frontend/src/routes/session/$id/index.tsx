@@ -9,7 +9,7 @@ import { db } from "@/db";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
-export const Route = createFileRoute("/session/$id")({
+export const Route = createFileRoute("/session/$id/")({
   component: RouteComponent,
   beforeLoad: () => {
     return {

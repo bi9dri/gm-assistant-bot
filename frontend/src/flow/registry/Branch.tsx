@@ -88,32 +88,28 @@ const BranchDetailPanel = ({ step, onChange }: DetailPanelProps<BranchStep>) => 
       </div>
 
       {step.mode === "auto" ? (
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">マッチ方式</span>
-          </div>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">マッチ方式</legend>
           <select
-            className="select select-bordered select-sm"
+            className="select select-sm w-full"
             value={step.matchMode}
             onChange={(evt) => onChange({ matchMode: evt.target.value as BranchStep["matchMode"] })}
           >
             <option value="first">最初にマッチした枝のみ</option>
             <option value="all">マッチした全ての枝</option>
           </select>
-        </label>
+        </fieldset>
       ) : (
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">選択結果を書き込むフラグ名</span>
-          </div>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">選択結果を書き込むフラグ名</legend>
           <input
             type="text"
-            className="input input-bordered input-sm w-full"
+            className="input input-sm w-full"
             value={step.flagName}
             onChange={(evt) => onChange({ flagName: evt.target.value })}
             placeholder="例: 選択結果"
           />
-        </label>
+        </fieldset>
       )}
 
       <div className="flex flex-col gap-3">

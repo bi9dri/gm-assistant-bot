@@ -3,25 +3,21 @@ import { defineStep, type DetailPanelProps } from "./types";
 
 const CounterDetailPanel = ({ step, onChange }: DetailPanelProps<CounterStep>) => (
   <div className="flex flex-col gap-2">
-    <label className="form-control w-full">
-      <div className="label">
-        <span className="label-text">フラグ名</span>
-      </div>
+    <fieldset className="fieldset">
+      <legend className="fieldset-legend">フラグ名</legend>
       <input
         type="text"
-        className="input input-bordered w-full"
+        className="input w-full"
         value={step.flagKey}
         onChange={(evt) => onChange({ flagKey: evt.target.value })}
         placeholder="例: ラウンド数, ライフ"
       />
-    </label>
-    <label className="form-control w-full">
-      <div className="label">
-        <span className="label-text">増減量</span>
-      </div>
+    </fieldset>
+    <fieldset className="fieldset">
+      <legend className="fieldset-legend">増減量</legend>
       <input
         type="number"
-        className="input input-bordered w-full"
+        className="input w-full"
         value={step.step}
         min={1}
         onChange={(evt) => {
@@ -29,7 +25,7 @@ const CounterDetailPanel = ({ step, onChange }: DetailPanelProps<CounterStep>) =
           if (next >= 1) onChange({ step: next });
         }}
       />
-    </label>
+    </fieldset>
   </div>
 );
 
