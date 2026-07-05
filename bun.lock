@@ -21,7 +21,7 @@
         "@discordjs/rest": "2.6.1",
         "@hono/zod-validator": "0.8.0",
         "discord-api-types": "0.38.49",
-        "hono": "4.12.23",
+        "hono": "4.12.27",
         "zod": "4.4.3",
       },
       "devDependencies": {
@@ -47,7 +47,7 @@
         "daisyui": "5.5.20",
         "dexie": "4.4.3",
         "dexie-react-hooks": "4.4.0",
-        "hono": "4.12.23",
+        "hono": "4.12.27",
         "immer": "11.1.8",
         "nanoid": "5.1.11",
         "react": "19.2.6",
@@ -823,7 +823,7 @@
 
     "headers-polyfill": ["headers-polyfill@5.0.1", "", { "dependencies": { "@types/set-cookie-parser": "^2.4.10", "set-cookie-parser": "^3.0.1" } }, "sha512-1TJ6Fih/b8h5TIcv+1+Hw0PDQWJTKDKzFZzcKOiW1wJza3XoAQlkCuXLbymPYB8+ZQyw8mHvdw560e8zVFIWyA=="],
 
-    "hono": ["hono@4.12.23", "", {}, "sha512-eIaZ9qDgu7XV0pxOCrg7/WhnQ6Ivm22UcxhXx/A3dcbqbbYgBEkc6e/J/s7j2tS96zoB0S9VBdLwQNCWwUo4LA=="],
+    "hono": ["hono@4.12.27", "", {}, "sha512-1yrb/+w6HWQJrUCLkJ2IF5jNIPvvFkblV5RNOYl6bV+OA6p9GLcMpHFFGTosSvHvcAUibuUukRqhlYI4z32C7Q=="],
 
     "immer": ["immer@11.1.8", "", {}, "sha512-/tbkHMW7y10Lx6i1crLjD4/OhNkRG+Fo7byZHtah0547nIeXYcpIXaUh0IAQY6gO5459qpGGYapcEOHtFXkIuA=="],
 
