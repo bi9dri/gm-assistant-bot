@@ -21,7 +21,7 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "@tailwindcss/vite": "4.3.0",
-    "@tanstack/react-devtools": "0.10.5",
+    "@tanstack/react-devtools": "0.10.8",
     "@tanstack/react-router": "1.169.1",
     "@tanstack/react-router-devtools": "1.167.0",
     "@tanstack/router-plugin": "1.167.32",
