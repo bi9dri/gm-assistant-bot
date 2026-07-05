@@ -26,5 +26,8 @@
     "oxlint-tsgolint": "0.23.0",
     "typescript": "6.0.3",
     "wrangler": "4.87.0"
+  },
+  "overrides": {
+    "shell-quote": "1.8.4"
   }
 }
