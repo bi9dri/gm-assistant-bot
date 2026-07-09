@@ -4,6 +4,7 @@ import type { FlowData, Step } from "./schema";
 
 import {
   clearDescendantExecution,
+  collectDescendantStepIds,
   findSection,
   findStep,
   insertSection,
@@ -329,5 +330,20 @@ describe("clearDescendantExecution", () => {
     const step = { ...leaf("x"), executedAt: new Date() };
     clearDescendantExecution(step);
     expect(step.executedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe("collectDescendantStepIds", () => {
+  test("Branch の全枝の子孫 id を集める (入れ子 Branch にも再帰)", () => {
+    const nested = branch("nested", [{ id: "n1", label: "N1", steps: [leaf("deep")] }]);
+    const outer = branch("outer", [
+      { id: "o1", label: "O1", steps: [leaf("c"), nested] },
+      { id: "o2", label: "O2", steps: [leaf("d")] },
+    ]);
+    expect(collectDescendantStepIds(outer).sort()).toEqual(["c", "d", "deep", "nested"]);
+  });
+
+  test("Branch 以外は空配列", () => {
+    expect(collectDescendantStepIds(leaf("x"))).toEqual([]);
   });
 });

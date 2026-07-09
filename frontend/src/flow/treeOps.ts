@@ -98,6 +98,20 @@ export const clearDescendantExecution = (step: Step): void => {
   }
 };
 
+// Branch の全枝の子孫ステップ id を集める (入れ子 Branch にも再帰)。Branch 以外は空。
+// clearDescendantExecution で実行痕跡が消える範囲と一致させ、store 側の skip 痕跡の
+// リセットに使う。
+export const collectDescendantStepIds = (step: Step): string[] => {
+  if (step.type !== "Branch") return [];
+  const out: string[] = [];
+  for (const arm of step.branches) {
+    for (const child of arm.steps) {
+      out.push(child.id, ...collectDescendantStepIds(child));
+    }
+  }
+  return out;
+};
+
 export const updateStepById = (flow: FlowData, id: string, patch: (step: Step) => void): FlowData =>
   produce(flow, (draft) => {
     const step = findStep(draft as FlowData, id);
