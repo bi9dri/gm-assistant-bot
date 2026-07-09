@@ -31,6 +31,8 @@ interface EditorActions {
   addStep: (type: Step["type"], at: StepLocation) => void;
   removeStep: (id: string) => void;
   moveStep: (id: string, to: StepLocation) => void;
+  // ドラッグキャンセル時などに、以前の immutable スナップショットへ丸ごと差し戻す。
+  restoreFlowData: (flowData: FlowData) => void;
   addSection: (title: string, index?: number) => void;
   updateSection: (id: string, patch: Partial<Section>) => void;
   removeSection: (id: string) => void;
@@ -87,6 +89,8 @@ export const useEditorStore = create<EditorStore>()((set) => ({
     }),
 
   moveStep: (id, to) => set((state) => ({ flowData: treeOps.moveStep(state.flowData, id, to) })),
+
+  restoreFlowData: (flowData) => set({ flowData }),
 
   addSection: (title, index) => {
     const section: Section = { id: generateId(), title, memo: "", collapsed: false, steps: [] };
