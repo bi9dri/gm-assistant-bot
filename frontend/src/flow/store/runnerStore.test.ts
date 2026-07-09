@@ -91,6 +91,63 @@ describe("markStepExecuted", () => {
     expect(stored?.executedAt).toBeUndefined();
   });
 
+  test("Branch 選び直しで cursor が閉じた枝に取り残されたら新しい枝の先頭へ置き直す", () => {
+    const branch = step("br", {
+      type: "Branch",
+      mode: "select",
+      matchMode: "first",
+      flagName: "",
+      branches: [
+        { id: "arm-a", label: "A", steps: [step("a1")] },
+        { id: "arm-b", label: "B", steps: [step("b1")] },
+      ],
+    });
+    useRunnerStore.getState().initialize(flowOf(branch, step("after")), {});
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-a"] });
+    expect(useRunnerStore.getState().cursorId).toBe("a1");
+    // 枝 B へ選び直し → a1 は実行順序から消えるので cursor を b1 に置き直す。
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
+    expect(useRunnerStore.getState().cursorId).toBe("b1");
+  });
+
+  test("Branch 選び直しでも cursor が枝の外なら動かさない", () => {
+    const branch = step("br", {
+      type: "Branch",
+      mode: "select",
+      matchMode: "first",
+      flagName: "",
+      branches: [
+        { id: "arm-a", label: "A", steps: [step("a1")] },
+        { id: "arm-b", label: "B", steps: [step("b1")] },
+      ],
+    });
+    useRunnerStore.getState().initialize(flowOf(branch, step("after")), {});
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-a"] });
+    useRunnerStore.getState().setCursor("after");
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
+    expect(useRunnerStore.getState().cursorId).toBe("after");
+  });
+
+  test("Branch 選び直しで枝の子孫の skip 痕跡もリセットする", () => {
+    const branch = step("br", {
+      type: "Branch",
+      mode: "select",
+      matchMode: "first",
+      flagName: "",
+      branches: [
+        { id: "arm-a", label: "A", steps: [step("a1")] },
+        { id: "arm-b", label: "B", steps: [step("b1")] },
+      ],
+    });
+    useRunnerStore.getState().initialize(flowOf(branch, step("after")), {});
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-a"] });
+    useRunnerStore.getState().skipStep("a1");
+    expect(useRunnerStore.getState().skippedStepIds).toEqual(["a1"]);
+    // 選び直しで子孫の実行痕跡が消えるのに合わせ、skip 痕跡も消して整合させる。
+    useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
+    expect(useRunnerStore.getState().skippedStepIds).toEqual([]);
+  });
+
   test("スキップ済みを実行したら skipped から外す", () => {
     useRunnerStore.getState().initialize(flowOf(step("a"), step("b")), {});
     useRunnerStore.getState().skipStep("a");

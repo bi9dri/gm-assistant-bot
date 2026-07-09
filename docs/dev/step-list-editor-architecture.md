@@ -199,6 +199,11 @@ engine in `flow/engine/execute.ts` owns orchestration only:
   condition tree (`matchMode:"first"` → first match; `matchMode:"all"` → every match top-to-bottom),
   `mode:"select"` takes the GM's choice and writes `flagName`. Records chosen arms in
   `executedBranchIds`, then descends into the chosen arm's `steps`. Unchosen arms collapse in the UI.
+- **Branch re-selection**: an executed `mode:"select"` Branch keeps offering its arm buttons, so a
+  mis-chosen arm can be redone. Re-executing a Branch clears descendant execution *and* skip marks
+  across all arms (`clearDescendantExecution` / `collectDescendantStepIds`) before committing the
+  new arm. If the cursor was left inside the now-closed arm (no longer in the run order), it is
+  repositioned to the head of the newly opened arm.
 - On completion: set `executedAt`, update flags/resources, toast. Reuses the existing pipeline
   semantics and `NodeExecutionContext` shape (`{ guildId, sessionId, sessionName, bot }`).
 

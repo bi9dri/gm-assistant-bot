@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { useMemo } from "react";
 
 import { TemplateResourcesOverrideProvider } from "@/components/Node/utils/useTemplateResources";
@@ -14,7 +15,8 @@ import { RunnerToolPanel } from "./RunnerToolPanel";
 // 中央カラム (execute モード)。選択中ステップの実行操作 + 詳細を表示する。
 // - 実行済みステップは read-only (記録保護)。runnable なら [再実行] のみ許す。
 // - 未実行の action / auto 分岐は編集可能な DetailPanel + [実行]/[スキップ]。
-// - select 分岐は枝ボタンで実行。tool は操作 UI。
+// - select 分岐は枝ボタンで実行。実行済みでも枝を選び直せる (誤選択のやり直し)。
+//   tool は操作 UI。
 export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
   const selectedStepId = useRunnerStore((state) => state.selectedStepId);
   const flowData = useRunnerStore((state) => state.flowData);
@@ -60,8 +62,13 @@ export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
           handlers={handlers}
         />
 
-        {step.type === "Branch" && step.mode === "select" && !isExecuted && (
-          <SelectBranchControls step={step} isRunning={isRunning} handlers={handlers} />
+        {step.type === "Branch" && step.mode === "select" && (
+          <SelectBranchControls
+            step={step}
+            isExecuted={isExecuted}
+            isRunning={isRunning}
+            handlers={handlers}
+          />
         )}
 
         {isTool && <RunnerToolPanel step={step} />}
@@ -121,25 +128,45 @@ const RunControls = ({ step, isExecuted, isRunning, handlers }: RunControlsProps
 
 interface SelectBranchControlsProps {
   step: BranchStep;
+  isExecuted: boolean;
   isRunning: boolean;
   handlers: RunHandlers;
 }
 
-const SelectBranchControls = ({ step, isRunning, handlers }: SelectBranchControlsProps) => (
-  <div className="flex flex-col gap-2 rounded border border-base-300 p-3">
-    <p className="text-sm font-semibold">枝を選んで実行</p>
-    <div className="flex flex-wrap gap-2">
-      {step.branches.map((arm) => (
-        <button
-          key={arm.id}
-          type="button"
-          className="btn btn-outline btn-sm"
-          disabled={isRunning}
-          onClick={() => handlers.onRun(step.id, { branchChoice: arm.id })}
-        >
-          {arm.label || "(無名の枝)"}
-        </button>
-      ))}
+const SelectBranchControls = ({
+  step,
+  isExecuted,
+  isRunning,
+  handlers,
+}: SelectBranchControlsProps) => {
+  const chosen = step.executedBranchIds ?? [];
+  return (
+    <div className="flex flex-col gap-2 rounded border border-base-300 p-3">
+      <p className="text-sm font-semibold">
+        {isExecuted ? "枝を選び直して実行" : "枝を選んで実行"}
+      </p>
+      {isExecuted && (
+        <p className="text-xs text-base-content/60">
+          選び直すと、枝の中のステップの実行・スキップの記録はリセットされます
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {step.branches.map((arm) => {
+          const isChosen = chosen.includes(arm.id);
+          return (
+            <button
+              key={arm.id}
+              type="button"
+              className={clsx("btn btn-sm", isChosen ? "btn-primary" : "btn-outline")}
+              disabled={isRunning}
+              onClick={() => handlers.onRun(step.id, { branchChoice: arm.id })}
+            >
+              {isChosen ? "✓ " : ""}
+              {arm.label || "(無名の枝)"}
+            </button>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};

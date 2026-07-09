@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { advanceCursor, firstRunnableId } from "../engine/order";
+import { advanceCursor, firstRunnableId, runnableSteps } from "../engine/order";
 import { defaultFlowData, type FlowData, type Step } from "../schema";
 import { findStep } from "../treeOps";
 import * as treeOps from "../treeOps";
@@ -48,6 +48,22 @@ interface RunnerActions {
 
 type RunnerStore = RunnerState & RunnerActions;
 
+// cursor は「推奨位置」を実行したときだけ前進させる。任意ステップの re-run/実行で
+// GM の現在位置を巻き戻さない。ただし Branch の選び直しで cursor が閉じた枝の中に
+// 取り残された (実行順序から消えた) 場合は、実行した Branch の直後 = 新しい枝の
+// 先頭に置き直す。
+const nextCursorId = (
+  cursorId: string | null,
+  flowData: FlowData,
+  executedId: string,
+): string | null => {
+  if (cursorId === executedId) return advanceCursor(flowData, executedId);
+  if (cursorId !== null && !runnableSteps(flowData).some((step) => step.id === cursorId)) {
+    return advanceCursor(flowData, executedId);
+  }
+  return cursorId;
+};
+
 const initialState: RunnerState = {
   flowData: defaultFlowData,
   gameFlags: {},
@@ -87,12 +103,17 @@ export const useRunnerStore = create<RunnerStore>()((set) => ({
         }
         step.executedAt = new Date();
       });
+      // Branch の (再) 実行では clearDescendantExecution で子孫の実行痕跡が消えるので、
+      // skip 痕跡も同じ範囲で消して整合させる。
+      const target = findStep(flowData, id);
+      const cleared = new Set([
+        id,
+        ...(target === undefined ? [] : treeOps.collectDescendantStepIds(target)),
+      ]);
       return {
         flowData,
-        skippedStepIds: state.skippedStepIds.filter((skipped) => skipped !== id),
-        // cursor は「推奨位置」を実行したときだけ前進させる。任意ステップの re-run/実行で
-        // GM の現在位置を巻き戻さない。
-        cursorId: state.cursorId === id ? advanceCursor(flowData, id) : state.cursorId,
+        skippedStepIds: state.skippedStepIds.filter((skipped) => !cleared.has(skipped)),
+        cursorId: nextCursorId(state.cursorId, flowData, id),
       };
     }),
 
