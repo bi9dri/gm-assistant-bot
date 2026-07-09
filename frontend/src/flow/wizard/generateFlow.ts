@@ -64,7 +64,7 @@ export const generateWizardFlow = (
   const step = <S extends Step>(fields: StepFields<S>): S =>
     ({ id: genId(), memo: "", autoAdvance: false, ...fields }) as S;
 
-  // ---- 準備セクション: ロール/カテゴリ/チャンネル作成 → 観戦ロール付与 ----
+  // ---- 準備セクション: ロール/カテゴリ/チャンネル作成 ----
   const setupSteps: Step[] = [];
 
   setupSteps.push(
@@ -113,14 +113,15 @@ export const generateWizardFlow = (
     );
   }
 
-  setupSteps.push(
+  // ---- セッション後セクション: PL メンバーへの観戦ロール付与 ----
+  const postSessionSteps: Step[] = [
     step<AddRoleToRoleMembersStep>({
       type: "AddRoleToRoleMembers",
-      title: "ロールメンバーにロールを付与",
+      title: "プレイヤーに観戦ロールを付与",
       memberRoleName: plRole,
       addRoleName: spectatorRole,
     }),
-  );
+  ];
 
   // ---- 片付けセクション: カテゴリ削除 → 全ロール削除 ----
   const teardownSteps: Step[] = [
@@ -140,6 +141,13 @@ export const generateWizardFlow = (
       memo: "",
       collapsed: false,
       steps: withChaining(setupSteps),
+    },
+    {
+      id: genId(),
+      title: "セッション後",
+      memo: "",
+      collapsed: false,
+      steps: withChaining(postSessionSteps),
     },
     {
       id: genId(),
