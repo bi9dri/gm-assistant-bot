@@ -19,7 +19,10 @@ body,
 .drawer-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* .drawer (grid) の auto 行に対する height: 100% は解決されず content 高さに
+     膨張してページ全体が 1 本のスクロールになるため、viewport 基準で固定する。
+     これで main の flex: 1 + min-height: 0 が効き、カラム内スクロールが成立する。 */
+  height: 100dvh;
 }
 
 main {
