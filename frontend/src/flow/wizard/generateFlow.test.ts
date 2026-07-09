@@ -17,10 +17,10 @@ const setupStepsOf = (params: Partial<WizardParams>) => gen(params).sections[0].
 const findStep = (steps: Step[], type: Step["type"]) => steps.find((s) => s.type === type);
 
 describe("generateWizardFlow", () => {
-  it("常に準備・片付けの2セクションを生成する", () => {
+  it("常に準備・セッション後・片付けの3セクションを生成する", () => {
     const flow = gen({});
     expect(flow.version).toBe(1);
-    expect(flow.sections.map((s) => s.title)).toEqual(["準備", "片付け"]);
+    expect(flow.sections.map((s) => s.title)).toEqual(["準備", "セッション後", "片付け"]);
   });
 
   it("生成結果は FlowDataSchema を満たす", () => {
@@ -130,15 +130,19 @@ describe("generateWizardFlow", () => {
     expect(findStep(setupStepsOf({}), "CreateChannel")).toBeUndefined();
   });
 
-  it("PL メンバーへ観戦ロールを付与するステップを常に作る", () => {
-    expect(findStep(setupStepsOf({ categoryName: "事件" }), "AddRoleToRoleMembers")).toMatchObject({
+  it("セッション後セクションで PL メンバーへ観戦ロールを付与するステップを常に作る", () => {
+    const postSession = gen({ categoryName: "事件" }).sections[1].steps;
+    expect(postSession).toHaveLength(1);
+    expect(postSession[0]).toMatchObject({
+      type: "AddRoleToRoleMembers",
+      title: "プレイヤーに観戦ロールを付与",
       memberRoleName: "事件PL",
       addRoleName: "事件観戦",
     });
   });
 
   it("片付けセクションはカテゴリ削除→全ロール削除", () => {
-    const teardown = gen({}).sections[1].steps;
+    const teardown = gen({}).sections[2].steps;
     expect(teardown.map((s) => s.type)).toEqual(["DeleteCategory", "DeleteRole"]);
     expect(teardown[1]).toMatchObject({ deleteAll: true, roleNames: [] });
   });
