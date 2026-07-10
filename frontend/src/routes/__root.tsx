@@ -1,5 +1,5 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { Outlet, createRootRoute, useRouteContext, useRouter } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useRouter, useRouterState } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { useEffect } from "react";
@@ -25,8 +25,18 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  const context = useRouteContext({ from: "__root__" }) as RootContext | undefined;
-  const layoutMode = context?.layoutMode ?? "padded";
+  // 各ルートの beforeLoad が返す layoutMode は子マッチの context にしか現れない
+  // (useRouteContext({ from: "__root__" }) はルート自身の context を返すため見えない)。
+  // 最深マッチから遡って最初に見つかった layoutMode を採用する。
+  const layoutMode = useRouterState({
+    select: (state) => {
+      for (let i = state.matches.length - 1; i >= 0; i--) {
+        const mode = (state.matches[i].context as Partial<RootContext> | undefined)?.layoutMode;
+        if (mode !== undefined) return mode;
+      }
+      return "padded";
+    },
+  });
   const router = useRouter();
 
   useEffect(() => {
