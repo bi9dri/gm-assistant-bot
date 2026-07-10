@@ -7,30 +7,12 @@
       "Write(**/.env*)",
       "Read(**/.dev.vars)",
       "Edit(**/.dev.vars)",
-      "Write(**/.dev.vars)"
+      "Write(**/.dev.vars)",
+      "Edit(**.lock)",
+      "Write(**.lock)"
     ]
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/setup-ccweb.sh\"; else direnv export bash > \"$CLAUDE_ENV_FILE\"; fi"
-          }
-        ]
-      }
-    ],
-    "CwdChanged": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/setup-ccweb.sh\"; else direnv export bash > \"$CLAUDE_ENV_FILE\"; fi"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -46,6 +28,7 @@
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
+    "frontend-design@claude-plugins-official": true,
+    "ponytail@ponytail": true
   }
 }
