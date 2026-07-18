@@ -1,7 +1,13 @@
 import { create } from "zustand";
 
 import { advanceCursor, firstRunnableId, runnableSteps } from "../engine/order";
-import { defaultFlowData, type FlowData, type Step } from "../schema";
+import {
+  defaultFlowData,
+  type FlowData,
+  type KanbanStep,
+  type RecordCombinationStep,
+  type Step,
+} from "../schema";
 import { findStep } from "../treeOps";
 import * as treeOps from "../treeOps";
 
@@ -14,6 +20,11 @@ import * as treeOps from "../treeOps";
 
 // ライブなゲームフラグは string 値 (evaluateCondition / DynamicValue が string 前提)。
 type GameFlags = Record<string, string>;
+
+// ツールの実行時状態 (盤面・記録)。設定フィールドと違い実行済みでも書き換えてよい。
+type ToolStatePatch = Partial<
+  Pick<KanbanStep, "cardPlacements"> & Pick<RecordCombinationStep, "recordedPairs">
+>;
 
 interface RunnerState {
   flowData: FlowData;
@@ -39,6 +50,8 @@ interface RunnerActions {
   skipStep: (id: string) => void;
   // in-session editing: 未実行ステップのみ編集可。type (判別子) は変更させない。
   updateStep: (id: string, patch: Omit<Partial<Step>, "type">) => void;
+  // ツール操作: 実行時状態のみを書く。実行済みガードを通さない (ツールは常時操作可能)。
+  updateToolState: (id: string, patch: ToolStatePatch) => void;
   setFlag: (key: string, value: string) => void;
   setFlags: (patch: GameFlags) => void;
   removeFlag: (key: string) => void;
@@ -137,6 +150,13 @@ export const useRunnerStore = create<RunnerStore>()((set) => ({
         }),
       };
     }),
+
+  updateToolState: (id, patch) =>
+    set((state) => ({
+      flowData: treeOps.updateStepById(state.flowData, id, (step) => {
+        Object.assign(step, patch);
+      }),
+    })),
 
   setFlag: (key, value) => set((state) => ({ gameFlags: { ...state.gameFlags, [key]: value } })),
 

@@ -112,6 +112,22 @@ export const collectDescendantStepIds = (step: Step): string[] => {
   return out;
 };
 
+const collectInSteps = (steps: Step[], out: Step[]): void => {
+  for (const step of steps) {
+    out.push(step);
+    if (step.type !== "Branch") continue;
+    for (const arm of step.branches) collectInSteps(arm.steps, out);
+  }
+};
+
+// フロー内の全ステップを pre-order で平坦化する。engine/order の runnableSteps と違い、
+// Branch の未実行・未選択の枝の中も含む (ツール常駐欄など「存在する全ステップ」を見たい用途)。
+export const collectSteps = (flow: FlowData): Step[] => {
+  const out: Step[] = [];
+  for (const section of flow.sections) collectInSteps(section.steps, out);
+  return out;
+};
+
 export const updateStepById = (flow: FlowData, id: string, patch: (step: Step) => void): FlowData =>
   produce(flow, (draft) => {
     const step = findStep(draft as FlowData, id);
