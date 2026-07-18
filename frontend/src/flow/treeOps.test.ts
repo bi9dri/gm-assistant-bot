@@ -5,6 +5,7 @@ import type { FlowData, Step } from "./schema";
 import {
   clearDescendantExecution,
   collectDescendantStepIds,
+  collectSteps,
   findSection,
   findStep,
   insertSection,
@@ -102,6 +103,20 @@ describe("findStep / findSection", () => {
   test("存在しない id は undefined", () => {
     expect(findStep(makeFlow(), "zzz")).toBeUndefined();
     expect(findSection(makeFlow(), "zzz")).toBeUndefined();
+  });
+});
+
+describe("collectSteps", () => {
+  test("全セクション・全枝のステップを pre-order で平坦化する", () => {
+    expect(collectSteps(makeFlow()).map((step) => step.id)).toEqual(["a", "b", "br", "c", "d"]);
+  });
+
+  test("入れ子の Branch の枝にも降りる", () => {
+    expect(collectSteps(makeNestedFlow()).map((step) => step.id)).toEqual(["outer", "inner", "x"]);
+  });
+
+  test("空のフローは空配列", () => {
+    expect(collectSteps({ version: 1, sections: [] })).toEqual([]);
   });
 });
 

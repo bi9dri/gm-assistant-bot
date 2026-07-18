@@ -10,6 +10,7 @@ import { useRunnerStore } from "../store/runnerStore";
 import { RunnerDetailPanel } from "./RunnerDetailPanel";
 import { RunnerFlagPanel } from "./RunnerFlagPanel";
 import { RunnerStepListPanel } from "./RunnerStepListPanel";
+import { RunnerToolDock } from "./RunnerToolDock";
 import { useSessionRunner } from "./useSessionRunner";
 
 const AUTOSAVE_DEBOUNCE_MS = 500;
@@ -121,6 +122,7 @@ export const RunnerView = ({ session, bot }: { session: GameSession; bot: Discor
           </div>
           <div className="min-h-0 overflow-y-auto">
             <RunnerFlagPanel />
+            <RunnerToolDock />
           </div>
         </div>
       </div>
