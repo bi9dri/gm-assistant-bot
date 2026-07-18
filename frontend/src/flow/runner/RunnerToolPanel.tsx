@@ -125,25 +125,20 @@ const OperateSection = ({ step, gameFlags, setFlag, setFlags }: OperateSectionPr
 // Kanban の実行時盤面。カードをドラッグして列間を移動する (cardPlacements を更新)。
 // 下部の設定エディタ (initialPlacements) とは独立で、こちらが実行中の現在盤面。
 const KanbanOperate = ({ step }: { step: KanbanStep }) => {
-  const updateStep = useRunnerStore((state) => state.updateStep);
+  const updateToolState = useRunnerStore((state) => state.updateToolState);
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
   const placements = kanbanBoardPlacements(step);
 
-  const cardsForColumn = (columnId: string) => {
-    const placedCardIds = placements
-      .filter((placement) => placement.columnId === columnId)
-      .map((placement) => placement.cardId);
-    return step.cards.filter((card) => placedCardIds.includes(card.id));
-  };
+  const cardsForColumn = (columnId: string) =>
+    step.cards.filter((card) =>
+      placements.some((p) => p.cardId === card.id && p.columnId === columnId),
+    );
 
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     const cardId = e.dataTransfer.getData("cardId");
     if (cardId) {
-      const patch: Partial<KanbanStep> = {
-        cardPlacements: moveKanbanCard(step, cardId, columnId),
-      };
-      updateStep(step.id, patch);
+      updateToolState(step.id, { cardPlacements: moveKanbanCard(step, cardId, columnId) });
     }
     setDragOverColumnId(null);
   };
@@ -225,7 +220,7 @@ const KanbanOperate = ({ step }: { step: KanbanStep }) => {
 
 // RecordCombination のペア記録 UI。ペアの選択→記録と記録履歴の削除 (recordedPairs を更新)。
 const RecordCombinationOperate = ({ step }: { step: RecordCombinationStep }) => {
-  const updateStep = useRunnerStore((state) => state.updateStep);
+  const updateToolState = useRunnerStore((state) => state.updateToolState);
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [selectedTargetId, setSelectedTargetId] = useState("");
 
@@ -253,10 +248,8 @@ const RecordCombinationOperate = ({ step }: { step: RecordCombinationStep }) => 
     return option === undefined ? "(不明)" : option.label || "(未入力)";
   };
 
-  const applyPairs = (pairs: RecordCombinationStep["recordedPairs"]) => {
-    const patch: Partial<RecordCombinationStep> = { recordedPairs: pairs };
-    updateStep(step.id, patch);
-  };
+  const applyPairs = (pairs: RecordCombinationStep["recordedPairs"]) =>
+    updateToolState(step.id, { recordedPairs: pairs });
 
   const handleRecord = () => {
     const pairs = recordPair(step, selectedSourceId, selectedTargetId, generateId());

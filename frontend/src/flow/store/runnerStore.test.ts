@@ -191,6 +191,24 @@ describe("updateStep (in-session editing)", () => {
   });
 });
 
+describe("updateToolState", () => {
+  test("実行済みステップでもツールの実行時状態は書ける", () => {
+    const kanban = step("k", {
+      type: "Kanban",
+      columns: [{ id: "col1", label: "未" }],
+      cards: [{ id: "card1", label: "A" }],
+      initialPlacements: [],
+      cardPlacements: [],
+    });
+    useRunnerStore.getState().initialize(flowOf(kanban), {});
+    useRunnerStore.getState().markStepExecuted("k", {});
+    const placements = [{ cardId: "card1", columnId: "col1", movedAt: new Date() }];
+    useRunnerStore.getState().updateToolState("k", { cardPlacements: placements });
+    const stored = findStep(useRunnerStore.getState().flowData, "k");
+    expect(stored?.type === "Kanban" ? stored.cardPlacements : undefined).toEqual(placements);
+  });
+});
+
 describe("flags", () => {
   test("setFlag / setFlags / removeFlag", () => {
     useRunnerStore.getState().initialize(flowOf(step("a")), { keep: "1" });

@@ -96,8 +96,8 @@ describe("moveKanbanCard", () => {
 
   test("初回移動は initialPlacements から盤面を確定してから動かす", () => {
     expect(moveKanbanCard(makeKanban(), "card1", "col2", now)).toEqual([
-      { cardId: "card1", columnId: "col2", movedAt: now },
       { cardId: "card2", columnId: "col1", movedAt: now },
+      { cardId: "card1", columnId: "col2", movedAt: now },
     ]);
   });
 

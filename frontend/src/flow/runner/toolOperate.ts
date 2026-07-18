@@ -69,7 +69,7 @@ export const kanbanBoardPlacements = (step: KanbanStep): { cardId: string; colum
   step.cardPlacements.length > 0 ? step.cardPlacements : step.initialPlacements;
 
 // Kanban: カード移動後の cardPlacements。初回移動時は initialPlacements から盤面を
-// 確定した上で動かす。既存の配置があれば上書き、無ければ追加。
+// 確定した上で動かす。配置の並び順に意味はない (表示順は step.cards 由来)。
 export const moveKanbanCard = (
   step: KanbanStep,
   cardId: string,
@@ -80,14 +80,10 @@ export const moveKanbanCard = (
     step.cardPlacements.length > 0
       ? step.cardPlacements
       : step.initialPlacements.map((placement) => ({ ...placement, movedAt }));
-  const next: CardPlacement = { cardId, columnId, movedAt };
-  const index = base.findIndex((placement) => placement.cardId === cardId);
-  if (index >= 0) {
-    const updated = [...base];
-    updated[index] = next;
-    return updated;
-  }
-  return [...base, next];
+  return [
+    ...base.filter((placement) => placement.cardId !== cardId),
+    { cardId, columnId, movedAt },
+  ];
 };
 
 // RecordCombination: ペアを検証して追加した recordedPairs を返す。
