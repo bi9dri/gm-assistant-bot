@@ -4,12 +4,9 @@
     "deny": [
       "Read(**/.env*)",
       "Edit(**/.env*)",
-      "Write(**/.env*)",
       "Read(**/.dev.vars)",
       "Edit(**/.dev.vars)",
-      "Write(**/.dev.vars)",
-      "Edit(**.lock)",
-      "Write(**.lock)"
+      "Edit(**.lock)"
     ]
   },
   "hooks": {
