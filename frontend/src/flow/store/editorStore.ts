@@ -29,6 +29,7 @@ interface EditorActions {
   // union 不変条件を破る事故を型レベルで防ぐ。
   updateStep: (id: string, patch: Omit<Partial<Step>, "type">) => void;
   addStep: (type: Step["type"], at: StepLocation) => void;
+  duplicateStep: (id: string) => void;
   removeStep: (id: string) => void;
   moveStep: (id: string, to: StepLocation) => void;
   // ドラッグキャンセル時などに、以前の immutable スナップショットへ丸ごと差し戻す。
@@ -72,6 +73,12 @@ export const useEditorStore = create<EditorStore>()((set) => ({
       selectedStepId: step.id,
     }));
   },
+
+  duplicateStep: (id) =>
+    set((state) => {
+      const { flowData, newStep } = treeOps.duplicateStep(state.flowData, id);
+      return newStep === undefined ? {} : { flowData, selectedStepId: newStep.id };
+    }),
 
   removeStep: (id) =>
     set((state) => {
