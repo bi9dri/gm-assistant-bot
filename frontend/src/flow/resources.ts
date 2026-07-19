@@ -2,6 +2,13 @@ import type { TemplateResources } from "@/components/Node/utils/collectResources
 
 import type { FlowData, Step } from "./schema";
 
+export const formatFlagValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+};
+
 // FlowData ツリーから、フィールドエディタ (ResourceSelector / FlagValueSelector /
 // DynamicValueInput) が候補表示に使う TemplateResources を集める。
 // React Flow 版の collectResourcesBeforeNode の flowData 版。edit モードでは順序を厳密に
@@ -71,10 +78,42 @@ const collectFromStep = (step: Step, resources: TemplateResources): void => {
   }
 };
 
-export const collectResourcesFromFlow = (flow: FlowData): TemplateResources => {
+// gameFlags には edit モードでは Template.gameFlags (seed)、execute モードでは
+// GameSession.gameFlags (live) を渡す。フラグパネルで定義しただけのフラグも候補に載せる。
+export const collectResourcesFromFlow = (
+  flow: FlowData,
+  gameFlags?: Record<string, unknown>,
+): TemplateResources => {
   const resources: TemplateResources = { roles: [], channels: [], gameFlags: [] };
+  for (const [key, value] of Object.entries(gameFlags ?? {})) {
+    const k = key.trim();
+    if (k === "") continue;
+    const v = formatFlagValue(value).trim();
+    resources.gameFlags.push({ key: k, values: v ? [v] : [], sourceNodeId: "game-flags" });
+  }
   for (const section of flow.sections) {
     for (const step of section.steps) collectFromStep(step, resources);
   }
   return resources;
+};
+
+// ---- フィールドエディタ向けの候補リスト (PURE / unit-tested) ----
+
+export const collectFlagKeyOptions = (resources: TemplateResources): string[] => [
+  ...new Set(resources.gameFlags.map((f) => f.key.trim()).filter((k) => k !== "")),
+];
+
+export const collectFlagValueOptions = (
+  resources: TemplateResources,
+  flagKey: string,
+): string[] => {
+  const key = flagKey.trim();
+  if (key === "") return [];
+  return [
+    ...new Set(
+      resources.gameFlags
+        .filter((f) => f.key.trim() === key)
+        .flatMap((f) => f.values.map((v) => v.trim()).filter((v) => v !== "")),
+    ),
+  ];
 };

@@ -20,10 +20,15 @@ import { RunnerToolPanel } from "./RunnerToolPanel";
 export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
   const selectedStepId = useRunnerStore((state) => state.selectedStepId);
   const flowData = useRunnerStore((state) => state.flowData);
+  const gameFlags = useRunnerStore((state) => state.gameFlags);
   const updateStep = useRunnerStore((state) => state.updateStep);
   const runningStepId = useRunnerStore((state) => state.runningStepId);
 
-  const resources = useMemo(() => collectResourcesFromFlow(flowData), [flowData]);
+  // ライブの session gameFlags も候補に含める (edit モードの seed に対応)。
+  const resources = useMemo(
+    () => collectResourcesFromFlow(flowData, gameFlags),
+    [flowData, gameFlags],
+  );
   const step = selectedStepId === null ? undefined : findStep(flowData, selectedStepId);
 
   if (step === undefined) {
