@@ -44,6 +44,29 @@ describe("editorStore", () => {
     expect(useEditorStore.getState().flowData.sections[0]?.steps[0]?.title).toBe("更新後");
   });
 
+  test("duplicateStep は複製を直後に挿入して選択する", () => {
+    useEditorStore
+      .getState()
+      .addStep("SetGameFlag", { container: sectionContainer("s1"), index: 0 });
+    const originalId = useEditorStore.getState().selectedStepId ?? "";
+    useEditorStore.getState().updateStep(originalId, { title: "元" });
+    useEditorStore.getState().duplicateStep(originalId);
+    const state = useEditorStore.getState();
+    const steps = state.flowData.sections[0]?.steps ?? [];
+    expect(steps).toHaveLength(2);
+    expect(steps[0]?.id).toBe(originalId);
+    expect(steps[1]?.id).not.toBe(originalId);
+    expect(steps[1]?.title).toBe("元");
+    expect(state.selectedStepId).toBe(steps[1]?.id ?? "");
+  });
+
+  test("duplicateStep は存在しない id を無視する", () => {
+    useEditorStore.getState().duplicateStep("zzz");
+    const state = useEditorStore.getState();
+    expect(state.flowData.sections[0]?.steps).toHaveLength(0);
+    expect(state.selectedStepId).toBeNull();
+  });
+
   test("removeStep は選択を解除する", () => {
     useEditorStore
       .getState()

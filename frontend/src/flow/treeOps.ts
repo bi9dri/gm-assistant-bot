@@ -2,6 +2,8 @@ import { produce } from "immer";
 
 import type { FlowData, Step } from "./schema";
 
+import { generateId } from "./ids";
+
 // FlowData のツリー (Section[] > Step[]、Branch は branches[].steps に再帰) を
 // 純粋に変換するヘルパ群。**ツリーが再帰的であることを知るのはこのファイルだけ**で、
 // store / コンポーネントは名前付きヘルパを呼ぶだけにする (docs: step-list-editor-architecture D4)。
@@ -146,6 +148,35 @@ export const removeStep = (flow: FlowData, id: string): FlowData =>
     const located = locateStep(draft as FlowData, id);
     if (located !== undefined) located.parentSteps.splice(located.index, 1);
   });
+
+// 複製自身に加え、Branch の枝 (arm) と入れ子ステップの id もすべて採番し直す。
+// id が重複すると locateStep の検索や dnd-kit の sortable id が最初の 1 件しか
+// 指せなくなるため。実行痕跡 (executedAt / executedBranchIds) も一緒に消す。
+const reassignIds = (step: Step): void => {
+  step.id = generateId();
+  step.executedAt = undefined;
+  if (step.type !== "Branch") return;
+  step.executedBranchIds = undefined;
+  for (const arm of step.branches) {
+    arm.id = generateId();
+    for (const child of arm.steps) reassignIds(child);
+  }
+};
+
+export const duplicateStep = (
+  flow: FlowData,
+  id: string,
+): { flowData: FlowData; newStep: Step | undefined } => {
+  const located = locateStep(flow, id);
+  if (located === undefined) return { flowData: flow, newStep: undefined };
+  const newStep = structuredClone(located.step);
+  reassignIds(newStep);
+  const flowData = produce(flow, (draft) => {
+    const draftLocated = locateStep(draft as FlowData, id);
+    draftLocated?.parentSteps.splice(draftLocated.index + 1, 0, newStep);
+  });
+  return { flowData, newStep };
+};
 
 // dnd-kit の arrayMove と同じ意味論: 対象を取り除いた後の配列に to.index で挿入する。
 export const moveStep = (flow: FlowData, id: string, to: StepLocation): FlowData =>

@@ -6,6 +6,7 @@ import {
   clearDescendantExecution,
   collectDescendantStepIds,
   collectSteps,
+  duplicateStep,
   findSection,
   findStep,
   insertSection,
@@ -210,6 +211,54 @@ describe("removeStep", () => {
   test("存在しない id は no-op", () => {
     const flow = makeFlow();
     expect(removeStep(flow, "zzz")).toBe(flow);
+  });
+});
+
+describe("duplicateStep", () => {
+  test("元の直後に新 id で挿入し、内容は同じ", () => {
+    const { flowData, newStep } = duplicateStep(makeFlow(), "a");
+    expect(newStep).toBeDefined();
+    expect(stepIds(flowData, "s1")).toEqual(["a", newStep?.id ?? "", "b"]);
+    expect(newStep?.id).not.toBe("a");
+    expect(newStep?.title).toBe("a");
+    expect(newStep?.type).toBe("SetGameFlag");
+  });
+
+  test("分岐枝の中のステップも直後に複製できる", () => {
+    const { flowData, newStep } = duplicateStep(makeFlow(), "c");
+    expect(armIds(flowData, "arm1")).toEqual(["c", newStep?.id ?? ""]);
+  });
+
+  test("Branch は枝と入れ子ステップの id もすべて採番し直す", () => {
+    const { flowData, newStep } = duplicateStep(makeFlow(), "br");
+    if (newStep?.type !== "Branch") throw new Error("Branch を複製したはず");
+    expect(newStep.branches.map((arm) => arm.id)).not.toContain("arm1");
+    expect(newStep.branches.map((arm) => arm.id)).not.toContain("arm2");
+    const allIds = collectSteps(flowData).map((step) => step.id);
+    expect(new Set(allIds).size).toBe(allIds.length); // ツリー全体で id 重複なし
+    expect(newStep.branches[0]?.steps[0]?.title).toBe("c"); // 内容は保たれる
+  });
+
+  test("実行痕跡 (executedAt / executedBranchIds) は消える", () => {
+    const flow = makeFlow();
+    const br = findStep(flow, "br");
+    if (br?.type !== "Branch") throw new Error("unreachable");
+    br.executedAt = new Date("2026-01-01T00:00:00Z");
+    br.executedBranchIds = ["arm1"];
+    const armStep = br.branches[0]?.steps[0];
+    if (armStep !== undefined) armStep.executedAt = new Date("2026-01-01T00:00:00Z");
+    const { newStep } = duplicateStep(flow, "br");
+    if (newStep?.type !== "Branch") throw new Error("unreachable");
+    expect(newStep.executedAt).toBeUndefined();
+    expect(newStep.executedBranchIds).toBeUndefined();
+    expect(newStep.branches[0]?.steps[0]?.executedAt).toBeUndefined();
+  });
+
+  test("存在しない id は no-op", () => {
+    const flow = makeFlow();
+    const { flowData, newStep } = duplicateStep(flow, "zzz");
+    expect(flowData).toBe(flow);
+    expect(newStep).toBeUndefined();
   });
 });
 

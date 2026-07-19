@@ -58,6 +58,7 @@ interface StepRowProps {
 const StepRow = memo(
   ({ step, container, index }: StepRowProps) => {
     const selectStep = useEditorStore((state) => state.selectStep);
+    const duplicateStep = useEditorStore((state) => state.duplicateStep);
     const removeStep = useEditorStore((state) => state.removeStep);
     const selectedStepId = useEditorStore((state) => state.selectedStepId);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -87,6 +88,17 @@ const StepRow = memo(
             ⠿
           </button>
           <StepRowContent step={step} />
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs"
+            aria-label="ステップを複製"
+            onClick={(event) => {
+              event.stopPropagation();
+              duplicateStep(step.id);
+            }}
+          >
+            ⧉
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-xs"
