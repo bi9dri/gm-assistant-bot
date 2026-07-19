@@ -1,9 +1,6 @@
 import { useId } from "react";
 
-// 候補からの選択と自由入力を両立するコンボボックス (input + datalist)。
-// PortaledSelect (選択のみ) と違い、候補に無い新しい値も入力できる。
 // datalist のポップアップはブラウザネイティブ UI のため CSS transform の影響を受けない。
-
 interface DatalistInputProps {
   value: string;
   onChange: (value: string) => void;

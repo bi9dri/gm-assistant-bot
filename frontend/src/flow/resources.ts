@@ -2,17 +2,12 @@ import type { TemplateResources } from "@/components/Node/utils/collectResources
 
 import type { FlowData, Step } from "./schema";
 
-// gameFlags (Template seed / GameSession live) の値は z.any() なので unknown。
-// 表示・候補用に安全に文字列化する。
 export const formatFlagValue = (value: unknown): string => {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return JSON.stringify(value);
 };
-
-// フラグパネル由来のフラグ (ステップ以外) を示す sourceNodeId。
-const GAME_FLAGS_SOURCE_ID = "game-flags";
 
 // FlowData ツリーから、フィールドエディタ (ResourceSelector / FlagValueSelector /
 // DynamicValueInput) が候補表示に使う TemplateResources を集める。
@@ -94,7 +89,7 @@ export const collectResourcesFromFlow = (
     const k = key.trim();
     if (k === "") continue;
     const v = formatFlagValue(value).trim();
-    resources.gameFlags.push({ key: k, values: v ? [v] : [], sourceNodeId: GAME_FLAGS_SOURCE_ID });
+    resources.gameFlags.push({ key: k, values: v ? [v] : [], sourceNodeId: "game-flags" });
   }
   for (const section of flow.sections) {
     for (const step of section.steps) collectFromStep(step, resources);
@@ -104,17 +99,9 @@ export const collectResourcesFromFlow = (
 
 // ---- フィールドエディタ向けの候補リスト (PURE / unit-tested) ----
 
-export const collectFlagKeyOptions = (resources: TemplateResources): string[] => {
-  const seen = new Set<string>();
-  const options: string[] = [];
-  for (const flag of resources.gameFlags) {
-    const key = flag.key.trim();
-    if (key === "" || seen.has(key)) continue;
-    seen.add(key);
-    options.push(key);
-  }
-  return options;
-};
+export const collectFlagKeyOptions = (resources: TemplateResources): string[] => [
+  ...new Set(resources.gameFlags.map((f) => f.key.trim()).filter((k) => k !== "")),
+];
 
 export const collectFlagValueOptions = (
   resources: TemplateResources,
@@ -122,16 +109,11 @@ export const collectFlagValueOptions = (
 ): string[] => {
   const key = flagKey.trim();
   if (key === "") return [];
-  const seen = new Set<string>();
-  const options: string[] = [];
-  for (const flag of resources.gameFlags) {
-    if (flag.key.trim() !== key) continue;
-    for (const rawValue of flag.values) {
-      const value = rawValue.trim();
-      if (value === "" || seen.has(value)) continue;
-      seen.add(value);
-      options.push(value);
-    }
-  }
-  return options;
+  return [
+    ...new Set(
+      resources.gameFlags
+        .filter((f) => f.key.trim() === key)
+        .flatMap((f) => f.values.map((v) => v.trim()).filter((v) => v !== "")),
+    ),
+  ];
 };
