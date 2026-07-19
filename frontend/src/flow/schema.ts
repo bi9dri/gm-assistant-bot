@@ -126,6 +126,9 @@ const SetGameFlagStepSchema = StepBaseSchema.extend({
   type: z.literal("SetGameFlag"),
   flagKey: z.string().trim(),
   flagValue: z.string().trim(),
+  // edit モードで用意する実行時の選択肢。空なら execute モードは自由入力のまま。
+  flagKeyOptions: z.array(z.string().trim()).default([]),
+  flagValueOptions: z.array(z.string().trim()).default([]),
 });
 
 // ---- ツール系ステップ (Discord 操作を伴わないフラグ操作 UI) ----

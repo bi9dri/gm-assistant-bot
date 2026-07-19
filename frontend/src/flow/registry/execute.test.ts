@@ -364,7 +364,16 @@ describe("SetGameFlag.execute", () => {
   test("フラグを書き込む", async () => {
     const { ctx, state } = createFakeContext();
     const result = await run(
-      { id: "s", type: "SetGameFlag", title: "", ...base, flagKey: "phase", flagValue: "day" },
+      {
+        id: "s",
+        type: "SetGameFlag",
+        title: "",
+        ...base,
+        flagKey: "phase",
+        flagValue: "day",
+        flagKeyOptions: [],
+        flagValueOptions: [],
+      },
       ctx,
     );
     expect(result.status).toBe("success");
@@ -374,7 +383,16 @@ describe("SetGameFlag.execute", () => {
   test("空キーは error", async () => {
     const { ctx } = createFakeContext();
     const result = await run(
-      { id: "s", type: "SetGameFlag", title: "", ...base, flagKey: "  ", flagValue: "x" },
+      {
+        id: "s",
+        type: "SetGameFlag",
+        title: "",
+        ...base,
+        flagKey: "  ",
+        flagValue: "x",
+        flagKeyOptions: [],
+        flagValueOptions: [],
+      },
       ctx,
     );
     expect(result.status).toBe("error");

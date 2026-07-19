@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { SetGameFlagStep } from "../schema";
 
+import { SetGameFlagStepSchema } from "../schema";
 import { SetGameFlagEntry } from "./SetGameFlag";
 
 const makeStep = (overrides: Partial<SetGameFlagStep> = {}): SetGameFlagStep => ({
@@ -12,7 +13,25 @@ const makeStep = (overrides: Partial<SetGameFlagStep> = {}): SetGameFlagStep => 
   autoAdvance: false,
   flagKey: "",
   flagValue: "",
+  flagKeyOptions: [],
+  flagValueOptions: [],
   ...overrides,
+});
+
+describe("SetGameFlagStepSchema", () => {
+  test("選択肢フィールドを持たない旧データは空配列で補完される", () => {
+    const parsed = SetGameFlagStepSchema.parse({
+      id: "step-1",
+      type: "SetGameFlag",
+      title: "ゲームフラグを設定する",
+      memo: "",
+      autoAdvance: false,
+      flagKey: "phase",
+      flagValue: "day",
+    });
+    expect(parsed.flagKeyOptions).toEqual([]);
+    expect(parsed.flagValueOptions).toEqual([]);
+  });
 });
 
 describe("SetGameFlagEntry.summary", () => {

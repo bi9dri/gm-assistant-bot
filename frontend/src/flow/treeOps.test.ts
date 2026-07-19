@@ -26,6 +26,8 @@ const leaf = (id: string, title = id): Step => ({
   autoAdvance: false,
   flagKey: "k",
   flagValue: "v",
+  flagKeyOptions: [],
+  flagValueOptions: [],
 });
 
 const branch = (id: string, arms: Array<{ id: string; label: string; steps: Step[] }>): Step => ({
