@@ -87,6 +87,8 @@ describe("editorStore", () => {
                         autoAdvance: false,
                         flagKey: "k",
                         flagValue: "v",
+                        flagKeyOptions: [],
+                        flagValueOptions: [],
                       },
                     ],
                   },

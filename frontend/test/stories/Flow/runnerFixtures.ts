@@ -39,6 +39,8 @@ export const runnerFlow: FlowData = {
           autoAdvance: false,
           flagKey: "phase",
           flagValue: "day",
+          flagKeyOptions: [],
+          flagValueOptions: [],
         },
       ],
     },

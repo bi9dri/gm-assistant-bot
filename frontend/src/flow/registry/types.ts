@@ -9,6 +9,8 @@ import type { Step } from "../schema";
 export interface DetailPanelProps<S extends Step = Step> {
   step: S;
   onChange: (patch: Partial<S>) => void;
+  // 省略時は "edit"。execute モードで UI を変えたいパネルだけが参照する。
+  mode?: "edit" | "execute";
 }
 
 // ステップタイプ 1 つ分の登録エントリ (docs: step-list-editor-architecture D1)。

@@ -45,6 +45,8 @@ const flow: FlowData = {
           autoAdvance: false,
           flagKey: "phase",
           flagValue: "night",
+          flagKeyOptions: [],
+          flagValueOptions: [],
         },
         {
           id: "ct1",
@@ -184,6 +186,8 @@ const autoFlow: FlowData = {
                   autoAdvance: false,
                   flagKey: "innerFlag",
                   flagValue: "1",
+                  flagKeyOptions: [],
+                  flagValueOptions: [],
                 },
               ],
             },

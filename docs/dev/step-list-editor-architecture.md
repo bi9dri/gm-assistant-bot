@@ -97,7 +97,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   schema: z.ZodType<S>;                      // re-export the per-type schema from flow/schema.ts
   defaults: () => Omit<S, "id">;             // for "add step" (replaces the addNode switch)
   summary: (step: S) => string;              // PURE. one-line list-row text. unit-tested.
-  DetailPanel: (props: { step: S; onChange: (patch: Partial<S>) => void }) => JSX.Element;
+  DetailPanel: (props: { step: S; onChange: (patch: Partial<S>) => void; mode?: "edit" | "execute" }) => JSX.Element;
   category: "action" | "tool" | "branch";    // tool = flag-only UI, no Discord call (see Tools)
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>; // PURE-ish. omit for tools.
 }
@@ -116,7 +116,9 @@ Rules:
   This is the autonomous-verification lever: both are unit-tested without rendering.
 - `DetailPanel` is a dumb controlled component: it receives `step` + `onChange(patch)` and
   reuses existing field editors (D2). It does **not** touch the store directly — the host
-  (`DetailPanel.tsx`) wires `onChange` to `treeOps.updateStepById`.
+  (`DetailPanel.tsx`) wires `onChange` to `treeOps.updateStepById`. The runner host passes
+  `mode="execute"` (default `"edit"`); a panel may branch on it to swap authoring UI for a
+  runtime picker (e.g. `SetGameFlag` renders its prepared options as a `<select>`).
 - Branch is just another entry; its `DetailPanel` renders nested `<StepList>` per arm and its
   `execute()` returns which arm(s) to descend into (the engine handles recursion — see Engine).
 - **Tools** (`Kanban`, `Counter`, `ShuffleAssign`, `RandomSelect`, `RecordCombination`) have

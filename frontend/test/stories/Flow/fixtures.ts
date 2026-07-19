@@ -35,6 +35,8 @@ export const sampleFlow: FlowData = {
           autoAdvance: false,
           flagKey: "phase",
           flagValue: "day",
+          flagKeyOptions: [],
+          flagValueOptions: [],
         },
       ],
     },

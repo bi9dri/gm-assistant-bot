@@ -83,7 +83,7 @@ export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
             <div className="divider my-0" />
             {/* 実行済み action/branch は read-only。tool は常に操作可能。 */}
             <fieldset disabled={isExecuted && !isTool} className="contents">
-              <StepDetailPanel step={step} onChange={handleChange} />
+              <StepDetailPanel step={step} onChange={handleChange} mode="execute" />
             </fieldset>
           </>
         )}
