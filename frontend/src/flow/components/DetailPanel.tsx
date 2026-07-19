@@ -14,10 +14,15 @@ import { findStep } from "../treeOps";
 export const DetailPanel = () => {
   const selectedStepId = useEditorStore((state) => state.selectedStepId);
   const flowData = useEditorStore((state) => state.flowData);
+  const gameFlags = useEditorStore((state) => state.gameFlags);
   const updateStep = useEditorStore((state) => state.updateStep);
 
-  // フィールドエディタ (ResourceSelector 等) が候補表示に使うリソースを flowData から供給する。
-  const resources = useMemo(() => collectResourcesFromFlow(flowData), [flowData]);
+  // フィールドエディタ (ResourceSelector 等) が候補表示に使うリソースを flowData と
+  // seed gameFlags (フラグパネル) から供給する。
+  const resources = useMemo(
+    () => collectResourcesFromFlow(flowData, gameFlags),
+    [flowData, gameFlags],
+  );
   const step = selectedStepId === null ? undefined : findStep(flowData, selectedStepId);
 
   if (step === undefined) {

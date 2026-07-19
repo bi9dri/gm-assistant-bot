@@ -1,14 +1,7 @@
 import { useState } from "react";
 
+import { formatFlagValue } from "../resources";
 import { useEditorStore } from "../store/editorStore";
-
-// gameFlags の値は z.any() なので unknown。表示用に安全に文字列化する。
-const formatFlagValue = (value: unknown): string => {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-};
 
 // D3: 常駐するゲームフラグパネル (右カラム)。
 // edit モードでは Template.gameFlags (セッション開始時の seed) を編集する。

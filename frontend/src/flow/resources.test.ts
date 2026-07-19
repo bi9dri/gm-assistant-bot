@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 
 import type { FlowData } from "./schema";
 
-import { collectResourcesFromFlow } from "./resources";
+import {
+  collectFlagKeyOptions,
+  collectFlagValueOptions,
+  collectResourcesFromFlow,
+  formatFlagValue,
+} from "./resources";
 
 const flow: FlowData = {
   version: 1,
@@ -199,5 +204,68 @@ describe("collectResourcesFromFlow (auto モード分岐)", () => {
 
   test("auto モードでも枝内のステップは再帰的に収集する", () => {
     expect(resources.gameFlags.some((flag) => flag.key === "innerFlag")).toBe(true);
+  });
+});
+
+describe("collectResourcesFromFlow (gameFlags マージ)", () => {
+  const resources = collectResourcesFromFlow(flow, {
+    seedOnly: "初期値",
+    phase: "day",
+    count: 3,
+    "  ": "空白キーはスキップ",
+    empty: "",
+  });
+
+  test("フラグパネル由来のキーを候補に含める", () => {
+    expect(resources.gameFlags.some((flag) => flag.key === "seedOnly")).toBe(true);
+  });
+
+  test("非文字列の値も文字列化して values に載せる", () => {
+    expect(resources.gameFlags.find((flag) => flag.key === "count")?.values).toEqual(["3"]);
+  });
+
+  test("空白キーはスキップ・空値は values に載せない", () => {
+    expect(resources.gameFlags.some((flag) => flag.key.trim() === "")).toBe(false);
+    expect(resources.gameFlags.find((flag) => flag.key === "empty")?.values).toEqual([]);
+  });
+
+  test("ステップ由来のフラグと共存する (phase は seed とステップの両方から)", () => {
+    expect(resources.gameFlags.filter((flag) => flag.key === "phase")).toHaveLength(2);
+  });
+});
+
+describe("collectFlagKeyOptions / collectFlagValueOptions", () => {
+  const resources = collectResourcesFromFlow(flow, { phase: "day" });
+
+  test("キー候補は重複を除いて列挙する", () => {
+    const options = collectFlagKeyOptions(resources);
+    expect(options.filter((key) => key === "phase")).toHaveLength(1);
+    expect(options.sort()).toEqual(
+      ["assign_t1", "assign_t2", "phase", "round", "vote", "winner"].sort(),
+    );
+  });
+
+  test("値候補は指定キーの値のみを重複を除いて列挙する", () => {
+    expect(collectFlagValueOptions(resources, "phase").sort()).toEqual(["day", "night"].sort());
+    expect(collectFlagValueOptions(resources, "vote")).toEqual(["賛成", "反対"]);
+  });
+
+  test("キー未入力・未知キーの値候補は空", () => {
+    expect(collectFlagValueOptions(resources, "")).toEqual([]);
+    expect(collectFlagValueOptions(resources, "unknown")).toEqual([]);
+  });
+});
+
+describe("formatFlagValue", () => {
+  test("null / undefined は空文字列", () => {
+    expect(formatFlagValue(null)).toBe("");
+    expect(formatFlagValue(undefined)).toBe("");
+  });
+
+  test("プリミティブは String 化・それ以外は JSON 化", () => {
+    expect(formatFlagValue("a")).toBe("a");
+    expect(formatFlagValue(3)).toBe("3");
+    expect(formatFlagValue(true)).toBe("true");
+    expect(formatFlagValue({ a: 1 })).toBe('{"a":1}');
   });
 });
