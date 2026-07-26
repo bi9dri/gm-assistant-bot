@@ -2,10 +2,9 @@ import { describe, expect, test } from "bun:test";
 
 import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
 
+import { createFakeContext } from "../engine/fakeContext";
 import type { ExecuteContext } from "../engine/types";
 import type { Step } from "../schema";
-
-import { createFakeContext } from "../engine/fakeContext";
 import { getEntry } from "./index";
 
 // 各ステップタイプの execute() を、インメモリ ExecuteContext (createFakeContext) で検証する。

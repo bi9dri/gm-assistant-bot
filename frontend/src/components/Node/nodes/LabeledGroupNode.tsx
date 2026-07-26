@@ -1,6 +1,5 @@
-import type { ComponentProps, ReactNode } from "react";
-
 import { type Node, type NodeProps, NodeResizer } from "@xyflow/react";
+import type { ComponentProps, ReactNode } from "react";
 import z from "zod";
 
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";

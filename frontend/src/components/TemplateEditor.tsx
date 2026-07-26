@@ -12,13 +12,13 @@ import {
   Panel,
   useReactFlow,
 } from "@xyflow/react";
+
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
-import type { DiscordBotData } from "@/db";
-
 import { createNodeTypes, NodeExecutionContext, TemplateEditorContext } from "@/components/Node";
 import { SessionResourcePanel } from "@/components/SessionResourcePanel";
+import type { DiscordBotData } from "@/db";
 import { useFileExistenceValidation } from "@/hooks/useFileExistenceValidation";
 import { useTemplateEditorStore, type FlowNode } from "@/stores/templateEditorStore";
 

@@ -1,5 +1,4 @@
 import type { ConditionNode, GroupNode, RuleNode } from "@/components/Node/utils/evaluateCondition";
-
 import { FlagValueSelector } from "@/components/Node/utils/FlagValueSelector";
 import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 

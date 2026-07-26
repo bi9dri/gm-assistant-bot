@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import type { FlowData } from "@/flow/schema";
-
 import { Template } from "@/db";
+import type { FlowData } from "@/flow/schema";
 import { TemplateWizard } from "@/flow/wizard/TemplateWizard";
 import { useToast } from "@/toast/ToastProvider";
 

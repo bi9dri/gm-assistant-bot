@@ -1,6 +1,5 @@
-import type { Step } from "../schema";
-
 import { getEntry } from "../registry";
+import type { Step } from "../schema";
 
 // GM 入力なしに実行できるステップか。execute() を持ち、かつ select 分岐でないこと
 // (select は枝選択が必要)。tool は execute() を持たないため false。

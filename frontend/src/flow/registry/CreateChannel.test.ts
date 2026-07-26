@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CreateChannelStep } from "../schema";
-
 import { CreateChannelEntry } from "./CreateChannel";
 
 const channel = (overrides: Partial<CreateChannelStep["channels"][number]> = {}) => ({

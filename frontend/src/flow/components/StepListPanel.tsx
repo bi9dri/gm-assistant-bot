@@ -17,9 +17,8 @@ import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import type { FlowData } from "../schema";
-import type { Section } from "../treeOps";
-
 import { useEditorStore } from "../store/editorStore";
+import type { Section } from "../treeOps";
 import { findStep } from "../treeOps";
 import { AddStepMenu } from "./AddStepMenu";
 import { type DragData, dropLocation, getDragData, sameContainer } from "./dnd";

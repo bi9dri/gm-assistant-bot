@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { DeleteChannelStep } from "../schema";
-
 import { DeleteChannelEntry } from "./DeleteChannel";
 
 const step = (overrides: Partial<DeleteChannelStep> = {}): DeleteChannelStep => ({

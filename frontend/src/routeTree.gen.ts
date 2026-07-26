@@ -8,270 +8,270 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as TemplateIndexRouteImport } from './routes/template/index'
-import { Route as SessionIndexRouteImport } from './routes/session/index'
-import { Route as BotIndexRouteImport } from './routes/bot/index'
-import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
-import { Route as TemplateNewRouteImport } from './routes/template/new'
-import { Route as SessionNewRouteImport } from './routes/session/new'
-import { Route as BotNewRouteImport } from './routes/bot/new'
-import { Route as TemplateIdIndexRouteImport } from './routes/template/$id/index'
-import { Route as SessionIdIndexRouteImport } from './routes/session/$id/index'
-import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps'
-import { Route as SessionIdStepsRouteImport } from './routes/session/$id/steps'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as BotIndexRouteImport } from "./routes/bot/index";
+import { Route as BotNewRouteImport } from "./routes/bot/new";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as SessionIdIndexRouteImport } from "./routes/session/$id/index";
+import { Route as SessionIdStepsRouteImport } from "./routes/session/$id/steps";
+import { Route as SessionIndexRouteImport } from "./routes/session/index";
+import { Route as SessionNewRouteImport } from "./routes/session/new";
+import { Route as TemplateIdIndexRouteImport } from "./routes/template/$id/index";
+import { Route as TemplateIdStepsRouteImport } from "./routes/template/$id/steps";
+import { Route as TemplateIndexRouteImport } from "./routes/template/index";
+import { Route as TemplateNewRouteImport } from "./routes/template/new";
+import { Route as TemplateWizardRouteImport } from "./routes/template/wizard";
 
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateIndexRoute = TemplateIndexRouteImport.update({
-  id: '/template/',
-  path: '/template/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SessionIndexRoute = SessionIndexRouteImport.update({
-  id: '/session/',
-  path: '/session/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const BotIndexRoute = BotIndexRouteImport.update({
-  id: '/bot/',
-  path: '/bot/',
+  id: "/bot/",
+  path: "/bot/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateWizardRoute = TemplateWizardRouteImport.update({
-  id: '/template/wizard',
-  path: '/template/wizard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateNewRoute = TemplateNewRouteImport.update({
-  id: '/template/new',
-  path: '/template/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SessionNewRoute = SessionNewRouteImport.update({
-  id: '/session/new',
-  path: '/session/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const BotNewRoute = BotNewRouteImport.update({
-  id: '/bot/new',
-  path: '/bot/new',
+  id: "/bot/new",
+  path: "/bot/new",
   getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
-  id: '/template/$id/',
-  path: '/template/$id/',
+} as any);
+const SessionIndexRoute = SessionIndexRouteImport.update({
+  id: "/session/",
+  path: "/session/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const SessionNewRoute = SessionNewRouteImport.update({
+  id: "/session/new",
+  path: "/session/new",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TemplateIndexRoute = TemplateIndexRouteImport.update({
+  id: "/template/",
+  path: "/template/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TemplateNewRoute = TemplateNewRouteImport.update({
+  id: "/template/new",
+  path: "/template/new",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TemplateWizardRoute = TemplateWizardRouteImport.update({
+  id: "/template/wizard",
+  path: "/template/wizard",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const SessionIdIndexRoute = SessionIdIndexRouteImport.update({
-  id: '/session/$id/',
-  path: '/session/$id/',
+  id: "/session/$id/",
+  path: "/session/$id/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
-  id: '/template/$id/steps',
-  path: '/template/$id/steps',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SessionIdStepsRoute = SessionIdStepsRouteImport.update({
-  id: '/session/$id/steps',
-  path: '/session/$id/steps',
+  id: "/session/$id/steps",
+  path: "/session/$id/steps",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
+  id: "/template/$id/",
+  path: "/template/$id/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
+  id: "/template/$id/steps",
+  path: "/template/$id/steps",
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/bot/new': typeof BotNewRoute
-  '/session/new': typeof SessionNewRoute
-  '/template/new': typeof TemplateNewRoute
-  '/template/wizard': typeof TemplateWizardRoute
-  '/bot/': typeof BotIndexRoute
-  '/session/': typeof SessionIndexRoute
-  '/template/': typeof TemplateIndexRoute
-  '/session/$id/steps': typeof SessionIdStepsRoute
-  '/template/$id/steps': typeof TemplateIdStepsRoute
-  '/session/$id/': typeof SessionIdIndexRoute
-  '/template/$id/': typeof TemplateIdIndexRoute
+  "/": typeof IndexRoute;
+  "/bot/new": typeof BotNewRoute;
+  "/session/new": typeof SessionNewRoute;
+  "/template/new": typeof TemplateNewRoute;
+  "/template/wizard": typeof TemplateWizardRoute;
+  "/bot/": typeof BotIndexRoute;
+  "/session/": typeof SessionIndexRoute;
+  "/template/": typeof TemplateIndexRoute;
+  "/session/$id/steps": typeof SessionIdStepsRoute;
+  "/template/$id/steps": typeof TemplateIdStepsRoute;
+  "/session/$id/": typeof SessionIdIndexRoute;
+  "/template/$id/": typeof TemplateIdIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/bot/new': typeof BotNewRoute
-  '/session/new': typeof SessionNewRoute
-  '/template/new': typeof TemplateNewRoute
-  '/template/wizard': typeof TemplateWizardRoute
-  '/bot': typeof BotIndexRoute
-  '/session': typeof SessionIndexRoute
-  '/template': typeof TemplateIndexRoute
-  '/session/$id/steps': typeof SessionIdStepsRoute
-  '/template/$id/steps': typeof TemplateIdStepsRoute
-  '/session/$id': typeof SessionIdIndexRoute
-  '/template/$id': typeof TemplateIdIndexRoute
+  "/": typeof IndexRoute;
+  "/bot/new": typeof BotNewRoute;
+  "/session/new": typeof SessionNewRoute;
+  "/template/new": typeof TemplateNewRoute;
+  "/template/wizard": typeof TemplateWizardRoute;
+  "/bot": typeof BotIndexRoute;
+  "/session": typeof SessionIndexRoute;
+  "/template": typeof TemplateIndexRoute;
+  "/session/$id/steps": typeof SessionIdStepsRoute;
+  "/template/$id/steps": typeof TemplateIdStepsRoute;
+  "/session/$id": typeof SessionIdIndexRoute;
+  "/template/$id": typeof TemplateIdIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/bot/new': typeof BotNewRoute
-  '/session/new': typeof SessionNewRoute
-  '/template/new': typeof TemplateNewRoute
-  '/template/wizard': typeof TemplateWizardRoute
-  '/bot/': typeof BotIndexRoute
-  '/session/': typeof SessionIndexRoute
-  '/template/': typeof TemplateIndexRoute
-  '/session/$id/steps': typeof SessionIdStepsRoute
-  '/template/$id/steps': typeof TemplateIdStepsRoute
-  '/session/$id/': typeof SessionIdIndexRoute
-  '/template/$id/': typeof TemplateIdIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/bot/new": typeof BotNewRoute;
+  "/session/new": typeof SessionNewRoute;
+  "/template/new": typeof TemplateNewRoute;
+  "/template/wizard": typeof TemplateWizardRoute;
+  "/bot/": typeof BotIndexRoute;
+  "/session/": typeof SessionIndexRoute;
+  "/template/": typeof TemplateIndexRoute;
+  "/session/$id/steps": typeof SessionIdStepsRoute;
+  "/template/$id/steps": typeof TemplateIdStepsRoute;
+  "/session/$id/": typeof SessionIdIndexRoute;
+  "/template/$id/": typeof TemplateIdIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/bot/new'
-    | '/session/new'
-    | '/template/new'
-    | '/template/wizard'
-    | '/bot/'
-    | '/session/'
-    | '/template/'
-    | '/session/$id/steps'
-    | '/template/$id/steps'
-    | '/session/$id/'
-    | '/template/$id/'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/bot/new"
+    | "/session/new"
+    | "/template/new"
+    | "/template/wizard"
+    | "/bot/"
+    | "/session/"
+    | "/template/"
+    | "/session/$id/steps"
+    | "/template/$id/steps"
+    | "/session/$id/"
+    | "/template/$id/";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/bot/new'
-    | '/session/new'
-    | '/template/new'
-    | '/template/wizard'
-    | '/bot'
-    | '/session'
-    | '/template'
-    | '/session/$id/steps'
-    | '/template/$id/steps'
-    | '/session/$id'
-    | '/template/$id'
+    | "/"
+    | "/bot/new"
+    | "/session/new"
+    | "/template/new"
+    | "/template/wizard"
+    | "/bot"
+    | "/session"
+    | "/template"
+    | "/session/$id/steps"
+    | "/template/$id/steps"
+    | "/session/$id"
+    | "/template/$id";
   id:
-    | '__root__'
-    | '/'
-    | '/bot/new'
-    | '/session/new'
-    | '/template/new'
-    | '/template/wizard'
-    | '/bot/'
-    | '/session/'
-    | '/template/'
-    | '/session/$id/steps'
-    | '/template/$id/steps'
-    | '/session/$id/'
-    | '/template/$id/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/bot/new"
+    | "/session/new"
+    | "/template/new"
+    | "/template/wizard"
+    | "/bot/"
+    | "/session/"
+    | "/template/"
+    | "/session/$id/steps"
+    | "/template/$id/steps"
+    | "/session/$id/"
+    | "/template/$id/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  BotNewRoute: typeof BotNewRoute
-  SessionNewRoute: typeof SessionNewRoute
-  TemplateNewRoute: typeof TemplateNewRoute
-  TemplateWizardRoute: typeof TemplateWizardRoute
-  BotIndexRoute: typeof BotIndexRoute
-  SessionIndexRoute: typeof SessionIndexRoute
-  TemplateIndexRoute: typeof TemplateIndexRoute
-  SessionIdStepsRoute: typeof SessionIdStepsRoute
-  TemplateIdStepsRoute: typeof TemplateIdStepsRoute
-  SessionIdIndexRoute: typeof SessionIdIndexRoute
-  TemplateIdIndexRoute: typeof TemplateIdIndexRoute
+  IndexRoute: typeof IndexRoute;
+  BotNewRoute: typeof BotNewRoute;
+  SessionNewRoute: typeof SessionNewRoute;
+  TemplateNewRoute: typeof TemplateNewRoute;
+  TemplateWizardRoute: typeof TemplateWizardRoute;
+  BotIndexRoute: typeof BotIndexRoute;
+  SessionIndexRoute: typeof SessionIndexRoute;
+  TemplateIndexRoute: typeof TemplateIndexRoute;
+  SessionIdStepsRoute: typeof SessionIdStepsRoute;
+  TemplateIdStepsRoute: typeof TemplateIdStepsRoute;
+  SessionIdIndexRoute: typeof SessionIdIndexRoute;
+  TemplateIdIndexRoute: typeof TemplateIdIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/': {
-      id: '/template/'
-      path: '/template'
-      fullPath: '/template/'
-      preLoaderRoute: typeof TemplateIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/': {
-      id: '/session/'
-      path: '/session'
-      fullPath: '/session/'
-      preLoaderRoute: typeof SessionIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bot/': {
-      id: '/bot/'
-      path: '/bot'
-      fullPath: '/bot/'
-      preLoaderRoute: typeof BotIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/wizard': {
-      id: '/template/wizard'
-      path: '/template/wizard'
-      fullPath: '/template/wizard'
-      preLoaderRoute: typeof TemplateWizardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/new': {
-      id: '/template/new'
-      path: '/template/new'
-      fullPath: '/template/new'
-      preLoaderRoute: typeof TemplateNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/new': {
-      id: '/session/new'
-      path: '/session/new'
-      fullPath: '/session/new'
-      preLoaderRoute: typeof SessionNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bot/new': {
-      id: '/bot/new'
-      path: '/bot/new'
-      fullPath: '/bot/new'
-      preLoaderRoute: typeof BotNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/$id/': {
-      id: '/template/$id/'
-      path: '/template/$id'
-      fullPath: '/template/$id/'
-      preLoaderRoute: typeof TemplateIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/$id/': {
-      id: '/session/$id/'
-      path: '/session/$id'
-      fullPath: '/session/$id/'
-      preLoaderRoute: typeof SessionIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/$id/steps': {
-      id: '/template/$id/steps'
-      path: '/template/$id/steps'
-      fullPath: '/template/$id/steps'
-      preLoaderRoute: typeof TemplateIdStepsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/$id/steps': {
-      id: '/session/$id/steps'
-      path: '/session/$id/steps'
-      fullPath: '/session/$id/steps'
-      preLoaderRoute: typeof SessionIdStepsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/bot/": {
+      id: "/bot/";
+      path: "/bot";
+      fullPath: "/bot/";
+      preLoaderRoute: typeof BotIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/bot/new": {
+      id: "/bot/new";
+      path: "/bot/new";
+      fullPath: "/bot/new";
+      preLoaderRoute: typeof BotNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/session/": {
+      id: "/session/";
+      path: "/session";
+      fullPath: "/session/";
+      preLoaderRoute: typeof SessionIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/session/new": {
+      id: "/session/new";
+      path: "/session/new";
+      fullPath: "/session/new";
+      preLoaderRoute: typeof SessionNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/template/": {
+      id: "/template/";
+      path: "/template";
+      fullPath: "/template/";
+      preLoaderRoute: typeof TemplateIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/template/new": {
+      id: "/template/new";
+      path: "/template/new";
+      fullPath: "/template/new";
+      preLoaderRoute: typeof TemplateNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/template/wizard": {
+      id: "/template/wizard";
+      path: "/template/wizard";
+      fullPath: "/template/wizard";
+      preLoaderRoute: typeof TemplateWizardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/session/$id/": {
+      id: "/session/$id/";
+      path: "/session/$id";
+      fullPath: "/session/$id/";
+      preLoaderRoute: typeof SessionIdIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/session/$id/steps": {
+      id: "/session/$id/steps";
+      path: "/session/$id/steps";
+      fullPath: "/session/$id/steps";
+      preLoaderRoute: typeof SessionIdStepsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/template/$id/": {
+      id: "/template/$id/";
+      path: "/template/$id";
+      fullPath: "/template/$id/";
+      preLoaderRoute: typeof TemplateIdIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/template/$id/steps": {
+      id: "/template/$id/steps";
+      path: "/template/$id/steps";
+      fullPath: "/template/$id/steps";
+      preLoaderRoute: typeof TemplateIdStepsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -288,7 +288,7 @@ const rootRouteChildren: RootRouteChildren = {
   TemplateIdStepsRoute: TemplateIdStepsRoute,
   SessionIdIndexRoute: SessionIdIndexRoute,
   TemplateIdIndexRoute: TemplateIdIndexRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

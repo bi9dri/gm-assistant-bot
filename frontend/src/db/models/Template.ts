@@ -1,12 +1,10 @@
 import { Entity } from "dexie";
 
-import type { FlowData } from "@/flow/schema";
-
 import { reactFlowToFlowData } from "@/flow/migrate";
+import type { FlowData } from "@/flow/schema";
 import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
 
 import type { DB } from "../database";
-
 import { db } from "../instance";
 import {
   GameFlagsSchema,

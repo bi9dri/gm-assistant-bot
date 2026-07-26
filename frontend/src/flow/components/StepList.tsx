@@ -4,12 +4,11 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { memo } from "react";
 
-import type { Step } from "../schema";
-import type { StepContainer } from "../treeOps";
-
 import { getEntry } from "../registry";
 import { CATEGORY_CLASS, CATEGORY_LABEL } from "../registry/category";
+import type { Step } from "../schema";
 import { useEditorStore } from "../store/editorStore";
+import type { StepContainer } from "../treeOps";
 import { AddStepMenu } from "./AddStepMenu";
 import { type DragData, emptyContainerDropId, sameContainer } from "./dnd";
 

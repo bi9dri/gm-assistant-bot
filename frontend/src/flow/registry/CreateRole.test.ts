@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CreateRoleStep } from "../schema";
-
 import { CreateRoleEntry } from "./CreateRole";
 
 const makeStep = (overrides: Partial<CreateRoleStep> = {}): CreateRoleStep => ({
