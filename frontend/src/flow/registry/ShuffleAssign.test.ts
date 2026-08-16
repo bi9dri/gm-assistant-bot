@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ShuffleAssignStep } from "../schema";
-
 import { ShuffleAssignEntry } from "./ShuffleAssign";
 
 const makeStep = (overrides: Partial<ShuffleAssignStep> = {}): ShuffleAssignStep => ({

@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DiscordBotData, GameSession } from "@/db";
 
-import type { RunHandlers } from "./types";
-
 import { MessageAttachmentTargetProvider } from "../components/messageContext";
 import { FlowDataSchema } from "../schema";
 import { useRunnerStore } from "../store/runnerStore";
@@ -11,6 +9,7 @@ import { RunnerDetailPanel } from "./RunnerDetailPanel";
 import { RunnerFlagPanel } from "./RunnerFlagPanel";
 import { RunnerStepListPanel } from "./RunnerStepListPanel";
 import { RunnerToolDock } from "./RunnerToolDock";
+import type { RunHandlers } from "./types";
 import { useSessionRunner } from "./useSessionRunner";
 
 const AUTOSAVE_DEBOUNCE_MS = 500;

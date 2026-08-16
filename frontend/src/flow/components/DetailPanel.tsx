@@ -2,10 +2,9 @@ import { useMemo } from "react";
 
 import { TemplateResourcesOverrideProvider } from "@/components/Node/utils/useTemplateResources";
 
-import type { Step } from "../schema";
-
 import { getEntry } from "../registry";
 import { collectResourcesFromFlow } from "../resources";
+import type { Step } from "../schema";
 import { useEditorStore } from "../store/editorStore";
 import { findStep } from "../treeOps";
 

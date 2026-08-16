@@ -1,13 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FlowData } from "./schema";
-
 import {
   collectFlagKeyOptions,
   collectFlagValueOptions,
   collectResourcesFromFlow,
   formatFlagValue,
 } from "./resources";
+import type { FlowData } from "./schema";
 
 const flow: FlowData = {
   version: 1,

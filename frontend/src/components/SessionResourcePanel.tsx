@@ -2,9 +2,8 @@ import { Panel } from "@xyflow/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { LuFlag, LuHash, LuMic, LuPanelRight, LuUsers, LuX } from "react-icons/lu";
 
-import type { ChannelData, GameFlags, RoleData } from "@/db/schemas";
-
 import { db, GameSession } from "@/db";
+import type { ChannelData, GameFlags, RoleData } from "@/db/schemas";
 
 interface SessionResourcePanelProps {
   sessionId: number;

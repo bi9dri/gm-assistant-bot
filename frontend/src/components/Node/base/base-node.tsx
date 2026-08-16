@@ -1,9 +1,8 @@
+import { Handle, type HandleProps } from "@xyflow/react";
+import { clsx, type ClassValue } from "clsx";
 // https://reactflow.dev/ui/components/base-node
 // Copyright (c) 2019-2025 webkid GmbH
 import type { ComponentProps } from "react";
-
-import { Handle, type HandleProps } from "@xyflow/react";
-import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import type { NodeWidth } from "./base-schema";

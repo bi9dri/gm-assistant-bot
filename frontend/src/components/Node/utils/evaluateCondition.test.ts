@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
 import type { RuleNode, ConditionNode, Branch } from "./evaluateCondition";
-
 import {
   evaluateRule,
   evaluateConditionNode,

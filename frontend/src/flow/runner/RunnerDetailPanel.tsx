@@ -3,14 +3,13 @@ import { useMemo } from "react";
 
 import { TemplateResourcesOverrideProvider } from "@/components/Node/utils/useTemplateResources";
 
-import type { BranchStep, Step } from "../schema";
-import type { RunHandlers } from "./types";
-
 import { getEntry } from "../registry";
 import { collectResourcesFromFlow } from "../resources";
+import type { BranchStep, Step } from "../schema";
 import { useRunnerStore } from "../store/runnerStore";
 import { findStep } from "../treeOps";
 import { RunnerToolPanel } from "./RunnerToolPanel";
+import type { RunHandlers } from "./types";
 
 // 中央カラム (execute モード)。選択中ステップの実行操作 + 詳細を表示する。
 // - 実行済みステップは read-only (記録保護)。runnable なら [再実行] のみ許す。

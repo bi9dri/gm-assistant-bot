@@ -3,9 +3,8 @@ import { useMemo, useState } from "react";
 import { PortaledSelect } from "@/components/Node/utils/PortaledSelect";
 import { getFilteredTargetOptions } from "@/components/Node/utils/recordCombination";
 
-import type { KanbanStep, RecordCombinationStep, Step } from "../schema";
-
 import { generateId } from "../ids";
+import type { KanbanStep, RecordCombinationStep, Step } from "../schema";
 import { useRunnerStore } from "../store/runnerStore";
 import {
   counterNextValue,

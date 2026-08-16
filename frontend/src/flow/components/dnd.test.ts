@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { StepContainer } from "../treeOps";
-
 import { dropLocation, emptyContainerDropId, sameContainer } from "./dnd";
 
 const section = (sectionId: string): StepContainer => ({ kind: "section", sectionId });

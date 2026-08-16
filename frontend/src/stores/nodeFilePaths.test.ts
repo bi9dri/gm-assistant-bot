@@ -1,8 +1,7 @@
 import { describe, test, expect } from "bun:test";
 
-import type { FlowNode } from "./templateEditorStore";
-
 import { collectFilePathsFromNode, collectFilePathsFromNodes } from "./nodeFilePaths";
+import type { FlowNode } from "./templateEditorStore";
 
 const makeSendMessageNode = (filePaths: string[]): FlowNode =>
   ({

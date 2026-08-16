@@ -1,9 +1,8 @@
 import type { Transaction } from "dexie";
 
 import type { ConversionWarning } from "./convert";
-import type { FlowData, Step } from "./schema";
-
 import { convertReactFlowToFlowData } from "./convert";
+import type { FlowData, Step } from "./schema";
 import { FlowDataSchema, defaultFlowData } from "./schema";
 
 // reactFlowData → flowData の Dexie マイグレーション (issue #182 Phase 1)。

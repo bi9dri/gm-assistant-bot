@@ -10,31 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TemplateIndexRouteImport } from './routes/template/index'
-import { Route as SessionIndexRouteImport } from './routes/session/index'
 import { Route as BotIndexRouteImport } from './routes/bot/index'
-import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
-import { Route as TemplateNewRouteImport } from './routes/template/new'
-import { Route as SessionNewRouteImport } from './routes/session/new'
 import { Route as BotNewRouteImport } from './routes/bot/new'
-import { Route as TemplateIdIndexRouteImport } from './routes/template/$id/index'
+import { Route as SessionIndexRouteImport } from './routes/session/index'
+import { Route as SessionNewRouteImport } from './routes/session/new'
+import { Route as TemplateIndexRouteImport } from './routes/template/index'
+import { Route as TemplateNewRouteImport } from './routes/template/new'
+import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
 import { Route as SessionIdIndexRouteImport } from './routes/session/$id/index'
-import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps'
 import { Route as SessionIdStepsRouteImport } from './routes/session/$id/steps'
+import { Route as TemplateIdIndexRouteImport } from './routes/template/$id/index'
+import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TemplateIndexRoute = TemplateIndexRouteImport.update({
-  id: '/template/',
-  path: '/template/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SessionIndexRoute = SessionIndexRouteImport.update({
-  id: '/session/',
-  path: '/session/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BotIndexRoute = BotIndexRouteImport.update({
@@ -42,14 +32,14 @@ const BotIndexRoute = BotIndexRouteImport.update({
   path: '/bot/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplateWizardRoute = TemplateWizardRouteImport.update({
-  id: '/template/wizard',
-  path: '/template/wizard',
+const BotNewRoute = BotNewRouteImport.update({
+  id: '/bot/new',
+  path: '/bot/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplateNewRoute = TemplateNewRouteImport.update({
-  id: '/template/new',
-  path: '/template/new',
+const SessionIndexRoute = SessionIndexRouteImport.update({
+  id: '/session/',
+  path: '/session/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionNewRoute = SessionNewRouteImport.update({
@@ -57,14 +47,19 @@ const SessionNewRoute = SessionNewRouteImport.update({
   path: '/session/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BotNewRoute = BotNewRouteImport.update({
-  id: '/bot/new',
-  path: '/bot/new',
+const TemplateIndexRoute = TemplateIndexRouteImport.update({
+  id: '/template/',
+  path: '/template/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
-  id: '/template/$id/',
-  path: '/template/$id/',
+const TemplateNewRoute = TemplateNewRouteImport.update({
+  id: '/template/new',
+  path: '/template/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplateWizardRoute = TemplateWizardRouteImport.update({
+  id: '/template/wizard',
+  path: '/template/wizard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionIdIndexRoute = SessionIdIndexRouteImport.update({
@@ -72,14 +67,19 @@ const SessionIdIndexRoute = SessionIdIndexRouteImport.update({
   path: '/session/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
-  id: '/template/$id/steps',
-  path: '/template/$id/steps',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SessionIdStepsRoute = SessionIdStepsRouteImport.update({
   id: '/session/$id/steps',
   path: '/session/$id/steps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
+  id: '/template/$id/',
+  path: '/template/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
+  id: '/template/$id/steps',
+  path: '/template/$id/steps',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -195,46 +195,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/template/': {
-      id: '/template/'
-      path: '/template'
-      fullPath: '/template/'
-      preLoaderRoute: typeof TemplateIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/': {
-      id: '/session/'
-      path: '/session'
-      fullPath: '/session/'
-      preLoaderRoute: typeof SessionIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/bot/': {
       id: '/bot/'
       path: '/bot'
       fullPath: '/bot/'
       preLoaderRoute: typeof BotIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/wizard': {
-      id: '/template/wizard'
-      path: '/template/wizard'
-      fullPath: '/template/wizard'
-      preLoaderRoute: typeof TemplateWizardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/template/new': {
-      id: '/template/new'
-      path: '/template/new'
-      fullPath: '/template/new'
-      preLoaderRoute: typeof TemplateNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/session/new': {
-      id: '/session/new'
-      path: '/session/new'
-      fullPath: '/session/new'
-      preLoaderRoute: typeof SessionNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bot/new': {
@@ -244,11 +209,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BotNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/template/$id/': {
-      id: '/template/$id/'
-      path: '/template/$id'
-      fullPath: '/template/$id/'
-      preLoaderRoute: typeof TemplateIdIndexRouteImport
+    '/session/': {
+      id: '/session/'
+      path: '/session'
+      fullPath: '/session/'
+      preLoaderRoute: typeof SessionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/session/new': {
+      id: '/session/new'
+      path: '/session/new'
+      fullPath: '/session/new'
+      preLoaderRoute: typeof SessionNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/': {
+      id: '/template/'
+      path: '/template'
+      fullPath: '/template/'
+      preLoaderRoute: typeof TemplateIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/new': {
+      id: '/template/new'
+      path: '/template/new'
+      fullPath: '/template/new'
+      preLoaderRoute: typeof TemplateNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/wizard': {
+      id: '/template/wizard'
+      path: '/template/wizard'
+      fullPath: '/template/wizard'
+      preLoaderRoute: typeof TemplateWizardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/session/$id/': {
@@ -258,18 +251,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/template/$id/steps': {
-      id: '/template/$id/steps'
-      path: '/template/$id/steps'
-      fullPath: '/template/$id/steps'
-      preLoaderRoute: typeof TemplateIdStepsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/session/$id/steps': {
       id: '/session/$id/steps'
       path: '/session/$id/steps'
       fullPath: '/session/$id/steps'
       preLoaderRoute: typeof SessionIdStepsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/$id/': {
+      id: '/template/$id/'
+      path: '/template/$id'
+      fullPath: '/template/$id/'
+      preLoaderRoute: typeof TemplateIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/template/$id/steps': {
+      id: '/template/$id/steps'
+      path: '/template/$id/steps'
+      fullPath: '/template/$id/steps'
+      preLoaderRoute: typeof TemplateIdStepsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

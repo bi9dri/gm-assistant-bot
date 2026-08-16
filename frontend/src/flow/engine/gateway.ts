@@ -1,6 +1,5 @@
-import type { DiscordBotData } from "@/db";
-
 import { ApiClient } from "@/api";
+import type { DiscordBotData } from "@/db";
 import { FileSystem } from "@/fileSystem";
 
 import type { DiscordGateway } from "./types";

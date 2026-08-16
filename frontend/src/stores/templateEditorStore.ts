@@ -7,9 +7,8 @@ import type {
   Viewport,
   NodeRemoveChange,
 } from "@xyflow/react";
-import type { z } from "zod";
-
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
+import type { z } from "zod";
 import { create } from "zustand";
 
 import {
