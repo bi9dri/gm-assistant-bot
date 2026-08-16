@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 
-import type { FlowData } from "../schema";
-
 import { getEntry } from "../registry";
 import { CATEGORY_CLASS, CATEGORY_LABEL } from "../registry/category";
+import type { FlowData } from "../schema";
 import {
   defaultWizardParams,
   generateWizardFlow,

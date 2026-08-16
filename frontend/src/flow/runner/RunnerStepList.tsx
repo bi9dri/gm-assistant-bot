@@ -1,13 +1,12 @@
 import clsx from "clsx";
 import { memo } from "react";
 
-import type { BranchStep, Step } from "../schema";
-import type { RunHandlers } from "./types";
-
 import { getEntry } from "../registry";
 import { CATEGORY_CLASS, CATEGORY_LABEL } from "../registry/category";
+import type { BranchStep, Step } from "../schema";
 import { useRunnerStore } from "../store/runnerStore";
 import { canRunStep } from "./canRun";
+import type { RunHandlers } from "./types";
 
 interface RunnerStepRowProps {
   step: Step;

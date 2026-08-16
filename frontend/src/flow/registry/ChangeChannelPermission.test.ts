@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ChangeChannelPermissionStep } from "../schema";
-
 import { ChangeChannelPermissionEntry } from "./ChangeChannelPermission";
 
 const makeStep = (

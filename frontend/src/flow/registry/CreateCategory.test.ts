@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CreateCategoryStep } from "../schema";
-
 import { CreateCategoryEntry } from "./CreateCategory";
 
 const step = (overrides: Partial<CreateCategoryStep> = {}): CreateCategoryStep => ({

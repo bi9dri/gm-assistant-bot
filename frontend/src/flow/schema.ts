@@ -1,8 +1,7 @@
 import z from "zod";
 
-import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
-
 import { DynamicValueSchema } from "@/components/Node/utils/DynamicValue";
+import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
 import { MessageBlockSchema } from "@/components/Node/utils/messageSchema";
 
 // ステップツリー型データモデル (issue #182 / #183)。

@@ -1,3 +1,4 @@
+import { generateId } from "../ids";
 import type {
   AddRoleToRoleMembersStep,
   CreateCategoryStep,
@@ -9,8 +10,6 @@ import type {
   Step,
 } from "../schema";
 import type { Section } from "../treeOps";
-
-import { generateId } from "../ids";
 
 // 新規テンプレートウィザード (旧 Blueprint ノードの置き換え)。
 // キャラクター名 / VC 数 / カテゴリ名 / 共通テキストチャンネルから、

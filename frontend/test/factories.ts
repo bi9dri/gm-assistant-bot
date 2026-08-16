@@ -1,9 +1,8 @@
+import { db } from "@/db";
 import type { GameSession } from "@/db/models/GameSession";
 import type { ReactFlowData } from "@/db/schemas";
-import type { FlowData } from "@/flow/schema";
-
-import { db } from "@/db";
 import { defaultReactFlowData } from "@/db/schemas";
+import type { FlowData } from "@/flow/schema";
 import { defaultFlowData } from "@/flow/schema";
 
 interface SessionFactoryOptions {
