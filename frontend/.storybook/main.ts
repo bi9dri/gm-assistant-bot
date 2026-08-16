@@ -10,7 +10,11 @@ const config: StorybookConfig = {
   framework: { name: "@storybook/react-vite", options: {} },
   stories: ["../test/stories/**/*.stories.@(ts|tsx|mdx)"],
   addons: ["@storybook/addon-themes", "@storybook/addon-docs"],
-  typescript: { check: false, reactDocgen: "react-docgen-typescript" },
+  // reactDocgen: "react-docgen-typescript" は @joshwooding/vite-plugin-react-docgen-typescript@0.7.0 が
+  // typescript の CJS export から直接 `ts.sys` を参照するが、TypeScript 7.0.2 (tsgo 系) はこの経路で
+  // classic Compiler API を公開しなくなり `ts.sys` が undefined になってクラッシュする。
+  // react-docgen は Babel ベースで TypeScript Compiler API に触れないため回避できる。
+  typescript: { check: false, reactDocgen: "react-docgen" },
   async viteFinal(cfg) {
     return mergeConfig(cfg, {
       plugins: [tailwindcss()],
