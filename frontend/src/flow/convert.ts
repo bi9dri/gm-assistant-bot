@@ -1,11 +1,9 @@
 import z from "zod";
 
 import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
-
 import { conditionToInfix } from "@/components/Node/utils/evaluateCondition";
 
 import type { FlowData, Step } from "./schema";
-
 import { FlowDataSchema, StepSchema } from "./schema";
 
 // reactFlowData (グラフ) → FlowData (ステップツリー) のベストエフォート変換器。

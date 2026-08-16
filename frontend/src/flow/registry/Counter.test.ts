@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CounterStep } from "../schema";
-
 import { CounterEntry } from "./Counter";
 
 const makeStep = (overrides: Partial<CounterStep> = {}): CounterStep => ({

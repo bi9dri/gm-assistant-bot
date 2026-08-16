@@ -1,8 +1,7 @@
 import { produce } from "immer";
 
-import type { FlowData, Step } from "./schema";
-
 import { generateId } from "./ids";
+import type { FlowData, Step } from "./schema";
 
 // FlowData のツリー (Section[] > Step[]、Branch は branches[].steps に再帰) を
 // 純粋に変換するヘルパ群。**ツリーが再帰的であることを知るのはこのファイルだけ**で、

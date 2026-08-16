@@ -1,6 +1,4 @@
 import type { Step } from "../schema";
-import type { StepRegistryEntry } from "./types";
-
 import { AddRoleToRoleMembersEntry } from "./AddRoleToRoleMembers";
 import { BranchEntry } from "./Branch";
 import { ChangeChannelPermissionEntry } from "./ChangeChannelPermission";
@@ -18,6 +16,7 @@ import { RecordCombinationEntry } from "./RecordCombination";
 import { SendMessageEntry } from "./SendMessage";
 import { SetGameFlagEntry } from "./SetGameFlag";
 import { ShuffleAssignEntry } from "./ShuffleAssign";
+import type { StepRegistryEntry } from "./types";
 
 // 全ステップタイプの登録リスト。ステップタイプを増やす = ここに 1 行追加するだけ。
 // 表示順は「操作 → 分岐 → ツール」のおおまかな並び。

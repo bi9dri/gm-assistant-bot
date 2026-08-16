@@ -3,7 +3,6 @@ import { describe, expect, test } from "bun:test";
 import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
 
 import type { BranchArm, BranchStep } from "../schema";
-
 import { selectAutoArms } from "./branch";
 
 const rule = (flagKey: string, value: string): ConditionNode => ({

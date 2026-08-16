@@ -1,8 +1,7 @@
 import type { FlowData, Step } from "../schema";
-import type { ExecuteResult } from "./types";
-
 import { findStep } from "../treeOps";
 import { advanceCursor } from "./order";
+import type { ExecuteResult } from "./types";
 
 // engine は orchestration だけを持つ (docs: "The engine ... owns orchestration only")。
 // 1 ステップを走らせ、そのステップが autoAdvance なら次ステップへ連鎖する。

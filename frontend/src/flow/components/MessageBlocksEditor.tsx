@@ -1,7 +1,6 @@
-import type { z } from "zod";
-
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { LuDownload, LuUpload } from "react-icons/lu";
+import type { z } from "zod";
 
 import {
   type Attachment,

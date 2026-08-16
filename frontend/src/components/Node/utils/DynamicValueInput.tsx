@@ -1,6 +1,5 @@
-import type { DynamicValue } from "./DynamicValue";
-
 import { useNodeExecutionOptional } from "../contexts";
+import type { DynamicValue } from "./DynamicValue";
 import { ResourceSelector } from "./ResourceSelector";
 
 type SupportedType = "literal" | "session.name" | "roleRef" | "channelRef" | "gameFlag";

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { RandomSelectStep } from "../schema";
-
 import { RandomSelectEntry } from "./RandomSelect";
 
 const makeStep = (overrides: Partial<RandomSelectStep> = {}): RandomSelectStep => ({

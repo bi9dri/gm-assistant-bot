@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import type { Step } from "@/flow/schema";
-
 import { DetailPanel } from "@/flow/components/DetailPanel";
 import { getEntry } from "@/flow/registry";
+import type { Step } from "@/flow/schema";
 import { useEditorStore } from "@/flow/store/editorStore";
 
 // registry の defaults をベースに、表示が意味を持つよう具体値を被せた 1 ステップを

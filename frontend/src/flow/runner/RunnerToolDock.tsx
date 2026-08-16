@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 
-import type { Step } from "../schema";
-
 import { getEntry } from "../registry";
+import type { Step } from "../schema";
 import { useRunnerStore } from "../store/runnerStore";
 import { collectSteps } from "../treeOps";
 import { counterNextValue } from "./toolOperate";

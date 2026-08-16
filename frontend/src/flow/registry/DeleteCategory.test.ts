@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { DeleteCategoryStep } from "../schema";
-
 import { DeleteCategoryEntry } from "./DeleteCategory";
 
 const step = (overrides: Partial<DeleteCategoryStep> = {}): DeleteCategoryStep => ({
