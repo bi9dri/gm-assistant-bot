@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Step } from "../schema";
-
 import { canRunStep } from "./canRun";
 
 const step = (overrides: Partial<Step>): Step =>

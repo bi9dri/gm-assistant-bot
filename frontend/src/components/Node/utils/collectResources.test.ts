@@ -1,6 +1,6 @@
-import type { Edge } from "@xyflow/react";
-
 import { describe, expect, it } from "bun:test";
+
+import type { Edge } from "@xyflow/react";
 
 import type { FlowNode } from "@/stores/templateEditorStore";
 

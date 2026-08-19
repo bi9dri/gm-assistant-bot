@@ -1,11 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import type { BranchStep, FlowData, Step } from "../schema";
-import type { StepRunner } from "./execute";
-import type { ExecuteResult } from "./types";
-
 import * as treeOps from "../treeOps";
+import type { StepRunner } from "./execute";
 import { runChain } from "./execute";
+import type { ExecuteResult } from "./types";
 
 const step = (id: string, overrides: Partial<Step> = {}): Step =>
   ({

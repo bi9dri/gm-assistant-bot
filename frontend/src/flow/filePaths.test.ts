@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FlowData } from "./schema";
-
 import { convertFilePathsInFlowData } from "./filePaths";
+import type { FlowData } from "./schema";
 import { FlowDataSchema } from "./schema";
 
 const flow = (sections: unknown[]): FlowData => FlowDataSchema.parse({ version: 1, sections });

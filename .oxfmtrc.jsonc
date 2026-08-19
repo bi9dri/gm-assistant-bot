@@ -1,7 +1,9 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  // ignorePatterns are rooted at this config file's directory (oxfmt >=0.59),
+  // so paths must be repo-root-relative, not per-workspace-relative.
   "ignorePatterns": [
-    "src/routeTree.gen.ts"
+    "frontend/src/routeTree.gen.ts"
   ],
   // Enable import sorting with default settings
   "experimentalSortImports": {}

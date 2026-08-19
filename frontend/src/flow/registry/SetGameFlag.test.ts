@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { SetGameFlagStep } from "../schema";
-
 import { SetGameFlagStepSchema } from "../schema";
 import { SetGameFlagEntry } from "./SetGameFlag";
 

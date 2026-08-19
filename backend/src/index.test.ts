@@ -1,5 +1,6 @@
-import { DiscordAPIError, RateLimitError } from "@discordjs/rest";
 import { describe, test, expect, spyOn, beforeEach, afterEach } from "bun:test";
+
+import { DiscordAPIError, RateLimitError } from "@discordjs/rest";
 
 import * as discord from "./discord";
 import app from "./index";

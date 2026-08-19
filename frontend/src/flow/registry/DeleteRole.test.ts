@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { DeleteRoleStep } from "../schema";
-
 import { DeleteRoleEntry } from "./DeleteRole";
 
 const step = (overrides: Partial<DeleteRoleStep> = {}): DeleteRoleStep => ({

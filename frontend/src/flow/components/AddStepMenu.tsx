@@ -1,11 +1,10 @@
 import { useMemo } from "react";
 
+import { getEntry, stepTypes } from "../registry";
 import type { StepRegistryEntry } from "../registry/types";
 import type { Step } from "../schema";
-import type { StepContainer } from "../treeOps";
-
-import { getEntry, stepTypes } from "../registry";
 import { useEditorStore } from "../store/editorStore";
+import type { StepContainer } from "../treeOps";
 
 interface MenuItem {
   type: Step["type"];

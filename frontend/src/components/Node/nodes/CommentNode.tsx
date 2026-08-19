@@ -1,5 +1,4 @@
 import type { Node, NodeProps } from "@xyflow/react";
-
 import { NodeResizer } from "@xyflow/react";
 import z from "zod";
 

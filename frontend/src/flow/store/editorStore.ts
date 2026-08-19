@@ -1,10 +1,9 @@
 import { create } from "zustand";
 
-import type { Section, StepLocation } from "../treeOps";
-
 import { generateId } from "../ids";
 import { getEntry } from "../registry";
 import { defaultFlowData, type FlowData, type Step } from "../schema";
+import type { Section, StepLocation } from "../treeOps";
 import * as treeOps from "../treeOps";
 
 // edit モード (テンプレート作成) の Zustand store。

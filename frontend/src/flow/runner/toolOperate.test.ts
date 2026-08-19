@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { KanbanStep, RecordCombinationStep } from "../schema";
-
 import {
   counterNextValue,
   drawRandomSelect,

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import type { BranchStep, FlowData, Step } from "../schema";
-
 import { advanceCursor, firstRunnableId, runnableSteps } from "./order";
 
 const step = (id: string, overrides: Partial<Step> = {}): Step =>

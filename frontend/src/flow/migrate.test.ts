@@ -1,8 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 
-import type { FlowData } from "./schema";
-
 import { foldWarningsIntoFlowData, migrateRecordToFlowData, reactFlowToFlowData } from "./migrate";
+import type { FlowData } from "./schema";
 import { FlowDataSchema, defaultFlowData } from "./schema";
 
 // ---- フィクスチャ ----

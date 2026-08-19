@@ -1,8 +1,7 @@
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
-import type { Section } from "../treeOps";
-
 import { useEditorStore } from "../store/editorStore";
+import type { Section } from "../treeOps";
 
 interface SectionHeaderProps {
   section: Section;

@@ -1,6 +1,6 @@
+import { ReactFlow, ReactFlowProvider, type Node, type NodeTypes } from "@xyflow/react";
 import type { ComponentType, CSSProperties } from "react";
 
-import { ReactFlow, ReactFlowProvider, type Node, type NodeTypes } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 interface RenderSingleNodeOptions<TData extends Record<string, unknown>> {

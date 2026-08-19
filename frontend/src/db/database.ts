@@ -8,6 +8,7 @@ if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
   Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 }
 
+import { applyFlowDataMigration } from "../flow/migrate";
 import type {
   CategoryData,
   ChannelData,
@@ -17,8 +18,6 @@ import type {
   RoleData,
   TemplateData,
 } from "./schemas";
-
-import { applyFlowDataMigration } from "../flow/migrate";
 
 const ReactFlowNodeSchema = z.looseObject({
   type: z.string().optional(),
