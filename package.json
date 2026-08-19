@@ -23,7 +23,7 @@
     "npm-check-updates": "23.0.2",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
-    "oxlint-tsgolint": "0.23.0",
+    "oxlint-tsgolint": "7.0.2001",
     "typescript": "7.0.2",
     "wrangler": "4.121.0"
   },
