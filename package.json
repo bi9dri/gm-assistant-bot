@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "26.2.0",
-    "knip": "6.32.0",
+    "knip": "6.32.2",
     "npm-check-updates": "23.0.2",
     "oxfmt": "0.62.0",
     "oxlint": "1.77.0",
