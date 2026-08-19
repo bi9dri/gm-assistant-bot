@@ -19,13 +19,13 @@
   },
   "devDependencies": {
     "@types/node": "26.2.0",
-    "knip": "6.32.0",
+    "knip": "6.32.2",
     "npm-check-updates": "23.0.2",
-    "oxfmt": "0.62.0",
-    "oxlint": "1.77.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "oxlint-tsgolint": "0.23.0",
     "typescript": "7.0.2",
-    "wrangler": "4.120.0"
+    "wrangler": "4.121.0"
   },
   "overrides": {
     "shell-quote": "1.10.0"
