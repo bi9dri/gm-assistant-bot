@@ -31,7 +31,7 @@
     "daisyui": "5.7.16",
     "dexie": "4.4.4",
     "dexie-react-hooks": "4.4.0",
-    "hono": "4.13.1",
+    "hono": "4.13.2",
     "immer": "11.1.16",
     "nanoid": "6.0.1",
     "react": "19.2.8",
