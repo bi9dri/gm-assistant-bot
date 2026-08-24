@@ -24,7 +24,7 @@
     "@tanstack/react-devtools": "0.10.10",
     "@tanstack/react-router": "1.170.29",
     "@tanstack/react-router-devtools": "1.167.1",
-    "@tanstack/router-plugin": "1.168.30",
+    "@tanstack/router-plugin": "1.168.32",
     "@xyflow/react": "12.11.3",
     "@zip.js/zip.js": "2.8.49",
     "clsx": "2.1.1",
