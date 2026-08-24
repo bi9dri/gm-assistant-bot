@@ -26,7 +26,7 @@
     "@tanstack/react-router-devtools": "1.167.1",
     "@tanstack/router-plugin": "1.168.32",
     "@xyflow/react": "12.11.3",
-    "@zip.js/zip.js": "2.8.49",
+    "@zip.js/zip.js": "2.8.51",
     "clsx": "2.1.1",
     "daisyui": "5.7.16",
     "dexie": "4.4.4",
