@@ -1,0 +1,32 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: "0 22 * * *"  # 07:00 JST
+  workflow_dispatch:
+    inputs:
+      log-level:
+        description: ログレベル
+        default: info
+        type: choice
+        options: [info, debug]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
+      - uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682  # v46.2.2
+        with:
+          # GITHUB_TOKEN で作成した PR には CI が走らないため PAT / GitHub App トークンを使う。
+          # 必要権限: contents:write, pull-requests:write, issues:write, workflows:write
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          LOG_LEVEL: ${{ inputs.log-level || 'info' }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
