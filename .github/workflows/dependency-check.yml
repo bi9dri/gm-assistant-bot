@@ -1,76 +1,24 @@
-name: Dependency Check
+name: Dependency Audit
 
-# 毎日 07:00 JST。npm パッケージ更新の判断は .claude/skills/update-dependencies
-# に委ねる方針のため、このワークフローが自動 PR にするのは機械的に安全な
-# GitHub Actions の SHA ピン更新（pinact）のみ。
+# 毎日 07:00 JST。パッケージの更新提案は Renovate（renovate.yml）が担当し、
+# こちらは Renovate がカバーしない脆弱性スキャン（推移的依存を含む）だけを行う。
 on:
   schedule:
     - cron: "0 22 * * *"
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
-  check:
+  audit:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PINACT_BRANCH: chore/pinact
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
-      # bun / pinact / osv-scanner のバージョンは devbox.json が単一の情報源。
+      # bun / osv-scanner のバージョンは devbox.json が単一の情報源。
       - uses: jetify-com/devbox-install-action@8c6a66ed6273138b1915457069de78cb52fe3bd7  # v0.15.0
         with:
           devbox-version: 0.17.1
           enable-cache: true
-
-      - name: pinact (GitHub Actions のピン更新)
-        run: devbox run pinact
-
-      - name: pinact の差分を PR にする
-        run: |
-          set -euo pipefail
-          if git diff --quiet; then
-            echo "GitHub Actions のピンは最新です" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          { echo '```diff'; git diff; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          git config user.name  'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -am 'chore(deps): GitHub Actions のピンを更新 (pinact -m 7)'
-          git push -f origin "HEAD:refs/heads/$PINACT_BRANCH"
-          if [ -z "$(gh pr list --head "$PINACT_BRANCH" --state open --json number -q '.[].number')" ]; then
-            gh pr create --head "$PINACT_BRANCH" --base "${{ github.ref_name }}" \
-              --title 'chore(deps): GitHub Actions のピンを更新' \
-              --body '`pinact run --min-age 7` による自動更新（7日以上経過したリリースのみ）。差分は SHA ピンとバージョンコメントのみ。'
-          fi
-
-      - name: ncu (npm パッケージの更新候補)
-        run: |
-          set -euo pipefail
-          devbox run -- bun install --frozen-lockfile
-          # --errorLevel 2: 更新候補があれば exit 1
-          if devbox run -- bun run --bun ncu --errorLevel 2 > ncu.txt 2>&1; then
-            cat ncu.txt >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          cat ncu.txt
-          title='依存パッケージの更新候補 (ncu)'
-          body=$(printf '`%s` の実行結果です。更新は `/update-dependencies` スキルの手順（triage → PR）で対応してください。\n\n```\n%s\n```\n' \
-            'bun run --bun ncu' "$(cat ncu.txt)")
-          num=$(gh issue list --state open --search "$title in:title" --json number -q '.[0].number')
-          if [ -n "$num" ]; then
-            gh issue edit "$num" --body "$body"
-          else
-            gh issue create --title "$title" --body "$body"
-          fi
-
-      # 脆弱性が見つかったらジョブを失敗させ、通知でエスカレーションする。
-      - name: bun audit
-        run: devbox run -- bun audit
-      - name: osv-scanner
-        run: devbox run -- osv-scanner scan source -r .
+      - run: devbox run -- bun audit
+      - run: devbox run -- osv-scanner scan source -r .
