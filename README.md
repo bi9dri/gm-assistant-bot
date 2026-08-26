@@ -30,7 +30,7 @@ Bun workspace monorepo:
 
 - [devbox](https://www.jetify.com/devbox)
 
-`devbox shell` に入れば `devbox.json` で pin された Bun / osv-scanner が揃う。Bun などをホストに直接インストールする必要はない。
+`devbox shell` に入れば `devbox.json` で pin された Bun が揃う。ホストに直接インストールする必要はない。
 
 ```bash
 devbox shell
