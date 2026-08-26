@@ -1,0 +1,63 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    // 外部 action を SHA + バージョンコメントに固定する（pinact 相当）
+    "helpers:pinGitHubActionDigests",
+  ],
+
+  // 固定バージョンのみ（^ / ~ を使わない）
+  rangeStrategy: "pin",
+
+  // 公開から 7 日未満のリリースは PR にしない（ncu --cooldown 7 / pinact -m 7 相当）。
+  // internalChecksFilter: strict で「保留中の新バージョン」も無視する。
+  minimumReleaseAge: "7 days",
+  internalChecksFilter: "strict",
+
+  // 更新候補の一覧 Issue。ncu の結果を Issue にまとめる自前処理の置き換え。
+  dependencyDashboard: true,
+  dependencyDashboardOSVVulnerabilitySummary: "unresolved",
+  osvVulnerabilityAlerts: true,
+
+  semanticCommits: "enabled",
+  commitMessageAction: "更新",
+  commitMessageExtra: "({{currentVersion}} → {{newVersion}})",
+  prConcurrentLimit: 5,
+
+  // セキュリティ更新は 7 日ルールを迂回する
+  vulnerabilityAlerts: {
+    minimumReleaseAge: null,
+    prPriority: 10,
+  },
+
+  packageRules: [
+    {
+      // bun のバージョンは devbox.json / packageManager / @types/bun の 3 箇所を
+      // 揃える必要がある（scripts/check-bun-version.sh）ため 1 PR にまとめる。
+      groupName: "bun",
+      matchPackageNames: ["bun", "@types/bun"],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Renovate は devbox.json しか書き換えられず devbox.lock は再生成できない。
+      // ダッシュボードで承認 → ブランチ上で `devbox install` してから CI を通す。
+      matchManagers: ["devbox"],
+      dependencyDashboardApproval: true,
+      prBodyNotes: [
+        "⚠️ `devbox.lock` は Renovate では更新されません。このブランチで `devbox install` を実行してコミットしてください。",
+      ],
+    },
+    {
+      // Batched 相当: 影響の小さい minor / patch は 1 PR に集約
+      groupName: "non-major dependencies",
+      matchManagers: ["bun", "npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      matchPackageNames: ["!bun", "!@types/bun"],
+    },
+    {
+      groupName: "github-actions",
+      matchManagers: ["github-actions"],
+    },
+    // major は既定どおりパッケージごとの個別 PR（Individual 相当）
+  ],
+}
