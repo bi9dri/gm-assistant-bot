@@ -100,54 +100,6 @@
           "store_path": "/nix/store/vmzjbq55q6jn6i77i1vni6vd8nish9ak-osv-scanner-2.3.3"
         }
       }
-    },
-    "pinact@3.8.0": {
-      "last_modified": "2026-03-21T07:29:51Z",
-      "resolved": "github:NixOS/nixpkgs/09061f748ee21f68a089cd5d91ec1859cd93d0be#pinact",
-      "source": "devbox-search",
-      "version": "3.8.0",
-      "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/p2s6vj789qjf5ksvlf8gdavrn1an5pf9-pinact-3.8.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/p2s6vj789qjf5ksvlf8gdavrn1an5pf9-pinact-3.8.0"
-        },
-        "aarch64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/9gkxm8gqdpdw38af4z4cmcpq2fwc9bqh-pinact-3.8.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/9gkxm8gqdpdw38af4z4cmcpq2fwc9bqh-pinact-3.8.0"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/vsg5yjfg0dz3k435hna65jp3qd1wfy15-pinact-3.8.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/vsg5yjfg0dz3k435hna65jp3qd1wfy15-pinact-3.8.0"
-        },
-        "x86_64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/9nwbza0shfb81s8vpdg21dvm2qq4xw62-pinact-3.8.0",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/9nwbza0shfb81s8vpdg21dvm2qq4xw62-pinact-3.8.0"
-        }
-      }
     }
   }
 }

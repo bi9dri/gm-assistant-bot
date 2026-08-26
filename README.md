@@ -30,7 +30,7 @@ Bun workspace monorepo:
 
 - [devbox](https://www.jetify.com/devbox)
 
-`devbox shell` に入れば `devbox.json` で pin された Bun / pinact / osv-scanner が揃う。Bun などをホストに直接インストールする必要はない。
+`devbox shell` に入れば `devbox.json` で pin された Bun / osv-scanner が揃う。Bun などをホストに直接インストールする必要はない。
 
 ```bash
 devbox shell
@@ -65,7 +65,6 @@ bun run --bun typecheck   # 型チェック
 bun run --bun lint        # lint
 bun run --bun format      # format
 bun run knip              # 未使用 export / dep の検出
-bun run ncu               # 依存更新チェック (cooldown 7 日)
 ```
 
 ワークスペース個別実行は `bun run --bun --filter <name> <script>`。

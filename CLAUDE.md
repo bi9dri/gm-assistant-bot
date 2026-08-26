@@ -14,8 +14,12 @@
 
 ## Dependency Management
 - **Fixed versions only** — no `^` / `~`. Supply chain protection.
-- **Use versions ≥7 days old**, except for security updates. Avoids malicious releases caught shortly after publish. Tooling enforces this: `ncu --cooldown 7` for npm/bun, `pinact run -m 7` for GitHub Actions.
-- **GitHub Actions**: pin external actions to full commit SHA (never tags/branches). Run `pinact run -m 7` to auto-pin.
+- **Use versions ≥7 days old**, except for security updates. Avoids malicious releases caught shortly after publish.
+- **GitHub Actions**: pin external actions to full commit SHA (never tags/branches).
+- **Renovate (GitHub App, `.github/renovate.json5`) proposes every update** and enforces the three rules above. Don't bump versions by hand — review its PRs instead.
+  - Bun bumps arrive as one PR covering `devbox.json` / `packageManager` / `@types/bun`, but Renovate can't regenerate `devbox.lock`: run `devbox install` on the branch before merging.
+  - If CI fails on a Renovate PR, fix it on that branch (replace deprecated APIs, adapt to the new API) rather than closing the PR.
+- **Don't reach for `overrides`.** Fix it by updating the direct dependency. Use `overrides` only when a critical vulnerability is reported against a transitive dependency AND no direct update resolves it — document the advisory, why a direct update isn't viable, and the removal condition in the PR.
 
 ## Architecture
 Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Workers Static Assets), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack.
@@ -28,7 +32,6 @@ Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Worker
 ## Skills (`.claude/skills/`)
 - **node-creator** — MUST use when implementing a new `XxxNode`
 - **schema-migration** — MUST use when changing a node's DataSchema
-- **update-dependencies** — use when updating npm/bun packages or GitHub Actions
 
 ## Commands
 See root `package.json` scripts. Run from repo root via `bun run --bun <script>`, or per-package via `bun run --bun --filter <pkg> <script>`.

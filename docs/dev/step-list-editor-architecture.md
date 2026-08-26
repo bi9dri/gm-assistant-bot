@@ -38,7 +38,7 @@ rows referentially equal so memoized rows skip re-render. Immer is also pmndrs-o
 `treeOps.ts` remains an equivalent fallback if the dependency is ever removed; the
 `treeOps.ts` pure-helper API is the canon either way.
 
-> Dependency policy still applies: pin Immer to a fixed version ≥7 days old (`ncu --cooldown 7`).
+> Dependency policy still applies: pin Immer to a fixed version ≥7 days old.
 
 ---
 
