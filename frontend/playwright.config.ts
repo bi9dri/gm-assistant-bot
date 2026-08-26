@@ -79,6 +79,8 @@ export default defineConfig<{}, VrtWorkerOptions>({
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      // VITE_USE_MSW は MSW 有効化に加えて「VRT 用 dev server」の目印でもある
+      // (vite.config.ts が devtools の event bus を切る判定に使う)。
       env: { VITE_USE_MSW: "true" },
     },
     {
