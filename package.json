@@ -14,14 +14,12 @@
     "build": "bun --filter '*' build",
     "deploy": "bun --filter gm-assistant-bot-backend deploy",
     "test": "bun --filter '*' test",
-    "ncu": "ncu --packageManager bun --workspaces --cooldown 7",
     "knip": "knip",
     "check:bun-version": "bash scripts/check-bun-version.sh"
   },
   "devDependencies": {
     "@types/node": "26.2.0",
     "knip": "6.32.2",
-    "npm-check-updates": "23.0.2",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "7.0.2001",
