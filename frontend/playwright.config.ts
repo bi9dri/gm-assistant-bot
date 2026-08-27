@@ -4,6 +4,17 @@ import type { VrtWorkerOptions } from "./test/vrt/fixtures";
 
 const THEMES = ["light", "dark"] as const satisfies readonly VrtWorkerOptions["theme"][];
 
+// `bun run --bun` は `node` を Bun に差し替える shim ディレクトリを PATH 先頭に注入し、
+// 子孫プロセスすべてがそれを継承する。webServer の `bun run dev` から起動される vite も
+// Bun で動いてしまい、dev server が listen 前に確率的にハングする。Playwright は 120 秒
+// 待って落ちるが vite は何も出力していないため原因が分からない (VRT flaky の真因)。
+// ここで即座に落として `--bun` を外すよう促す。
+if (typeof Bun !== "undefined") {
+  throw new Error(
+    "VRT must run on Node, not Bun: use `bun run --filter gm-assistant-bot-frontend test:vrt` (no `--bun`).",
+  );
+}
+
 export default defineConfig<{}, VrtWorkerOptions>({
   testDir: "./test/vrt",
   testMatch: "**/*.vrt.ts",

@@ -215,5 +215,5 @@ Aligned with the Development Workflow in CLAUDE.md. After implementation, the ta
 
 VRT-only verification (optional):
 
-- `bun run --bun --filter gm-assistant-bot-frontend test:vrt`
+- `bun run --filter gm-assistant-bot-frontend test:vrt`
 - Baseline updates and the CI artifact recovery flow are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)

@@ -66,14 +66,14 @@ await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 ```bash
 # All six projects (desktop / mobile / storybook × light / dark)
 bun run --bun --filter gm-assistant-bot-frontend build-storybook
-bun run --bun --filter gm-assistant-bot-frontend test:vrt
+bun run --filter gm-assistant-bot-frontend test:vrt
 
 # Single viewport / theme combination
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
+bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
+bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
 
 # Single theme across all viewports
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- \
+bun run --filter gm-assistant-bot-frontend test:vrt -- \
   --project=chromium-desktop-dark --project=chromium-mobile-dark --project=chromium-storybook-dark
 ```
 
@@ -89,10 +89,10 @@ bun --cwd frontend x playwright install chromium
 
 ```bash
 # All six projects (desktop + mobile + storybook × light + dark)
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+bun run --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
 
 # Single project — useful when only one viewport / theme is intentionally diverging
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- \
+bun run --filter gm-assistant-bot-frontend test:vrt -- \
   --update-snapshots --project=chromium-mobile-dark
 
 git add frontend/test/vrt
@@ -143,6 +143,10 @@ A new `@playwright/test` ships a new chromium build, which renders pixels differ
 ### `webServer` hangs / Internal Server Error during VRT
 
 Documented Tailwind + `@tailwindcss/vite` + DaisyUI + Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately uses `bun run dev` (not `bun run --bun dev`) so vite executes via its node shebang. Do not "fix" this without re-reading the comment in that file.
+
+**VRT だけは `--bun` を付けずに実行する。** `bun run --bun` は `node` を Bun に差し替える shim ディレクトリ (`/tmp/bun-node-*`) を PATH 先頭に注入し、子孫プロセスすべてがそれを継承する。そのため webServer の `bun run dev` の中の node shebang まで Bun に解決され、`bun run dev` と書いていても vite が Bun で動く (`/proc/<vite pid>/exe` が `bun` を指すことで確認できる)。この状態の vite dev server は listen 前に確率的にハングし、`Timed out waiting 120000ms from config.webServer` として現れる。`playwright.config.ts` 冒頭のガードが `--bun` を検出して即座に落とす。
+
+なお Playwright の `webServer.stdout` は既定で `"ignore"`。CI ログに見える `[WebServer] $ vite --port 3000` は bun が stderr に出す行で、vite 自身の出力 (ready バナー等) は捨てられている。「stderr に何も出ない」ことは vite の状態の根拠にならない (#239 の誤診の原因)。
 
 ### Artifact contains no PNGs, only `trace.zip`
 
