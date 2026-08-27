@@ -27,10 +27,9 @@ function mswServiceWorkerDevOnly(): Plugin {
 
 export default defineConfig({
   plugins: [
-    // VRT (`VITE_USE_MSW`) では devtools の event bus を止める。VRT に不要な上、
+    // VRT (`VITE_USE_MSW`) では devtools の event bus を止める。VRT では使わない上、
     // ServerEventBus.start() は EADDRINUSE 以外の listen エラーで resolve も reject もせず、
-    // それを await する configureServer が返らないと vite は listen しないため。
-    // (#239 はこれを VRT flaky の原因と見たが誤り。真因は playwright.config.ts 冒頭を参照)
+    // それを await する configureServer が返らないと vite が listen できなくなるため。
     devtools(process.env.VITE_USE_MSW ? { eventBusConfig: { enabled: false } } : undefined),
     tailwindcss(),
     tanstackRouter({

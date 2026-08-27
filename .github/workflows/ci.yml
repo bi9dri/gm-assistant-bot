@@ -45,7 +45,7 @@ jobs:
       # from frontend/storybook-static/).
       - run: bun run --bun --filter gm-assistant-bot-frontend build-storybook
       # `--bun` 不使用: shim 経由で vite dev server まで Bun で動くと listen 前に
-      # ハングし、Playwright が 120s 無言でタイムアウトする (playwright.config.ts 参照)。
+      # ハングする (frontend/playwright.config.ts 冒頭のガードを参照)。
       - run: bun run --filter gm-assistant-bot-frontend test:vrt
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

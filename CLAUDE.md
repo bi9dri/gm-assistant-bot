@@ -8,7 +8,7 @@
 
 ## Runtime / Package Manager (Bun)
 - Use `bun install`, `bun run --bun <script>`, `bun <file>` — never npm/yarn/pnpm/node/ts-node.
-- **Exception: VRT (`test:vrt`) は `--bun` なしで実行する。** `--bun` の node shim は子孫プロセスに継承され、vite dev server が Bun で動いて確率的にハングする（[visual-regression-testing.md](docs/dev/visual-regression-testing.md) 参照）。
+- **VRT is the exception: run `test:vrt` without `--bun`.** The `--bun` node shim is inherited by child processes, so the vite dev server ends up on Bun and hangs before listen. See [visual-regression-testing.md](docs/dev/visual-regression-testing.md).
 - Tests: `bun run --bun test`. No dotenv (Bun auto-loads `.env`).
 - `--filter` matches `package.json` `name` (not workspace dir). Wildcards ok: `--filter '*'`.
 - Coverage: `coveragePathIgnorePatterns` uses glob (not regex). Thresholds apply globally — exclude untestable files rather than lowering thresholds.

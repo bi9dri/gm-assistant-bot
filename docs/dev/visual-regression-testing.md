@@ -142,11 +142,16 @@ A new `@playwright/test` ships a new chromium build, which renders pixels differ
 
 ### `webServer` hangs / Internal Server Error during VRT
 
-Documented Tailwind + `@tailwindcss/vite` + DaisyUI + Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately uses `bun run dev` (not `bun run --bun dev`) so vite executes via its node shebang. Do not "fix" this without re-reading the comment in that file.
+**The vite dev server must run on Node.** Under Bun it fails two ways: `@tailwindcss/vite` cannot read DaisyUI's CSS (Internal Server Error — see [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround)), and the server intermittently hangs before it listens, surfacing as `Timed out waiting 120000ms from config.webServer`.
 
-**VRT だけは `--bun` を付けずに実行する。** `bun run --bun` は `node` を Bun に差し替える shim ディレクトリ (`/tmp/bun-node-*`) を PATH 先頭に注入し、子孫プロセスすべてがそれを継承する。そのため webServer の `bun run dev` の中の node shebang まで Bun に解決され、`bun run dev` と書いていても vite が Bun で動く (`/proc/<vite pid>/exe` が `bun` を指すことで確認できる)。この状態の vite dev server は listen 前に確率的にハングし、`Timed out waiting 120000ms from config.webServer` として現れる。`playwright.config.ts` 冒頭のガードが `--bun` を検出して即座に落とす。
+Two things put vite on Bun, and both must be avoided:
 
-なお Playwright の `webServer.stdout` は既定で `"ignore"`。CI ログに見える `[WebServer] $ vite --port 3000` は bun が stderr に出す行で、vite 自身の出力 (ready バナー等) は捨てられている。「stderr に何も出ない」ことは vite の状態の根拠にならない (#239 の誤診の原因)。
+- `webServer.command` in `frontend/playwright.config.ts` must stay `bun run dev`, never `bun run --bun dev`, so vite executes via its node shebang.
+- The VRT run itself must not use `--bun`. `bun run --bun` prepends a shim directory (`/tmp/bun-node-*`) where `node` is Bun itself, and every descendant process inherits it — so the node shebang inside `bun run dev` resolves to Bun anyway. A guard at the top of `playwright.config.ts` fails fast when the config is evaluated on Bun.
+
+To confirm which runtime a running dev server uses, check `/proc/<vite pid>/exe`: it points at `bun` when the shim is in play.
+
+When diagnosing a `webServer` timeout, remember that Playwright's `webServer.stdout` defaults to `"ignore"`. The `[WebServer] $ vite --port 3000` line in CI logs comes from bun's stderr; vite's own output (ready banner, optimizer logs) is discarded. Silence there says nothing about whether vite started — set `stdout: "pipe"` if you need to see it.
 
 ### Artifact contains no PNGs, only `trace.zip`
 
