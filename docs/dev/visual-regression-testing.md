@@ -66,14 +66,14 @@ await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 ```bash
 # All six projects (desktop / mobile / storybook × light / dark)
 bun run --bun --filter gm-assistant-bot-frontend build-storybook
-bun run --bun --filter gm-assistant-bot-frontend test:vrt
+bun run --filter gm-assistant-bot-frontend test:vrt
 
 # Single viewport / theme combination
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
+bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
+bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
 
 # Single theme across all viewports
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- \
+bun run --filter gm-assistant-bot-frontend test:vrt -- \
   --project=chromium-desktop-dark --project=chromium-mobile-dark --project=chromium-storybook-dark
 ```
 
@@ -89,10 +89,10 @@ bun --cwd frontend x playwright install chromium
 
 ```bash
 # All six projects (desktop + mobile + storybook × light + dark)
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+bun run --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
 
 # Single project — useful when only one viewport / theme is intentionally diverging
-bun run --bun --filter gm-assistant-bot-frontend test:vrt -- \
+bun run --filter gm-assistant-bot-frontend test:vrt -- \
   --update-snapshots --project=chromium-mobile-dark
 
 git add frontend/test/vrt
@@ -142,7 +142,16 @@ A new `@playwright/test` ships a new chromium build, which renders pixels differ
 
 ### `webServer` hangs / Internal Server Error during VRT
 
-Documented Tailwind + `@tailwindcss/vite` + DaisyUI + Bun-runtime issue. See [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround). The `webServer.command` in `frontend/playwright.config.ts` deliberately uses `bun run dev` (not `bun run --bun dev`) so vite executes via its node shebang. Do not "fix" this without re-reading the comment in that file.
+**The vite dev server must run on Node.** Under Bun it fails two ways: `@tailwindcss/vite` cannot read DaisyUI's CSS (Internal Server Error — see [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround)), and the server intermittently hangs before it listens, surfacing as `Timed out waiting 120000ms from config.webServer`.
+
+Two things put vite on Bun, and both must be avoided:
+
+- `webServer.command` in `frontend/playwright.config.ts` must stay `bun run dev`, never `bun run --bun dev`, so vite executes via its node shebang.
+- The VRT run itself must not use `--bun`. `bun run --bun` prepends a shim directory (`/tmp/bun-node-*`) where `node` is Bun itself, and every descendant process inherits it — so the node shebang inside `bun run dev` resolves to Bun anyway. A guard at the top of `playwright.config.ts` fails fast when the config is evaluated on Bun.
+
+To confirm which runtime a running dev server uses, check `/proc/<vite pid>/exe`: it points at `bun` when the shim is in play.
+
+When diagnosing a `webServer` timeout, remember that Playwright's `webServer.stdout` defaults to `"ignore"`. The `[WebServer] $ vite --port 3000` line in CI logs comes from bun's stderr; vite's own output (ready banner, optimizer logs) is discarded. Silence there says nothing about whether vite started — set `stdout: "pipe"` if you need to see it.
 
 ### Artifact contains no PNGs, only `trace.zip`
 
