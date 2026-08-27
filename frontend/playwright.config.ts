@@ -4,6 +4,17 @@ import type { VrtWorkerOptions } from "./test/vrt/fixtures";
 
 const THEMES = ["light", "dark"] as const satisfies readonly VrtWorkerOptions["theme"][];
 
+// VRT は Node ランタイムで動かす。`bun run --bun` は `node` を Bun 自身に差し替える
+// shim ディレクトリを PATH 先頭に注入し、子孫プロセスすべてがそれを継承するため、
+// 下の webServer が起動する vite まで Bun で動いてしまう。その vite は listen する前に
+// 確率的にハングし、Playwright が 120 秒待ってタイムアウトする。vite 側のログが
+// 出ないまま落ちるので、ここで検出して理由付きで即座に失敗させる。
+if (typeof Bun !== "undefined") {
+  throw new Error(
+    "VRT must run on Node, not Bun: use `bun run --filter gm-assistant-bot-frontend test:vrt` (no `--bun`).",
+  );
+}
+
 export default defineConfig<{}, VrtWorkerOptions>({
   testDir: "./test/vrt",
   testMatch: "**/*.vrt.ts",

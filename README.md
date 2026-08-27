@@ -72,7 +72,7 @@ bun run knip              # 未使用 export / dep の検出
 ## テスト
 
 - **Unit / 統合**: Bun の組み込みテストランナー (`bun run --bun test`)。
-- **Visual Regression Testing**: Playwright + Storybook + MSW。frontend で `bun run --bun --filter gm-assistant-bot-frontend test:vrt`。
+- **Visual Regression Testing**: Playwright + Storybook + MSW。frontend で `bun run --filter gm-assistant-bot-frontend test:vrt`。
 - **Storybook 単体起動**: `bun run --bun --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
 
 戦略の詳細は [testing-strategy.md](docs/dev/testing-strategy.md)。

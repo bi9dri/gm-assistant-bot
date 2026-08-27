@@ -49,7 +49,7 @@ Gotchas:
 
 ## Running the repo's VRT suite locally (remote/sandbox environments)
 
-`bun run --bun test:vrt` needs Playwright's own browser revisions. If the
+`bun run test:vrt` needs Playwright's own browser revisions. If the
 pinned @playwright/test expects a revision the environment doesn't have
 (`Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-<rev>/...`),
 shim it instead of downloading (`playwright install` is blocked/unnecessary):
