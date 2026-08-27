@@ -24,10 +24,9 @@
   commitMessageExtra: "({{currentVersion}} → {{newVersion}})",
   prConcurrentLimit: 5,
 
-  // セキュリティ更新は 7 日ルールを迂回する
+  // セキュリティ更新は 7 日ルールを迂回する（prConcurrentLimit も Renovate 側で自動的に免除される）
   vulnerabilityAlerts: {
     minimumReleaseAge: null,
-    prPriority: 10,
   },
 
   packageRules: [
