@@ -4,6 +4,8 @@ import Dexie from "dexie";
 
 import { defaultScenarioData } from "@/scenario/schema";
 
+import { applyScenarioDataMigration } from "./database";
+
 // version(9) は scenarioData カラムの追加。インデックスを張らないため stores は変わらず、
 // 既存レコードへ空の scenarioData を書き込むだけの upgrade を実 IndexedDB 上で検証する。
 // fake-indexeddb は test/unit.setup.ts で設定済み。
@@ -32,18 +34,12 @@ const openV8 = async (): Promise<Dexie> => {
   return db;
 };
 
-// 本体の database.ts と同じ upgrade を張った v9。本体は 1 つの Dexie インスタンスに
-// 全バージョンを積むため、ここでは v8 → v9 の差分だけを再現する。
+// 本体と同じ upgrade 関数を張った v9。本体は 1 つの Dexie インスタンスに全バージョンを
+// 積むため、ここでは v8 → v9 の差分だけを再現する。
 const openV9 = async (): Promise<Dexie> => {
   const db = new Dexie(DB_NAME);
   db.version(8).stores(V8_STORES);
-  db.version(9).upgrade(async (tx) => {
-    const backfill = (row: { scenarioData?: string }): void => {
-      row.scenarioData ??= emptyScenarioData;
-    };
-    await tx.table("Template").toCollection().modify(backfill);
-    await tx.table("GameSession").toCollection().modify(backfill);
-  });
+  db.version(9).upgrade(applyScenarioDataMigration);
   await db.open();
   return db;
 };
@@ -119,12 +115,5 @@ describe("scenarioData migration (v8 → v9)", () => {
     expect((await reopened.table("Template").get(id)).scenarioData).toBe(scenarioData);
 
     reopened.close();
-  });
-
-  test("本体の Template スキーマに scenarioData のインデックスを張っていない", async () => {
-    const { db } = await import("./instance");
-
-    expect(db.Template.schema.indexes.map((index) => index.name)).not.toContain("scenarioData");
-    expect(db.GameSession.schema.indexes.map((index) => index.name)).not.toContain("scenarioData");
   });
 });

@@ -415,7 +415,6 @@ describe("collectDescendantStepIds", () => {
   });
 });
 
-// シナリオドキュメント UI のブロック列 (フラットな Step[]) 用の入口。
 describe("findStepIn / collectStepsIn", () => {
   const blocks = [
     leaf("a"),

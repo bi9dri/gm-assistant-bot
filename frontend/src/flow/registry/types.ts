@@ -34,7 +34,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // (GM が手動操作するのみ)。action / branch のみ定義する。
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
   // シナリオドキュメント UI で本文中にインライン描画される本体 (docs: scenario-editor-architecture D11)。
-  // 持たない型は DetailPanel に落ちる。既存画面はこのフィールドを参照しない。
+  // 持たない型は DetailPanel に落ちる。
   InlineBody?: ComponentType<DetailPanelProps<S>>;
 }
 

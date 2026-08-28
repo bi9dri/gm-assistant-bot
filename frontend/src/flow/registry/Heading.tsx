@@ -32,6 +32,9 @@ export const HeadingEntry = defineStep<HeadingStep>({
     level: 1,
     collapsed: false,
   }),
-  summary: (step) => `H${step.level} ${step.title.trim() === "" ? "(無題)" : step.title.trim()}`,
+  summary: (step) => {
+    const title = step.title.trim();
+    return `H${step.level} ${title === "" ? "(無題)" : title}`;
+  },
   DetailPanel: HeadingDetailPanel,
 });

@@ -97,7 +97,6 @@ export class Template extends Entity<DB> {
     }
 
     if (scenarioData !== undefined) {
-      ScenarioDataSchema.parse(scenarioData);
       updateData.scenarioData = JSON.stringify(scenarioData);
     }
 

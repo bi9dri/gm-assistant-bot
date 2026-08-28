@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable, type Table } from "dexie";
+import Dexie, { type EntityTable, type Table, type Transaction } from "dexie";
 import z from "zod";
 
 // Set up fake-indexeddb for test environment (bun test sets NODE_ENV=test)
@@ -66,6 +66,20 @@ const SendMessageNodeV2Data = z.object({
 const CreateCategoryNodeV1Data = z.object({
   categoryName: z.string(),
 });
+
+// v9: 既存レコードへ空の scenarioData を書き込む。旧 flowData からの変換は行わない
+// (docs: scenario-editor-architecture D4)。空の形は v9 時点のリテラルで持つ
+// (defaultScenarioData を import すると、将来スキーマが変わったときに過去の
+// マイグレーションの意味が変わる)。
+export const applyScenarioDataMigration = async (tx: Transaction): Promise<void> => {
+  const emptyScenarioData = JSON.stringify({ version: 1, blocks: [] });
+  const backfill = (row: { scenarioData?: string }): void => {
+    row.scenarioData ??= emptyScenarioData;
+  };
+
+  await tx.table("Template").toCollection().modify(backfill);
+  await tx.table("GameSession").toCollection().modify(backfill);
+};
 
 export class DB extends Dexie {
   DiscordBot!: Table<DiscordBotData, string>;
@@ -332,19 +346,7 @@ export class DB extends Dexie {
     });
 
     // issue #245: シナリオドキュメント型 UI の scenarioData を両テーブルへ追加する。
-    // 絞り込みには使わないため (有無の判定は行を読んでから行う) インデックスは張らず、
-    // 既存レコードへ空の scenarioData を書き込むだけにする。旧 flowData からの変換は行わない
-    // (docs: scenario-editor-architecture D4)。
-    this.version(9).upgrade(async (tx) => {
-      // 当時の空の形をそのまま持つ (defaultScenarioData を import すると、
-      // 将来スキーマが変わったときに過去のマイグレーションの意味が変わる)。
-      const emptyScenarioData = JSON.stringify({ version: 1, blocks: [] });
-      const backfill = (row: { scenarioData?: string }): void => {
-        row.scenarioData ??= emptyScenarioData;
-      };
-
-      await tx.table("Template").toCollection().modify(backfill);
-      await tx.table("GameSession").toCollection().modify(backfill);
-    });
+    // 絞り込みには使わないため (有無の判定は行を読んでから行う) インデックスは張らない。
+    this.version(9).upgrade(applyScenarioDataMigration);
   }
 }

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { getEntry, stepTypes } from "../registry";
+import { CATEGORY_LABEL } from "../registry/category";
 import type { StepRegistryEntry } from "../registry/types";
 import type { Step } from "../schema";
 import { useEditorStore } from "../store/editorStore";
@@ -14,16 +15,7 @@ interface MenuItem {
 
 // text カテゴリ (本文・見出し) はシナリオドキュメント UI 専用のため、ここには並べない
 // (docs: scenario-editor-architecture D15)。
-const CATEGORY_ORDER = [
-  "action",
-  "branch",
-  "tool",
-] as const satisfies StepRegistryEntry["category"][];
-const CATEGORY_LABEL: Record<(typeof CATEGORY_ORDER)[number], string> = {
-  action: "操作",
-  branch: "分岐",
-  tool: "ツール",
-};
+const CATEGORY_ORDER: StepRegistryEntry["category"][] = ["action", "branch", "tool"];
 
 export const AddStepMenu = ({ container, index }: { container: StepContainer; index: number }) => {
   const addStep = useEditorStore((state) => state.addStep);

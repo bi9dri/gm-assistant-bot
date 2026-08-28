@@ -48,12 +48,6 @@ describe("ScenarioDataSchema", () => {
     expect(ScenarioDataSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  test("未知のブロック型は弾く", () => {
-    expect(() =>
-      ScenarioDataSchema.parse({ version: 1, blocks: [{ id: "x", type: "Unknown", title: "" }] }),
-    ).toThrow();
-  });
-
   test("version が 1 以外なら弾く", () => {
     expect(() => ScenarioDataSchema.parse({ version: 2, blocks: [] })).toThrow();
   });

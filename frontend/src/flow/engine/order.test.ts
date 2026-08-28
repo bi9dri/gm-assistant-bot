@@ -126,7 +126,6 @@ describe("firstRunnableId", () => {
   });
 });
 
-// シナリオドキュメント UI のブロック列 (フラットな Step[]) 用の入口。
 describe("runnableStepsIn", () => {
   test("フラットなブロック列をそのままの順で返す", () => {
     expect(runnableStepsIn([step("a"), step("b"), step("c")]).map((s) => s.id)).toEqual([

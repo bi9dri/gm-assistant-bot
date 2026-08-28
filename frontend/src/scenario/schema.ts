@@ -16,5 +16,5 @@ export const ScenarioDataSchema = z.object({
 
 export type ScenarioData = z.infer<typeof ScenarioDataSchema>;
 
-// 空の ScenarioData。新規作成時の初期値、およびパース失敗時のフォールバック。
+// 新規作成時の初期値、およびパース失敗時のフォールバック。
 export const defaultScenarioData: ScenarioData = { version: 1, blocks: [] };
