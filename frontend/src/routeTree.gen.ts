@@ -20,6 +20,7 @@ import { Route as TemplateWizardRouteImport } from './routes/template/wizard'
 import { Route as SessionIdIndexRouteImport } from './routes/session/$id/index'
 import { Route as SessionIdStepsRouteImport } from './routes/session/$id/steps'
 import { Route as TemplateIdIndexRouteImport } from './routes/template/$id/index'
+import { Route as TemplateIdScenarioRouteImport } from './routes/template/$id/scenario'
 import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +78,11 @@ const TemplateIdIndexRoute = TemplateIdIndexRouteImport.update({
   path: '/template/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplateIdScenarioRoute = TemplateIdScenarioRouteImport.update({
+  id: '/template/$id/scenario',
+  path: '/template/$id/scenario',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
   id: '/template/$id/steps',
   path: '/template/$id/steps',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
+  '/template/$id/scenario': typeof TemplateIdScenarioRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
   '/session/$id/': typeof SessionIdIndexRoute
   '/template/$id/': typeof TemplateIdIndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/session': typeof SessionIndexRoute
   '/template': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
+  '/template/$id/scenario': typeof TemplateIdScenarioRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
   '/session/$id': typeof SessionIdIndexRoute
   '/template/$id': typeof TemplateIdIndexRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/session/': typeof SessionIndexRoute
   '/template/': typeof TemplateIndexRoute
   '/session/$id/steps': typeof SessionIdStepsRoute
+  '/template/$id/scenario': typeof TemplateIdScenarioRoute
   '/template/$id/steps': typeof TemplateIdStepsRoute
   '/session/$id/': typeof SessionIdIndexRoute
   '/template/$id/': typeof TemplateIdIndexRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/session/'
     | '/template/'
     | '/session/$id/steps'
+    | '/template/$id/scenario'
     | '/template/$id/steps'
     | '/session/$id/'
     | '/template/$id/'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/session'
     | '/template'
     | '/session/$id/steps'
+    | '/template/$id/scenario'
     | '/template/$id/steps'
     | '/session/$id'
     | '/template/$id'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/session/'
     | '/template/'
     | '/session/$id/steps'
+    | '/template/$id/scenario'
     | '/template/$id/steps'
     | '/session/$id/'
     | '/template/$id/'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   SessionIndexRoute: typeof SessionIndexRoute
   TemplateIndexRoute: typeof TemplateIndexRoute
   SessionIdStepsRoute: typeof SessionIdStepsRoute
+  TemplateIdScenarioRoute: typeof TemplateIdScenarioRoute
   TemplateIdStepsRoute: typeof TemplateIdStepsRoute
   SessionIdIndexRoute: typeof SessionIdIndexRoute
   TemplateIdIndexRoute: typeof TemplateIdIndexRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplateIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/template/$id/scenario': {
+      id: '/template/$id/scenario'
+      path: '/template/$id/scenario'
+      fullPath: '/template/$id/scenario'
+      preLoaderRoute: typeof TemplateIdScenarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/template/$id/steps': {
       id: '/template/$id/steps'
       path: '/template/$id/steps'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionIndexRoute: SessionIndexRoute,
   TemplateIndexRoute: TemplateIndexRoute,
   SessionIdStepsRoute: SessionIdStepsRoute,
+  TemplateIdScenarioRoute: TemplateIdScenarioRoute,
   TemplateIdStepsRoute: TemplateIdStepsRoute,
   SessionIdIndexRoute: SessionIdIndexRoute,
   TemplateIdIndexRoute: TemplateIdIndexRoute,

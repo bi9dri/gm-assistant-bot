@@ -14,6 +14,18 @@ const TextDetailPanel = ({ step, onChange }: DetailPanelProps<TextStep>) => (
   </fieldset>
 );
 
+// ドキュメント本文としてのインライン編集 (docs: scenario-editor-architecture D7)。
+// 高さは CSS の field-sizing に任せる (JS でのオートリサイズを持たない)。
+const TextInlineBody = ({ step, onChange }: DetailPanelProps<TextStep>) => (
+  <textarea
+    className="textarea field-sizing-content min-h-16 w-full border-transparent bg-transparent px-0 text-base leading-relaxed focus:border-base-300"
+    value={step.body}
+    placeholder="シナリオ本文"
+    aria-label="シナリオ本文"
+    onChange={(event) => onChange({ body: event.target.value })}
+  />
+);
+
 const SUMMARY_LENGTH = 40;
 
 export const TextEntry = defineStep<TextStep>({
@@ -40,4 +52,5 @@ export const TextEntry = defineStep<TextStep>({
       : firstLine;
   },
   DetailPanel: TextDetailPanel,
+  InlineBody: TextInlineBody,
 });

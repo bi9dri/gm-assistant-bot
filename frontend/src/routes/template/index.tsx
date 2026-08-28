@@ -6,6 +6,7 @@ import z from "zod";
 import { TemplateCard } from "@/components/TemplateCard";
 import { db } from "@/db";
 import { FileSystem } from "@/fileSystem";
+import { hasScenarioBlocks } from "@/scenario/schema";
 import { matchesTemplateFilter, type TemplateFilterCriteria } from "@/templateFilter";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -159,7 +160,14 @@ function RouteComponent() {
           </div>
         ) : (
           visibleTemplates?.map((t) => (
-            <TemplateCard key={t.id} id={t.id} name={t.name} updatedAt={t.updatedAt} meta={t} />
+            <TemplateCard
+              key={t.id}
+              id={t.id}
+              name={t.name}
+              updatedAt={t.updatedAt}
+              meta={t}
+              hasScenario={hasScenarioBlocks(t.scenarioData)}
+            />
           ))
         )}
       </div>

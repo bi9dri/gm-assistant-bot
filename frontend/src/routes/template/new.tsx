@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { TemplateEditor } from "@/components/TemplateEditor";
 import { Template } from "@/db";
-import { useTemplateEditorStore } from "@/stores/templateEditorStore";
+import { generateId } from "@/flow/ids";
+import { TextEntry } from "@/flow/registry/Text";
+import type { Step } from "@/flow/schema";
 import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/template/new")({
@@ -15,58 +16,53 @@ export const Route = createFileRoute("/template/new")({
   },
 });
 
+// 新規テンプレートはシナリオ形式のみを作る (docs: scenario-editor-architecture D15)。
+// 空のブロック列にしないのは、v9 で全既存レコードに空の scenarioData が backfill されており、
+// 「空 = 旧形式」と区別できず一覧のバッジと導線が出せないため。
+const initialBlocks = (): Step[] => [{ ...TextEntry.defaults(), id: generateId() } as Step];
+
 function RouteComponent() {
   const [templateName, setTemplateName] = useState("");
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  // マウント時にストアをリセット
-  const [mounted, setMounted] = useState(false);
-  if (!mounted) {
-    useTemplateEditorStore.getState().reset();
-    setMounted(true);
-  }
-
-  const handleSave = async () => {
+  const handleCreate = async () => {
     try {
-      const { nodes, edges, viewport } = useTemplateEditorStore.getState();
       const template = await Template.create(templateName);
-      await template.update({
-        reactFlowData: { nodes, edges, viewport },
-      });
+      await template.update({ scenarioData: { version: 1, blocks: initialBlocks() } });
 
       addToast({
         message: `テンプレート「${templateName}」を作成しました`,
         durationSeconds: 5,
       });
 
-      void navigate({ to: "/template/$id", params: { id: template.id.toString() } });
+      void navigate({ to: "/template/$id/scenario", params: { id: template.id.toString() } });
     } catch (error) {
-      console.error("Failed to save template:", error);
+      console.error("Failed to create template:", error);
       addToast({
-        message: "テンプレートの保存に失敗しました",
+        message: "テンプレートの作成に失敗しました",
         status: "error",
       });
     }
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 px-4 py-3 bg-base-200 border-b border-base-300">
+    <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
+      <h2 className="text-2xl font-bold">新しいシナリオを作成</h2>
+      <p className="text-sm text-base-content/60">
+        シナリオ本文を書きながら Discord 操作ブロックを差し込む形式で作成します。
+      </p>
+      <div className="flex w-full max-w-md gap-2">
         <input
           type="text"
           placeholder="テンプレート名を入力"
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
-          className="input input-bordered flex-1 max-w-md"
+          className="input input-bordered flex-1"
         />
-        <button onClick={handleSave} disabled={!templateName.trim()} className="btn btn-primary">
-          保存
+        <button onClick={handleCreate} disabled={!templateName.trim()} className="btn btn-primary">
+          作成
         </button>
-      </div>
-
-      <div className="flex-1 min-h-0">
-        <TemplateEditor nodes={[]} edges={[]} />
       </div>
     </div>
   );

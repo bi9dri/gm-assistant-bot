@@ -26,7 +26,8 @@ interface StepLocator {
   step: Step;
 }
 
-const locateInSteps = (steps: Step[], id: string): StepLocator | undefined => {
+// フラットなステップ列に対する入口 (findStepIn / scenario の blockOps が共有する)。
+export const locateInSteps = (steps: Step[], id: string): StepLocator | undefined => {
   for (let index = 0; index < steps.length; index++) {
     const step = steps[index];
     if (step === undefined) continue;
@@ -69,7 +70,8 @@ const resolveContainerSteps = (flow: FlowData, container: StepContainer): Step[]
   return branch.branches.find((arm) => arm.id === container.armId)?.steps;
 };
 
-const clampIndex = (index: number, length: number): number => Math.max(0, Math.min(index, length));
+export const clampIndex = (index: number, length: number): number =>
+  Math.max(0, Math.min(index, length));
 
 const collectBranchIds = (step: Step, acc: Set<string>): void => {
   if (step.type !== "Branch") return;
@@ -163,7 +165,7 @@ export const removeStep = (flow: FlowData, id: string): FlowData =>
 // 複製自身に加え、Branch の枝 (arm) と入れ子ステップの id もすべて採番し直す。
 // id が重複すると locateStep の検索や dnd-kit の sortable id が最初の 1 件しか
 // 指せなくなるため。実行痕跡 (executedAt / executedBranchIds) も一緒に消す。
-const reassignIds = (step: Step): void => {
+export const reassignIds = (step: Step): void => {
   step.id = generateId();
   step.executedAt = undefined;
   if (step.type !== "Branch") return;

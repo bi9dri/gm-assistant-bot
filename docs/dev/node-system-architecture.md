@@ -1,6 +1,7 @@
 # Node-Based Workflow System Architecture
 
-> Read this before implementing a new node type. For step-by-step implementation procedures, see `.claude/skills/node-creator/SKILL.md`.
+> Read this before touching the React Flow node UI (the first-generation editor). New features go to the
+> scenario document UI instead — see [scenario-editor-architecture.md](./scenario-editor-architecture.md).
 
 ## Overview
 
@@ -56,7 +57,7 @@ Add an entry to `NODE_TYPE_WIDTHS` when introducing a new node type.
 
 ## Node component pattern
 
-Skeleton only. The full template lives in `.claude/skills/node-creator/SKILL.md`.
+Skeleton only. See `frontend/src/components/Node/nodes/` for complete examples.
 
 ```tsx
 import { Position, type Node, type NodeProps } from "@xyflow/react";
@@ -260,7 +261,7 @@ These files must be edited. None of this is automated by type inference — ever
 - `frontend/src/stores/templateEditorStore.ts` — extend the `FlowNode` union, the `addNode` switch, and `updateNodeData`'s parameter type (three separate sites)
 - `frontend/src/components/TemplateEditor.tsx` — add to `NODE_CATEGORIES`
 
-**For the full procedure and code templates, follow `.claude/skills/node-creator/SKILL.md`.**
+**A new block for the scenario document UI is one module added to the registry — see [scenario-editor-architecture.md](./scenario-editor-architecture.md).**
 
 ---
 

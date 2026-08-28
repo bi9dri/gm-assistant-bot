@@ -13,6 +13,8 @@ const TemplateCardSchema = z.object({
   name: z.string().trim().nonempty(),
   updatedAt: z.date().optional(),
   meta: TemplateMetaSchema,
+  // シナリオ形式のブロックを持つか。持つ場合だけシナリオ編集への導線を出す (docs: scenario-editor-architecture D12)。
+  hasScenario: z.boolean(),
 });
 
 type Props = z.infer<typeof TemplateCardSchema>;
@@ -48,7 +50,7 @@ const useCoverUrl = (coverPath: string | undefined): string | undefined => {
   return url;
 };
 
-export const TemplateCard = ({ id, name, updatedAt, meta }: Props) => {
+export const TemplateCard = ({ id, name, updatedAt, meta, hasScenario }: Props) => {
   const { addToast } = useToast();
   const [metaModalOpen, setMetaModalOpen] = useState(false);
   const coverUrl = useCoverUrl(meta.coverPath);
@@ -122,6 +124,7 @@ export const TemplateCard = ({ id, name, updatedAt, meta }: Props) => {
         )}
         <div className="card-body">
           <h5 className="card-title">{name}</h5>
+          {hasScenario && <span className="badge badge-primary w-fit">シナリオ形式</span>}
           {badges.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {badges.map((badge) => (
@@ -145,6 +148,15 @@ export const TemplateCard = ({ id, name, updatedAt, meta }: Props) => {
             >
               ステップ編集
             </Link>
+            {hasScenario && (
+              <Link
+                to="/template/$id/scenario"
+                params={{ id: id.toString() }}
+                className="btn btn-secondary"
+              >
+                シナリオ編集
+              </Link>
+            )}
             <button onClick={() => setMetaModalOpen(true)} className="btn btn-accent">
               メタ情報
             </button>

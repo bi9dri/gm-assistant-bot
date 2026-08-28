@@ -17,9 +17,15 @@ interface MenuItem {
 // (docs: scenario-editor-architecture D15)。
 const CATEGORY_ORDER: StepRegistryEntry["category"][] = ["action", "branch", "tool"];
 
-export const AddStepMenu = ({ container, index }: { container: StepContainer; index: number }) => {
-  const addStep = useEditorStore((state) => state.addStep);
+interface StepTypeMenuProps {
+  label: string;
+  categories: StepRegistryEntry["category"][];
+  onPick: (type: Step["type"]) => void;
+}
 
+// registry からステップタイプをカテゴリ別に並べるドロップダウン。
+// 並べるカテゴリと挿入先の決め方は呼び出し側 (UI ごと) が決める。
+export const StepTypeMenu = ({ label, categories, onPick }: StepTypeMenuProps) => {
   const items = useMemo<MenuItem[]>(
     () =>
       stepTypes().flatMap((type) => {
@@ -38,13 +44,13 @@ export const AddStepMenu = ({ container, index }: { container: StepContainer; in
         tabIndex={0}
         className="btn btn-ghost btn-xs w-full justify-start text-base-content/60"
       >
-        ＋ ステップを追加
+        {label}
       </button>
       <ul
         tabIndex={0}
         className="dropdown-content menu z-10 max-h-80 w-56 flex-nowrap overflow-y-auto rounded bg-base-100 p-2 shadow"
       >
-        {CATEGORY_ORDER.map((category) => (
+        {categories.map((category) => (
           <li key={category}>
             <h4 className="menu-title">{CATEGORY_LABEL[category]}</h4>
             <ul>
@@ -52,7 +58,7 @@ export const AddStepMenu = ({ container, index }: { container: StepContainer; in
                 .filter((item) => item.category === category)
                 .map((item) => (
                   <li key={item.type}>
-                    <button type="button" onClick={() => addStep(item.type, { container, index })}>
+                    <button type="button" onClick={() => onPick(item.type)}>
                       {item.label}
                     </button>
                   </li>
@@ -62,5 +68,17 @@ export const AddStepMenu = ({ container, index }: { container: StepContainer; in
         ))}
       </ul>
     </div>
+  );
+};
+
+export const AddStepMenu = ({ container, index }: { container: StepContainer; index: number }) => {
+  const addStep = useEditorStore((state) => state.addStep);
+
+  return (
+    <StepTypeMenu
+      label="＋ ステップを追加"
+      categories={CATEGORY_ORDER}
+      onPick={(type) => addStep(type, { container, index })}
+    />
   );
 };

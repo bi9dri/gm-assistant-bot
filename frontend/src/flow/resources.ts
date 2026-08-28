@@ -78,10 +78,11 @@ const collectFromStep = (step: Step, resources: TemplateResources): void => {
   }
 };
 
+// フラットなステップ列からリソース候補を集める (シナリオドキュメント UI の入口)。
 // gameFlags には edit モードでは Template.gameFlags (seed)、execute モードでは
 // GameSession.gameFlags (live) を渡す。フラグパネルで定義しただけのフラグも候補に載せる。
-export const collectResourcesFromFlow = (
-  flow: FlowData,
+export const collectResourcesFromSteps = (
+  steps: Step[],
   gameFlags?: Record<string, unknown>,
 ): TemplateResources => {
   const resources: TemplateResources = { roles: [], channels: [], gameFlags: [] };
@@ -91,11 +92,18 @@ export const collectResourcesFromFlow = (
     const v = formatFlagValue(value).trim();
     resources.gameFlags.push({ key: k, values: v ? [v] : [], sourceNodeId: "game-flags" });
   }
-  for (const section of flow.sections) {
-    for (const step of section.steps) collectFromStep(step, resources);
-  }
+  for (const step of steps) collectFromStep(step, resources);
   return resources;
 };
+
+export const collectResourcesFromFlow = (
+  flow: FlowData,
+  gameFlags?: Record<string, unknown>,
+): TemplateResources =>
+  collectResourcesFromSteps(
+    flow.sections.flatMap((section) => section.steps),
+    gameFlags,
+  );
 
 // ---- フィールドエディタ向けの候補リスト (PURE / unit-tested) ----
 

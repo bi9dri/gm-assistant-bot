@@ -86,9 +86,11 @@ frontend/src/scenario/
   store/
     editorStore.ts       # 編集モード (テンプレート著作)
     runnerStore.ts       # 実行モード (カーソル + 連鎖実行)
+  outline.ts             # ブロック列を Heading の level で階層化 (折りたたみと目次が共有)
   components/
-    ScenarioEditor.tsx   # 編集モードの 2 カラム + 目次
+    ScenarioEditor.tsx   # 編集モードの 2 カラム + 目次 (store 初期化・自動保存)
     ScenarioRunner.tsx   # 実行モード
+    BlockDocument.tsx    # ドキュメントのカラム (単一 DndContext)
     BlockList.tsx        # ドキュメント本体 (ブロック列の描画)
     TableOfContents.tsx  # Heading から生成する目次 (D22)
     CopyButton.tsx       # クリップボードコピー (D13)
@@ -278,16 +280,6 @@ export interface StepRegistryEntry<S extends Step = Step> {
 | PDF 併置ビューア | 本文は再構成した成果物である、という前提と両立しない |
 | 構造化ブロック (`Character` 等) | シナリオ 3 本を `Text` で書くまで作らない (D20) |
 | `docs/dev/node-system-architecture.md` の整理 | `DynamicValue` の解決仕様は新画面でも有効なので、ノード実装手順のみ削る。#182 Phase 5 の後 |
-
-## 後片付け TODO
-
-- [ ] **フェーズ 2 完了後**: `.claude/skills/node-creator` を削除する。新機能はすべて新画面に
-      実装される (D11) ため、React Flow のノード実装手順へ誘導するこのスキルは誤ったガイドを
-      引き当て続ける。新画面のブロック追加は registry に 1 モジュール足すだけで、スキル化する
-      ほどの手順がない。`knip` では検出されないので手で削除すること。
-- [ ] CLAUDE.md の Skills 節から node-creator の記述を削る (上と同時)。
-
----
 
 ## 参照ファイル
 
