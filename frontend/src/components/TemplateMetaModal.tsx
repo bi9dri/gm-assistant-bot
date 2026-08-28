@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { saveFileToOPFS } from "@/components/Node/utils/messageSchema";
-import { Template, type TemplateMeta } from "@/db";
+import { Template, TemplateMetaSchema, type TemplateMeta } from "@/db";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {
@@ -60,11 +60,17 @@ export const TemplateMetaModal = ({ id, name, meta, onClose }: Props) => {
       coverPath: toOptionalString(form.coverPath),
     };
 
-    if (
-      (next.playerCountMin ?? 0) > (next.playerCountMax ?? Infinity) ||
-      (next.durationMinutesMin ?? 0) > (next.durationMinutesMax ?? Infinity)
-    ) {
-      addToast({ message: "範囲の下限が上限を超えています", status: "error" });
+    // 保存前に弾かないと Template.update の中で zod が throw し、どの項目が悪いか伝わらない。
+    if (!TemplateMetaSchema.safeParse(next).success) {
+      addToast({ message: "人数と所要時間は 1 以上の整数で入力してください", status: "error" });
+      return;
+    }
+    if ((next.playerCountMin ?? 0) > (next.playerCountMax ?? Infinity)) {
+      addToast({ message: "プレイヤー人数の下限が上限を超えています", status: "error" });
+      return;
+    }
+    if ((next.durationMinutesMin ?? 0) > (next.durationMinutesMax ?? Infinity)) {
+      addToast({ message: "所要時間の下限が上限を超えています", status: "error" });
       return;
     }
 
@@ -114,7 +120,7 @@ export const TemplateMetaModal = ({ id, name, meta, onClose }: Props) => {
             />
             <span>人</span>
           </div>
-          <legend className="fieldset-legend">所要時間の目安</legend>
+          <legend className="fieldset-legend">所要時間</legend>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -146,8 +152,8 @@ export const TemplateMetaModal = ({ id, name, meta, onClose }: Props) => {
             onChange={handleCoverChange}
           />
           {form.coverPath && (
-            <p className="text-sm opacity-70 break-all">
-              {form.coverPath}
+            <p className="text-sm opacity-70">
+              設定済み
               <button className="btn btn-ghost btn-xs ml-2" onClick={() => set("coverPath", "")}>
                 削除
               </button>

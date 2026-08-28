@@ -2,7 +2,13 @@ import { expect, test } from "./fixtures";
 import { FIXTURE_TEMPLATES } from "./seed";
 
 // メタ情報の編集は保存 → 表示 → 再編集 → クリアまで通しで確認する (スナップショットなし)。
-test("template meta — 編集の往復", async ({ page, seedDb }) => {
+test("template meta — 編集の往復", async ({ page, seedDb }, testInfo) => {
+  // スナップショットを撮らないので theme / viewport ごとに回す意味がない。
+  test.skip(
+    testInfo.project.name !== "chromium-desktop-light",
+    "非視覚の操作テストは 1 プロジェクトでのみ実行する",
+  );
+
   await seedDb({ templates: FIXTURE_TEMPLATES });
   await page.goto("/template");
   await page.getByRole("button", { name: "メタ情報" }).first().click();

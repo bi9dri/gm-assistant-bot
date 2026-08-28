@@ -57,12 +57,12 @@ describe("matchesTemplateFilter", () => {
       expect(matchesTemplateFilter(META, { maxDurationMinutes: 240 })).toBe(true);
     });
 
-    test("上限未設定なら下限で判定する", () => {
+    test("上限未設定 (「2時間以上」) は判断できないので除外する", () => {
       expect(matchesTemplateFilter({ durationMinutesMin: 120 }, { maxDurationMinutes: 120 })).toBe(
-        true,
-      );
-      expect(matchesTemplateFilter({ durationMinutesMin: 180 }, { maxDurationMinutes: 120 })).toBe(
         false,
+      );
+      expect(matchesTemplateFilter({ durationMinutesMax: 120 }, { maxDurationMinutes: 120 })).toBe(
+        true,
       );
     });
 

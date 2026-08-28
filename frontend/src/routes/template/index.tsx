@@ -25,7 +25,14 @@ function RouteComponent() {
   // 件数が高々数十なのでインデックス検索はせず、取得済みの一覧を絞る
   // (複数条件の AND は Dexie でも結局 1 インデックス + フィルタになる)。
   const systems = [...new Set(templates?.map((t) => t.system).filter((s) => s !== undefined))];
-  const visibleTemplates = templates?.filter((t) => matchesTemplateFilter(t, criteria));
+  // 選択中のシステムが編集で一覧から消えることがある。選択肢に無い値は「すべて」に戻す。
+  const system =
+    criteria.system !== undefined && systems.includes(criteria.system)
+      ? criteria.system
+      : undefined;
+  const visibleTemplates = templates?.filter((t) =>
+    matchesTemplateFilter(t, { ...criteria, system }),
+  );
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -88,7 +95,7 @@ function RouteComponent() {
             <select
               className="select w-56"
               aria-label="システムで絞り込む"
-              value={criteria.system ?? ""}
+              value={system ?? ""}
               onChange={(e) =>
                 setCriteria((prev) => ({ ...prev, system: e.target.value || undefined }))
               }
@@ -107,7 +114,6 @@ function RouteComponent() {
               type="number"
               min={1}
               className="input w-40"
-              placeholder="人数"
               aria-label="プレイヤー人数で絞り込む"
               value={criteria.playerCount ?? ""}
               onChange={(e) =>
@@ -143,13 +149,13 @@ function RouteComponent() {
       )}
 
       <div className="flex flex-wrap gap-8">
-        {templates && templates.length === 0 ? (
+        {visibleTemplates && visibleTemplates.length === 0 ? (
           <div className="w-full text-center py-16">
-            <p className="text-base-content/30 text-lg">テンプレートが作成されていません</p>
-          </div>
-        ) : visibleTemplates && visibleTemplates.length === 0 ? (
-          <div className="w-full text-center py-16">
-            <p className="text-base-content/30 text-lg">条件に合うテンプレートがありません</p>
+            <p className="text-base-content/30 text-lg">
+              {templates?.length === 0
+                ? "テンプレートが作成されていません"
+                : "条件に合うテンプレートがありません"}
+            </p>
           </div>
         ) : (
           visibleTemplates?.map((t) => (

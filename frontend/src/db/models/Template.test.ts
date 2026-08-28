@@ -66,7 +66,7 @@ describe("Template", () => {
       expect(template.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
     });
 
-    test("メタ情報を保存し、未指定のキーでクリアできる (issue #244)", async () => {
+    test("メタ情報を保存し、未指定のキーでクリアできる", async () => {
       const template = await Template.create("Test");
 
       await template.update({

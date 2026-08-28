@@ -7,10 +7,11 @@ export interface TemplateFilterCriteria {
 }
 
 /**
- * 一覧の絞り込み判定 (issue #244)。
+ * 一覧の絞り込み判定。
  *
  * メタ情報が無い軸は「条件を満たすか判断できない」ため、その軸で絞り込んだ時点で除外する。
  * 所要時間は範囲の上限で判定する: 「2〜3 時間」のシナリオは「2 時間以内」に収まらない。
+ * 上限が無い (「2 時間以上」) 場合も同様に判断できないため除外する。
  */
 export const matchesTemplateFilter = (
   meta: TemplateMeta,
@@ -28,7 +29,7 @@ export const matchesTemplateFilter = (
   }
 
   if (maxDurationMinutes !== undefined) {
-    const longest = meta.durationMinutesMax ?? meta.durationMinutesMin;
+    const { durationMinutesMax: longest } = meta;
     if (longest === undefined || longest > maxDurationMinutes) return false;
   }
 

@@ -35,7 +35,9 @@ const useCoverUrl = (coverPath: string | undefined): string | undefined => {
         objectUrl = URL.createObjectURL(file);
         setUrl(objectUrl);
       })
-      .catch(() => setUrl(undefined));
+      .catch(() => {
+        if (!cancelled) setUrl(undefined);
+      });
 
     return () => {
       cancelled = true;

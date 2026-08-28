@@ -106,7 +106,7 @@ export const test = base.extend<VrtFixtures, VrtWorkerOptions>({
 
   seedDb: async ({ page }, use) => {
     await page.goto("/");
-    await page.waitForFunction(() => "__vrtDb" in window);
+    await page.waitForFunction(() => "__vrtDb" in window && "__vrtFs" in window);
 
     await use(async (payload: SeedPayload) => {
       await applySeed(page, payload);

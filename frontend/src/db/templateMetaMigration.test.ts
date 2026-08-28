@@ -2,9 +2,11 @@ import { afterEach, describe, expect, test } from "bun:test";
 
 import Dexie from "dexie";
 
-// version(8) はメタ情報カラム (issue #244) のインデックス追加のみで upgrade 関数を持たない。
-// 「既存レコードが壊れず、新カラムはインデックス経由で絞り込める」ことを実 IndexedDB
-// (fake-indexeddb) 上で確認する。配線は test/unit.setup.ts の db import で済んでいる前提。
+import { db as appDb } from "./instance";
+
+// version(8) はメタ情報カラムのインデックス追加のみで upgrade 関数を持たない。
+// 既存レコードが v7 → v8 で壊れないことを実 IndexedDB 上で確認する。
+// fake-indexeddb は test/unit.setup.ts で設定済み。
 
 const DB_NAME = "TemplateMetaMigrationTest";
 
@@ -64,31 +66,14 @@ describe("template meta migration (v7 → v8)", () => {
     newDb.close();
   });
 
-  test("メタ情報カラムでインデックス検索できる", async () => {
-    const db = new Dexie(DB_NAME);
-    db.version(7).stores(V7_STORES);
-    db.version(8).stores(V8_STORES);
-    await db.open();
-
-    const base = {
-      gameFlags: "{}",
-      reactFlowData: emptyReactFlow,
-      flowData: emptyFlow,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    await db.table("Template").bulkAdd([
-      { ...base, name: "メタあり", system: "CoC", playerCountMin: 2, playerCountMax: 4 },
-      { ...base, name: "メタなし" },
-    ]);
-
-    const withSystem = await db.table("Template").where("system").equals("CoC").toArray();
-    expect(withSystem.map((t) => t.name)).toEqual(["メタあり"]);
-
-    // 未設定のレコードはインデックスに載らない = 絞り込みで自然に除外される
-    const upTo4 = await db.table("Template").where("playerCountMax").belowOrEqual(4).toArray();
-    expect(upTo4.map((t) => t.name)).toEqual(["メタあり"]);
-
-    db.close();
+  // 上のテストは V8_STORES を写経しているため、本体のスキーマが変わっても緑のままになる。
+  // 本体側のインデックス定義と一致していることをここで突き合わせる。
+  test("本体の Template スキーマが V8_STORES と一致している", () => {
+    const actual = appDb.Template.schema.indexes.map((index) => index.name).sort();
+    const expected = V8_STORES.Template.split(",")
+      .slice(1)
+      .map((name) => name.trim())
+      .sort();
+    expect(actual).toEqual(expected);
   });
 });

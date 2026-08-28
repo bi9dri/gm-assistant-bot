@@ -212,7 +212,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   配下に置き、パスのみをカラムに持つ。**`schema-migration` スキルを使うこと。**
   1 シナリオでも人数と所要時間は範囲を取る (2〜4 人 / 2〜3 時間) ため、下限と上限を別カラムに
   分ける: `playerCountMin` / `playerCountMax` / `durationMinutesMin` / `durationMinutesMax`
-  (Dexie v8、issue #244 で実装済み)。絞り込みは「人数がその範囲に入るか」「所要時間の上限が
+  (Dexie v8)。絞り込みは「人数がその範囲に入るか」「所要時間の上限が
   指定時間以内か」で判定し、メタ情報が無い軸は判定不能として除外する。
 
 ---
