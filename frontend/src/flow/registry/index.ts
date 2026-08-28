@@ -10,16 +10,18 @@ import { CreateRoleEntry } from "./CreateRole";
 import { DeleteCategoryEntry } from "./DeleteCategory";
 import { DeleteChannelEntry } from "./DeleteChannel";
 import { DeleteRoleEntry } from "./DeleteRole";
+import { HeadingEntry } from "./Heading";
 import { KanbanEntry } from "./Kanban";
 import { RandomSelectEntry } from "./RandomSelect";
 import { RecordCombinationEntry } from "./RecordCombination";
 import { SendMessageEntry } from "./SendMessage";
 import { SetGameFlagEntry } from "./SetGameFlag";
 import { ShuffleAssignEntry } from "./ShuffleAssign";
+import { TextEntry } from "./Text";
 import type { StepRegistryEntry } from "./types";
 
 // 全ステップタイプの登録リスト。ステップタイプを増やす = ここに 1 行追加するだけ。
-// 表示順は「操作 → 分岐 → ツール」のおおまかな並び。
+// 表示順は「操作 → 分岐 → ツール → 本文」のおおまかな並び。
 const ENTRIES: StepRegistryEntry[] = [
   CreateRoleEntry,
   DeleteRoleEntry,
@@ -38,6 +40,8 @@ const ENTRIES: StepRegistryEntry[] = [
   ShuffleAssignEntry,
   RandomSelectEntry,
   RecordCombinationEntry,
+  TextEntry,
+  HeadingEntry,
 ];
 
 export const registry = new Map<Step["type"], StepRegistryEntry>(

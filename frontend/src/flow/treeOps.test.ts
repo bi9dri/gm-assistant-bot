@@ -5,9 +5,11 @@ import {
   clearDescendantExecution,
   collectDescendantStepIds,
   collectSteps,
+  collectStepsIn,
   duplicateStep,
   findSection,
   findStep,
+  findStepIn,
   insertSection,
   insertStep,
   moveSection,
@@ -410,5 +412,27 @@ describe("collectDescendantStepIds", () => {
 
   test("Branch 以外は空配列", () => {
     expect(collectDescendantStepIds(leaf("x"))).toEqual([]);
+  });
+});
+
+describe("findStepIn / collectStepsIn", () => {
+  const blocks = [
+    leaf("a"),
+    branch("br", [
+      { id: "arm1", label: "A1", steps: [leaf("c")] },
+      { id: "arm2", label: "A2", steps: [leaf("d")] },
+    ]),
+  ];
+
+  test("Branch の枝の中も含めて探す", () => {
+    expect(findStepIn(blocks, "d")?.id).toBe("d");
+  });
+
+  test("見つからなければ undefined", () => {
+    expect(findStepIn(blocks, "ghost")).toBeUndefined();
+  });
+
+  test("未選択の枝も含めて pre-order で平坦化する", () => {
+    expect(collectStepsIn(blocks).map((step) => step.id)).toEqual(["a", "br", "c", "d"]);
   });
 });

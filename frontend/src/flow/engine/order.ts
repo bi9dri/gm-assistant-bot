@@ -15,14 +15,17 @@ const visit = (step: Step, out: Step[]): void => {
   }
 };
 
-// セクション順・ステップ順の pre-order で、実行可能なステップを平坦化する。
-export const runnableSteps = (flow: FlowData): Step[] => {
+// フラットなステップ列に対する入口。シナリオドキュメント UI のブロック列が使う
+// (docs: scenario-editor-architecture「既存エンジンの再利用」)。Branch 降下は visit を共有する。
+export const runnableStepsIn = (steps: Step[]): Step[] => {
   const out: Step[] = [];
-  for (const section of flow.sections) {
-    for (const step of section.steps) visit(step, out);
-  }
+  for (const step of steps) visit(step, out);
   return out;
 };
+
+// セクション順・ステップ順の pre-order で、実行可能なステップを平坦化する。
+export const runnableSteps = (flow: FlowData): Step[] =>
+  flow.sections.flatMap((section) => runnableStepsIn(section.steps));
 
 export const firstRunnableId = (flow: FlowData): string | null =>
   runnableSteps(flow)[0]?.id ?? null;

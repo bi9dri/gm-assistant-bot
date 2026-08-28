@@ -2,6 +2,8 @@ import { describe, test, expect, spyOn } from "bun:test";
 
 import type { FlowData } from "@/flow/schema";
 import { defaultFlowData } from "@/flow/schema";
+import type { ScenarioData } from "@/scenario/schema";
+import { defaultScenarioData } from "@/scenario/schema";
 
 import { defaultReactFlowData } from "../schemas";
 import { Template } from "./Template";
@@ -210,6 +212,50 @@ describe("Template", () => {
       consoleSpy.mockRestore();
 
       expect(parsed).toEqual(defaultFlowData);
+    });
+  });
+
+  describe("scenarioData", () => {
+    test("create時にdefaultScenarioDataが設定される", async () => {
+      const template = await Template.create("Test");
+
+      expect(template.getParsedScenarioData()).toEqual(defaultScenarioData);
+    });
+
+    test("scenarioDataをZodバリデーション付きで更新する", async () => {
+      const template = await Template.create("Test");
+      const scenarioData: ScenarioData = {
+        version: 1,
+        blocks: [
+          { id: "t1", type: "Text", title: "導入", memo: "", autoAdvance: false, body: "本文" },
+        ],
+      };
+
+      await template.update({ scenarioData });
+
+      expect(template.getParsedScenarioData()).toEqual(scenarioData);
+    });
+
+    test("scenarioDataのバリデーションが失敗した場合はエラーをスローする", async () => {
+      const template = await Template.create("Test");
+
+      const invalidData = { version: 1, blocks: "nope" } as unknown as Parameters<
+        typeof template.update
+      >[0]["scenarioData"];
+
+      expect(template.update({ scenarioData: invalidData })).rejects.toThrow();
+    });
+
+    test("無効なJSONの場合はdefaultScenarioDataを返す", async () => {
+      const template = await Template.create("Test");
+
+      template.scenarioData = "not valid json";
+
+      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const parsed = template.getParsedScenarioData();
+      consoleSpy.mockRestore();
+
+      expect(parsed).toEqual(defaultScenarioData);
     });
   });
 

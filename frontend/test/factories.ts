@@ -4,6 +4,8 @@ import type { ReactFlowData } from "@/db/schemas";
 import { defaultReactFlowData } from "@/db/schemas";
 import type { FlowData } from "@/flow/schema";
 import { defaultFlowData } from "@/flow/schema";
+import type { ScenarioData } from "@/scenario/schema";
+import { defaultScenarioData } from "@/scenario/schema";
 
 interface SessionFactoryOptions {
   name?: string;
@@ -12,6 +14,7 @@ interface SessionFactoryOptions {
   gameFlags?: Record<string, unknown>;
   reactFlowData?: ReactFlowData;
   flowData?: FlowData;
+  scenarioData?: ScenarioData;
 }
 
 export async function createTestSession(options: SessionFactoryOptions = {}): Promise<GameSession> {
@@ -22,6 +25,7 @@ export async function createTestSession(options: SessionFactoryOptions = {}): Pr
     gameFlags = {},
     reactFlowData = defaultReactFlowData,
     flowData = defaultFlowData,
+    scenarioData = defaultScenarioData,
   } = options;
 
   const { GameSession } = await import("@/db/models/GameSession");
@@ -33,6 +37,7 @@ export async function createTestSession(options: SessionFactoryOptions = {}): Pr
     gameFlags: JSON.stringify(gameFlags),
     reactFlowData: JSON.stringify(reactFlowData),
     flowData: JSON.stringify(flowData),
+    scenarioData: JSON.stringify(scenarioData),
     createdAt: new Date(),
     lastUsedAt: new Date(),
   });

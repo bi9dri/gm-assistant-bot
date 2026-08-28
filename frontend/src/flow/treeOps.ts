@@ -52,6 +52,11 @@ const locateStep = (flow: FlowData, id: string): StepLocator | undefined => {
 export const findStep = (flow: FlowData, id: string): Step | undefined =>
   locateStep(flow, id)?.step;
 
+// フラットなステップ列に対する入口。シナリオドキュメント UI のブロック列が使う
+// (docs: scenario-editor-architecture「既存エンジンの再利用」)。Branch 降下は共有する。
+export const findStepIn = (steps: Step[], id: string): Step | undefined =>
+  locateInSteps(steps, id)?.step;
+
 export const findSection = (flow: FlowData, id: string): Section | undefined =>
   flow.sections.find((section) => section.id === id);
 
@@ -126,6 +131,13 @@ const collectInSteps = (steps: Step[], out: Step[]): void => {
 export const collectSteps = (flow: FlowData): Step[] => {
   const out: Step[] = [];
   for (const section of flow.sections) collectInSteps(section.steps, out);
+  return out;
+};
+
+// collectSteps のフラットなステップ列版 (findStepIn と同じくブロック列用の入口)。
+export const collectStepsIn = (steps: Step[]): Step[] => {
+  const out: Step[] = [];
+  collectInSteps(steps, out);
   return out;
 };
 

@@ -22,7 +22,8 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // Phase 3 で単一ステップ検証に使う際はこの差異に注意。
   schema: z.ZodType<S>;
   // tool = フラグ操作や手動ボード操作など、Discord 呼び出しを伴わない GM 操作系。
-  category: "action" | "tool" | "branch";
+  // text = シナリオ本文・見出し。Discord 操作を伴わないため execute を持たない。
+  category: "action" | "tool" | "branch" | "text";
   // 「ステップ追加」時の初期値 (旧 addNode の switch を置き換える)。id は呼び出し側が採番する。
   defaults: () => Omit<S, "id">;
   // PURE。リスト 1 行の要約テキスト。レンダリング無しで unit-test する。
@@ -32,6 +33,9 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // ため、context をモックすれば unit-test できる。tool (category: "tool") は持たない
   // (GM が手動操作するのみ)。action / branch のみ定義する。
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
+  // シナリオドキュメント UI で本文中にインライン描画される本体 (docs: scenario-editor-architecture D11)。
+  // 持たない型は DetailPanel に落ちる。
+  InlineBody?: ComponentType<DetailPanelProps<S>>;
 }
 
 // 具体ステップ型の entry を union 型 (StepRegistryEntry<Step>) に格納するためのヘルパ。
@@ -47,4 +51,5 @@ export const defineStep = <S extends Step>(entry: StepRegistryEntry<S>): StepReg
   // execute も step 引数が反変。summary と同様に引数キャストへ閉じ込める。
   // ランタイムは type が一致する entry しか引かれないため安全。
   execute: entry.execute === undefined ? undefined : (step, ctx) => entry.execute!(step as S, ctx),
+  InlineBody: entry.InlineBody as unknown as ComponentType<DetailPanelProps> | undefined,
 });

@@ -75,6 +75,7 @@ const GameSessionSchema = z.object({
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
   flowData: z.string(), // JSON encoded (issue #182 step-list editor)
+  scenarioData: z.string(), // JSON encoded (issue #213 scenario document editor)
   createdAt: z.date(),
   lastUsedAt: z.date(),
 });
@@ -96,6 +97,7 @@ const TemplateSchema = z.object({
   gameFlags: z.string(), // JSON encoded
   reactFlowData: z.string(), // JSON encoded
   flowData: z.string(), // JSON encoded (issue #182 step-list editor)
+  scenarioData: z.string(), // JSON encoded (issue #213 scenario document editor)
   createdAt: z.date(),
   updatedAt: z.date(),
   ...TemplateMetaSchema.shape,
