@@ -24,6 +24,15 @@ interface SeedTemplate {
   reactFlowData: string;
   createdAtIso: string;
   updatedAtIso: string;
+  // issue #244 のメタ情報。coverColor があるとその色の PNG を coverPath へ書き込む
+  // (OPFS も seed 対象。実画像を置かないとカバー表示が VRT に写らない)。
+  system?: string;
+  playerCountMin?: number;
+  playerCountMax?: number;
+  durationMinutesMin?: number;
+  durationMinutesMax?: number;
+  coverPath?: string;
+  coverColor?: string;
 }
 
 interface SeedSession {
@@ -73,6 +82,46 @@ export const FIXTURE_TEMPLATES: SeedTemplate[] = [
     reactFlowData: FIXED_REACT_FLOW_DATA,
     createdAtIso: "2026-01-12T11:00:00.000+09:00",
     updatedAtIso: "2026-01-20T09:00:00.000+09:00",
+  },
+];
+
+// メタ情報あり (システム / 人数 / 所要時間 / カバー画像) のテンプレート。
+// 絞り込みの VRT でも使うため、人数と所要時間の範囲を意図的にずらしてある。
+export const FIXTURE_META_TEMPLATES: SeedTemplate[] = [
+  {
+    id: 111,
+    name: "メタ情報つきシナリオ",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: FIXED_REACT_FLOW_DATA,
+    createdAtIso: "2026-01-10T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-15T15:30:00.000+09:00",
+    system: "クトゥルフ神話TRPG",
+    playerCountMin: 2,
+    playerCountMax: 4,
+    durationMinutesMin: 120,
+    durationMinutesMax: 180,
+    coverPath: "template/111/cover.png",
+    coverColor: "#7c3aed",
+  },
+  {
+    id: 112,
+    name: "大人数・長時間シナリオ",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: FIXED_REACT_FLOW_DATA,
+    createdAtIso: "2026-01-11T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-14T15:30:00.000+09:00",
+    system: "エモクロアTRPG",
+    playerCountMin: 6,
+    durationMinutesMin: 300,
+    durationMinutesMax: 360,
+  },
+  {
+    id: 113,
+    name: "メタ情報なしシナリオ",
+    gameFlags: FIXED_GAME_FLAGS,
+    reactFlowData: FIXED_REACT_FLOW_DATA,
+    createdAtIso: "2026-01-12T10:00:00.000+09:00",
+    updatedAtIso: "2026-01-13T15:30:00.000+09:00",
   },
 ];
 

@@ -9,6 +9,7 @@ interface VrtDbWindow {
     DiscordBot: { bulkAdd: (rows: unknown[]) => Promise<unknown> };
     Guild: { bulkAdd: (rows: unknown[]) => Promise<unknown> };
   };
+  __vrtFs?: { writeFile: (path: string, data: Blob) => Promise<void> };
 }
 
 async function applySeed(page: Page, payload: SeedPayload): Promise<void> {
@@ -18,15 +19,29 @@ async function applySeed(page: Page, payload: SeedPayload): Promise<void> {
     const db = w.__vrtDb;
     if (data.templates?.length) {
       await db.Template.bulkAdd(
-        data.templates.map((t) => ({
-          id: t.id,
-          name: t.name,
-          gameFlags: t.gameFlags,
-          reactFlowData: t.reactFlowData,
-          createdAt: new Date(t.createdAtIso),
-          updatedAt: new Date(t.updatedAtIso),
+        data.templates.map(({ createdAtIso, updatedAtIso, coverColor: _c, ...meta }) => ({
+          ...meta,
+          createdAt: new Date(createdAtIso),
+          updatedAt: new Date(updatedAtIso),
         })),
       );
+
+      // カバー画像は OPFS 側の seed が要る。単色 PNG を生成して coverPath へ書き込む。
+      for (const t of data.templates) {
+        if (!t.coverPath || !t.coverColor) continue;
+        const canvas = document.createElement("canvas");
+        canvas.width = 384;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("2d context is not available");
+        ctx.fillStyle = t.coverColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png");
+        });
+        if (!w.__vrtFs) throw new Error("__vrtFs is not exposed");
+        await w.__vrtFs.writeFile(t.coverPath, blob);
+      }
     }
     if (data.bots?.length) {
       await db.DiscordBot.bulkAdd(
@@ -91,7 +106,7 @@ export const test = base.extend<VrtFixtures, VrtWorkerOptions>({
 
   seedDb: async ({ page }, use) => {
     await page.goto("/");
-    await page.waitForFunction(() => "__vrtDb" in window);
+    await page.waitForFunction(() => "__vrtDb" in window && "__vrtFs" in window);
 
     await use(async (payload: SeedPayload) => {
       await applySeed(page, payload);

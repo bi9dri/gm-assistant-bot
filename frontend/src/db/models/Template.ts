@@ -10,11 +10,13 @@ import {
   GameFlagsSchema,
   ReactFlowDataSchema,
   TemplateExportSchema,
+  TemplateMetaSchema,
   defaultReactFlowData,
   type GameFlags,
   type ReactFlowData,
   type TemplateData,
   type TemplateExport,
+  type TemplateMeta,
 } from "../schemas";
 
 export class Template extends Entity<DB> {
@@ -25,6 +27,12 @@ export class Template extends Entity<DB> {
   flowData!: string; // JSON encoded string
   readonly createdAt!: Date;
   updatedAt!: Date;
+  system?: string;
+  playerCountMin?: number;
+  playerCountMax?: number;
+  durationMinutesMin?: number;
+  durationMinutesMax?: number;
+  coverPath?: string;
 
   static async create(name: string): Promise<Template> {
     const id = await db.Template.add({
@@ -56,8 +64,9 @@ export class Template extends Entity<DB> {
     gameFlags?: GameFlags;
     reactFlowData?: ReactFlowData;
     flowData?: FlowData;
+    meta?: TemplateMeta;
   }): Promise<void> {
-    const { name, gameFlags, reactFlowData, flowData } = options;
+    const { name, gameFlags, reactFlowData, flowData, meta } = options;
 
     const updateData: Partial<TemplateData> = {
       updatedAt: new Date(),
@@ -82,6 +91,22 @@ export class Template extends Entity<DB> {
       updateData.flowData = JSON.stringify(flowData);
     }
 
+    // メタ情報は全項目まとめて置き換える。渡されなかった項目は undefined になり、
+    // Dexie がプロパティ削除として扱う (= クリア)。
+    const normalizedMeta = meta && {
+      system: meta.system,
+      playerCountMin: meta.playerCountMin,
+      playerCountMax: meta.playerCountMax,
+      durationMinutesMin: meta.durationMinutesMin,
+      durationMinutesMax: meta.durationMinutesMax,
+      coverPath: meta.coverPath,
+    };
+
+    if (normalizedMeta !== undefined) {
+      TemplateMetaSchema.parse(normalizedMeta);
+      Object.assign(updateData, normalizedMeta);
+    }
+
     await db.Template.update(this.id, updateData);
 
     if (name !== undefined) {
@@ -95,6 +120,9 @@ export class Template extends Entity<DB> {
     }
     if (flowData !== undefined) {
       this.flowData = JSON.stringify(flowData);
+    }
+    if (normalizedMeta !== undefined) {
+      Object.assign(this, normalizedMeta);
     }
     if (updateData.updatedAt) {
       this.updatedAt = updateData.updatedAt;

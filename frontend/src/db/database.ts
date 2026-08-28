@@ -322,5 +322,13 @@ export class DB extends Dexie {
         Template: "++id, name, gameFlags, reactFlowData, flowData, createdAt, updatedAt",
       })
       .upgrade(applyFlowDataMigration);
+
+    // issue #244: テンプレートのメタ情報カラム。すべて optional 追加のためデータ変換は不要で、
+    // 範囲での絞り込みに使う人数・所要時間にインデックスを張るためだけのバージョン。
+    // coverPath は絞り込みに使わないのでインデックスなし (カラムとしては保存される)。
+    this.version(8).stores({
+      Template:
+        "++id, name, gameFlags, reactFlowData, flowData, createdAt, updatedAt, system, playerCountMin, playerCountMax, durationMinutesMin, durationMinutesMax",
+    });
   }
 }
