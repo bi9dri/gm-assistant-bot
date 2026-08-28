@@ -108,12 +108,14 @@ describe("scenarioData migration (v8 → v9)", () => {
     });
     oldDb.close();
 
-    const migrated = await openV9();
-    migrated.close();
-    const reopened = await openV9();
+    const db = await openV9();
+    // 一度上がった DB に対してもう一度同じ関数を流す (再オープンでは upgrade が走らない)
+    await db.transaction("rw", db.table("Template"), db.table("GameSession"), (tx) =>
+      applyScenarioDataMigration(tx),
+    );
 
-    expect((await reopened.table("Template").get(id)).scenarioData).toBe(scenarioData);
+    expect((await db.table("Template").get(id)).scenarioData).toBe(scenarioData);
 
-    reopened.close();
+    db.close();
   });
 });

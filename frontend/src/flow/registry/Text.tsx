@@ -33,7 +33,11 @@ export const TextEntry = defineStep<TextStep>({
       .find((line) => line.trim() !== "")
       ?.trim();
     if (firstLine === undefined) return "本文 (空)";
-    return firstLine.length > SUMMARY_LENGTH ? `${firstLine.slice(0, SUMMARY_LENGTH)}…` : firstLine;
+    // サロゲートペアを割らないようコードポイント単位で切る
+    const chars = [...firstLine];
+    return chars.length > SUMMARY_LENGTH
+      ? `${chars.slice(0, SUMMARY_LENGTH).join("")}…`
+      : firstLine;
   },
   DetailPanel: TextDetailPanel,
 });

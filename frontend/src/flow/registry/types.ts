@@ -22,7 +22,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // Phase 3 で単一ステップ検証に使う際はこの差異に注意。
   schema: z.ZodType<S>;
   // tool = フラグ操作や手動ボード操作など、Discord 呼び出しを伴わない GM 操作系。
-  // text = シナリオ本文・見出し。実行は no-op で executedAt だけが打たれる。
+  // text = シナリオ本文・見出し。Discord 操作を伴わないため execute を持たない。
   category: "action" | "tool" | "branch" | "text";
   // 「ステップ追加」時の初期値 (旧 addNode の switch を置き換える)。id は呼び出し側が採番する。
   defaults: () => Omit<S, "id">;

@@ -97,6 +97,7 @@ export class Template extends Entity<DB> {
     }
 
     if (scenarioData !== undefined) {
+      ScenarioDataSchema.parse(scenarioData);
       updateData.scenarioData = JSON.stringify(scenarioData);
     }
 
@@ -185,6 +186,9 @@ export class Template extends Entity<DB> {
     }
   }
 
+  // scenarioData はエクスポートに含めていない。TemplateExportSchema は version を
+  // literal(1) で固定しており、形式を変えるにはバージョンを上げる必要があるため、
+  // 新形式のデータを作る画面と同時に対応する。
   export(): TemplateExport {
     return {
       version: 1,
