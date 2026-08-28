@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { BranchStep, FlowData, Step } from "../schema";
-import { advanceCursor, firstRunnableId, runnableSteps } from "./order";
+import { advanceCursor, firstRunnableId, runnableSteps, runnableStepsIn } from "./order";
 
 const step = (id: string, overrides: Partial<Step> = {}): Step =>
   ({
@@ -123,5 +123,43 @@ describe("firstRunnableId", () => {
 
   test("空フローでは null", () => {
     expect(firstRunnableId({ version: 1, sections: [] })).toBeNull();
+  });
+});
+
+// シナリオドキュメント UI のブロック列 (フラットな Step[]) 用の入口。
+describe("runnableStepsIn", () => {
+  test("フラットなブロック列をそのままの順で返す", () => {
+    expect(runnableStepsIn([step("a"), step("b"), step("c")]).map((s) => s.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  test("実行済み Branch は選ばれた枝だけに降下する", () => {
+    const br = branch("br", {
+      executedBranchIds: ["br-a"],
+      branches: [
+        { id: "br-a", label: "A", steps: [step("a1")] },
+        { id: "br-b", label: "B", steps: [step("b1")] },
+      ],
+    });
+
+    expect(runnableStepsIn([step("before"), br, step("after")]).map((s) => s.id)).toEqual([
+      "before",
+      "br",
+      "a1",
+      "after",
+    ]);
+  });
+
+  test("未実行の Branch はリーフとして扱う", () => {
+    expect(runnableStepsIn([branch("br")]).map((s) => s.id)).toEqual(["br"]);
+  });
+
+  test("runnableSteps とセクション単位で一致する", () => {
+    const steps = [step("a"), branch("br", { executedBranchIds: ["br-a"] })];
+
+    expect(runnableStepsIn(steps)).toEqual(runnableSteps(flowOf(...steps)));
   });
 });

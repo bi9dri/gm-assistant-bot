@@ -3,6 +3,8 @@ import { Entity } from "dexie";
 import { reactFlowToFlowData } from "@/flow/migrate";
 import type { FlowData } from "@/flow/schema";
 import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
+import type { ScenarioData } from "@/scenario/schema";
+import { ScenarioDataSchema, defaultScenarioData } from "@/scenario/schema";
 
 import type { DB } from "../database";
 import { db } from "../instance";
@@ -25,6 +27,7 @@ export class Template extends Entity<DB> {
   gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
   flowData!: string; // JSON encoded string
+  scenarioData!: string; // JSON encoded string
   readonly createdAt!: Date;
   updatedAt!: Date;
   system?: string;
@@ -40,6 +43,7 @@ export class Template extends Entity<DB> {
       gameFlags: JSON.stringify({}),
       reactFlowData: JSON.stringify(defaultReactFlowData),
       flowData: JSON.stringify(defaultFlowData),
+      scenarioData: JSON.stringify(defaultScenarioData),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -64,9 +68,10 @@ export class Template extends Entity<DB> {
     gameFlags?: GameFlags;
     reactFlowData?: ReactFlowData;
     flowData?: FlowData;
+    scenarioData?: ScenarioData;
     meta?: TemplateMeta;
   }): Promise<void> {
-    const { name, gameFlags, reactFlowData, flowData, meta } = options;
+    const { name, gameFlags, reactFlowData, flowData, scenarioData, meta } = options;
 
     const updateData: Partial<TemplateData> = {
       updatedAt: new Date(),
@@ -89,6 +94,11 @@ export class Template extends Entity<DB> {
     if (flowData !== undefined) {
       FlowDataSchema.parse(flowData);
       updateData.flowData = JSON.stringify(flowData);
+    }
+
+    if (scenarioData !== undefined) {
+      ScenarioDataSchema.parse(scenarioData);
+      updateData.scenarioData = JSON.stringify(scenarioData);
     }
 
     // メタ情報は全項目まとめて置き換える。渡されなかった項目は undefined になり、
@@ -120,6 +130,9 @@ export class Template extends Entity<DB> {
     }
     if (flowData !== undefined) {
       this.flowData = JSON.stringify(flowData);
+    }
+    if (scenarioData !== undefined) {
+      this.scenarioData = JSON.stringify(scenarioData);
     }
     if (normalizedMeta !== undefined) {
       Object.assign(this, normalizedMeta);
@@ -160,6 +173,16 @@ export class Template extends Entity<DB> {
     } catch (error) {
       console.error("Failed to parse flowData:", error);
       return defaultFlowData;
+    }
+  }
+
+  getParsedScenarioData(): ScenarioData {
+    try {
+      const parsed = JSON.parse(this.scenarioData);
+      return ScenarioDataSchema.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse scenarioData:", error);
+      return defaultScenarioData;
     }
   }
 

@@ -330,5 +330,21 @@ export class DB extends Dexie {
       Template:
         "++id, name, gameFlags, reactFlowData, flowData, createdAt, updatedAt, system, playerCountMin, playerCountMax, durationMinutesMin, durationMinutesMax",
     });
+
+    // issue #245: シナリオドキュメント型 UI の scenarioData を両テーブルへ追加する。
+    // 絞り込みには使わないため (有無の判定は行を読んでから行う) インデックスは張らず、
+    // 既存レコードへ空の scenarioData を書き込むだけにする。旧 flowData からの変換は行わない
+    // (docs: scenario-editor-architecture D4)。
+    this.version(9).upgrade(async (tx) => {
+      // 当時の空の形をそのまま持つ (defaultScenarioData を import すると、
+      // 将来スキーマが変わったときに過去のマイグレーションの意味が変わる)。
+      const emptyScenarioData = JSON.stringify({ version: 1, blocks: [] });
+      const backfill = (row: { scenarioData?: string }): void => {
+        row.scenarioData ??= emptyScenarioData;
+      };
+
+      await tx.table("Template").toCollection().modify(backfill);
+      await tx.table("GameSession").toCollection().modify(backfill);
+    });
   }
 }

@@ -2,6 +2,8 @@ import { Entity } from "dexie";
 
 import type { FlowData } from "@/flow/schema";
 import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
+import type { ScenarioData } from "@/scenario/schema";
+import { ScenarioDataSchema, defaultScenarioData } from "@/scenario/schema";
 
 import type { DB } from "../database";
 import { db } from "../instance";
@@ -22,6 +24,7 @@ export class GameSession extends Entity<DB> {
   gameFlags!: string; // JSON encoded string
   reactFlowData!: string; // JSON encoded string
   flowData!: string; // JSON encoded string
+  scenarioData!: string; // JSON encoded string
   readonly createdAt!: Date;
   lastUsedAt!: Date;
 
@@ -34,8 +37,9 @@ export class GameSession extends Entity<DB> {
     gameFlags?: GameFlags;
     reactFlowData?: ReactFlowData;
     flowData?: FlowData;
+    scenarioData?: ScenarioData;
   }): Promise<void> {
-    const { name, gameFlags, reactFlowData, flowData } = options;
+    const { name, gameFlags, reactFlowData, flowData, scenarioData } = options;
 
     const updateData: Partial<GameSessionData> = {
       lastUsedAt: new Date(),
@@ -60,6 +64,11 @@ export class GameSession extends Entity<DB> {
       updateData.flowData = JSON.stringify(flowData);
     }
 
+    if (scenarioData !== undefined) {
+      ScenarioDataSchema.parse(scenarioData);
+      updateData.scenarioData = JSON.stringify(scenarioData);
+    }
+
     await db.GameSession.update(this.id, updateData);
 
     if (name !== undefined) {
@@ -73,6 +82,9 @@ export class GameSession extends Entity<DB> {
     }
     if (flowData !== undefined) {
       this.flowData = JSON.stringify(flowData);
+    }
+    if (scenarioData !== undefined) {
+      this.scenarioData = JSON.stringify(scenarioData);
     }
     if (updateData.lastUsedAt) {
       this.lastUsedAt = updateData.lastUsedAt;
@@ -106,6 +118,16 @@ export class GameSession extends Entity<DB> {
     } catch (error) {
       console.error("Failed to parse flowData:", error);
       return defaultFlowData;
+    }
+  }
+
+  getParsedScenarioData(): ScenarioData {
+    try {
+      const parsed = JSON.parse(this.scenarioData);
+      return ScenarioDataSchema.parse(parsed);
+    } catch (error) {
+      console.error("Failed to parse scenarioData:", error);
+      return defaultScenarioData;
     }
   }
 }
