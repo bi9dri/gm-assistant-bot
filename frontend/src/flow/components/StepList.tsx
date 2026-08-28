@@ -12,8 +12,9 @@ import type { StepContainer } from "../treeOps";
 import { AddStepMenu } from "./AddStepMenu";
 import { type DragData, emptyContainerDropId, sameContainer } from "./dnd";
 
-// 行の中身 (カテゴリバッジ + タイトル + autoAdvance)。リスト行と DragOverlay で共用する。
-const StepRowContent = ({ step }: { step: Step }) => {
+// 行の中身 (カテゴリバッジ + タイトル + autoAdvance)。リスト行と DragOverlay、
+// およびシナリオドキュメント UI の操作ブロック 1 行サマリで共用する。
+export const StepRowContent = ({ step }: { step: Step }) => {
   const entry = getEntry(step.type);
   return (
     <>

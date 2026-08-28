@@ -3,12 +3,15 @@ import { useState } from "react";
 import { formatFlagValue } from "../resources";
 import { useEditorStore } from "../store/editorStore";
 
-// D3: 常駐するゲームフラグパネル (右カラム)。
-// edit モードでは Template.gameFlags (セッション開始時の seed) を編集する。
-export const FlagPanel = () => {
-  const gameFlags = useEditorStore((state) => state.gameFlags);
-  const setGameFlag = useEditorStore((state) => state.setGameFlag);
-  const removeGameFlag = useEditorStore((state) => state.removeGameFlag);
+interface FlagPanelViewProps {
+  gameFlags: Record<string, unknown>;
+  setGameFlag: (key: string, value: unknown) => void;
+  removeGameFlag: (key: string) => void;
+}
+
+// フラグ編集の見た目と操作。store に触れない presentational component として、
+// ステップリスト UI とシナリオドキュメント UI の両方から使う。
+export const FlagPanelView = ({ gameFlags, setGameFlag, removeGameFlag }: FlagPanelViewProps) => {
   const [newKey, setNewKey] = useState("");
 
   const entries = Object.entries(gameFlags);
@@ -67,5 +70,21 @@ export const FlagPanel = () => {
         </button>
       </div>
     </div>
+  );
+};
+
+// 常駐するゲームフラグパネル (右カラム・docs: step-list-editor-architecture D3)。
+// edit モードでは Template.gameFlags (セッション開始時の seed) を編集する。
+export const FlagPanel = () => {
+  const gameFlags = useEditorStore((state) => state.gameFlags);
+  const setGameFlag = useEditorStore((state) => state.setGameFlag);
+  const removeGameFlag = useEditorStore((state) => state.removeGameFlag);
+
+  return (
+    <FlagPanelView
+      gameFlags={gameFlags}
+      setGameFlag={setGameFlag}
+      removeGameFlag={removeGameFlag}
+    />
   );
 };

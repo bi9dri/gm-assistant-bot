@@ -85,8 +85,8 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         // reactFlowData / flowData ともパスは下の update で session/{id}/ へ書き換える
         reactFlowData: template.reactFlowData,
         flowData: template.flowData,
-        // scenarioData 内のファイルパスは session/{id}/ へ書き換えていない。
-        // 新形式のデータを作る画面がまだ無いため (docs: scenario-editor-architecture D16)。
+        // scenarioData 内のファイルパスは session/{id}/ へ書き換えていない。実行画面
+        // (フェーズ 3) でセッション側のコピー経路ごと入れる (docs: scenario-editor-architecture D16)。
         scenarioData: template.scenarioData,
         createdAt: new Date(),
         lastUsedAt: new Date(),

@@ -32,7 +32,6 @@ Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Worker
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
 
 ## Skills (`.claude/skills/`)
-- **node-creator** — MUST use when implementing a new `XxxNode`
 - **schema-migration** — MUST use when changing a node's DataSchema
 
 ## Commands

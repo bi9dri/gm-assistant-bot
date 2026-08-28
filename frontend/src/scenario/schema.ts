@@ -18,3 +18,18 @@ export type ScenarioData = z.infer<typeof ScenarioDataSchema>;
 
 // 新規作成時の初期値、およびパース失敗時のフォールバック。
 export const defaultScenarioData: ScenarioData = { version: 1, blocks: [] };
+
+// 一覧のバッジ・導線の判定 (docs: scenario-editor-architecture D12)。
+// Dexie v9 が全既存レコードに空の scenarioData を backfill しているため、
+// 「フィールドの有無」ではなくブロックが 1 つ以上あるかで判定する。
+export const hasScenarioBlocks = (scenarioData: string): boolean => {
+  try {
+    // 一覧のカードごとに走るため、全ブロックの zod 検証はしない。中身の妥当性は
+    // 画面を開いた時点で getParsedScenarioData が担保する。
+    const parsed: unknown = JSON.parse(scenarioData);
+    const blocks = (parsed as { blocks?: unknown }).blocks;
+    return Array.isArray(blocks) && blocks.length > 0;
+  } catch {
+    return false;
+  }
+};

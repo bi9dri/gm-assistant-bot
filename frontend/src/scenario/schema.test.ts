@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { ScenarioDataSchema, defaultScenarioData } from "./schema";
+import { ScenarioDataSchema, defaultScenarioData, hasScenarioBlocks } from "./schema";
 
 const textBlock = {
   id: "t1",
@@ -56,5 +56,19 @@ describe("ScenarioDataSchema", () => {
 
   test("version が 1 以外なら弾く", () => {
     expect(() => ScenarioDataSchema.parse({ version: 2, blocks: [] })).toThrow();
+  });
+});
+
+describe("hasScenarioBlocks", () => {
+  test("ブロックが 1 つ以上あれば true", () => {
+    expect(hasScenarioBlocks(JSON.stringify({ version: 1, blocks: [textBlock] }))).toBe(true);
+  });
+
+  test("空のブロック列は false (旧形式のテンプレートと区別できないため)", () => {
+    expect(hasScenarioBlocks(JSON.stringify(defaultScenarioData))).toBe(false);
+  });
+
+  test("壊れた JSON は false", () => {
+    expect(hasScenarioBlocks("not json")).toBe(false);
   });
 });
