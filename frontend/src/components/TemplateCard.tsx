@@ -1,21 +1,58 @@
 import { Link } from "@tanstack/react-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import z from "zod";
 
-import { db } from "@/db";
+import { TemplateMetaModal } from "@/components/TemplateMetaModal";
+import { db, TemplateMetaSchema } from "@/db";
 import { FileSystem } from "@/fileSystem";
+import { formatDuration, formatPlayerCount } from "@/templateFilter";
 import { useToast } from "@/toast/ToastProvider";
 
 const TemplateCardSchema = z.object({
   id: z.number(),
   name: z.string().trim().nonempty(),
   updatedAt: z.date().optional(),
+  meta: TemplateMetaSchema,
 });
 
 type Props = z.infer<typeof TemplateCardSchema>;
 
-export const TemplateCard = ({ id, name, updatedAt }: Props) => {
+// OPFS のカバー画像は blob URL 経由でしか <img> に渡せない。
+const useCoverUrl = (coverPath: string | undefined): string | undefined => {
+  const [url, setUrl] = useState<string>();
+
+  useEffect(() => {
+    if (!coverPath) {
+      setUrl(undefined);
+      return;
+    }
+    let objectUrl: string | undefined;
+    let cancelled = false;
+    new FileSystem()
+      .readFile(coverPath)
+      .then((file) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(file);
+        setUrl(objectUrl);
+      })
+      .catch(() => setUrl(undefined));
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [coverPath]);
+
+  return url;
+};
+
+export const TemplateCard = ({ id, name, updatedAt, meta }: Props) => {
   const { addToast } = useToast();
+  const [metaModalOpen, setMetaModalOpen] = useState(false);
+  const coverUrl = useCoverUrl(meta.coverPath);
+  const badges = [meta.system, formatPlayerCount(meta), formatDuration(meta)].filter(
+    (badge) => badge !== undefined,
+  );
 
   const handleExport = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -76,8 +113,22 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
   return (
     <>
       <div className="card card-shadow-md bg-base-200 w-96 rounded-xs border-2 border-primary">
+        {coverUrl && (
+          <figure className="h-32">
+            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+          </figure>
+        )}
         <div className="card-body">
           <h5 className="card-title">{name}</h5>
+          {badges.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {badges.map((badge) => (
+                <span key={badge} className="badge badge-outline">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-sm opacity-70">
             最終更新: {updatedAt ? updatedAt.toLocaleString("ja-JP") : "未更新"}
           </p>
@@ -92,6 +143,9 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
             >
               ステップ編集
             </Link>
+            <button onClick={() => setMetaModalOpen(true)} className="btn btn-accent">
+              メタ情報
+            </button>
             <button onClick={handleExport} className="btn btn-info">
               エクスポート
             </button>
@@ -101,6 +155,15 @@ export const TemplateCard = ({ id, name, updatedAt }: Props) => {
           </div>
         </div>
       </div>
+
+      {metaModalOpen && (
+        <TemplateMetaModal
+          id={id}
+          name={name}
+          meta={meta}
+          onClose={() => setMetaModalOpen(false)}
+        />
+      )}
 
       <input id={`confirmDeleteModal-${id}`} type="checkbox" className="modal-toggle" />
       <div className="modal" role="dialog">

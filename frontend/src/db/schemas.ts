@@ -79,6 +79,17 @@ const GameSessionSchema = z.object({
   lastUsedAt: z.date(),
 });
 
+// issue #244: テンプレートのメタ情報。人数と所要時間は 1 シナリオでも範囲を取る
+// (例: 2〜4 人 / 2〜3 時間) ため、下限と上限を別カラムに持つ。
+export const TemplateMetaSchema = z.object({
+  system: z.string().optional(),
+  playerCountMin: z.number().int().positive().optional(),
+  playerCountMax: z.number().int().positive().optional(),
+  durationMinutesMin: z.number().int().positive().optional(),
+  durationMinutesMax: z.number().int().positive().optional(),
+  coverPath: z.string().optional(), // OPFS: template/{id}/xxx
+});
+
 const TemplateSchema = z.object({
   id: z.number().int(),
   name: z.string().nonempty().trim(),
@@ -87,6 +98,7 @@ const TemplateSchema = z.object({
   flowData: z.string(), // JSON encoded (issue #182 step-list editor)
   createdAt: z.date(),
   updatedAt: z.date(),
+  ...TemplateMetaSchema.shape,
 });
 
 // ========================================
@@ -115,5 +127,6 @@ export type GameFlags = z.infer<typeof GameFlagsSchema>;
 
 export type GameSessionData = z.infer<typeof GameSessionSchema>;
 export type TemplateData = z.infer<typeof TemplateSchema>;
+export type TemplateMeta = z.infer<typeof TemplateMetaSchema>;
 
 export type TemplateExport = z.infer<typeof TemplateExportSchema>;

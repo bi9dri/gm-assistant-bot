@@ -65,6 +65,44 @@ describe("Template", () => {
 
       expect(template.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
     });
+
+    test("メタ情報を保存し、未指定のキーでクリアできる (issue #244)", async () => {
+      const template = await Template.create("Test");
+
+      await template.update({
+        meta: {
+          system: "クトゥルフ神話TRPG",
+          playerCountMin: 2,
+          playerCountMax: 4,
+          durationMinutesMin: 120,
+          durationMinutesMax: 180,
+          coverPath: "template/1/cover.png",
+        },
+      });
+
+      const saved = await Template.getById(template.id);
+      expect(saved).toMatchObject({
+        system: "クトゥルフ神話TRPG",
+        playerCountMin: 2,
+        playerCountMax: 4,
+        durationMinutesMin: 120,
+        durationMinutesMax: 180,
+        coverPath: "template/1/cover.png",
+      });
+
+      await template.update({ meta: { system: "エモクロアTRPG" } });
+
+      const cleared = await Template.getById(template.id);
+      expect(cleared?.system).toBe("エモクロアTRPG");
+      expect(cleared?.playerCountMin).toBeUndefined();
+      expect(cleared?.coverPath).toBeUndefined();
+    });
+
+    test("メタ情報の型違反を弾く", async () => {
+      const template = await Template.create("Test");
+
+      expect(template.update({ meta: { playerCountMin: -1 } })).rejects.toThrow();
+    });
   });
 
   describe("getParsedGameFlags", () => {

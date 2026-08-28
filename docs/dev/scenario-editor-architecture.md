@@ -40,7 +40,7 @@
 | D11 | registry | 既存 registry を **完全共有**し、`InlineBody?` を任意フィールドとして追加する。**新機能は新画面にのみ実装する** |
 | D12 | 導線 | `scenarioData` の有無でバッジ判定。`/template/new` の隣に「シナリオ形式で作成」。ルートは `/template/$id/scenario`・`/session/$id/scenario` |
 | D13 | CCFOLIA 連携 | **クリップボードへのコピーボタン**で行う |
-| D14 | メタ情報 | `Template` に個別カラム 4 つ (人数・システム・時間・画像パス) + OPFS 画像 |
+| D14 | メタ情報 | `Template` に個別カラム 6 つ (人数の下限/上限・システム・時間の下限/上限・画像パス) + OPFS 画像 |
 | D15 | 旧画面の凍結 | コードは変更しない。`/template/new` を新形式のみに変更し、**古い形式のデータがこれ以上増えないようにする**。既存テストは残し、VRT の追加のみ止める |
 | D16 | セッション生成 | `scenarioData` を 3 本目として既存のコピー経路に追加する。セッション画面は **空でないほうを開く** |
 | D17 | 投票 | リアクション集計を先、返信一覧を後。バックエンドに読み取り API を新設する |
@@ -210,6 +210,10 @@ export interface StepRegistryEntry<S extends Step = Step> {
 - `Template` にメタ情報カラムを追加する (D14): 人数・システム・所要時間・カバー画像パス。
   いずれも optional 追加なのでマイグレーションコストは実質ゼロ。画像は OPFS の `template/{id}/`
   配下に置き、パスのみをカラムに持つ。**`schema-migration` スキルを使うこと。**
+  1 シナリオでも人数と所要時間は範囲を取る (2〜4 人 / 2〜3 時間) ため、下限と上限を別カラムに
+  分ける: `playerCountMin` / `playerCountMax` / `durationMinutesMin` / `durationMinutesMax`
+  (Dexie v8、issue #244 で実装済み)。絞り込みは「人数がその範囲に入るか」「所要時間の上限が
+  指定時間以内か」で判定し、メタ情報が無い軸は判定不能として除外する。
 
 ---
 
