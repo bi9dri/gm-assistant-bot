@@ -41,7 +41,7 @@
         "@tanstack/react-router-devtools": "1.167.1",
         "@tanstack/router-plugin": "1.168.34",
         "@xyflow/react": "12.11.3",
-        "@zip.js/zip.js": "2.8.54",
+        "@zip.js/zip.js": "2.8.55",
         "clsx": "2.1.1",
         "daisyui": "5.7.20",
         "dexie": "4.4.5",
@@ -725,7 +725,7 @@
 
     "@xyflow/system": ["@xyflow/system@0.0.80", "", { "dependencies": { "@types/d3-drag": "^3.0.7", "@types/d3-interpolate": "^3.0.4", "@types/d3-selection": "^3.0.10", "@types/d3-transition": "^3.0.8", "@types/d3-zoom": "^3.0.8", "d3-drag": "^3.0.0", "d3-interpolate": "^3.0.1", "d3-selection": "^3.0.0", "d3-zoom": "^3.0.0" } }, "sha512-ywc3ZqG91brzWrH1WlwMdIX4goOfrpBy6AbLdVSaof/Xx9l138ijIKRExM6EkMro2F+OImGmSiA/WKcXvKVcfA=="],
 
-    "@zip.js/zip.js": ["@zip.js/zip.js@2.8.54", "", {}, "sha512-Nr2JRdMBxmdh6v8JYb/BBipvTvBr3Ztwf6+bIdVxb1EMaNNm5gsM9R80pB+c9S2WMdODb3LIWiXfYekDA3+JSw=="],
+    "@zip.js/zip.js": ["@zip.js/zip.js@2.8.55", "", {}, "sha512-MxnikN49/iB2AQOSUBjxlGYLsbEblCsZ5S84tmt+hcBlYCQQKG0qKO7UNX0AzFS8a5KlS8cyvwjZV3nNTF6WuQ=="],
 
     "acorn": ["acorn@8.18.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ=="],
 
