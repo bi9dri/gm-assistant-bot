@@ -9,6 +9,8 @@
  * - reactFlowData / gameFlags は JSON 文字列(Dexie schema が string)。
  */
 
+import { avatarDataUri } from "./avatar";
+
 const FIXED_REACT_FLOW_DATA = JSON.stringify({
   nodes: [],
   edges: [],
@@ -153,7 +155,7 @@ export const FIXTURE_BOTS: SeedBot[] = [
     id: "vrt-bot-001",
     name: "VRT Bot",
     token: "vrt-bot-token-001",
-    icon: "https://cdn.discordapp.com/embed/avatars/0.png",
+    icon: avatarDataUri("#5865f2"),
   },
 ];
 
@@ -161,7 +163,7 @@ export const FIXTURE_GUILDS: SeedGuild[] = [
   {
     id: "vrt-guild-001",
     name: "VRT Guild Alpha",
-    icon: "https://cdn.discordapp.com/embed/avatars/1.png",
+    icon: avatarDataUri("#57f287"),
   },
 ];
 
