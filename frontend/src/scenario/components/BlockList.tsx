@@ -14,6 +14,8 @@ import type { HeadingStep, Step } from "@/flow/schema";
 import { sameBlockContainer, type BlockContainer } from "../blockOps";
 import { buildOutline, type OutlineNode, type OutlineSection } from "../outline";
 import { useScenarioEditorStore } from "../store/editorStore";
+import { blockCopyText } from "../textTransfer";
+import { CopyButton } from "./CopyButton";
 
 // ドキュメント本体。ブロック列を Heading の階層 (<details>) に沿って描画する。
 // 本文ブロックは InlineBody でインライン編集し、Discord 操作ブロックは 1 行サマリを
@@ -42,18 +44,20 @@ export const AddBlockMenu = ({
   );
 };
 
-// 行の右端に常駐する複製・削除。行本体のクリック (選択 / details の開閉) とは切り離す。
-const RowActions = ({ id }: { id: string }) => {
+// 行の右端に常駐するコピー・複製・削除。行本体のクリック (選択 / details の開閉) とは切り離す。
+const RowActions = ({ block }: { block: Step }) => {
   const duplicateBlock = useScenarioEditorStore((state) => state.duplicateBlock);
   const removeBlock = useScenarioEditorStore((state) => state.removeBlock);
+  const copyText = blockCopyText(block);
 
   return (
     <>
+      {copyText !== "" && <CopyButton text={copyText} />}
       <button
         type="button"
         className="btn btn-ghost btn-xs"
         aria-label="ブロックを複製"
-        onClick={() => duplicateBlock(id)}
+        onClick={() => duplicateBlock(block.id)}
       >
         ⧉
       </button>
@@ -61,7 +65,7 @@ const RowActions = ({ id }: { id: string }) => {
         type="button"
         className="btn btn-ghost btn-xs"
         aria-label="ブロックを削除"
-        onClick={() => removeBlock(id)}
+        onClick={() => removeBlock(block.id)}
       >
         ✕
       </button>
@@ -167,7 +171,7 @@ const BlockNode = memo(
     <div>
       <SortableBlock block={block} container={container} index={index}>
         <BlockBody block={block} />
-        <RowActions id={block.id} />
+        <RowActions block={block} />
       </SortableBlock>
       <BranchArms block={block} />
     </div>
@@ -210,7 +214,7 @@ const SectionNode = ({
         >
           <SortableBlock block={section.heading} container={container} index={section.index}>
             <BlockBody block={section.heading} />
-            <RowActions id={section.heading.id} />
+            <RowActions block={section.heading} />
           </SortableBlock>
         </span>
       </summary>

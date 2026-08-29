@@ -29,6 +29,8 @@ interface EditorActions {
   // type (判別子) は patch で変更させない (union 不変条件を型レベルで守る)。
   updateBlock: (id: string, patch: Omit<Partial<Step>, "type">) => void;
   addBlock: (type: Step["type"], at: BlockLocation) => void;
+  // 取り込んだテキストを本文ブロック列として流し込む (docs: scenario-editor-architecture D19)。
+  insertTextBlocks: (bodies: string[], at: BlockLocation) => void;
   duplicateBlock: (id: string) => void;
   removeBlock: (id: string) => void;
   moveBlock: (id: string, to: BlockLocation) => void;
@@ -89,6 +91,20 @@ export const useScenarioEditorStore = create<EditorStore>()((set) => ({
       selectedBlockId: block.id,
     }));
   },
+
+  insertTextBlocks: (bodies, at) =>
+    set((state) => {
+      const inserted = bodies.reduce(
+        (blocks, body, offset) =>
+          blockOps.insertBlock(blocks, { container: at.container, index: at.index + offset }, {
+            ...TextEntry.defaults(),
+            id: generateId(),
+            body,
+          } as Step),
+        state.blocks,
+      );
+      return { blocks: openEnclosingHeading(inserted, at) };
+    }),
 
   duplicateBlock: (id) =>
     set((state) => {

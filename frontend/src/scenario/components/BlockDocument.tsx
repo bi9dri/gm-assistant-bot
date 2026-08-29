@@ -11,7 +11,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent } from "react";
 
 import { dropLocation, getDragData } from "@/flow/components/dnd";
 import { StepRowOverlay } from "@/flow/components/StepList";
@@ -20,6 +20,7 @@ import { findStepIn } from "@/flow/treeOps";
 
 import { sameBlockContainer, type BlockContainer } from "../blockOps";
 import { useScenarioEditorStore } from "../store/editorStore";
+import { isImportableTextFile, splitTextBlocks } from "../textTransfer";
 import { AddBlockMenu, BlockList } from "./BlockList";
 
 const ROOT: BlockContainer = { kind: "root" };
@@ -42,6 +43,7 @@ export const BlockDocument = () => {
   const blocks = useScenarioEditorStore((state) => state.blocks);
   const moveBlock = useScenarioEditorStore((state) => state.moveBlock);
   const restoreBlocks = useScenarioEditorStore((state) => state.restoreBlocks);
+  const insertTextBlocks = useScenarioEditorStore((state) => state.insertTextBlocks);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
@@ -83,8 +85,31 @@ export const BlockDocument = () => {
     setActiveBlockId(null);
   };
 
+  // ファイルのドロップ (docs: scenario-editor-architecture D19)。dnd-kit はポインタ
+  // イベントで並べ替えるため、ネイティブのドラッグ&ドロップとは干渉しない。
+  const handleFileDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (event.dataTransfer.types.includes("Files")) event.preventDefault();
+  };
+
+  const importTextFiles = async (files: File[]) => {
+    const texts = await Promise.all(files.map((file) => file.text()));
+    const bodies = texts.flatMap(splitTextBlocks);
+    if (bodies.length === 0) return;
+    insertTextBlocks(bodies, { container: ROOT, index: blocks.length });
+  };
+
+  const handleFileDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!event.dataTransfer.types.includes("Files")) return;
+    // 取り込めない種類でもブラウザの既定動作 (ファイルを開いて編集中の画面を離れる) は止める。
+    event.preventDefault();
+    // dataTransfer は await を跨ぐと空になるため、ここで取り出しておく。
+    const files = Array.from(event.dataTransfer.files).filter(isImportableTextFile);
+    if (files.length === 0) return;
+    void importTextFiles(files);
+  };
+
   return (
-    <div className="p-3">
+    <div className="p-3" onDragOver={handleFileDragOver} onDrop={handleFileDrop}>
       <DndContext
         sensors={sensors}
         collisionDetection={visibleCollisionDetection}
@@ -100,8 +125,11 @@ export const BlockDocument = () => {
           {activeBlock !== undefined && <StepRowOverlay step={activeBlock} />}
         </DragOverlay>
       </DndContext>
-      <div className="pt-2">
+      <div className="flex flex-col gap-1 pt-2">
         <AddBlockMenu container={ROOT} index={blocks.length} />
+        <p className="text-xs text-base-content/40">
+          .txt / .md をこの列にドロップすると、空行区切りで本文ブロックとして取り込みます
+        </p>
       </div>
     </div>
   );
