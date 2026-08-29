@@ -168,6 +168,7 @@ const BlockNode = ({ block, handlers }: { block: Step; handlers: RunHandlers }) 
 // ローカル state で持つ (collapsed の書き戻しはしない)。
 const SectionNode = ({ section, handlers }: { section: OutlineSection; handlers: RunHandlers }) => {
   const [open, setOpen] = useState(!section.heading.collapsed);
+  const isRunning = useRunnerStore((state) => state.runningStepId !== null);
 
   return (
     <details
@@ -185,10 +186,13 @@ const SectionNode = ({ section, handlers }: { section: OutlineSection; handlers:
           }}
         >
           <BlockRow block={section.heading} handlers={handlers}>
-            {/* ループ (docs: scenario-editor-architecture D9)。周回数は Counter ステップで数える。 */}
+            {/* ループ (docs: scenario-editor-architecture D9)。周回数は Counter ステップで数える。
+                実行中に押せると、連鎖の途中で executedAt が消えて実行済みブロックが
+                もう一度 Discord を叩く。実行系ボタンと同じく無効化する。 */}
             <button
               type="button"
               className="btn btn-ghost btn-xs shrink-0"
+              disabled={isRunning}
               title="この見出しの配下の実行・スキップの記録を消して、ここからやり直す"
               onClick={() => restartFromHeading(section.heading.id)}
             >

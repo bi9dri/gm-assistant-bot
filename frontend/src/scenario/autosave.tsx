@@ -36,11 +36,16 @@ export const useScenarioAutosave = (record: AutosaveRecord, source: AutosaveSour
   recordRef.current = record;
 
   useEffect(() => {
+    const recordId = record.id;
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let savedTimeout: ReturnType<typeof setTimeout> | null = null;
     let saveSeq = 0;
 
     const save = () => {
+      // 対象レコードの切り替えでは、まず購読の後始末 (= 未保存分の flush) が走り、
+      // その時点で ref は新しいレコードを指している。store もまだ前の画面の内容なので、
+      // そのまま書くと前の内容が新しいレコードへ移ってしまう。
+      if (recordRef.current.id !== recordId) return;
       const seq = ++saveSeq;
       const { blocks, gameFlags } = source.snapshot();
       // 編集途中の不完全なブロック (空のロール行など) は保存しない。update が parse で

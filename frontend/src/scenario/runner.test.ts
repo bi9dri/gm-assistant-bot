@@ -8,7 +8,7 @@ import type { Step } from "@/flow/schema";
 import { useRunnerStore } from "@/flow/store/runnerStore";
 import { findStep } from "@/flow/treeOps";
 
-import { restartFromHeading, runnerBlocks, toRunnerFlow } from "./runner";
+import { restartFromHeading, resumeCursorId, runnerBlocks, toRunnerFlow } from "./runner";
 
 // 実行モードはブロック列を FlowData に包んで flow の runnerStore / engine に載せる。
 // ここで検証するのはシナリオ側の意味論: 見出しの「ここから再実行」の範囲と、
@@ -74,6 +74,27 @@ describe("toRunnerFlow / runnerBlocks", () => {
 
   test("空の FlowData からは空のブロック列を返す", () => {
     expect(runnerBlocks({ version: 1, sections: [] })).toEqual([]);
+  });
+});
+
+describe("resumeCursorId", () => {
+  test("最初の未実行ブロックを指す", () => {
+    const blocks = [executed(heading("h1", 1)), executed(text("t1")), text("t2"), text("t3")];
+
+    expect(resumeCursorId(blocks)).toBe("t2");
+  });
+
+  test("確定した枝の中の未実行ブロックも対象にする", () => {
+    const blocks = [
+      executed(text("t1")),
+      branch("br", "a1", [executed(text("t2")), text("t3")], ["a1"]),
+    ];
+
+    expect(resumeCursorId(blocks)).toBe("t3");
+  });
+
+  test("すべて実行済みなら null", () => {
+    expect(resumeCursorId([executed(text("t1"))])).toBeNull();
   });
 });
 

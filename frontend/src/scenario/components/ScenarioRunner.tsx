@@ -11,7 +11,7 @@ import { useSessionRunner } from "@/flow/runner/useSessionRunner";
 import { useRunnerStore } from "@/flow/store/runnerStore";
 
 import { SaveStateBadge, useScenarioAutosave, type AutosaveSource } from "../autosave";
-import { runnerBlocks, toRunnerFlow } from "../runner";
+import { resumeCursorId, runnerBlocks, toRunnerFlow } from "../runner";
 import { RunnerBlockList } from "./RunnerBlockList";
 import { TableOfContents } from "./TableOfContents";
 
@@ -33,6 +33,7 @@ const runnerSource: AutosaveSource = {
 // 目次 + ドキュメント + 詳細/フラグ/ツールの 3 カラムで、編集画面と同じ並びにする。
 export const ScenarioRunner = ({ session, bot }: { session: GameSession; bot: DiscordBotData }) => {
   const initialize = useRunnerStore((state) => state.initialize);
+  const setCursor = useRunnerStore((state) => state.setCursor);
   const skipStep = useRunnerStore((state) => state.skipStep);
   const flowData = useRunnerStore((state) => state.flowData);
   const [loadedId, setLoadedId] = useState<number | null>(null);
@@ -42,12 +43,11 @@ export const ScenarioRunner = ({ session, bot }: { session: GameSession; bot: Di
   // 自動保存の購読より前に置く (逆だと開いただけで保存が走る)。
   useEffect(() => {
     if (loadedId === session.id) return;
-    initialize(
-      toRunnerFlow(session.getParsedScenarioData().blocks),
-      coerceFlags(session.getParsedGameFlags()),
-    );
+    const { blocks } = session.getParsedScenarioData();
+    initialize(toRunnerFlow(blocks), coerceFlags(session.getParsedGameFlags()));
+    setCursor(resumeCursorId(blocks));
     setLoadedId(session.id);
-  }, [session, loadedId, initialize]);
+  }, [session, loadedId, initialize, setCursor]);
 
   const saveState = useScenarioAutosave(session, runnerSource);
 
