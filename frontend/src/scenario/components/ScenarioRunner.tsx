@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { DiscordBotData, GameSession } from "@/db";
 import { MessageAttachmentTargetProvider } from "@/flow/components/messageContext";
+import { coerceFlags } from "@/flow/runner/flags";
 import { RunnerDetailPanel } from "@/flow/runner/RunnerDetailPanel";
 import { RunnerFlagPanel } from "@/flow/runner/RunnerFlagPanel";
-import { coerceFlags } from "@/flow/runner/flags";
 import { RunnerToolDock } from "@/flow/runner/RunnerToolDock";
 import type { RunHandlers } from "@/flow/runner/types";
 import { useSessionRunner } from "@/flow/runner/useSessionRunner";
