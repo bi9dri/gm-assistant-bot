@@ -4,7 +4,7 @@ import { useRunnerStore } from "@/flow/store/runnerStore";
 import { RunnerBlockList } from "@/scenario/components/RunnerBlockList";
 import { restartFromHeading, toRunnerFlow } from "@/scenario/runner";
 
-import { executedSampleBlocks, sampleLiveFlags } from "./fixtures";
+import { executedSampleBlocks, sampleGameFlags } from "./fixtures";
 
 // 実行モードのドキュメント: 実行済み (✓) / スキップ (⏭) / カーソル (▶) のマーカー、
 // Branch の確定枝の展開、見出しの「ここから再実行」を撮る。
@@ -12,7 +12,7 @@ import { executedSampleBlocks, sampleLiveFlags } from "./fixtures";
 const seed = (cursorId: string | null, skippedStepIds: string[]) => {
   useRunnerStore.setState({
     flowData: toRunnerFlow(executedSampleBlocks),
-    gameFlags: sampleLiveFlags,
+    gameFlags: sampleGameFlags,
     cursorId,
     selectedStepId: null,
     skippedStepIds,

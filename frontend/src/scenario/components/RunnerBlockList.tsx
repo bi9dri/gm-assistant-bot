@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { memo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { StepRowContent } from "@/flow/components/StepList";
 import { getEntry } from "@/flow/registry";
@@ -17,12 +17,6 @@ import { scrollToBlock } from "../scrollToBlock";
 // 見出しの「ここから再実行」を持つ。本文ブロックの実行は no-op で、通過印 (executedAt) が
 // 付くだけ。「既読」のような別状態は持たせない。
 
-// 本文ブロックは Discord 副作用を持たないため、ボタンは「通過」と呼ぶ。
-const runLabel = (block: Step, isExecuted: boolean): string => {
-  if (isExecuted) return "再実行";
-  return getEntry(block.type)?.category === "text" ? "通過" : "実行";
-};
-
 const RunControls = ({ block, handlers }: { block: Step; handlers: RunHandlers }) => {
   const isRunning = useRunnerStore((state) => state.runningStepId !== null);
   const isExecuted = block.executedAt !== undefined;
@@ -38,7 +32,8 @@ const RunControls = ({ block, handlers }: { block: Step; handlers: RunHandlers }
           disabled={isRunning}
           onClick={() => handlers.onRun(block.id)}
         >
-          {runLabel(block, isExecuted)}
+          {/* 本文ブロックは Discord 副作用を持たないため「通過」と呼ぶ。 */}
+          {isExecuted ? "再実行" : getEntry(block.type)?.category === "text" ? "通過" : "実行"}
         </button>
       )}
       {!isExecuted && (
@@ -162,13 +157,12 @@ const BranchArms = ({ block, handlers }: { block: Step; handlers: RunHandlers })
   );
 };
 
-const BlockNode = memo(({ block, handlers }: { block: Step; handlers: RunHandlers }) => (
+const BlockNode = ({ block, handlers }: { block: Step; handlers: RunHandlers }) => (
   <div>
     <BlockRow block={block} handlers={handlers} />
     <BranchArms block={block} handlers={handlers} />
   </div>
-));
-BlockNode.displayName = "BlockNode";
+);
 
 // 見出し 1 つ分。折りたたみは実行中の見え方の調整でしかないので、記録保護に触れないよう
 // ローカル state で持つ (collapsed の書き戻しはしない)。
@@ -191,7 +185,15 @@ const SectionNode = ({ section, handlers }: { section: OutlineSection; handlers:
           }}
         >
           <BlockRow block={section.heading} handlers={handlers}>
-            <RestartButton headingId={section.heading.id} />
+            {/* ループ (docs: scenario-editor-architecture D9)。周回数は Counter ステップで数える。 */}
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs shrink-0"
+              title="この見出しの配下の実行・スキップの記録を消して、ここからやり直す"
+              onClick={() => restartFromHeading(section.heading.id)}
+            >
+              ここから再実行
+            </button>
           </BlockRow>
         </span>
       </summary>
@@ -201,18 +203,6 @@ const SectionNode = ({ section, handlers }: { section: OutlineSection; handlers:
     </details>
   );
 };
-
-// ループ (D9)。見出し配下の実行痕跡を消してカーソルを見出しへ戻す。
-const RestartButton = ({ headingId }: { headingId: string }) => (
-  <button
-    type="button"
-    className="btn btn-ghost btn-xs shrink-0"
-    title="この見出しの配下の実行・スキップの記録を消して、ここからやり直す"
-    onClick={() => restartFromHeading(headingId)}
-  >
-    ここから再実行
-  </button>
-);
 
 const RunnerBlockNodes = ({ nodes, handlers }: { nodes: OutlineNode[]; handlers: RunHandlers }) => (
   <>

@@ -93,7 +93,9 @@ export const sampleBlocks: Step[] = [
   },
 ];
 
-export const sampleGameFlags: Record<string, unknown> = { evidence: "見つけた", round: "1" };
+// フラグ値は string (evaluateCondition / DynamicValue が string 前提)。実行モードの
+// ライブフラグにもそのまま渡せる。
+export const sampleGameFlags: Record<string, string> = { evidence: "見つけた", round: "1" };
 
 // 実行モード (ScenarioRunner) 用に実行痕跡を載せたブロック列。実行済み ✓ とスキップ ⏭、
 // カーソル ▶、Branch の確定枝 (a1) を 1 本で撮れるようにしてある。
@@ -106,6 +108,3 @@ export const executedSampleBlocks: Step[] = sampleBlocks.map((block) => {
   }
   return EXECUTED_BLOCK_IDS.has(block.id) ? { ...block, executedAt: EXECUTED_AT } : block;
 });
-
-// ライブなゲームフラグは string 値 (evaluateCondition / DynamicValue が string 前提)。
-export const sampleLiveFlags: Record<string, string> = { evidence: "見つけた", round: "1" };

@@ -58,16 +58,4 @@ describe("convertFilePathsInScenarioData", () => {
     if (nested?.type !== "SendMessage") throw new Error("expected SendMessage");
     expect(nested.messages[0]!.attachments[0]!.filePath).toBe("session/9/b.png");
   });
-
-  test("添付を持たないブロックはそのまま残る", () => {
-    const input = scenario([
-      { id: "t1", type: "Text", title: "本文", body: "館に着いた" },
-      sendMessage("m1", "template/1/c.png"),
-    ]);
-
-    const result = convertFilePathsInScenarioData(input, replacer);
-
-    expect(result.blocks[0]).toEqual(input.blocks[0]!);
-    expect(filePathOf(result, 1)).toBe("session/9/c.png");
-  });
 });

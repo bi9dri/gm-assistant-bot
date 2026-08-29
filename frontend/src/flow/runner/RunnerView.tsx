@@ -8,6 +8,7 @@ import { useRunnerStore } from "../store/runnerStore";
 import { RunnerDetailPanel } from "./RunnerDetailPanel";
 import { RunnerFlagPanel } from "./RunnerFlagPanel";
 import { RunnerStepListPanel } from "./RunnerStepListPanel";
+import { coerceFlags } from "./flags";
 import { RunnerToolDock } from "./RunnerToolDock";
 import type { RunHandlers } from "./types";
 import { useSessionRunner } from "./useSessionRunner";
@@ -16,17 +17,6 @@ const AUTOSAVE_DEBOUNCE_MS = 500;
 const SAVED_INDICATOR_MS = 2000;
 
 type SaveState = "saved" | "invalid" | "error" | null;
-
-// ライブフラグは string 値で扱う (evaluateCondition / DynamicValue が string 前提)。
-const toFlagString = (value: unknown): string => {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-};
-
-const coerceFlags = (flags: Record<string, unknown>): Record<string, string> =>
-  Object.fromEntries(Object.entries(flags).map(([key, value]) => [key, toFlagString(value)]));
 
 // execute モードの 3 カラムレイアウト + store 初期化 + flowData/gameFlags の自動保存。
 // edit モードの StepsEditor に対応する execute モード版。

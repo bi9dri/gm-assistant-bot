@@ -4,6 +4,7 @@ import type { DiscordBotData, GameSession } from "@/db";
 import { MessageAttachmentTargetProvider } from "@/flow/components/messageContext";
 import { RunnerDetailPanel } from "@/flow/runner/RunnerDetailPanel";
 import { RunnerFlagPanel } from "@/flow/runner/RunnerFlagPanel";
+import { coerceFlags } from "@/flow/runner/flags";
 import { RunnerToolDock } from "@/flow/runner/RunnerToolDock";
 import type { RunHandlers } from "@/flow/runner/types";
 import { useSessionRunner } from "@/flow/runner/useSessionRunner";
@@ -13,17 +14,6 @@ import { SaveStateBadge, useScenarioAutosave, type AutosaveSource } from "../aut
 import { runnerBlocks, toRunnerFlow } from "../runner";
 import { RunnerBlockList } from "./RunnerBlockList";
 import { TableOfContents } from "./TableOfContents";
-
-// ライブフラグは string 値で扱う (evaluateCondition / DynamicValue が string 前提)。
-const toFlagString = (value: unknown): string => {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-};
-
-const coerceFlags = (flags: Record<string, unknown>): Record<string, string> =>
-  Object.fromEntries(Object.entries(flags).map(([key, value]) => [key, toFlagString(value)]));
 
 // 実行モードの保存対象は GameSession.scenarioData とライブの GameSession.gameFlags。
 const runnerSource: AutosaveSource = {

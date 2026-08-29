@@ -5,7 +5,6 @@ import z from "zod";
 
 import { db } from "@/db";
 import { FileSystem } from "@/fileSystem";
-import { hasScenarioBlocks } from "@/scenario/schema";
 import { useToast } from "@/toast/ToastProvider";
 
 const SessionCardSchema = z.object({
@@ -13,16 +12,15 @@ const SessionCardSchema = z.object({
   name: z.string().trim().nonempty(),
   guildId: z.string().trim().nonempty(),
   lastUsedAt: z.date(),
-  // セッションの実行画面は scenarioData が空でないほうを開く (docs: scenario-editor-architecture D16)。
-  scenarioData: z.string(),
+  // シナリオ形式のブロックを持つか。実行画面は空でないほうを開く (docs: scenario-editor-architecture D16)。
+  hasScenario: z.boolean(),
 });
 
 type Props = z.infer<typeof SessionCardSchema>;
 
-export const SessionCard = ({ id, name, guildId, lastUsedAt, scenarioData }: Props) => {
+export const SessionCard = ({ id, name, guildId, lastUsedAt, hasScenario }: Props) => {
   const { addToast } = useToast();
   const guild = useLiveQuery(() => db.Guild.get(guildId));
-  const hasScenario = hasScenarioBlocks(scenarioData);
 
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -71,23 +69,13 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt, scenarioData }: Pro
             <Link to="/session/$id" params={{ id: id.toString() }} className="btn btn-primary">
               詳細を見る
             </Link>
-            {hasScenario ? (
-              <Link
-                to="/session/$id/scenario"
-                params={{ id: id.toString() }}
-                className="btn btn-secondary"
-              >
-                シナリオ実行
-              </Link>
-            ) : (
-              <Link
-                to="/session/$id/steps"
-                params={{ id: id.toString() }}
-                className="btn btn-secondary"
-              >
-                ステップ実行
-              </Link>
-            )}
+            <Link
+              to={hasScenario ? "/session/$id/scenario" : "/session/$id/steps"}
+              params={{ id: id.toString() }}
+              className="btn btn-secondary"
+            >
+              {hasScenario ? "シナリオ実行" : "ステップ実行"}
+            </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">
               削除
             </label>
