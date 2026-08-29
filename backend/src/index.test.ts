@@ -417,3 +417,131 @@ describe("Error handling", () => {
     getProfileSpy.mockRestore();
   });
 });
+
+describe("Member endpoints", () => {
+  let listGuildMembersSpy: ReturnType<typeof spyOn>;
+  let addRoleToMemberSpy: ReturnType<typeof spyOn>;
+
+  beforeEach(() => {
+    listGuildMembersSpy = spyOn(discord, "listGuildMembers");
+    addRoleToMemberSpy = spyOn(discord, "addRoleToMember");
+  });
+
+  afterEach(() => {
+    listGuildMembersSpy.mockRestore();
+    addRoleToMemberSpy.mockRestore();
+  });
+
+  test("GET /api/members returns guild members", async () => {
+    const mockMembers = [{ id: "user-1", name: "探偵", icon: "https://example.com/1.png" }];
+    listGuildMembersSpy.mockResolvedValue(mockMembers);
+
+    const res = await app.request("/api/members?guildId=guild-123", {
+      headers: { [BOT_TOKEN_HEADER]: TEST_TOKEN },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ members: mockMembers });
+    expect(listGuildMembersSpy).toHaveBeenCalledWith(TEST_TOKEN, { guildId: "guild-123" });
+  });
+
+  test("GET /api/members returns validation error without guildId", async () => {
+    const res = await app.request("/api/members", {
+      headers: { [BOT_TOKEN_HEADER]: TEST_TOKEN },
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  test("POST /api/roles/addRoleToMember adds role to a single member", async () => {
+    addRoleToMemberSpy.mockResolvedValue(undefined);
+
+    const res = await app.request("/api/roles/addRoleToMember", {
+      method: "POST",
+      headers: {
+        [BOT_TOKEN_HEADER]: TEST_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ guildId: "guild-123", userId: "user-1", roleId: "role-1" }),
+    });
+
+    expect(res.status).toBe(204);
+    expect(addRoleToMemberSpy).toHaveBeenCalledWith(TEST_TOKEN, {
+      guildId: "guild-123",
+      userId: "user-1",
+      roleId: "role-1",
+    });
+  });
+});
+
+describe("Vote endpoints", () => {
+  let sendVoteSpy: ReturnType<typeof spyOn>;
+  let getVoteResultSpy: ReturnType<typeof spyOn>;
+
+  beforeEach(() => {
+    sendVoteSpy = spyOn(discord, "sendVote");
+    getVoteResultSpy = spyOn(discord, "getVoteResult");
+  });
+
+  afterEach(() => {
+    sendVoteSpy.mockRestore();
+    getVoteResultSpy.mockRestore();
+  });
+
+  test("POST /api/messages/vote returns the posted message id", async () => {
+    sendVoteSpy.mockResolvedValue({ id: "msg-1" });
+
+    const res = await app.request("/api/messages/vote", {
+      method: "POST",
+      headers: {
+        [BOT_TOKEN_HEADER]: TEST_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        channelId: "ch-1",
+        content: "誰を追放しますか",
+        optionEmojis: ["1️⃣", "2️⃣"],
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ message: { id: "msg-1" } });
+    expect(sendVoteSpy).toHaveBeenCalledWith(TEST_TOKEN, {
+      channelId: "ch-1",
+      content: "誰を追放しますか",
+      optionEmojis: ["1️⃣", "2️⃣"],
+    });
+  });
+
+  test("POST /api/messages/vote returns validation error without options", async () => {
+    const res = await app.request("/api/messages/vote", {
+      method: "POST",
+      headers: {
+        [BOT_TOKEN_HEADER]: TEST_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ channelId: "ch-1", content: "誰を追放しますか", optionEmojis: [] }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  test("GET /api/messages/vote returns reaction counts", async () => {
+    const mockReactions = [{ emoji: "1️⃣", count: 2 }];
+    getVoteResultSpy.mockResolvedValue(mockReactions);
+
+    const res = await app.request("/api/messages/vote?channelId=ch-1&messageId=msg-1", {
+      headers: { [BOT_TOKEN_HEADER]: TEST_TOKEN },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ reactions: mockReactions });
+    expect(getVoteResultSpy).toHaveBeenCalledWith(TEST_TOKEN, {
+      channelId: "ch-1",
+      messageId: "msg-1",
+    });
+  });
+});

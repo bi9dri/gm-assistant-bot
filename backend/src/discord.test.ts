@@ -1,6 +1,14 @@
 import { describe, test, expect } from "bun:test";
 
-import { getDefaultAvatarIndex, getGuildIconUrl, getUserAvatarUrl } from "./discord";
+import type { APIReaction, RESTGetAPIGuildMemberResult } from "discord-api-types/v10";
+
+import {
+  getDefaultAvatarIndex,
+  getGuildIconUrl,
+  getMemberDisplayName,
+  getUserAvatarUrl,
+  toVoteCounts,
+} from "./discord";
 
 describe("getDefaultAvatarIndex", () => {
   test("returns same index for same ID", () => {
@@ -75,5 +83,46 @@ describe("getUserAvatarUrl", () => {
     const url1 = getUserAvatarUrl("123456789", null);
     const url2 = getUserAvatarUrl("987654321", null);
     expect(url1).not.toBe(url2);
+  });
+});
+
+describe("getMemberDisplayName", () => {
+  const member = (nick: string | null, globalName: string | null, username: string) =>
+    ({ nick, user: { global_name: globalName, username } }) as RESTGetAPIGuildMemberResult;
+
+  test("prefers guild nickname", () => {
+    expect(getMemberDisplayName(member("探偵", "Global", "user1"))).toBe("探偵");
+  });
+
+  test("falls back to global name when nickname is unset", () => {
+    expect(getMemberDisplayName(member(null, "Global", "user1"))).toBe("Global");
+  });
+
+  test("falls back to username when both are unset", () => {
+    expect(getMemberDisplayName(member(null, null, "user1"))).toBe("user1");
+  });
+});
+
+describe("toVoteCounts", () => {
+  const reaction = (name: string, count: number, me: boolean) =>
+    ({ emoji: { name }, count, me }) as APIReaction;
+
+  test("converts reactions of multiple emojis into per-emoji counts", () => {
+    expect(toVoteCounts([reaction("1️⃣", 4, true), reaction("2️⃣", 2, true)])).toEqual([
+      { emoji: "1️⃣", count: 3 },
+      { emoji: "2️⃣", count: 1 },
+    ]);
+  });
+
+  test("excludes the bot's own reaction", () => {
+    expect(toVoteCounts([reaction("1️⃣", 1, true)])).toEqual([{ emoji: "1️⃣", count: 0 }]);
+  });
+
+  test("keeps the count when the bot did not react", () => {
+    expect(toVoteCounts([reaction("1️⃣", 2, false)])).toEqual([{ emoji: "1️⃣", count: 2 }]);
+  });
+
+  test("returns an empty list when nobody reacted", () => {
+    expect(toVoteCounts(undefined)).toEqual([]);
   });
 });

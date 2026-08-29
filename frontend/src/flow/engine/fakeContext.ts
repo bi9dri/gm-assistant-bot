@@ -1,6 +1,7 @@
 import type {
   DiscordGateway,
   ExecuteContext,
+  GuildMember,
   SessionCategory,
   SessionChannel,
   SessionRole,
@@ -25,6 +26,9 @@ interface FakeContextState {
 
 interface FakeContextOptions {
   flags?: Record<string, string>;
+  members?: GuildMember[];
+  // getVoteResult が返すリアクション集計 (投票ブロックのテスト用)。
+  voteReactions?: { emoji: string; count: number }[];
   roles?: SessionRole[];
   channels?: SessionChannel[];
   categories?: SessionCategory[];
@@ -74,6 +78,21 @@ export const createFakeContext = (
     },
     addRoleToRoleMembers: async (params) => {
       record("addRoleToRoleMembers", params);
+    },
+    addRoleToMember: async (params) => {
+      record("addRoleToMember", params);
+    },
+    listGuildMembers: async () => {
+      record("listGuildMembers", undefined);
+      return options.members ?? [];
+    },
+    sendVote: async (params) => {
+      record("sendVote", params);
+      return { id: "message-1" };
+    },
+    getVoteResult: async (params) => {
+      record("getVoteResult", params);
+      return options.voteReactions ?? [];
     },
     sendMessage: async (message) => {
       record("sendMessage", message);

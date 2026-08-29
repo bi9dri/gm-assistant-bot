@@ -123,3 +123,25 @@ export const RandomSelect = story(
   stepFor("RandomSelect", { items: ["A", "B"], resultFlagKey: "winner" }),
 );
 export const RecordCombination = story(stepFor("RecordCombination", {}));
+// 投票ブロックは集計前後で表示が変わるため 2 状態を撮る。
+export const VoteBeforeTally = story(
+  stepFor("Vote", {
+    channelName: "全体",
+    question: "誰を追放しますか",
+    options: ["アリス", "ボブ", "キャロル"],
+  }),
+);
+export const VoteAfterTally = story(
+  stepFor("Vote", {
+    channelName: "全体",
+    question: "誰を追放しますか",
+    options: ["アリス", "ボブ", "キャロル"],
+    messageId: "message-1",
+    tally: [
+      { option: "アリス", count: 3 },
+      { option: "ボブ", count: 1 },
+      { option: "キャロル", count: 0 },
+    ],
+  }),
+);
+export const AssignRole = story(stepFor("AssignRole", { flagPrefix: "役" }));

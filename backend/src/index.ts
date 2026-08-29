@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import {
+  addRoleToMember,
   addRoleToRoleMembers,
   changeChannelPermissions,
   createCategory,
@@ -14,9 +15,13 @@ import {
   deleteRole,
   getGuilds,
   getProfile,
+  getVoteResult,
+  listGuildMembers,
   sendMessage,
+  sendVote,
 } from "./discord";
 import {
+  addRoleToMemberSchema,
   addRoleToRoleMembersSchema,
   BOT_TOKEN_HEADER,
   changeChannelPermissionsSchema,
@@ -25,7 +30,10 @@ import {
   createRoleSchema,
   deleteChannelSchema,
   deleteRoleSchema,
+  getVoteResultSchema,
+  listGuildMembersSchema,
   sendMessageSchema,
+  sendVoteSchema,
 } from "./schemas";
 
 type Variables = {
@@ -69,6 +77,15 @@ const api = new Hono<{ Variables: Variables }>()
       return c.body(null, 204);
     },
   )
+  .post("/roles/addRoleToMember", zValidator("json", addRoleToMemberSchema), async (c) => {
+    await addRoleToMember(c.get("botToken"), c.req.valid("json"));
+    return c.body(null, 204);
+  })
+
+  .get("/members", zValidator("query", listGuildMembersSchema), async (c) => {
+    const members = await listGuildMembers(c.get("botToken"), c.req.valid("query"));
+    return c.json({ members });
+  })
 
   .post("/categories", zValidator("json", createCategorySchema), async (c) => {
     const category = await createCategory(c.get("botToken"), c.req.valid("json"));
@@ -91,6 +108,14 @@ const api = new Hono<{ Variables: Variables }>()
   .post("/messages", zValidator("form", sendMessageSchema), async (c) => {
     await sendMessage(c.get("botToken"), c.req.valid("form"));
     return c.body(null, 204);
+  })
+  .post("/messages/vote", zValidator("json", sendVoteSchema), async (c) => {
+    const message = await sendVote(c.get("botToken"), c.req.valid("json"));
+    return c.json({ message });
+  })
+  .get("/messages/vote", zValidator("query", getVoteResultSchema), async (c) => {
+    const reactions = await getVoteResult(c.get("botToken"), c.req.valid("query"));
+    return c.json({ reactions });
   });
 
 const app = new Hono()

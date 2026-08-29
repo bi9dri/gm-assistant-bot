@@ -469,3 +469,162 @@ describe("Branch.execute", () => {
     expect(result.branchArmIds).toEqual(["a1"]);
   });
 });
+
+describe("Vote.execute", () => {
+  const channels = [
+    {
+      id: "ch1",
+      name: "全体",
+      type: "text" as const,
+      writerRoleIds: [],
+      readerRoleIds: [],
+    },
+  ];
+  const voteStep = (overrides: Partial<Extract<Step, { type: "Vote" }>> = {}) =>
+    ({
+      id: "s",
+      type: "Vote",
+      title: "",
+      ...base,
+      channelName: "全体",
+      question: "誰を追放しますか",
+      options: ["アリス", "ボブ"],
+      ...overrides,
+    }) as Step;
+
+  test("未送信なら投票メッセージを送り messageId を書き戻す", async () => {
+    const { ctx, state } = createFakeContext({ channels });
+    const result = await run(voteStep(), ctx);
+
+    expect(result.status).toBe("success");
+    expect(result.stepState).toEqual({ messageId: "message-1" });
+    expect(state.calls.filter((c) => c.method === "sendVote")).toEqual([
+      {
+        method: "sendVote",
+        arg: {
+          channelId: "ch1",
+          content: "誰を追放しますか\n1️⃣ アリス\n2️⃣ ボブ",
+          optionEmojis: ["1️⃣", "2️⃣"],
+        },
+      },
+    ]);
+  });
+
+  test("送信済みなら集計して tally を書き戻す", async () => {
+    const { ctx, state } = createFakeContext({
+      channels,
+      voteReactions: [
+        { emoji: "1️⃣", count: 2 },
+        { emoji: "2️⃣", count: 1 },
+      ],
+    });
+    const result = await run(voteStep({ messageId: "message-1" }), ctx);
+
+    expect(result.status).toBe("success");
+    expect(result.stepState).toEqual({
+      tally: [
+        { option: "アリス", count: 2 },
+        { option: "ボブ", count: 1 },
+      ],
+    });
+    expect(state.calls.some((c) => c.method === "sendVote")).toBe(false);
+    expect(result.message).toContain("アリス 2票");
+  });
+
+  test("チャンネル名が未設定なら error", async () => {
+    const { ctx } = createFakeContext({ channels });
+    expect((await run(voteStep({ channelName: "" }), ctx)).status).toBe("error");
+  });
+
+  test("選択肢が 2 つ未満なら error", async () => {
+    const { ctx } = createFakeContext({ channels });
+    expect((await run(voteStep({ options: ["アリス"] }), ctx)).status).toBe("error");
+  });
+
+  test("チャンネルが存在しなければ error", async () => {
+    const { ctx } = createFakeContext();
+    const result = await run(voteStep(), ctx);
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("全体");
+  });
+
+  test("送信に失敗したら error", async () => {
+    const { ctx } = createFakeContext({ channels, failOn: { sendVote: true } });
+    expect((await run(voteStep(), ctx)).status).toBe("error");
+  });
+
+  test("集計に失敗したら error", async () => {
+    const { ctx } = createFakeContext({ channels, failOn: { getVoteResult: true } });
+    expect((await run(voteStep({ messageId: "message-1" }), ctx)).status).toBe("error");
+  });
+});
+
+describe("AssignRole.execute", () => {
+  const members = [
+    { id: "u1", name: "アリス" },
+    { id: "u2", name: "ボブ" },
+  ];
+  const roles = [
+    { id: "r1", name: "探偵" },
+    { id: "r2", name: "犯人" },
+  ];
+  const assignStep = (flagPrefix = "役") =>
+    ({ id: "s", type: "AssignRole", title: "", ...base, flagPrefix }) as Step;
+
+  test("配役フラグに従って各メンバーへロールを付与する", async () => {
+    const { ctx, state } = createFakeContext({
+      members,
+      roles,
+      flags: { 役_アリス: "探偵", 役_ボブ: "犯人" },
+    });
+    const result = await run(assignStep(), ctx);
+
+    expect(result.status).toBe("success");
+    expect(state.calls.filter((c) => c.method === "addRoleToMember").map((c) => c.arg)).toEqual([
+      { userId: "u1", roleId: "r1" },
+      { userId: "u2", roleId: "r2" },
+    ]);
+  });
+
+  test("対象フラグが無ければ error", async () => {
+    const { ctx } = createFakeContext({ members, roles, flags: { メモ: "無関係" } });
+    expect((await run(assignStep(), ctx)).status).toBe("error");
+  });
+
+  test("ギルドに居ないメンバーは付与せず error", async () => {
+    const { ctx, state } = createFakeContext({
+      members,
+      roles,
+      flags: { 役_キャロル: "探偵" },
+    });
+    const result = await run(assignStep(), ctx);
+
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("キャロル");
+    expect(state.calls.some((c) => c.method === "addRoleToMember")).toBe(false);
+  });
+
+  test("存在しないロール名は付与せず error", async () => {
+    const { ctx, state } = createFakeContext({ members, roles, flags: { 役_アリス: "村人" } });
+    const result = await run(assignStep(), ctx);
+
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("村人");
+    expect(state.calls.some((c) => c.method === "addRoleToMember")).toBe(false);
+  });
+
+  test("メンバー取得に失敗したら error", async () => {
+    const { ctx } = createFakeContext({ roles, failOn: { listGuildMembers: true } });
+    expect((await run(assignStep(), ctx)).status).toBe("error");
+  });
+
+  test("ロール付与に失敗したら error", async () => {
+    const { ctx } = createFakeContext({
+      members,
+      roles,
+      flags: { 役_アリス: "探偵" },
+      failOn: { addRoleToMember: true },
+    });
+    expect((await run(assignStep(), ctx)).status).toBe("error");
+  });
+});

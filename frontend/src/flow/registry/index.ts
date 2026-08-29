@@ -1,5 +1,6 @@
 import type { Step } from "../schema";
 import { AddRoleToRoleMembersEntry } from "./AddRoleToRoleMembers";
+import { AssignRoleEntry } from "./AssignRole";
 import { BranchEntry } from "./Branch";
 import { ChangeChannelPermissionEntry } from "./ChangeChannelPermission";
 import { CombinationSendMessageEntry } from "./CombinationSendMessage";
@@ -19,6 +20,7 @@ import { SetGameFlagEntry } from "./SetGameFlag";
 import { ShuffleAssignEntry } from "./ShuffleAssign";
 import { TextEntry } from "./Text";
 import type { StepRegistryEntry } from "./types";
+import { VoteEntry } from "./Vote";
 
 // 全ステップタイプの登録リスト。ステップタイプを増やす = ここに 1 行追加するだけ。
 // 表示順は「操作 → 分岐 → ツール → 本文」のおおまかな並び。
@@ -31,7 +33,9 @@ const ENTRIES: StepRegistryEntry[] = [
   DeleteChannelEntry,
   ChangeChannelPermissionEntry,
   AddRoleToRoleMembersEntry,
+  AssignRoleEntry,
   SendMessageEntry,
+  VoteEntry,
   CombinationSendMessageEntry,
   SetGameFlagEntry,
   BranchEntry,

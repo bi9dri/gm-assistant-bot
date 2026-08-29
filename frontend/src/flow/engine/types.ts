@@ -4,6 +4,8 @@
 // db 書き込みは context のポート越しに行うため、context をモックすれば execute() を
 // レンダリング無しで unit-test できる。
 
+import type { StepRuntimeState } from "../schema";
+
 // セッション中に生成された Discord リソースのスナップショット。
 // db.Role / db.Channel / db.Category (sessionId スコープ) に対応する。
 export interface SessionRole {
@@ -20,6 +22,12 @@ export interface SessionChannel {
 }
 
 export interface SessionCategory {
+  id: string;
+  name: string;
+}
+
+// ギルドに参加している Discord ユーザー (bot を除く)。配役で名前 → id 解決に使う。
+export interface GuildMember {
   id: string;
   name: string;
 }
@@ -56,7 +64,19 @@ export interface DiscordGateway {
   }): Promise<void>;
   deleteChannel(channelId: string): Promise<void>;
   addRoleToRoleMembers(params: { memberRoleId: string; addRoleId: string }): Promise<void>;
+  addRoleToMember(params: { userId: string; roleId: string }): Promise<void>;
+  listGuildMembers(): Promise<GuildMember[]>;
   sendMessage(message: OutgoingMessage): Promise<void>;
+  // 投票メッセージを送り、選択肢の絵文字をリアクションとして付ける。集計に使う id を返す。
+  sendVote(params: {
+    channelId: string;
+    content: string;
+    optionEmojis: string[];
+  }): Promise<{ id: string }>;
+  getVoteResult(params: {
+    channelId: string;
+    messageId: string;
+  }): Promise<{ emoji: string; count: number }[]>;
 }
 
 // セッションリソースの読み取り (スナップショット) と永続化ミューテーション。
@@ -101,4 +121,7 @@ export interface ExecuteResult {
   status: "success" | "error";
   message: string;
   branchArmIds?: string[];
+  // 実行時状態の書き戻し (投票メッセージ id・集計結果)。設定フィールドと違い、
+  // 実行済みステップでも更新してよい。
+  stepState?: StepRuntimeState;
 }

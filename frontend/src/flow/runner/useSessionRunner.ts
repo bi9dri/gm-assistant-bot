@@ -71,9 +71,10 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
 
           const result = await stepEntry.execute(step, ctx);
           if (result.status === "success") {
-            useRunnerStore
-              .getState()
-              .markStepExecuted(id, { executedBranchIds: result.branchArmIds });
+            useRunnerStore.getState().markStepExecuted(id, {
+              executedBranchIds: result.branchArmIds,
+              stepState: result.stepState,
+            });
           }
           return result;
         },

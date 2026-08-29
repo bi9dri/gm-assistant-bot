@@ -200,6 +200,24 @@ const RecordCombinationStepSchema = StepBaseSchema.extend({
     .default([]),
 });
 
+const VoteStepSchema = StepBaseSchema.extend({
+  type: z.literal("Vote"),
+  channelName: z.string().trim(),
+  question: z.string().trim().default(""),
+  options: z.array(z.string().min(1)).min(2).max(10),
+  // 実行時状態: 送信した投票メッセージ id と、集計した票数。
+  messageId: z.string().optional(),
+  tally: z
+    .array(z.object({ option: z.string(), count: z.number().int().nonnegative() }))
+    .optional(),
+});
+
+const AssignRoleStepSchema = StepBaseSchema.extend({
+  type: z.literal("AssignRole"),
+  // ShuffleAssign が書いた `${flagPrefix}_${表示名}` フラグを配役表として読む
+  flagPrefix: z.string().trim().min(1),
+});
+
 // ---- 本文ステップ (Discord 操作を伴わない、シナリオ本文と見出し) ----
 
 const TextStepSchema = StepBaseSchema.extend({
@@ -262,6 +280,8 @@ const StepUnionSchema = z.discriminatedUnion("type", [
   ShuffleAssignStepSchema,
   RandomSelectStepSchema,
   RecordCombinationStepSchema,
+  VoteStepSchema,
+  AssignRoleStepSchema,
   TextStepSchema,
   HeadingStepSchema,
   BranchStepSchema,
@@ -326,6 +346,7 @@ export const defaultFlowData: FlowData = { version: 1, sections: [] };
 // 定義そのものは上の Phase 0 のものを変更しない。
 export {
   AddRoleToRoleMembersStepSchema,
+  AssignRoleStepSchema,
   BranchStepSchema,
   ChangeChannelPermissionStepSchema,
   CombinationSendMessageStepSchema,
@@ -344,6 +365,7 @@ export {
   SetGameFlagStepSchema,
   ShuffleAssignStepSchema,
   TextStepSchema,
+  VoteStepSchema,
 };
 
 // 個別ステップ型。`Extract<Step, { type: "X" }>` の別名で、各 registry module / DetailPanel が使う。
@@ -363,6 +385,16 @@ export type CounterStep = Extract<Step, { type: "Counter" }>;
 export type ShuffleAssignStep = Extract<Step, { type: "ShuffleAssign" }>;
 export type RandomSelectStep = Extract<Step, { type: "RandomSelect" }>;
 export type RecordCombinationStep = Extract<Step, { type: "RecordCombination" }>;
+export type VoteStep = Extract<Step, { type: "Vote" }>;
+export type AssignRoleStep = Extract<Step, { type: "AssignRole" }>;
 export type BranchStep = Extract<Step, { type: "Branch" }>;
 export type TextStep = Extract<Step, { type: "Text" }>;
 export type HeadingStep = Extract<Step, { type: "Heading" }>;
+
+// 実行時状態 (盤面・記録・投票結果)。設定フィールドと違い、実行済みでも書き換えてよい。
+// runnerStore.updateToolState と execute() の書き戻し (ExecuteResult.stepState) が共有する。
+export type StepRuntimeState = Partial<
+  Pick<KanbanStep, "cardPlacements"> &
+    Pick<RecordCombinationStep, "recordedPairs"> &
+    Pick<VoteStep, "messageId" | "tally">
+>;

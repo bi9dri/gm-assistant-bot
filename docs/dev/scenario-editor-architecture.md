@@ -249,6 +249,19 @@ export interface StepRegistryEntry<S extends Step = Step> {
 既存 `addRoleToRoleMembers` はロール単位 (あるロールの保持者全員に別ロールを付ける) のみで、
 特定ユーザーへの付与ができない。ここが配役の欠けているピース。
 
+追加したエンドポイント:
+
+| エンドポイント | 用途 |
+|---|---|
+| `POST /api/messages/vote` | 投票メッセージを送り、選択肢の絵文字をリアクションとして付けて message id を返す |
+| `GET /api/messages/vote` | メッセージのリアクションを絵文字ごとの票数にして返す (bot 自身の 1 票を除外) |
+| `GET /api/members` | ギルドメンバー一覧 (bot を除く。表示名は nick > global_name > username) |
+| `POST /api/roles/addRoleToMember` | ユーザー指定のロール付与 |
+
+ブロックは `Vote` と `AssignRole` の 2 つ。`Vote` は 1 回目の実行で投票を送信し、2 回目以降の
+実行で集計する (再実行がポーリングそのものになる)。`AssignRole` は `ShuffleAssign` が書いた
+`${prefix}_${表示名}` フラグを配役表として読むので、抽選と配役の間に新しい受け渡し口を作らない。
+
 集計は Gateway を張らずポーリングで行う。リアクション集計を先に実装するのは、返信は表記揺れの
 ため機械集計が原理的に不可能で、成果が「一覧表示」に留まるため。
 

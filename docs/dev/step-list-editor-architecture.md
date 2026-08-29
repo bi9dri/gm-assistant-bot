@@ -121,6 +121,11 @@ Rules:
   runtime picker (e.g. `SetGameFlag` renders its prepared options as a `<select>`).
 - Branch is just another entry; its `DetailPanel` renders nested `<StepList>` per arm and its
   `execute()` returns which arm(s) to descend into (the engine handles recursion — see Engine).
+- `execute()` never touches the step itself; it reports through `ExecuteResult`. The one
+  exception is **runtime state** (the vote block's posted message id and tally): put it in
+  `ExecuteResult.stepState` and the engine writes it back via `markStepExecuted`. It shares the
+  `StepRuntimeState` type with the tools' `updateToolState`, i.e. the fields that stay writable
+  after the step has been executed, unlike configuration fields.
 - **Tools** (`Kanban`, `Counter`, `ShuffleAssign`, `RandomSelect`, `RecordCombination`) have
   `category: "tool"` and **no `execute()`**. In execute mode they render an "open/operate" UI
   that mutates game flags directly, not a run button.

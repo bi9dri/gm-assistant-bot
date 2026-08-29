@@ -19,6 +19,10 @@ export const createDiscordGateway = (bot: DiscordBotData, guildId: string): Disc
     changeChannelPermissions: (params) => client.changeChannelPermissions({ guildId, ...params }),
     deleteChannel: (channelId) => client.deleteChannel({ guildId, channelId }),
     addRoleToRoleMembers: (params) => client.addRoleToRoleMembers({ guildId, ...params }),
+    addRoleToMember: (params) => client.addRoleToMember({ guildId, ...params }),
+    listGuildMembers: () => client.listGuildMembers({ guildId }),
+    sendVote: (params) => client.sendVote(params),
+    getVoteResult: (params) => client.getVoteResult(params),
     sendMessage: async ({ channelId, content, attachments }) => {
       const files: File[] = [];
       for (const attachment of attachments) {

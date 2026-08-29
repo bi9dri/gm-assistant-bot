@@ -35,7 +35,13 @@ type ChangeChannelPermissionsRequest = InferRequestType<
 type AddRoleToRoleMembersRequest = InferRequestType<
   Client["api"]["roles"]["addRoleToRoleMembers"]["$post"]
 >["json"];
+type AddRoleToMemberRequest = InferRequestType<
+  Client["api"]["roles"]["addRoleToMember"]["$post"]
+>["json"];
+type ListGuildMembersRequest = InferRequestType<Client["api"]["members"]["$get"]>["query"];
 type SendMessageRequest = InferRequestType<Client["api"]["messages"]["$post"]>["form"];
+type SendVoteRequest = InferRequestType<Client["api"]["messages"]["vote"]["$post"]>["json"];
+type GetVoteResultRequest = InferRequestType<Client["api"]["messages"]["vote"]["$get"]>["query"];
 
 export class ApiClient {
   private readonly client: Client["api"];
@@ -126,6 +132,44 @@ export class ApiClient {
       const error = await res.json();
       throw new Error(`Failed to add role to role members: ${getErrorMessage(error, res.status)}`);
     }
+  }
+
+  async addRoleToMember(data: AddRoleToMemberRequest) {
+    const res = await this.client.roles.addRoleToMember.$post({ json: data });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to add role to member: ${getErrorMessage(error, res.status)}`);
+    }
+  }
+
+  async listGuildMembers(data: ListGuildMembersRequest) {
+    const res = await this.client.members.$get({ query: data });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to list guild members: ${getErrorMessage(error, res.status)}`);
+    }
+    const result = await res.json();
+    return result.members;
+  }
+
+  async sendVote(data: SendVoteRequest) {
+    const res = await this.client.messages.vote.$post({ json: data });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to send vote: ${getErrorMessage(error, res.status)}`);
+    }
+    const result = await res.json();
+    return result.message;
+  }
+
+  async getVoteResult(data: GetVoteResultRequest) {
+    const res = await this.client.messages.vote.$get({ query: data });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(`Failed to get vote result: ${getErrorMessage(error, res.status)}`);
+    }
+    const result = await res.json();
+    return result.reactions;
   }
 
   async sendMessage(data: SendMessageRequest) {

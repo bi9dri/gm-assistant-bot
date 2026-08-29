@@ -44,6 +44,28 @@ export const addRoleToRoleMembersSchema = z.object({
   addRoleId: z.string().trim().nonempty(),
 });
 
+export const addRoleToMemberSchema = z.object({
+  guildId: z.string().trim().nonempty(),
+  userId: z.string().trim().nonempty(),
+  roleId: z.string().trim().nonempty(),
+});
+
+export const listGuildMembersSchema = z.object({
+  guildId: z.string().trim().nonempty(),
+});
+
+export const sendVoteSchema = z.object({
+  channelId: z.string().trim().nonempty(),
+  content: z.string().trim().nonempty(),
+  // 選択肢に対応するリアクション絵文字。bot が投票メッセージに付ける。
+  optionEmojis: z.array(z.string().trim().nonempty()).min(1).max(20),
+});
+
+export const getVoteResultSchema = z.object({
+  channelId: z.string().trim().nonempty(),
+  messageId: z.string().trim().nonempty(),
+});
+
 export const sendMessageSchema = z
   .object({
     channelId: z.string().trim().nonempty(),
@@ -61,4 +83,8 @@ export type CreateChannelData = z.infer<typeof createChannelSchema>;
 export type ChangeChannelPermissionsData = z.infer<typeof changeChannelPermissionsSchema>;
 export type DeleteChannelData = z.infer<typeof deleteChannelSchema>;
 export type AddRoleToRoleMembersData = z.infer<typeof addRoleToRoleMembersSchema>;
+export type AddRoleToMemberData = z.infer<typeof addRoleToMemberSchema>;
+export type ListGuildMembersData = z.infer<typeof listGuildMembersSchema>;
+export type SendVoteData = z.infer<typeof sendVoteSchema>;
+export type GetVoteResultData = z.infer<typeof getVoteResultSchema>;
 export type SendMessageData = z.infer<typeof sendMessageSchema>;

@@ -4,14 +4,18 @@ import {
   OverwriteType,
   PermissionFlagsBits,
   Routes,
+  type APIReaction,
+  type RESTGetAPIChannelMessageResult,
   type RESTGetAPIGuildMemberResult,
   type RESTGetAPICurrentUserGuildsResult,
   type RESTGetAPIUserResult,
+  type RESTPostAPIChannelMessageResult,
   type RESTPostAPIGuildChannelResult,
   type RESTPostAPIGuildRoleResult,
 } from "discord-api-types/v10";
 
 import type {
+  AddRoleToMemberData,
   AddRoleToRoleMembersData,
   ChangeChannelPermissionsData,
   CreateCategoryData,
@@ -19,7 +23,10 @@ import type {
   CreateRoleData,
   DeleteChannelData,
   DeleteRoleData,
+  GetVoteResultData,
+  ListGuildMembersData,
   SendMessageData,
+  SendVoteData,
 } from "./schemas";
 
 /**
@@ -217,11 +224,13 @@ export async function deleteChannel(token: string, data: DeleteChannelData) {
   await rest.delete(Routes.channel(data.channelId));
 }
 
-export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMembersData) {
-  const rest = createRestClient(token);
-
-  // 指定されたロールを持つメンバーを取得
-  const membersWithRole = [];
+// ギルドメンバーを 1000 件ずつ全ページ取得する。
+// Server Members Intent が無効だと 50001 になり、エラー文だけでは原因が分からないため補足する。
+async function fetchGuildMembers(
+  rest: REST,
+  guildId: string,
+): Promise<RESTGetAPIGuildMemberResult[]> {
+  const all: RESTGetAPIGuildMemberResult[] = [];
   let after: string | undefined = undefined;
   while (true) {
     const query = new URLSearchParams();
@@ -231,7 +240,7 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
     }
     let members: RESTGetAPIGuildMemberResult[];
     try {
-      members = (await rest.get(Routes.guildMembers(data.guildId), {
+      members = (await rest.get(Routes.guildMembers(guildId), {
         query,
       })) as RESTGetAPIGuildMemberResult[];
     } catch (e) {
@@ -243,15 +252,40 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
       throw e;
     }
     if (members.length === 0) break;
-    for (const member of members) {
-      if (member.roles.includes(data.memberRoleId)) {
-        membersWithRole.push(member.user.id);
-      }
-    }
+    all.push(...members);
     after = members[members.length - 1].user.id;
   }
+  return all;
+}
 
-  // メンバーにロールを追加
+/**
+ * サーバー内での表示名。ニックネーム > 表示名 > ユーザー名の順で拾う
+ */
+export function getMemberDisplayName(member: RESTGetAPIGuildMemberResult): string {
+  return member.nick || member.user.global_name || member.user.username;
+}
+
+export async function listGuildMembers(token: string, data: ListGuildMembersData) {
+  const rest = createRestClient(token);
+  const members = await fetchGuildMembers(rest, data.guildId);
+  return members
+    .filter((member) => !member.user.bot)
+    .map((member) => ({ id: member.user.id, name: getMemberDisplayName(member) }));
+}
+
+export async function addRoleToMember(token: string, data: AddRoleToMemberData) {
+  const rest = createRestClient(token);
+  await rest.put(Routes.guildMemberRole(data.guildId, data.userId, data.roleId));
+}
+
+export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMembersData) {
+  const rest = createRestClient(token);
+
+  const members = await fetchGuildMembers(rest, data.guildId);
+  const membersWithRole = members
+    .filter((member) => member.roles.includes(data.memberRoleId))
+    .map((member) => member.user.id);
+
   for (const memberId of membersWithRole) {
     await rest.put(Routes.guildMemberRole(data.guildId, memberId, data.addRoleId));
   }
@@ -278,4 +312,37 @@ async function fileToRawFile(file: File): Promise<RawFile> {
     data: await file.bytes(),
     name: file.name,
   };
+}
+
+export async function sendVote(token: string, data: SendVoteData) {
+  const rest = createRestClient(token);
+  const message = (await rest.post(Routes.channelMessages(data.channelId), {
+    body: { content: data.content },
+  })) as RESTPostAPIChannelMessageResult;
+
+  for (const emoji of data.optionEmojis) {
+    await rest.put(
+      Routes.channelMessageOwnReaction(data.channelId, message.id, encodeURIComponent(emoji)),
+    );
+  }
+  return { id: message.id };
+}
+
+/**
+ * リアクションを絵文字ごとの票数に変換する。
+ * bot 自身が選択肢として付けた 1 票 (me) は投票ではないため差し引く
+ */
+export function toVoteCounts(reactions: APIReaction[] | undefined) {
+  return (reactions ?? []).map((reaction) => ({
+    emoji: reaction.emoji.name ?? "",
+    count: Math.max(0, reaction.count - (reaction.me ? 1 : 0)),
+  }));
+}
+
+export async function getVoteResult(token: string, data: GetVoteResultData) {
+  const rest = createRestClient(token);
+  const message = (await rest.get(
+    Routes.channelMessage(data.channelId, data.messageId),
+  )) as RESTGetAPIChannelMessageResult;
+  return toVoteCounts(message.reactions);
 }
