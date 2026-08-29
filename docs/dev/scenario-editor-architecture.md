@@ -83,18 +83,29 @@ GM が「もう 1 周」を宣言して押す形は、実際の卓の進行と�
 frontend/src/scenario/
   schema.ts              # ScenarioData = { version: 1, blocks: Block[] }
   blockOps.ts            # フラット列 + Branch ネストに対する純粋な変更操作
+  filePaths.ts           # セッション作成時の添付パス書き換え (D16)
+  autosave.tsx           # scenarioData の debounce 保存 (編集・実行で共有)
+  outline.ts             # ブロック列を Heading の level で階層化 (折りたたみと目次が共有)
+  scrollToBlock.ts       # ブロック行へのスクロール (目次とカーソル追従が共有)
+  runner.ts              # 実行モード: ブロック列を FlowData に包んで flow の runnerStore に載せる
   store/
     editorStore.ts       # 編集モード (テンプレート著作)
-    runnerStore.ts       # 実行モード (カーソル + 連鎖実行)
-  outline.ts             # ブロック列を Heading の level で階層化 (折りたたみと目次が共有)
   components/
     ScenarioEditor.tsx   # 編集モードの 2 カラム + 目次 (store 初期化・自動保存)
-    ScenarioRunner.tsx   # 実行モード
+    ScenarioRunner.tsx   # 実行モードの 3 カラム (store 初期化・自動保存)
     BlockDocument.tsx    # ドキュメントのカラム (単一 DndContext)
     BlockList.tsx        # ドキュメント本体 (ブロック列の描画)
+    RunnerBlockList.tsx  # 実行モードのドキュメント本体 (マーカー・実行操作・ループ)
     TableOfContents.tsx  # Heading から生成する目次 (D22)
     CopyButton.tsx       # クリップボードコピー (D13)
 ```
+
+実行モードは専用の store を持たない。ブロック列をセクション 1 つの `FlowData` に包んで
+(`runner.ts` の `toRunnerFlow`) 既存の `flow/store/runnerStore` に載せ、`useSessionRunner`・
+`RunnerDetailPanel`・`RunnerFlagPanel`・`RunnerToolDock` をそのまま使う。実行意味論
+(カーソル・連鎖・Branch のアーム再選択・記録保護) を書き直すと実装が二重化するため、
+新画面が足すのはドキュメントの描画 (`RunnerBlockList`) とループ (D9) だけにする。
+セクションはこの包みの中にしか存在せず、UI には出ない (D8)。
 
 `flow/registry/Text.tsx` と `flow/registry/Heading.tsx` は既存 registry 側に置く (D11)。
 `Step` union の定義が `flow/schema.ts` にあるため、2 型の追加もそこに行う。
@@ -131,8 +142,8 @@ const HeadingStepSchema = StepBaseSchema.extend({
 });
 ```
 
-`Text` は Discord 処理を伴わないメモ的ステップも兼ねる。どちらも `category: "text"` として
-`execute()` を持たず、実行は no-op で `executedAt` だけ打つ (D10)。
+`Text` は Discord 処理を伴わないメモ的ステップも兼ねる。どちらも `category: "text"` で、
+実行は no-op (常に成功) として `executedAt` だけ打つ (D10)。
 
 ### 既存エンジンの再利用
 
@@ -141,6 +152,11 @@ const HeadingStepSchema = StepBaseSchema.extend({
 これらに `Step[]` を受ける入口を足して共有する。
 
 **Branch 降下ロジックを新画面用に書き直さないこと。** 実装が二重化してドリフトする。
+
+`Text` / `Heading` は Discord 副作用を持たないが、`execute()` を「常に成功する no-op」として
+持つ。こうすると通過が既存の実行経路 (`canRunStep` → `runChain` → `markStepExecuted`) にそのまま
+乗り、本文ブロック専用の通過処理を engine に足さずに済む (D10)。旧ステップリスト UI の
+追加メニューには text カテゴリを出していないため、旧画面には影響しない。
 
 ---
 

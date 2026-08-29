@@ -12,11 +12,13 @@ const SessionCardSchema = z.object({
   name: z.string().trim().nonempty(),
   guildId: z.string().trim().nonempty(),
   lastUsedAt: z.date(),
+  // シナリオ形式のブロックを持つか。実行画面は空でないほうを開く (docs: scenario-editor-architecture D16)。
+  hasScenario: z.boolean(),
 });
 
 type Props = z.infer<typeof SessionCardSchema>;
 
-export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
+export const SessionCard = ({ id, name, guildId, lastUsedAt, hasScenario }: Props) => {
   const { addToast } = useToast();
   const guild = useLiveQuery(() => db.Guild.get(guildId));
 
@@ -68,11 +70,11 @@ export const SessionCard = ({ id, name, guildId, lastUsedAt }: Props) => {
               詳細を見る
             </Link>
             <Link
-              to="/session/$id/steps"
+              to={hasScenario ? "/session/$id/scenario" : "/session/$id/steps"}
               params={{ id: id.toString() }}
               className="btn btn-secondary"
             >
-              ステップ実行
+              {hasScenario ? "シナリオ実行" : "ステップ実行"}
             </Link>
             <label htmlFor={`confirmDeleteModal-${id}`} className="btn btn-error">
               削除

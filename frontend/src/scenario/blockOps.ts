@@ -4,6 +4,7 @@ import type { Step } from "@/flow/schema";
 import {
   clampIndex,
   collectDescendantStepIds,
+  collectStepsIn,
   findStepIn,
   locateInSteps,
   reassignIds,
@@ -105,3 +106,13 @@ export const moveBlock = (blocks: Step[], id: string, to: BlockLocation): Step[]
     if (moved === undefined) return;
     target.splice(clampIndex(to.index, target.length), 0, moved);
   });
+
+// 見出しが束ねる範囲 (見出し自身 + 次の同レベル以下の見出しの手前まで) の全ブロック id。
+// Branch のアームの中まで降りる。見出しの「ここから再実行」で実行痕跡を消す範囲
+// (docs: scenario-editor-architecture D9)。
+export const sectionBlockIds = (blocks: Step[], headingId: string): string[] => {
+  const located = locateInSteps(blocks, headingId);
+  if (located === undefined || located.step.type !== "Heading") return [];
+  const end = sectionEnd(located.parentSteps, located.index);
+  return collectStepsIn(located.parentSteps.slice(located.index, end)).map((step) => step.id);
+};

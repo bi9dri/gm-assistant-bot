@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 import { SessionCard } from "@/components/SessionCard";
 import { db } from "@/db";
+import { hasScenarioBlocks } from "@/scenario/schema";
 
 export const Route = createFileRoute("/session/")({
   component: RouteComponent,
@@ -31,6 +32,7 @@ function RouteComponent() {
               name={session.name}
               guildId={session.guildId}
               lastUsedAt={session.lastUsedAt}
+              hasScenario={hasScenarioBlocks(session.scenarioData)}
             />
           ))
         )}
