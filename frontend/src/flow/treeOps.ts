@@ -143,6 +143,17 @@ export const collectStepsIn = (steps: Step[]): Step[] => {
   return out;
 };
 
+// 指定 id 群の実行痕跡 (executedAt と Branch の枝確定) をまとめて消す。見出し配下の
+// 一括再実行 (docs: scenario-editor-architecture D9) が範囲を id 集合として渡す。
+export const clearExecutionByIds = (flow: FlowData, ids: Set<string>): FlowData =>
+  produce(flow, (draft) => {
+    for (const step of collectSteps(draft as FlowData)) {
+      if (!ids.has(step.id)) continue;
+      step.executedAt = undefined;
+      if (step.type === "Branch") step.executedBranchIds = undefined;
+    }
+  });
+
 export const updateStepById = (flow: FlowData, id: string, patch: (step: Step) => void): FlowData =>
   produce(flow, (draft) => {
     const step = findStep(draft as FlowData, id);

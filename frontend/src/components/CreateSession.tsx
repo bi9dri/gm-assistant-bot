@@ -8,6 +8,8 @@ import { type GuildSchema } from "@/db";
 import { FileSystem, convertFilePathsInReactFlowData } from "@/fileSystem";
 import { convertFilePathsInFlowData } from "@/flow/filePaths";
 import type { FlowData } from "@/flow/schema";
+import { convertFilePathsInScenarioData } from "@/scenario/filePaths";
+import type { ScenarioData } from "@/scenario/schema";
 import { useToast } from "@/toast/ToastProvider";
 
 interface Props {
@@ -82,11 +84,9 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         guildId: selectedGuildId,
         botId: selectedBotId,
         gameFlags: template.gameFlags,
-        // reactFlowData / flowData ともパスは下の update で session/{id}/ へ書き換える
+        // reactFlowData / flowData / scenarioData ともパスは下の update で session/{id}/ へ書き換える
         reactFlowData: template.reactFlowData,
         flowData: template.flowData,
-        // scenarioData 内のファイルパスは session/{id}/ へ書き換えていない。実行画面
-        // (フェーズ 3) でセッション側のコピー経路ごと入れる (docs: scenario-editor-architecture D16)。
         scenarioData: template.scenarioData,
         createdAt: new Date(),
         lastUsedAt: new Date(),
@@ -96,7 +96,7 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const fileSystem = new FileSystem();
       await fileSystem.copyTemplateFilesToSession(selectedTemplateId, newSessionId);
 
-      // reactFlowData と flowData はファイルパスを共有するため、同じ replacer で両方書き換える
+      // reactFlowData / flowData / scenarioData はファイルパスを共有するため、同じ replacer で書き換える
       const replaceFilePath = (filePath: string) =>
         filePath.replace(`template/${selectedTemplateId}/`, `session/${newSessionId}/`);
       const parsed: ReactFlowData = JSON.parse(template.reactFlowData);
@@ -107,9 +107,14 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const convertedFlowData = JSON.stringify(
         convertFilePathsInFlowData(parsedFlow, replaceFilePath),
       );
+      const parsedScenario: ScenarioData = JSON.parse(template.scenarioData);
+      const convertedScenarioData = JSON.stringify(
+        convertFilePathsInScenarioData(parsedScenario, replaceFilePath),
+      );
       await db.GameSession.update(newSessionId, {
         reactFlowData: convertedReactFlowData,
         flowData: convertedFlowData,
+        scenarioData: convertedScenarioData,
       });
 
       addToast({

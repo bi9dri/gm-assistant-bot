@@ -5,6 +5,7 @@ import type { Step } from "@/flow/schema";
 import {
   duplicateBlock,
   sameBlockContainer,
+  sectionBlockIds,
   insertBlock,
   moveBlock,
   removeBlock,
@@ -215,5 +216,47 @@ describe("sameBlockContainer", () => {
   test("同じ枝だけが等しい", () => {
     expect(sameBlockContainer(arm("br", "arm1"), arm("br", "arm1"))).toBe(true);
     expect(sameBlockContainer(arm("br", "arm1"), arm("br", "arm2"))).toBe(false);
+  });
+});
+
+describe("sectionBlockIds", () => {
+  test("見出し自身と、次の同レベル見出しの手前までを集める", () => {
+    const blocks = [
+      heading("h1", 1),
+      text("a"),
+      heading("h2", 2),
+      text("b"),
+      heading("h3", 1),
+      text("c"),
+    ];
+
+    expect(sectionBlockIds(blocks, "h1")).toEqual(["h1", "a", "h2", "b"]);
+  });
+
+  test("下位見出しの範囲は自分の配下だけに閉じる", () => {
+    const blocks = [heading("h1", 1), heading("h2", 2), text("a"), heading("h3", 1), text("b")];
+
+    expect(sectionBlockIds(blocks, "h2")).toEqual(["h2", "a"]);
+  });
+
+  test("Branch アームの中のブロックも含める", () => {
+    const blocks = [
+      heading("h1", 1),
+      branch("br", "arm1", [text("nested"), branch("br2", "arm2", [text("deep")])]),
+      heading("h2", 1),
+    ];
+
+    expect(sectionBlockIds(blocks, "h1")).toEqual(["h1", "br", "nested", "br2", "deep"]);
+  });
+
+  test("末尾の見出しは列の終わりまで", () => {
+    expect(sectionBlockIds([text("a"), heading("h1", 1), text("b")], "h1")).toEqual(["h1", "b"]);
+  });
+
+  test("見出し以外の id と未知の id は空", () => {
+    const blocks = [heading("h1", 1), text("a")];
+
+    expect(sectionBlockIds(blocks, "a")).toEqual([]);
+    expect(sectionBlockIds(blocks, "nope")).toEqual([]);
   });
 });

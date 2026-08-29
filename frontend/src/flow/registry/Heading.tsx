@@ -55,4 +55,7 @@ export const HeadingEntry = defineStep<HeadingStep>({
   },
   DetailPanel: HeadingDetailPanel,
   InlineBody: HeadingInlineBody,
+  // 実行は no-op。通過した記録 (executedAt) を打つためだけに execute を持つ
+  // (docs: scenario-editor-architecture D10)。
+  execute: () => Promise.resolve({ status: "success", message: "" }),
 });

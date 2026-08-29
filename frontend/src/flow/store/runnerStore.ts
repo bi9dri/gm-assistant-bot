@@ -48,6 +48,9 @@ interface RunnerActions {
   markStepExecuted: (id: string, patch: { executedBranchIds?: string[] }) => void;
   // スキップ: skippedStepIds に加え cursor を次へ進める (実行はしない)。
   skipStep: (id: string) => void;
+  // 指定 id 群の実行痕跡と skip 印を消す。シナリオ UI の見出し「ここから再実行」が
+  // 配下の範囲を渡す (docs: scenario-editor-architecture D9)。cursor は呼び出し側が置き直す。
+  clearExecution: (ids: string[]) => void;
   // in-session editing: 未実行ステップのみ編集可。type (判別子) は変更させない。
   updateStep: (id: string, patch: Omit<Partial<Step>, "type">) => void;
   // ツール操作: 実行時状態のみを書く。実行済みガードを通さない (ツールは常時操作可能)。
@@ -138,6 +141,15 @@ export const useRunnerStore = create<RunnerStore>()((set) => ({
       // cursor 位置のステップをスキップしたときだけ前進させる。
       cursorId: state.cursorId === id ? advanceCursor(state.flowData, id) : state.cursorId,
     })),
+
+  clearExecution: (ids) =>
+    set((state) => {
+      const cleared = new Set(ids);
+      return {
+        flowData: treeOps.clearExecutionByIds(state.flowData, cleared),
+        skippedStepIds: state.skippedStepIds.filter((skipped) => !cleared.has(skipped)),
+      };
+    }),
 
   updateStep: (id, patch) =>
     set((state) => {

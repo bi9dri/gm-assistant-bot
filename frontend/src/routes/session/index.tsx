@@ -31,6 +31,7 @@ function RouteComponent() {
               name={session.name}
               guildId={session.guildId}
               lastUsedAt={session.lastUsedAt}
+              scenarioData={session.scenarioData}
             />
           ))
         )}

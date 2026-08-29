@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Template } from "@/db";
 import { StepDetail } from "@/flow/components/DetailPanel";
@@ -8,81 +8,23 @@ import { collectResourcesFromSteps } from "@/flow/resources";
 import type { Step } from "@/flow/schema";
 import { findStepIn } from "@/flow/treeOps";
 
-import { ScenarioDataSchema } from "../schema";
+import { SaveStateBadge, useScenarioAutosave, type AutosaveSource } from "../autosave";
 import { useScenarioEditorStore } from "../store/editorStore";
 import { BlockDocument } from "./BlockDocument";
 import { TableOfContents } from "./TableOfContents";
 
-const AUTOSAVE_DEBOUNCE_MS = 500;
-const SAVED_INDICATOR_MS = 2000;
-
-type SaveState = "saved" | "invalid" | "error" | null;
-
-// blocks / gameFlags の変更を debounce して Template に保存する。
-// 保存要求には世代番号を振り、update() の解決順が前後しても最新要求の結果だけを
-// UI に反映する (遅延した "保存しました" が後続の "未保存" を上書きしない)。
-const useAutosave = (template: Template): SaveState => {
-  const [saveState, setSaveState] = useState<SaveState>(null);
-
-  // 毎保存で useLiveQuery が template を差し替えても購読を張り直さないよう、
-  // 購読 effect は template.id でのみ依存し、最新レコードは ref で読む。
-  const templateRef = useRef(template);
-  templateRef.current = template;
-
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-    let savedTimeout: ReturnType<typeof setTimeout> | null = null;
-    let saveSeq = 0;
-
-    const save = () => {
-      const seq = ++saveSeq;
-      const { blocks, gameFlags } = useScenarioEditorStore.getState();
-      // 編集途中の不完全なブロック (空のロール行など) は保存しない。Template.update が
-      // parse で throw して編集が無言で失われるのを防ぎ、「未保存」を明示する。
-      const parsed = ScenarioDataSchema.safeParse({ version: 1, blocks });
-      if (!parsed.success) {
-        // 「未保存」を sticky に保つ (直前の保存成功が予約した自動消去を止める)。
-        if (savedTimeout !== null) clearTimeout(savedTimeout);
-        savedTimeout = null;
-        setSaveState("invalid");
-        return;
-      }
-      templateRef.current
-        .update({ scenarioData: parsed.data, gameFlags })
-        .then(() => {
-          if (seq !== saveSeq) return; // 後続の保存要求が出ていれば古い結果は捨てる
-          setSaveState("saved");
-          if (savedTimeout !== null) clearTimeout(savedTimeout);
-          savedTimeout = setTimeout(() => setSaveState(null), SAVED_INDICATOR_MS);
-        })
-        .catch((error: unknown) => {
-          console.error("Failed to autosave scenarioData:", error);
-          if (seq !== saveSeq) return;
-          if (savedTimeout !== null) clearTimeout(savedTimeout);
-          savedTimeout = null;
-          setSaveState("error");
-        });
-    };
-
-    const unsubscribe = useScenarioEditorStore.subscribe((state, prev) => {
+// 編集モードの保存対象は Template.scenarioData と Template.gameFlags (セッション開始時の seed)。
+const editorSource: AutosaveSource = {
+  subscribe: (listener) =>
+    useScenarioEditorStore.subscribe((state, prev) => {
       if (!state.initialized) return;
       if (state.blocks === prev.blocks && state.gameFlags === prev.gameFlags) return;
-      if (timeout !== null) clearTimeout(timeout);
-      timeout = setTimeout(save, AUTOSAVE_DEBOUNCE_MS);
-    });
-
-    return () => {
-      unsubscribe();
-      if (savedTimeout !== null) clearTimeout(savedTimeout);
-      if (timeout === null) return;
-      // debounce 待ちのまま画面を離れると、直前の打鍵が無言で消える。
-      // タイマーを捨てる前に一度だけ保存し切る。
-      clearTimeout(timeout);
-      save();
-    };
-  }, [template.id]);
-
-  return saveState;
+      listener();
+    }),
+  snapshot: () => {
+    const { blocks, gameFlags } = useScenarioEditorStore.getState();
+    return { blocks, gameFlags };
+  },
 };
 
 // 右カラム: 選択ブロックの詳細 (共通フィールド + registry の DetailPanel) とフラグパネル。
@@ -142,7 +84,7 @@ export const ScenarioEditor = ({ template }: { template: Template }) => {
     setLoadedId(template.id);
   }, [template, loadedId, initialize]);
 
-  const saveState = useAutosave(template);
+  const saveState = useScenarioAutosave(template, editorSource);
 
   return (
     <MessageAttachmentTargetProvider value={{ templateId: template.id }}>
@@ -150,15 +92,7 @@ export const ScenarioEditor = ({ template }: { template: Template }) => {
         <div className="flex items-center gap-2 border-b border-base-300 bg-base-200 px-4 py-2">
           <h2 className="font-semibold">{template.name}</h2>
           <span className="text-xs text-base-content/50">シナリオ編集</span>
-          {saveState === "saved" && (
-            <span className="badge badge-success badge-sm">保存しました</span>
-          )}
-          {saveState === "invalid" && (
-            <span className="badge badge-warning badge-sm">未保存: 入力に不備があります</span>
-          )}
-          {saveState === "error" && (
-            <span className="badge badge-error badge-sm">保存に失敗しました</span>
-          )}
+          <SaveStateBadge saveState={saveState} />
         </div>
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(180px,0.6fr)_minmax(420px,1.8fr)_minmax(280px,1fr)] divide-x divide-base-300">
           <div className="min-h-0 overflow-y-auto">

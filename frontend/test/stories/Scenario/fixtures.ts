@@ -94,3 +94,18 @@ export const sampleBlocks: Step[] = [
 ];
 
 export const sampleGameFlags: Record<string, unknown> = { evidence: "見つけた", round: "1" };
+
+// 実行モード (ScenarioRunner) 用に実行痕跡を載せたブロック列。実行済み ✓ とスキップ ⏭、
+// カーソル ▶、Branch の確定枝 (a1) を 1 本で撮れるようにしてある。
+const EXECUTED_AT = new Date("2026-01-01T00:00:00.000Z");
+const EXECUTED_BLOCK_IDS = new Set(["h1", "t1", "cr", "h2"]);
+
+export const executedSampleBlocks: Step[] = sampleBlocks.map((block) => {
+  if (block.type === "Branch") {
+    return { ...block, executedAt: EXECUTED_AT, executedBranchIds: ["a1"] };
+  }
+  return EXECUTED_BLOCK_IDS.has(block.id) ? { ...block, executedAt: EXECUTED_AT } : block;
+});
+
+// ライブなゲームフラグは string 値 (evaluateCondition / DynamicValue が string 前提)。
+export const sampleLiveFlags: Record<string, string> = { evidence: "見つけた", round: "1" };

@@ -22,7 +22,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // Phase 3 で単一ステップ検証に使う際はこの差異に注意。
   schema: z.ZodType<S>;
   // tool = フラグ操作や手動ボード操作など、Discord 呼び出しを伴わない GM 操作系。
-  // text = シナリオ本文・見出し。Discord 操作を伴わないため execute を持たない。
+  // text = シナリオ本文・見出し。Discord 操作は伴わず、execute は通過印を打つだけの no-op。
   category: "action" | "tool" | "branch" | "text";
   // 「ステップ追加」時の初期値 (旧 addNode の switch を置き換える)。id は呼び出し側が採番する。
   defaults: () => Omit<S, "id">;
@@ -31,7 +31,7 @@ export interface StepRegistryEntry<S extends Step = Step> {
   DetailPanel: ComponentType<DetailPanelProps<S>>;
   // 自動実行 (Validate → Resolve → Call → Persist)。PURE-ish で context 越しに副作用を行う
   // ため、context をモックすれば unit-test できる。tool (category: "tool") は持たない
-  // (GM が手動操作するのみ)。action / branch のみ定義する。
+  // (GM が手動操作するのみ)。action / branch / text が定義する。
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
   // シナリオドキュメント UI で本文中にインライン描画される本体 (docs: scenario-editor-architecture D11)。
   // 持たない型は DetailPanel に落ちる。
