@@ -118,12 +118,9 @@ describe("scenario editorStore", () => {
     expect(heading?.type === "Heading" && heading.collapsed).toBe(false);
   });
 
-  test("insertTextBlocks は本文を順番どおりに本文ブロックとして挿入する", () => {
+  test("appendTextBlocks は本文を順番どおりに末尾へ足す", () => {
     useScenarioEditorStore.setState({ blocks: [text("head")] });
-    useScenarioEditorStore.getState().insertTextBlocks(["一段落目", "二段落目"], {
-      container: root,
-      index: 1,
-    });
+    useScenarioEditorStore.getState().appendTextBlocks(["一段落目", "二段落目"]);
     const { blocks } = useScenarioEditorStore.getState();
 
     expect(blocks.map((block) => block.type)).toEqual(["Text", "Text", "Text"]);
@@ -135,7 +132,7 @@ describe("scenario editorStore", () => {
     expect(new Set(blocks.map((block) => block.id)).size).toBe(3);
   });
 
-  test("insertTextBlocks は畳まれた見出しの中に取り込んだらその見出しを開く", () => {
+  test("appendTextBlocks は畳まれた見出しの中に取り込んだらその見出しを開く", () => {
     useScenarioEditorStore.setState({
       blocks: [
         {
@@ -149,7 +146,7 @@ describe("scenario editorStore", () => {
         },
       ],
     });
-    useScenarioEditorStore.getState().insertTextBlocks(["本文"], { container: root, index: 1 });
+    useScenarioEditorStore.getState().appendTextBlocks(["本文"]);
     const heading = useScenarioEditorStore.getState().blocks[0];
 
     expect(heading?.type === "Heading" && heading.collapsed).toBe(false);

@@ -17,6 +17,7 @@ import { dropLocation, getDragData } from "@/flow/components/dnd";
 import { StepRowOverlay } from "@/flow/components/StepList";
 import type { Step } from "@/flow/schema";
 import { findStepIn } from "@/flow/treeOps";
+import { useToast } from "@/toast/ToastProvider";
 
 import { sameBlockContainer, type BlockContainer } from "../blockOps";
 import { useScenarioEditorStore } from "../store/editorStore";
@@ -43,8 +44,9 @@ export const BlockDocument = () => {
   const blocks = useScenarioEditorStore((state) => state.blocks);
   const moveBlock = useScenarioEditorStore((state) => state.moveBlock);
   const restoreBlocks = useScenarioEditorStore((state) => state.restoreBlocks);
-  const insertTextBlocks = useScenarioEditorStore((state) => state.insertTextBlocks);
+  const appendTextBlocks = useScenarioEditorStore((state) => state.appendTextBlocks);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const { addToast } = useToast();
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const activeBlock = activeBlockId === null ? undefined : findStepIn(blocks, activeBlockId);
@@ -92,10 +94,22 @@ export const BlockDocument = () => {
   };
 
   const importTextFiles = async (files: File[]) => {
-    const texts = await Promise.all(files.map((file) => file.text()));
-    const bodies = texts.flatMap(splitTextBlocks);
-    if (bodies.length === 0) return;
-    insertTextBlocks(bodies, { container: ROOT, index: blocks.length });
+    try {
+      const texts = await Promise.all(
+        // fatal 指定で復号し、Shift_JIS を文字化けしたまま取り込んで保存するのを防ぐ。
+        files.map(async (file) =>
+          new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer()),
+        ),
+      );
+      appendTextBlocks(texts.flatMap(splitTextBlocks));
+    } catch {
+      // 読み込み失敗を黙って捨てると、ドロップしても何も起きないように見える。
+      addToast({
+        message: "ファイルを取り込めませんでした (UTF-8 のテキストのみ)",
+        status: "error",
+        durationSeconds: 5,
+      });
+    }
   };
 
   const handleFileDrop = (event: DragEvent<HTMLDivElement>) => {

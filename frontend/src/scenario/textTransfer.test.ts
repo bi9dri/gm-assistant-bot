@@ -26,6 +26,29 @@ describe("blockCopyText", () => {
     expect(blockCopyText(block)).toBe("調査を開始します\n\n制限時間は 30 分");
   });
 
+  test("CombinationSendMessage は全エントリのメッセージを空行で連結する", () => {
+    const block: Step = {
+      ...base,
+      id: "cm",
+      type: "CombinationSendMessage",
+      entries: [
+        {
+          id: "e1",
+          channelName: "探索者A",
+          collapsed: false,
+          messages: [{ content: "あなたは犯人を見た", attachments: [] }],
+        },
+        {
+          id: "e2",
+          channelName: "探索者B",
+          collapsed: false,
+          messages: [{ content: "あなたは何も見ていない", attachments: [] }],
+        },
+      ],
+    };
+    expect(blockCopyText(block)).toBe("あなたは犯人を見た\n\nあなたは何も見ていない");
+  });
+
   test("コピー対象を持たないブロックは空文字", () => {
     const block: Step = { ...base, id: "h", type: "Heading", level: 1, collapsed: false };
     expect(blockCopyText(block)).toBe("");
@@ -48,6 +71,11 @@ describe("splitTextBlocks", () => {
   test("空ファイルは 1 つもブロックを作らない", () => {
     expect(splitTextBlocks("")).toEqual([]);
     expect(splitTextBlocks("   \n\n  ")).toEqual([]);
+  });
+
+  test("空白だけの行も区切りとして扱う", () => {
+    expect(splitTextBlocks("A\n\u3000\nB")).toEqual(["A", "B"]);
+    expect(splitTextBlocks("A\n \t\nB")).toEqual(["A", "B"]);
   });
 
   test("CRLF 改行でも空行区切りが成立する", () => {

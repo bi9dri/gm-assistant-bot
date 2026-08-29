@@ -29,8 +29,8 @@ interface EditorActions {
   // type (判別子) は patch で変更させない (union 不変条件を型レベルで守る)。
   updateBlock: (id: string, patch: Omit<Partial<Step>, "type">) => void;
   addBlock: (type: Step["type"], at: BlockLocation) => void;
-  // 取り込んだテキストを本文ブロック列として流し込む (docs: scenario-editor-architecture D19)。
-  insertTextBlocks: (bodies: string[], at: BlockLocation) => void;
+  // 取り込んだテキストを本文ブロック列として末尾に流し込む (docs: scenario-editor-architecture D19)。
+  appendTextBlocks: (bodies: string[]) => void;
   duplicateBlock: (id: string) => void;
   removeBlock: (id: string) => void;
   moveBlock: (id: string, to: BlockLocation) => void;
@@ -92,18 +92,16 @@ export const useScenarioEditorStore = create<EditorStore>()((set) => ({
     }));
   },
 
-  insertTextBlocks: (bodies, at) =>
+  // 挿入位置はファイル読み込みを待つ間に動きうるため、state を見る側で決める。
+  appendTextBlocks: (bodies) =>
     set((state) => {
-      const inserted = bodies.reduce(
-        (blocks, body, offset) =>
-          blockOps.insertBlock(blocks, { container: at.container, index: at.index + offset }, {
-            ...TextEntry.defaults(),
-            id: generateId(),
-            body,
-          } as Step),
+      const at: BlockLocation = { container: { kind: "root" }, index: state.blocks.length };
+      const blocks = blockOps.insertBlocks(
         state.blocks,
+        at,
+        bodies.map((body) => ({ ...TextEntry.defaults(), id: generateId(), body }) as Step),
       );
-      return { blocks: openEnclosingHeading(inserted, at) };
+      return { blocks: openEnclosingHeading(blocks, at) };
     }),
 
   duplicateBlock: (id) =>
