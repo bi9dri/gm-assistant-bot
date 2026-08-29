@@ -122,6 +122,24 @@ Use this when local baselines pass locally but `vrt` fails in CI with rendering 
 
 This is the canonical reconciliation path: **CI's rendering is the source of truth**.
 
+## `VITE_USE_MSW` が切り替えるもの
+
+VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.ts` の `webServer.env`)。このフラグは MSW の有効化だけでなく「VRT 実行中」の目印も兼ねており、3 箇所で参照している:
+
+| 参照元 | 効果 | 理由 |
+| --- | --- | --- |
+| `src/main.tsx` | MSW worker を start する | API を叩かず決定的な snapshot を撮るため |
+| `vite.config.ts` | devtools plugin の event bus を止める | `ServerEventBus.start()` が listen エラーで resolve も reject もせず、vite が listen できなくなるため |
+| `src/routes/__root.tsx` | `<TanStackDevtools>` をマウントしない | 起動ボタンが全 baseline の右下に写り込み、パネルの dynamic import が vite の依存再最適化とレースして毎回 fetch に失敗するため |
+
+### MSW Service Worker script は生成物をコミットしない
+
+`/mockServiceWorker.js` は `vite.config.ts` の `mswServiceWorkerDevOnly` middleware が配信する。配信元は **インストール済み msw パッケージ同梱の `lib/mockServiceWorker.js`** で、`createRequire(import.meta.url).resolve("msw/mockServiceWorker.js")` で解決する。
+
+`msw init` が吐くコピーをリポジトリに置くと、script 内の `PACKAGE_VERSION` が固定されるため msw を bump するたびにインストール中の msw とズレ、worker が全リクエストで互換性警告を出す。パッケージ同梱物を直接配信すればバージョンは常に一致し、Renovate の msw bump もそのまま追従できる。`msw init` の再実行も `package.json` の `msw.workerDirectory` も不要。
+
+`import.meta.resolve` は使えない。storybook が vite の module runner 経由でこの config を読み込み、そこでは未実装のため build が落ちる。
+
 ## CI behavior
 
 `.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the existing `check` job:
