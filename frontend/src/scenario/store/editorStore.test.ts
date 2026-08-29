@@ -118,6 +118,40 @@ describe("scenario editorStore", () => {
     expect(heading?.type === "Heading" && heading.collapsed).toBe(false);
   });
 
+  test("appendTextBlocks は本文を順番どおりに末尾へ足す", () => {
+    useScenarioEditorStore.setState({ blocks: [text("head")] });
+    useScenarioEditorStore.getState().appendTextBlocks(["一段落目", "二段落目"]);
+    const { blocks } = useScenarioEditorStore.getState();
+
+    expect(blocks.map((block) => block.type)).toEqual(["Text", "Text", "Text"]);
+    expect(blocks.map((block) => (block.type === "Text" ? block.body : ""))).toEqual([
+      "",
+      "一段落目",
+      "二段落目",
+    ]);
+    expect(new Set(blocks.map((block) => block.id)).size).toBe(3);
+  });
+
+  test("appendTextBlocks は畳まれた見出しの中に取り込んだらその見出しを開く", () => {
+    useScenarioEditorStore.setState({
+      blocks: [
+        {
+          id: "h1",
+          type: "Heading",
+          title: "章",
+          memo: "",
+          autoAdvance: false,
+          level: 1,
+          collapsed: true,
+        },
+      ],
+    });
+    useScenarioEditorStore.getState().appendTextBlocks(["本文"]);
+    const heading = useScenarioEditorStore.getState().blocks[0];
+
+    expect(heading?.type === "Heading" && heading.collapsed).toBe(false);
+  });
+
   test("duplicateBlock は複製を選択する", () => {
     useScenarioEditorStore.setState({ blocks: [branchWithChild()] });
     useScenarioEditorStore.getState().duplicateBlock("br");

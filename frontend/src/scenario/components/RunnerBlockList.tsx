@@ -11,6 +11,8 @@ import { useRunnerStore } from "@/flow/store/runnerStore";
 import { buildOutline, type OutlineNode, type OutlineSection } from "../outline";
 import { restartFromHeading, runnerBlocks } from "../runner";
 import { scrollToBlock } from "../scrollToBlock";
+import { blockCopyText } from "../textTransfer";
+import { CopyButton } from "./CopyButton";
 
 // 実行モードのドキュメント本体 (docs: scenario-editor-architecture D10)。編集モードの
 // BlockList と違い並べ替え・追加・削除は無く、実行状態のマーカーと実行/スキップ/再実行、
@@ -106,6 +108,8 @@ const BlockRow = ({ block, handlers, children }: BlockRowProps) => {
   const skipped = useRunnerStore((state) => state.skippedStepIds.includes(block.id));
   const isCursor = useRunnerStore((state) => state.cursorId === block.id);
   const isExecuted = block.executedAt !== undefined;
+  // 実行中でも本文をココフォリアへ持ち出せるようにする (docs: scenario-editor-architecture D13)。
+  const copyText = blockCopyText(block);
 
   return (
     <div
@@ -121,6 +125,7 @@ const BlockRow = ({ block, handlers, children }: BlockRowProps) => {
       <StateMarker block={block} />
       <BlockBody block={block} />
       {children}
+      {copyText !== "" && <CopyButton text={copyText} />}
       <RunControls block={block} handlers={handlers} />
     </div>
   );

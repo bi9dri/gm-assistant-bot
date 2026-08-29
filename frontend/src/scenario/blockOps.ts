@@ -47,12 +47,15 @@ export const updateBlockById = (blocks: Step[], id: string, patch: (block: Step)
     if (block !== undefined) patch(block);
   });
 
-export const insertBlock = (blocks: Step[], at: BlockLocation, block: Step): Step[] =>
+export const insertBlocks = (blocks: Step[], at: BlockLocation, inserted: Step[]): Step[] =>
   produce(blocks, (draft) => {
     const target = resolveContainerBlocks(draft as Step[], at.container);
     if (target === undefined) return;
-    target.splice(clampIndex(at.index, target.length), 0, block);
+    target.splice(clampIndex(at.index, target.length), 0, ...inserted);
   });
+
+export const insertBlock = (blocks: Step[], at: BlockLocation, block: Step): Step[] =>
+  insertBlocks(blocks, at, [block]);
 
 export const removeBlock = (blocks: Step[], id: string): Step[] =>
   produce(blocks, (draft) => {
