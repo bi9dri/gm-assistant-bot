@@ -57,10 +57,5 @@
     "storybook": "10.5.10",
     "typescript": "7.0.2",
     "vite": "8.2.2"
-  },
-  "msw": {
-    "workerDirectory": [
-      "test/vrt/msw"
-    ]
   }
 }

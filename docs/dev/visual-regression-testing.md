@@ -122,6 +122,18 @@ Use this when local baselines pass locally but `vrt` fails in CI with rendering 
 
 This is the canonical reconciliation path: **CI's rendering is the source of truth**.
 
+## `VITE_USE_MSW` が切り替えるもの
+
+VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.ts` の `webServer.env`)。このフラグは MSW の有効化だけでなく「VRT 実行中」の目印も兼ねており、3 箇所で参照している:
+
+| 参照元 | 効果 |
+| --- | --- |
+| `src/main.tsx` | MSW worker を start する |
+| `vite.config.ts` | devtools plugin の event bus を止める |
+| `src/routes/__root.tsx` | `<TanStackDevtools>` をマウントしない |
+
+`/mockServiceWorker.js` はリポジトリに置かず、インストール済み msw パッケージ同梱の script を `vite.config.ts` の middleware が配信する。**`msw init` は実行しない** — 生成物をコミットすると msw の bump でバージョンがズレる。
+
 ## CI behavior
 
 `.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the existing `check` job:

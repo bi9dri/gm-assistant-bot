@@ -123,17 +123,21 @@ function RootComponent() {
             </aside>
           </div>
         </div>
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        {/* VRT では起動ボタンが全 baseline に写り込み、パネルの dynamic import が
+            vite の依存再最適化とレースして毎回 fetch 失敗するのでマウントしない。 */}
+        {import.meta.env.VITE_USE_MSW !== "true" && (
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+        )}
       </ToastProvider>
     </ThemeProvider>
   );
