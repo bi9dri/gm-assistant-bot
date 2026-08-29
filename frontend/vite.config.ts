@@ -34,7 +34,7 @@ export default defineConfig({
     // VRT (`VITE_USE_MSW`) では devtools の event bus を止める。VRT では使わない上、
     // ServerEventBus.start() は EADDRINUSE 以外の listen エラーで resolve も reject もせず、
     // それを await する configureServer が返らないと vite が listen できなくなるため。
-    devtools(process.env.VITE_USE_MSW ? { eventBusConfig: { enabled: false } } : undefined),
+    devtools(process.env.VITE_USE_MSW === "true" ? { eventBusConfig: { enabled: false } } : undefined),
     tailwindcss(),
     tanstackRouter({
       target: "react",
