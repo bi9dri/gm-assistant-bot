@@ -10,6 +10,9 @@ test("scenario document — 操作チップを空段落へドラッグで移す"
 
   await page.goto("/iframe.html?id=scenario-scenariodocument--default&viewMode=story");
 
+  const sourceParagraph = page.getByText("館に着いた頃には", { exact: false });
+  await expect(sourceParagraph).toContainText("ロール作成");
+
   const lastParagraph = page.getByText("犯人は執事だった。");
   await expect(lastParagraph).toBeVisible();
 
@@ -23,4 +26,6 @@ test("scenario document — 操作チップを空段落へドラッグで移す"
   await page.locator("#step-cr").getByText("ロール作成").dragTo(emptyParagraph);
 
   await expect(emptyParagraph).toContainText("ロール作成");
+  // 複製ではなく移動であること。
+  await expect(sourceParagraph).not.toContainText("ロール作成");
 });
