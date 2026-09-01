@@ -2,11 +2,9 @@ import { afterEach, describe, expect, test } from "bun:test";
 
 import Dexie from "dexie";
 
-import { defaultScenarioData } from "@/scenario/schema";
+import { applyScenarioDataMigration, applyScenarioDataV2Migration } from "./database";
 
-import { applyScenarioDataMigration } from "./database";
-
-// version(9) は scenarioData カラムの追加。インデックスを張らないため stores は変わらず、
+// version(9) は scenarioData カラムの追加、version(10) は本文の v1 → v2 変換。インデックスを張らないため stores は変わらず、
 // 既存レコードへ空の scenarioData を書き込むだけの upgrade を実 IndexedDB 上で検証する。
 // fake-indexeddb は test/unit.setup.ts で設定済み。
 
@@ -19,7 +17,9 @@ const V8_STORES = {
     "++id, name, guildId, botId, gameFlags, reactFlowData, flowData, createdAt, lastUsedAt",
 };
 
-const emptyScenarioData = JSON.stringify(defaultScenarioData);
+// v9 が書き込む空の形。migration 側と同じくバージョン当時のリテラルで持つ
+// (defaultScenarioData を参照すると、スキーマが進んだときに過去の期待値が変わる)。
+const emptyScenarioDataV1 = JSON.stringify({ version: 1, blocks: [] });
 const emptyFlow = JSON.stringify({ version: 1, sections: [] });
 const emptyReactFlow = JSON.stringify({
   nodes: [],
@@ -78,12 +78,12 @@ describe("scenarioData migration (v8 → v9)", () => {
       name: "既存テンプレート",
       flowData: emptyFlow,
       reactFlowData: emptyReactFlow,
-      scenarioData: emptyScenarioData,
+      scenarioData: emptyScenarioDataV1,
     });
     expect(await newDb.table("GameSession").get(sessionId)).toMatchObject({
       name: "既存セッション",
       flowData: emptyFlow,
-      scenarioData: emptyScenarioData,
+      scenarioData: emptyScenarioDataV1,
     });
 
     newDb.close();
@@ -115,6 +115,95 @@ describe("scenarioData migration (v8 → v9)", () => {
     );
 
     expect((await db.table("Template").get(id)).scenarioData).toBe(scenarioData);
+
+    db.close();
+  });
+});
+
+// version(10) は本文をブロック列から段落ベースのリッチテキストへ移す
+// (docs: scenario-editor-architecture D26)。
+const openV10 = async (): Promise<Dexie> => {
+  const db = new Dexie(DB_NAME);
+  db.version(8).stores(V8_STORES);
+  db.version(9).upgrade(applyScenarioDataMigration);
+  db.version(10).upgrade(applyScenarioDataV2Migration);
+  await db.open();
+  return db;
+};
+
+describe("scenarioData migration (v9 → v10)", () => {
+  const v1ScenarioData = JSON.stringify({
+    version: 1,
+    blocks: [
+      { id: "h1", type: "Heading", title: "導入", memo: "", autoAdvance: false, level: 1 },
+      { id: "t1", type: "Text", title: "本文", memo: "", autoAdvance: false, body: "館に着いた。" },
+      {
+        id: "c1",
+        type: "Counter",
+        title: "周回",
+        memo: "",
+        autoAdvance: false,
+        flagKey: "round",
+        step: 1,
+      },
+    ],
+  });
+
+  const addTemplate = async (db: Dexie, scenarioData: string): Promise<number> =>
+    (await db.table("Template").add({
+      name: "旧形式テンプレート",
+      gameFlags: "{}",
+      reactFlowData: emptyReactFlow,
+      flowData: emptyFlow,
+      scenarioData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })) as number;
+
+  test("ブロック列が doc + steps に移る", async () => {
+    const oldDb = await openV8();
+    const id = await addTemplate(oldDb, v1ScenarioData);
+    oldDb.close();
+
+    const db = await openV10();
+
+    const migrated = JSON.parse((await db.table("Template").get(id)).scenarioData);
+    expect(migrated.version).toBe(2);
+    expect(migrated.doc.content.map((node: { type: string }) => node.type)).toEqual([
+      "heading",
+      "paragraph",
+      "paragraph",
+    ]);
+    // 本文と見出しは doc へ、Discord 操作の実体だけが steps に残る。
+    expect(migrated.steps.map((step: { id: string }) => step.id)).toEqual(["c1"]);
+
+    db.close();
+  });
+
+  test("再実行しても v2 のデータを壊さない (冪等)", async () => {
+    const oldDb = await openV8();
+    const id = await addTemplate(oldDb, v1ScenarioData);
+    oldDb.close();
+
+    const db = await openV10();
+    const once = (await db.table("Template").get(id)).scenarioData;
+    await db.transaction("rw", db.table("Template"), db.table("GameSession"), (tx) =>
+      applyScenarioDataV2Migration(tx),
+    );
+
+    expect((await db.table("Template").get(id)).scenarioData).toBe(once);
+
+    db.close();
+  });
+
+  test("壊れた JSON はそのまま残す", async () => {
+    const oldDb = await openV8();
+    const id = await addTemplate(oldDb, "not json");
+    oldDb.close();
+
+    const db = await openV10();
+
+    expect((await db.table("Template").get(id)).scenarioData).toBe("not json");
 
     db.close();
   });

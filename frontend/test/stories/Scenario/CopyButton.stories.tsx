@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { CopyButton } from "@/scenario/components/CopyButton";
 
-// 本文ブロックと SendMessage の行に出るコピーボタン (docs: scenario-editor-architecture D13)。
-// ドキュメント全体のストーリーでは 1 行分の差でしかなく VRT の閾値に埋もれるため、
+// 文中の操作チップに出るコピーボタン (docs: scenario-editor-architecture D13)。
+// ドキュメント全体のストーリーではチップ 1 つ分の差でしかなく VRT の閾値に埋もれるため、
 // ボタン単体でも撮る。
 const meta = {
   title: "Scenario/CopyButton",

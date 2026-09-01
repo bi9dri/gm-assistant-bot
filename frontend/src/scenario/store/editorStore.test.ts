@@ -1,22 +1,27 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
+import type { JSONContent } from "@tiptap/core";
+
 import type { Step } from "@/flow/schema";
 
-import { useScenarioEditorStore } from "./editorStore";
+import { emptyDoc } from "../schema";
+import { newStep, useScenarioEditorStore } from "./editorStore";
 
-const root = { kind: "root" as const };
+// 編集モードの store。本文 (doc) は ProseMirror の木をそのまま預かるだけで、
+// 操作の実体 (steps) だけをこの store が変更する (docs: scenario-editor-architecture D25)。
 
-const text = (id: string): Step => ({
+const counter = (id: string): Step => ({
   id,
-  type: "Text",
-  title: "本文",
+  type: "Counter",
+  title: "周回",
   memo: "",
   autoAdvance: false,
-  body: "",
+  flagKey: "round",
+  step: 1,
 });
 
-const branchWithChild = (): Step => ({
-  id: "br",
+const branch = (id: string, child: Step): Step => ({
+  id,
   type: "Branch",
   title: "分岐",
   memo: "",
@@ -24,182 +29,139 @@ const branchWithChild = (): Step => ({
   mode: "select",
   matchMode: "first",
   flagName: "vote",
-  branches: [
-    {
-      id: "arm1",
-      label: "枝",
-      steps: [{ id: "child", type: "Text", title: "本文", memo: "", autoAdvance: false, body: "" }],
-    },
-  ],
+  branches: [{ id: `${id}-arm`, label: "枝", steps: [child] }],
 });
 
-describe("scenario editorStore", () => {
-  beforeEach(() => {
-    useScenarioEditorStore.setState({
-      blocks: [],
-      gameFlags: {},
-      selectedBlockId: null,
-      initialized: true,
-    });
+const docWith = (text: string): JSONContent => ({
+  type: "doc",
+  content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+});
+
+const store = () => useScenarioEditorStore.getState();
+
+beforeEach(() => {
+  useScenarioEditorStore.setState({
+    doc: emptyDoc(),
+    steps: [],
+    gameFlags: {},
+    selectedStepId: null,
+    initialized: false,
+  });
+});
+
+describe("initialize", () => {
+  test("本文・実体・フラグを読み込み、選択を外す", () => {
+    useScenarioEditorStore.setState({ selectedStepId: "c1" });
+
+    store().initialize(docWith("本文"), [counter("c1")], { round: "1" });
+
+    expect(store().doc).toEqual(docWith("本文"));
+    expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
+    expect(store().gameFlags).toEqual({ round: "1" });
+    expect(store().selectedStepId).toBeNull();
+    expect(store().initialized).toBe(true);
+  });
+});
+
+describe("setDoc", () => {
+  test("本文だけを差し替え、実体は残す", () => {
+    store().initialize(emptyDoc(), [counter("c1")], {});
+
+    store().setDoc(docWith("書き換えた"));
+
+    expect(store().doc).toEqual(docWith("書き換えた"));
+    // 孤児の除去は保存時に行うので、打鍵の途中では実体を落とさない。
+    expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
   });
 
-  test("addBlock は registry の defaults で採番して挿入し選択する", () => {
-    useScenarioEditorStore.getState().addBlock("Text", { container: root, index: 0 });
-    const { blocks, selectedBlockId } = useScenarioEditorStore.getState();
+  test("本文から消えた操作の選択は外す", () => {
+    const withStep: JSONContent = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "step", attrs: { stepId: "c1" } }] }],
+    };
+    store().initialize(withStep, [counter("c1")], {});
+    store().selectStep("c1");
 
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0]?.type).toBe("Text");
-    expect(selectedBlockId).toBe(blocks[0]!.id);
+    store().setDoc(docWith("消した"));
+
+    // 実体は保存時まで残すが、選択が残ると右カラムでの編集が孤児ごと捨てられる。
+    expect(store().selectedStepId).toBeNull();
+    expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
   });
 
-  test("addBlock は未知のタイプを無視する", () => {
-    useScenarioEditorStore.getState().addBlock("Nope" as never, { container: root, index: 0 });
+  test("枝の中の操作を選んでいる間は選択を保つ", () => {
+    const withBranch: JSONContent = {
+      type: "doc",
+      content: [{ type: "branch", attrs: { stepId: "br" } }],
+    };
+    store().initialize(withBranch, [branch("br", counter("c1"))], {});
+    store().selectStep("c1");
 
-    expect(useScenarioEditorStore.getState().blocks).toHaveLength(0);
+    store().setDoc(withBranch);
+
+    expect(store().selectedStepId).toBe("c1");
+  });
+});
+
+describe("createStep", () => {
+  test("registry の初期値から実体を作り、選択する", () => {
+    store().initialize(emptyDoc(), [], {});
+
+    const created = store().createStep("Counter");
+
+    expect(created?.type).toBe("Counter");
+    expect(store().steps.map((step) => step.id)).toEqual([created!.id]);
+    expect(store().selectedStepId).toBe(created!.id);
   });
 
-  test("updateBlock はフィールドを浅くマージする", () => {
-    useScenarioEditorStore.getState().addBlock("Heading", { container: root, index: 0 });
-    const id = useScenarioEditorStore.getState().selectedBlockId ?? "";
-    useScenarioEditorStore.getState().updateBlock(id, { title: "第 1 章" });
+  test("未知の型では何も起きない", () => {
+    store().initialize(emptyDoc(), [], {});
 
-    expect(useScenarioEditorStore.getState().blocks[0]?.title).toBe("第 1 章");
+    expect(store().createStep("Unknown" as Step["type"])).toBeUndefined();
+    expect(store().steps).toEqual([]);
+  });
+});
+
+describe("updateStep", () => {
+  test("実体を更新し、他のステップの参照は保つ", () => {
+    store().initialize(emptyDoc(), [counter("c1"), counter("c2")], {});
+    const untouched = store().steps[1];
+
+    store().updateStep("c1", { title: "書き換えた" });
+
+    expect(store().steps[0]?.title).toBe("書き換えた");
+    expect(store().steps[1]).toBe(untouched!);
   });
 
-  test("removeBlock は枝ごと消えた選択を外す", () => {
-    useScenarioEditorStore.setState({
-      blocks: [branchWithChild(), text("keep")],
-      selectedBlockId: "child",
-    });
-    useScenarioEditorStore.getState().removeBlock("br");
+  test("Branch の枝に入れ子のステップも更新できる", () => {
+    store().initialize(emptyDoc(), [branch("br", counter("c1"))], {});
 
-    expect(useScenarioEditorStore.getState().blocks.map((block) => block.id)).toEqual(["keep"]);
-    expect(useScenarioEditorStore.getState().selectedBlockId).toBeNull();
+    store().updateStep("c1", { title: "枝の中" });
+
+    const target = store().steps[0];
+    if (target?.type !== "Branch") throw new Error("expected Branch");
+    expect(target.branches[0]?.steps[0]?.title).toBe("枝の中");
   });
+});
 
-  test("removeBlock は残っている選択を保つ", () => {
-    useScenarioEditorStore.setState({ blocks: [branchWithChild()], selectedBlockId: "child" });
-    useScenarioEditorStore.getState().addBlock("Text", { container: root, index: 0 });
-    const added = useScenarioEditorStore.getState().selectedBlockId ?? "";
-    useScenarioEditorStore.setState({ selectedBlockId: "child" });
-    useScenarioEditorStore.getState().removeBlock(added);
+describe("newStep", () => {
+  test("枝に入れる実体は top-level の steps に載せずに作れる", () => {
+    store().initialize(emptyDoc(), [], {});
 
-    expect(useScenarioEditorStore.getState().selectedBlockId).toBe("child");
+    const created = newStep("Counter");
+
+    expect(created?.type).toBe("Counter");
+    expect(store().steps).toEqual([]);
   });
+});
 
-  test("removeBlock は最後の 1 ブロックを消しても空にしない", () => {
-    useScenarioEditorStore.getState().addBlock("Text", { container: root, index: 0 });
-    const id = useScenarioEditorStore.getState().selectedBlockId ?? "";
-    useScenarioEditorStore.getState().removeBlock(id);
-    const { blocks } = useScenarioEditorStore.getState();
+describe("gameFlags", () => {
+  test("追加と削除ができる", () => {
+    store().initialize(emptyDoc(), [], { a: "1" });
 
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0]?.type).toBe("Text");
-    expect(blocks[0]?.id).not.toBe(id);
-  });
+    store().setGameFlag("b", "2");
+    store().removeGameFlag("a");
 
-  test("addBlock は畳まれた見出しの中に追加したらその見出しを開く", () => {
-    useScenarioEditorStore.setState({
-      blocks: [
-        {
-          id: "h1",
-          type: "Heading",
-          title: "章",
-          memo: "",
-          autoAdvance: false,
-          level: 1,
-          collapsed: true,
-        },
-      ],
-    });
-    useScenarioEditorStore.getState().addBlock("Text", { container: root, index: 1 });
-    const heading = useScenarioEditorStore.getState().blocks[0];
-
-    expect(heading?.type === "Heading" && heading.collapsed).toBe(false);
-  });
-
-  test("appendTextBlocks は本文を順番どおりに末尾へ足す", () => {
-    useScenarioEditorStore.setState({ blocks: [text("head")] });
-    useScenarioEditorStore.getState().appendTextBlocks(["一段落目", "二段落目"]);
-    const { blocks } = useScenarioEditorStore.getState();
-
-    expect(blocks.map((block) => block.type)).toEqual(["Text", "Text", "Text"]);
-    expect(blocks.map((block) => (block.type === "Text" ? block.body : ""))).toEqual([
-      "",
-      "一段落目",
-      "二段落目",
-    ]);
-    expect(new Set(blocks.map((block) => block.id)).size).toBe(3);
-  });
-
-  test("appendTextBlocks は畳まれた見出しの中に取り込んだらその見出しを開く", () => {
-    useScenarioEditorStore.setState({
-      blocks: [
-        {
-          id: "h1",
-          type: "Heading",
-          title: "章",
-          memo: "",
-          autoAdvance: false,
-          level: 1,
-          collapsed: true,
-        },
-      ],
-    });
-    useScenarioEditorStore.getState().appendTextBlocks(["本文"]);
-    const heading = useScenarioEditorStore.getState().blocks[0];
-
-    expect(heading?.type === "Heading" && heading.collapsed).toBe(false);
-  });
-
-  test("duplicateBlock は複製を選択する", () => {
-    useScenarioEditorStore.setState({ blocks: [branchWithChild()] });
-    useScenarioEditorStore.getState().duplicateBlock("br");
-    const { blocks, selectedBlockId } = useScenarioEditorStore.getState();
-
-    expect(blocks).toHaveLength(2);
-    expect(selectedBlockId).toBe(blocks[1]!.id);
-  });
-
-  test("initialize は編集状態を入れ替えて選択を外す", () => {
-    useScenarioEditorStore.setState({ selectedBlockId: "child" });
-    useScenarioEditorStore.getState().initialize([branchWithChild()], { phase: "day" });
-    const state = useScenarioEditorStore.getState();
-
-    expect(state.initialized).toBe(true);
-    expect(state.gameFlags).toEqual({ phase: "day" });
-    expect(state.selectedBlockId).toBeNull();
-  });
-
-  test("selectBlock は選択を切り替える", () => {
-    useScenarioEditorStore.getState().selectBlock("child");
-    expect(useScenarioEditorStore.getState().selectedBlockId).toBe("child");
-
-    useScenarioEditorStore.getState().selectBlock(null);
-    expect(useScenarioEditorStore.getState().selectedBlockId).toBeNull();
-  });
-
-  test("moveBlock は枝を跨いで移動する", () => {
-    useScenarioEditorStore.setState({ blocks: [branchWithChild()] });
-    useScenarioEditorStore.getState().moveBlock("child", { container: root, index: 0 });
-    const { blocks } = useScenarioEditorStore.getState();
-
-    expect(blocks.map((block) => block.id)).toEqual(["child", "br"]);
-  });
-
-  test("restoreBlocks はスナップショットへ差し戻す", () => {
-    const snapshot = [branchWithChild()];
-    useScenarioEditorStore.getState().addBlock("Text", { container: root, index: 0 });
-    useScenarioEditorStore.getState().restoreBlocks(snapshot);
-
-    expect(useScenarioEditorStore.getState().blocks).toBe(snapshot);
-  });
-
-  test("ゲームフラグを追加・削除できる", () => {
-    useScenarioEditorStore.getState().setGameFlag("phase", "day");
-    expect(useScenarioEditorStore.getState().gameFlags).toEqual({ phase: "day" });
-
-    useScenarioEditorStore.getState().removeGameFlag("phase");
-    expect(useScenarioEditorStore.getState().gameFlags).toEqual({});
+    expect(store().gameFlags).toEqual({ b: "2" });
   });
 });

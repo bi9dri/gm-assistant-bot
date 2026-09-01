@@ -2,18 +2,18 @@ import { describe, expect, test } from "bun:test";
 
 import type { Step } from "@/flow/schema";
 
-import { blockCopyText, isImportableTextFile, splitTextBlocks } from "./textTransfer";
+import { stepCopyText, isImportableTextFile, splitParagraphs } from "./textTransfer";
 
 const base = { title: "", memo: "", autoAdvance: false };
 
-describe("blockCopyText", () => {
-  test("本文ブロックは body をそのまま返す", () => {
-    const block: Step = { ...base, id: "t", type: "Text", body: "館に着いた。\n扉を叩く。" };
-    expect(blockCopyText(block)).toBe("館に着いた。\n扉を叩く。");
+describe("stepCopyText", () => {
+  test("本文ステップは body をそのまま返す", () => {
+    const step: Step = { ...base, id: "t", type: "Text", body: "館に着いた。\n扉を叩く。" };
+    expect(stepCopyText(step)).toBe("館に着いた。\n扉を叩く。");
   });
 
   test("SendMessage は全メッセージを空行で連結する", () => {
-    const block: Step = {
+    const step: Step = {
       ...base,
       id: "sm",
       type: "SendMessage",
@@ -23,11 +23,11 @@ describe("blockCopyText", () => {
         { content: "制限時間は 30 分", attachments: [] },
       ],
     };
-    expect(blockCopyText(block)).toBe("調査を開始します\n\n制限時間は 30 分");
+    expect(stepCopyText(step)).toBe("調査を開始します\n\n制限時間は 30 分");
   });
 
   test("CombinationSendMessage は全エントリのメッセージを空行で連結する", () => {
-    const block: Step = {
+    const step: Step = {
       ...base,
       id: "cm",
       type: "CombinationSendMessage",
@@ -46,40 +46,40 @@ describe("blockCopyText", () => {
         },
       ],
     };
-    expect(blockCopyText(block)).toBe("あなたは犯人を見た\n\nあなたは何も見ていない");
+    expect(stepCopyText(step)).toBe("あなたは犯人を見た\n\nあなたは何も見ていない");
   });
 
-  test("コピー対象を持たないブロックは空文字", () => {
-    const block: Step = { ...base, id: "h", type: "Heading", level: 1, collapsed: false };
-    expect(blockCopyText(block)).toBe("");
+  test("コピー対象を持たないステップは空文字", () => {
+    const step: Step = { ...base, id: "c", type: "Counter", flagKey: "round", step: 1 };
+    expect(stepCopyText(step)).toBe("");
   });
 });
 
-describe("splitTextBlocks", () => {
+describe("splitParagraphs", () => {
   test("空行で段落に割る", () => {
-    expect(splitTextBlocks("第一段落\n続き\n\n第二段落")).toEqual(["第一段落\n続き", "第二段落"]);
+    expect(splitParagraphs("第一段落\n続き\n\n第二段落")).toEqual(["第一段落\n続き", "第二段落"]);
   });
 
   test("連続した空行は 1 つの区切りとして扱う", () => {
-    expect(splitTextBlocks("A\n\n\n\nB")).toEqual(["A", "B"]);
+    expect(splitParagraphs("A\n\n\n\nB")).toEqual(["A", "B"]);
   });
 
-  test("先頭・末尾の空行では空のブロックを作らない", () => {
-    expect(splitTextBlocks("\n\nA\n\n\n")).toEqual(["A"]);
+  test("先頭・末尾の空行では空の段落を作らない", () => {
+    expect(splitParagraphs("\n\nA\n\n\n")).toEqual(["A"]);
   });
 
-  test("空ファイルは 1 つもブロックを作らない", () => {
-    expect(splitTextBlocks("")).toEqual([]);
-    expect(splitTextBlocks("   \n\n  ")).toEqual([]);
+  test("空ファイルは 1 つも段落を作らない", () => {
+    expect(splitParagraphs("")).toEqual([]);
+    expect(splitParagraphs("   \n\n  ")).toEqual([]);
   });
 
   test("空白だけの行も区切りとして扱う", () => {
-    expect(splitTextBlocks("A\n\u3000\nB")).toEqual(["A", "B"]);
-    expect(splitTextBlocks("A\n \t\nB")).toEqual(["A", "B"]);
+    expect(splitParagraphs("A\n\u3000\nB")).toEqual(["A", "B"]);
+    expect(splitParagraphs("A\n \t\nB")).toEqual(["A", "B"]);
   });
 
   test("CRLF 改行でも空行区切りが成立する", () => {
-    expect(splitTextBlocks("A\r\n\r\nB")).toEqual(["A", "B"]);
+    expect(splitParagraphs("A\r\n\r\nB")).toEqual(["A", "B"]);
   });
 });
 

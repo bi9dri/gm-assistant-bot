@@ -1,11 +1,13 @@
+import type { JSONContent } from "@tiptap/core";
 import { useEffect, useRef, useState } from "react";
 
 import type { GameFlags } from "@/db";
 import type { Step } from "@/flow/schema";
 
+import { orderedSteps } from "./document";
 import { ScenarioDataSchema, type ScenarioData } from "./schema";
 
-// blocks / gameFlags の変更を debounce して Template / GameSession に保存する。
+// doc / steps / gameFlags の変更を debounce して Template / GameSession に保存する。
 // 編集モード (Template.scenarioData) と実行モード (GameSession.scenarioData) は
 // 見ている store が違うだけなので、store の覗き方だけを source として受け取る。
 
@@ -17,7 +19,7 @@ export type SaveState = "saved" | "invalid" | "error" | null;
 export interface AutosaveSource {
   // 保存対象の変更だけを listener に伝える (zustand store の subscribe を包む)。
   subscribe: (listener: () => void) => () => void;
-  snapshot: () => { blocks: Step[]; gameFlags: GameFlags };
+  snapshot: () => { doc: JSONContent; steps: Step[]; gameFlags: GameFlags };
 }
 
 interface AutosaveRecord {
@@ -47,10 +49,15 @@ export const useScenarioAutosave = (record: AutosaveRecord, source: AutosaveSour
       // そのまま書くと前の内容が新しいレコードへ移ってしまう。
       if (recordRef.current.id !== recordId) return;
       const seq = ++saveSeq;
-      const { blocks, gameFlags } = source.snapshot();
-      // 編集途中の不完全なブロック (空のロール行など) は保存しない。update が parse で
+      const { doc, steps, gameFlags } = source.snapshot();
+      // 本文から参照が消えた実体 (孤児) を落とすのは保存のこの一点だけ (D25)。
+      // 編集途中の不完全なステップ (空のロール行など) は保存しない。update が parse で
       // throw して編集が無言で失われるのを防ぎ、「未保存」を明示する。
-      const parsed = ScenarioDataSchema.safeParse({ version: 1, blocks });
+      const parsed = ScenarioDataSchema.safeParse({
+        version: 2,
+        doc,
+        steps: orderedSteps(doc, steps),
+      });
       if (!parsed.success) {
         // 「未保存」を sticky に保つ (直前の保存成功が予約した自動消去を止める)。
         if (savedTimeout !== null) clearTimeout(savedTimeout);

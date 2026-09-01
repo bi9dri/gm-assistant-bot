@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TableOfContents } from "@/scenario/components/TableOfContents";
 
-import { sampleBlocks } from "./fixtures";
+import { sampleDoc } from "./fixtures";
 
 const meta = {
   title: "Scenario/TableOfContents",
@@ -13,9 +13,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// H1 > H2 の階層と、折りたたみ済みの見出しも目次には出ること。
+// H1 > H2 の階層がインデントで出ること。
 export const Default: Story = {
-  args: { blocks: sampleBlocks },
+  args: { doc: sampleDoc },
   render: (args) => (
     <div className="w-[280px] bg-base-100">
       <TableOfContents {...args} />
@@ -24,7 +24,17 @@ export const Default: Story = {
 };
 
 export const NoHeading: Story = {
-  args: { blocks: [] },
+  args: { doc: { type: "doc", content: [{ type: "paragraph" }] } },
+  render: (args) => (
+    <div className="w-[280px] bg-base-100">
+      <TableOfContents {...args} />
+    </div>
+  ),
+};
+
+// 実行モードでは見出しごとに「ここから再実行」が並ぶ (docs: scenario-editor-architecture D9)。
+export const WithRestart: Story = {
+  args: { doc: sampleDoc, onRestart: () => {} },
   render: (args) => (
     <div className="w-[280px] bg-base-100">
       <TableOfContents {...args} />

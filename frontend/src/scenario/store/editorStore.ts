@@ -1,128 +1,91 @@
+import type { JSONContent } from "@tiptap/core";
 import { create } from "zustand";
 
 import { generateId } from "@/flow/ids";
 import { getEntry } from "@/flow/registry";
-import { TextEntry } from "@/flow/registry/Text";
-import type { HeadingStep, Step } from "@/flow/schema";
-import { findStepIn } from "@/flow/treeOps";
+import type { Step } from "@/flow/schema";
+import { updateStepIn } from "@/flow/treeOps";
 
-import * as blockOps from "../blockOps";
-import type { BlockLocation } from "../blockOps";
+import { collectStepIds, withDescendantIds } from "../document";
+import { emptyDoc } from "../schema";
 
 // シナリオ編集モード (テンプレート著作) の Zustand store。
-// ブロック列の変更は必ず blockOps の named helper を経由する
-// (構造的共有が保たれ、未変更のブロック行が再レンダーを免れる)。
+// 本文 (doc) は ProseMirror が持つ木をそのまま受け取るだけで、この store は加工しない。
+// 操作の実体 (steps) は doc と分けて持ち、実行記録が本文の undo 履歴に乗らないようにする
+// (docs: scenario-editor-architecture D25)。
 
 type GameFlags = Record<string, unknown>;
 
 interface EditorState {
-  blocks: Step[];
+  doc: JSONContent;
+  steps: Step[];
   // 編集モードでは Template.gameFlags (セッション開始時の seed) を編集する。
   gameFlags: GameFlags;
-  selectedBlockId: string | null;
+  selectedStepId: string | null;
   initialized: boolean;
 }
 
 interface EditorActions {
-  initialize: (blocks: Step[], gameFlags: GameFlags) => void;
-  selectBlock: (id: string | null) => void;
+  initialize: (doc: JSONContent, steps: Step[], gameFlags: GameFlags) => void;
+  setDoc: (doc: JSONContent) => void;
+  selectStep: (id: string | null) => void;
   // type (判別子) は patch で変更させない (union 不変条件を型レベルで守る)。
-  updateBlock: (id: string, patch: Omit<Partial<Step>, "type">) => void;
-  addBlock: (type: Step["type"], at: BlockLocation) => void;
-  // 取り込んだテキストを本文ブロック列として末尾に流し込む (docs: scenario-editor-architecture D19)。
-  appendTextBlocks: (bodies: string[]) => void;
-  duplicateBlock: (id: string) => void;
-  removeBlock: (id: string) => void;
-  moveBlock: (id: string, to: BlockLocation) => void;
-  // ドラッグキャンセル時に、以前の immutable スナップショットへ丸ごと差し戻す。
-  restoreBlocks: (blocks: Step[]) => void;
+  updateStep: (id: string, patch: Omit<Partial<Step>, "type">) => void;
+  // 実体を作って id を返す。本文への挿入は呼び出し側が ProseMirror のトランザクションで行う
+  // (doc の変更経路を 1 本に保つ)。
+  createStep: (type: Step["type"]) => Step | undefined;
   setGameFlag: (key: string, value: unknown) => void;
   removeGameFlag: (key: string) => void;
 }
 
 type EditorStore = EditorState & EditorActions;
 
-// 挿入位置を含む見出しが畳まれていると、追加したブロックが <details> の中に隠れて
-// 「押しても何も起きない」ように見える。直前の見出しを開いて見えるようにする。
-const openEnclosingHeading = (blocks: Step[], at: BlockLocation): Step[] => {
-  if (at.container.kind !== "root") return blocks;
-  for (let index = Math.min(at.index, blocks.length - 1) - 1; index >= 0; index--) {
-    const block = blocks[index];
-    if (block?.type !== "Heading") continue;
-    if (!block.collapsed) return blocks;
-    const patch: Partial<HeadingStep> = { collapsed: false };
-    return blockOps.updateBlockById(blocks, block.id, (target) => {
-      Object.assign(target, patch);
-    });
-  }
-  return blocks;
+// registry の初期値から実体を 1 つ作る。Branch の枝に入れるステップは top-level の
+// steps に載せない (枝の中身は Branch 実体の内側に持つ・D24) ため、生成だけを切り出す。
+export const newStep = (type: Step["type"]): Step | undefined => {
+  const entry = getEntry(type);
+  return entry === undefined ? undefined : ({ ...entry.defaults(), id: generateId() } as Step);
 };
 
-// 削除された結果として選択中ブロックが消えたら選択を外す。
-const keepSelection = (blocks: Step[], selectedBlockId: string | null): string | null =>
-  selectedBlockId !== null && findStepIn(blocks, selectedBlockId) === undefined
-    ? null
-    : selectedBlockId;
-
 export const useScenarioEditorStore = create<EditorStore>()((set) => ({
-  blocks: [],
+  doc: emptyDoc(),
+  steps: [],
   gameFlags: {},
-  selectedBlockId: null,
+  selectedStepId: null,
   initialized: false,
 
-  initialize: (blocks, gameFlags) =>
-    set({ blocks, gameFlags, selectedBlockId: null, initialized: true }),
+  initialize: (doc, steps, gameFlags) =>
+    set({ doc, steps, gameFlags, selectedStepId: null, initialized: true }),
 
-  selectBlock: (id) => set({ selectedBlockId: id }),
-
-  updateBlock: (id, patch) =>
+  // 孤児 (本文から参照が消えた実体) はここでは落とさない。打鍵ごとに落とすと
+  // 切り取り → 貼り付けの途中や undo で実体が失われる。除去は保存時に行う (D25)。
+  // ただし選択だけは外す。本文から消えた操作を右カラムで編集し続けられると、その編集は
+  // 保存時に孤児ごと捨てられ、書いたものが無言で消える。
+  setDoc: (doc) =>
     set((state) => ({
-      blocks: blockOps.updateBlockById(state.blocks, id, (block) => {
-        Object.assign(block, patch);
+      doc,
+      selectedStepId:
+        state.selectedStepId === null ||
+        withDescendantIds(collectStepIds(doc), state.steps).includes(state.selectedStepId)
+          ? state.selectedStepId
+          : null,
+    })),
+
+  selectStep: (id) => set({ selectedStepId: id }),
+
+  updateStep: (id, patch) =>
+    set((state) => ({
+      steps: updateStepIn(state.steps, id, (step) => {
+        Object.assign(step, patch);
       }),
     })),
 
-  addBlock: (type, at) => {
-    const entry = getEntry(type);
-    if (entry === undefined) return;
-    const block = { ...entry.defaults(), id: generateId() } as Step;
-    set((state) => ({
-      blocks: openEnclosingHeading(blockOps.insertBlock(state.blocks, at, block), at),
-      selectedBlockId: block.id,
-    }));
+  createStep: (type) => {
+    const step = newStep(type);
+    if (step === undefined) return undefined;
+    set((state) => ({ steps: [...state.steps, step], selectedStepId: step.id }));
+    return step;
   },
-
-  // 挿入位置はファイル読み込みを待つ間に動きうるため、state を見る側で決める。
-  appendTextBlocks: (bodies) =>
-    set((state) => {
-      const at: BlockLocation = { container: { kind: "root" }, index: state.blocks.length };
-      const blocks = blockOps.insertBlocks(
-        state.blocks,
-        at,
-        bodies.map((body) => ({ ...TextEntry.defaults(), id: generateId(), body }) as Step),
-      );
-      return { blocks: openEnclosingHeading(blocks, at) };
-    }),
-
-  duplicateBlock: (id) =>
-    set((state) => {
-      const { blocks, newBlock } = blockOps.duplicateBlock(state.blocks, id);
-      return newBlock === undefined ? {} : { blocks, selectedBlockId: newBlock.id };
-    }),
-
-  removeBlock: (id) =>
-    set((state) => {
-      const removed = blockOps.removeBlock(state.blocks, id);
-      // ドキュメントを空にしない。空の scenarioData は「旧形式」と区別できず
-      // (Dexie v9 の backfill)、一覧からシナリオ編集への導線が消えて戻れなくなる。
-      const blocks =
-        removed.length === 0 ? [{ ...TextEntry.defaults(), id: generateId() } as Step] : removed;
-      return { blocks, selectedBlockId: keepSelection(blocks, state.selectedBlockId) };
-    }),
-
-  moveBlock: (id, to) => set((state) => ({ blocks: blockOps.moveBlock(state.blocks, id, to) })),
-
-  restoreBlocks: (blocks) => set({ blocks }),
 
   setGameFlag: (key, value) =>
     set((state) => ({ gameFlags: { ...state.gameFlags, [key]: value } })),

@@ -3,13 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SidePanel } from "@/scenario/components/ScenarioEditor";
 import { useScenarioEditorStore } from "@/scenario/store/editorStore";
 
-import { sampleBlocks, sampleGameFlags } from "./fixtures";
+import { sampleDoc, sampleGameFlags, sampleSteps } from "./fixtures";
 
 const seed = () => {
   useScenarioEditorStore.setState({
-    blocks: sampleBlocks,
+    doc: sampleDoc,
+    steps: sampleSteps,
     gameFlags: sampleGameFlags,
-    selectedBlockId: null,
+    selectedStepId: null,
     initialized: true,
   });
 };
@@ -23,9 +24,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// 操作ブロックを選択すると、既存 registry の DetailPanel がここに開く (docs: scenario-editor-architecture D7)。
-export const OperationBlockSelected: Story = {
-  args: { blocks: sampleBlocks, selectedId: "sm" },
+// 文中の操作を選択すると、既存 registry の DetailPanel がここに開く (docs: scenario-editor-architecture D7)。
+export const StepSelected: Story = {
+  args: { steps: sampleSteps, selectedId: "sm" },
   render: (args) => {
     seed();
     return (
@@ -37,7 +38,7 @@ export const OperationBlockSelected: Story = {
 };
 
 export const NoSelection: Story = {
-  args: { blocks: sampleBlocks, selectedId: null },
+  args: { steps: sampleSteps, selectedId: null },
   render: (args) => {
     seed();
     return (

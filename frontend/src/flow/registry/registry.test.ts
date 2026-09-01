@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { StepSchema, type Step } from "../schema";
 import { getEntry, registry, stepTypes } from "./index";
 
-const STEP_TYPE_COUNT = 19;
+const STEP_TYPE_COUNT = 18;
 
 describe("registry", () => {
   test("全ステップタイプが登録されている", () => {

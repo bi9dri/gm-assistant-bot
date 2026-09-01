@@ -3,6 +3,7 @@ import { Entity } from "dexie";
 import { reactFlowToFlowData } from "@/flow/migrate";
 import type { FlowData } from "@/flow/schema";
 import { FlowDataSchema, defaultFlowData } from "@/flow/schema";
+import { toScenarioDataV2 } from "@/scenario/migrate";
 import type { ScenarioData } from "@/scenario/schema";
 import { ScenarioDataSchema, defaultScenarioData } from "@/scenario/schema";
 
@@ -178,7 +179,8 @@ export class Template extends Entity<DB> {
 
   getParsedScenarioData(): ScenarioData {
     try {
-      const parsed = JSON.parse(this.scenarioData);
+      // Dexie v10 が既存行を v2 へ移すが、取り込みなど別経路で入った v1 も読めるようにする。
+      const parsed = toScenarioDataV2(JSON.parse(this.scenarioData));
       return ScenarioDataSchema.parse(parsed);
     } catch (error) {
       console.error("Failed to parse scenarioData:", error);

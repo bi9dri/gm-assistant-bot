@@ -1,25 +1,11 @@
+import type { JSONContent } from "@tiptap/core";
+
 import type { Step } from "@/flow/schema";
 
-// 見出し階層 (H1 > H2)・本文・Discord 操作ブロック・ツール・Branch ネストを 1 本に含む
-// シナリオドキュメント UI 用のサンプル。VRT stories の共通シード。
-export const sampleBlocks: Step[] = [
-  {
-    id: "h1",
-    type: "Heading",
-    title: "導入",
-    memo: "",
-    autoAdvance: false,
-    level: 1,
-    collapsed: false,
-  },
-  {
-    id: "t1",
-    type: "Text",
-    title: "本文",
-    memo: "",
-    autoAdvance: false,
-    body: "館に着いた頃には日が暮れていた。\n扉を叩くと、執事が現れる。",
-  },
+// 段落・見出し・箇条書き・強調・ハイライト・引用と、文中の操作チップ・ブロック分岐を
+// 1 本に含むシナリオドキュメント UI 用のサンプル。VRT stories の共通シード。
+
+export const sampleSteps: Step[] = [
   {
     id: "cr",
     type: "CreateRole",
@@ -27,15 +13,6 @@ export const sampleBlocks: Step[] = [
     memo: "",
     autoAdvance: true,
     roles: ["探索者", "GM"],
-  },
-  {
-    id: "h2",
-    type: "Heading",
-    title: "調査フェーズ",
-    memo: "",
-    autoAdvance: false,
-    level: 2,
-    collapsed: false,
   },
   {
     id: "sm",
@@ -61,50 +38,86 @@ export const sampleBlocks: Step[] = [
         label: "見つけた",
         steps: [
           {
-            id: "t2",
-            type: "Text",
-            title: "本文",
+            id: "ct",
+            type: "Counter",
+            title: "周回カウント",
             memo: "",
             autoAdvance: false,
-            body: "血痕が階段に続いている。",
+            flagKey: "round",
+            step: 1,
           },
         ],
       },
       { id: "a2", label: "見つけていない", steps: [] },
     ],
   },
-  {
-    id: "h3",
-    type: "Heading",
-    title: "解決 (折りたたみ)",
-    memo: "",
-    autoAdvance: false,
-    level: 1,
-    collapsed: true,
-  },
-  {
-    id: "ct",
-    type: "Counter",
-    title: "周回カウント",
-    memo: "",
-    autoAdvance: false,
-    flagKey: "round",
-    step: 1,
-  },
 ];
+
+const stepNode = (stepId: string): JSONContent => ({ type: "step", attrs: { stepId } });
+
+export const sampleDoc: JSONContent = {
+  type: "doc",
+  content: [
+    { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "導入" }] },
+    {
+      type: "paragraph",
+      content: [
+        { type: "text", text: "館に着いた頃には日が暮れていた。扉を叩くと執事が現れる。まず " },
+        stepNode("cr"),
+        { type: "text", text: " を済ませ、" },
+        { type: "text", marks: [{ type: "bold" }], text: "全員の準備を確認する" },
+        { type: "text", text: "。" },
+      ],
+    },
+    {
+      type: "blockquote",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "注意: " },
+            { type: "text", marks: [{ type: "highlight" }], text: "執事の正体は伏せること" },
+          ],
+        },
+      ],
+    },
+    { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "調査フェーズ" }] },
+    {
+      type: "bulletList",
+      content: [
+        {
+          type: "listItem",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "書斎を調べる" }] }],
+        },
+        {
+          type: "listItem",
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "地下室は鍵がかかっている" }],
+            },
+          ],
+        },
+      ],
+    },
+    { type: "paragraph", content: [{ type: "text", text: "準備ができたら " }, stepNode("sm")] },
+    { type: "branch", attrs: { stepId: "br" } },
+    { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "解決" }] },
+    { type: "paragraph", content: [{ type: "text", text: "犯人は執事だった。" }] },
+  ],
+};
 
 // フラグ値は string (evaluateCondition / DynamicValue が string 前提)。実行モードの
 // ライブフラグにもそのまま渡せる。
 export const sampleGameFlags: Record<string, string> = { evidence: "見つけた", round: "1" };
 
-// 実行モード (ScenarioRunner) 用に実行痕跡を載せたブロック列。実行済み ✓ とスキップ ⏭、
-// カーソル ▶、Branch の確定枝 (a1) を 1 本で撮れるようにしてある。
+// 実行モード用に実行痕跡を載せたステップ列。実行済み ✓ と確定枝 (a1) を撮れるようにしてある。
 const EXECUTED_AT = new Date("2026-01-01T00:00:00.000Z");
-const EXECUTED_BLOCK_IDS = new Set(["h1", "t1", "cr", "h2"]);
 
-export const executedSampleBlocks: Step[] = sampleBlocks.map((block) => {
-  if (block.type === "Branch") {
-    return { ...block, executedAt: EXECUTED_AT, executedBranchIds: ["a1"] };
-  }
-  return EXECUTED_BLOCK_IDS.has(block.id) ? { ...block, executedAt: EXECUTED_AT } : block;
-});
+export const executedSampleSteps: Step[] = sampleSteps.map((step) =>
+  step.id === "cr"
+    ? { ...step, executedAt: EXECUTED_AT }
+    : step.type === "Branch"
+      ? { ...step, executedAt: EXECUTED_AT, executedBranchIds: ["a1"] }
+      : step,
+);

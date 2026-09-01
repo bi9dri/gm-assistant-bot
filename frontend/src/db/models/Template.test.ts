@@ -225,10 +225,12 @@ describe("Template", () => {
     test("scenarioDataをZodバリデーション付きで更新する", async () => {
       const template = await Template.create("Test");
       const scenarioData: ScenarioData = {
-        version: 1,
-        blocks: [
-          { id: "t1", type: "Text", title: "導入", memo: "", autoAdvance: false, body: "本文" },
-        ],
+        version: 2,
+        doc: {
+          type: "doc",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "本文" }] }],
+        },
+        steps: [],
       };
 
       await template.update({ scenarioData });
@@ -239,7 +241,7 @@ describe("Template", () => {
     test("scenarioDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const template = await Template.create("Test");
 
-      const invalidData = { version: 1, blocks: "nope" } as unknown as Parameters<
+      const invalidData = { version: 2, doc: {}, steps: "nope" } as unknown as Parameters<
         typeof template.update
       >[0]["scenarioData"];
 

@@ -6,7 +6,7 @@ import z from "zod";
 import { TemplateCard } from "@/components/TemplateCard";
 import { db } from "@/db";
 import { FileSystem } from "@/fileSystem";
-import { hasScenarioBlocks } from "@/scenario/schema";
+import { hasScenarioContent } from "@/scenario/schema";
 import { matchesTemplateFilter, type TemplateFilterCriteria } from "@/templateFilter";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -166,7 +166,7 @@ function RouteComponent() {
               name={t.name}
               updatedAt={t.updatedAt}
               meta={t}
-              hasScenario={hasScenarioBlocks(t.scenarioData)}
+              hasScenario={hasScenarioContent(t.scenarioData)}
             />
           ))
         )}

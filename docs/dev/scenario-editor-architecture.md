@@ -125,32 +125,44 @@ frontend/src/scenario/
   migrate.ts             # ScenarioData v1 → v2 の変換 (D26)
   filePaths.ts           # セッション作成時の添付パス書き換え (D16)
   autosave.tsx           # scenarioData の debounce 保存 (編集・実行で共有)
-  outline.ts             # doc の heading から目次を組む (目次と現在地表示が共有)
-  scrollToBlock.ts       # 見出し / 操作チップへのスクロール (目次とカーソル追従が共有)
+  outline.ts             # doc の heading から目次と「ここから再実行」の範囲を組む
+  scrollTo.ts            # 見出し / 操作チップへのスクロール (目次とカーソル追従が共有)
   runner.ts              # 実行モード: steps を FlowData に包んで flow の runnerStore に載せる
   textTransfer.ts        # コピー (D13) と .txt/.md 取り込み (D19)
   editor/
-    extensions.ts        # 許可するノード / マークの定義 (StarterKit + 下の 3 つ)
+    extensions.ts        # 許可するノード / マークの定義 (StarterKit + Highlight + 下の 2 つ)
+                         # ハイライトは色 1 種類なので multicolor にしない
     StepNode.ts          # 文中の操作を表すインラインアトム (attrs: stepId)
-    BranchNode.ts        # ブロックレベルの分岐 (アームの中身は DetailPanel で編集)
-    HighlightMark.ts     # 見落とし防止のハイライト (D20)
+    BranchNode.ts        # ブロックレベルの分岐 (枝の中身は Branch 実体の内側)
+    stepIdAttribute.ts   # 2 つのノードが共有する唯一の属性
+    nodeViews.tsx        # ProseMirror ノード ↔ React の境界 (描画は chips に委譲)
+    useScenarioDocument.ts # Tiptap エディタの生成 (レコード切替でのみ作り直す)
   store/
     editorStore.ts       # 編集モード (テンプレート著作)
   components/
-    ScenarioEditor.tsx   # 編集モードの 2 カラム + 目次 (store 初期化・自動保存)
+    ScenarioEditor.tsx   # 編集モードの 3 カラム (store 初期化・自動保存・取り込み)
     ScenarioRunner.tsx   # 実行モードの 3 カラム (store 初期化・自動保存)
     ScenarioDocument.tsx # 本文エディタ (Tiptap の EditorContent)
-    StepChip.tsx         # 操作の NodeView。1 行サマリ + 選択で DetailPanel を開く
+    chips.tsx            # 文中の操作を何で描くかを NodeView へ渡す context
+    StepChip.tsx         # チップの見た目 (1 行サマリ)。編集・実行で共有
+    EditorChips.tsx      # 編集モードのチップと分岐ブロック (選択 → DetailPanel)
+    RunnerChips.tsx      # 実行モードのチップと分岐ブロック (実行状態 + 実行 / スキップ)
     Toolbar.tsx          # 見出し / 強調 / ハイライト / 操作の挿入
     TableOfContents.tsx  # heading から生成する目次 (D22)
     CopyButton.tsx       # クリップボードコピー (D13)
 ```
 
+**「ここから再実行」のボタンは目次に置く。** heading ノードは id を持たず、本文側に
+ボタンを出すには heading 専用の NodeView が要る。範囲の決定 (`outline.sectionStepIds`) は
+どちらでも同じで、目次は実行モードで常に見えている回遊面でもある (D22)。
+
 **置き換えて消えるもの**: `blockOps.ts`・`BlockList.tsx`・`BlockDocument.tsx`・
 `RunnerBlockList.tsx`。フラットな `Step[]` に対する挿入・移動・複製は ProseMirror の
 トランザクションが担うため、同じ操作を 2 系統持たない。`blockOps.sectionBlockIds`
-(「ここから再実行」の範囲・D9) だけは doc の見出し階層から求める形で `outline.ts` へ移す。
+(「ここから再実行」の範囲・D9) だけは doc の見出しから求める形で `outline.ts` へ移す。
 `textTransfer` / `filePaths` / `autosave` / `runner` はそのまま残る。
+`Step` の更新だけは枝の中まで降りる必要があるため、`flow/treeOps.updateStepIn` を
+共有の入口として使う (再帰を知るのは `treeOps` だけ、という既存の約束を崩さない)。
 
 実行モードは専用の store を持たない。`steps` をセクション 1 つの `FlowData` に包んで
 (`runner.ts` の `toRunnerFlow`) 既存の `flow/store/runnerStore` に載せ、`useSessionRunner`・
@@ -259,13 +271,21 @@ Dexie の次バージョンで `scenarioData` を読み替える。**`schema-mig
 | 観点 | 編集モード (テンプレート) | 実行モード (セッション) |
 |------|--------------------------|------------------------|
 | バッキング | `Template.scenarioData` | `GameSession.scenarioData` |
-| 本文編集 | 自由 | 未実行の範囲のみ |
+| 本文編集 | 自由 | 読み取り専用 (下記) |
 | カーソル | なし | advisory。任意の操作を実行・再実行・スキップ可 |
 | ループ | なし | 見出しの「ここから再実行」(D9) |
 | フラグパネル | seed `Template.gameFlags` | ライブ `GameSession.gameFlags` |
 
-実行意味論はステップリスト UI の実行モデルを引き継ぐ (D10)。**本文ブロックに「既読」という
+実行意味論はステップリスト UI の実行モデルを引き継ぐ (D10)。**本文に「既読」という
 別状態を持たせないこと。** `executedAt` と併存する 2 種類の進捗が生まれ、実行エンジンの状態が倍になる。
+
+実行モードの本文は読み取り専用とする。「未実行の範囲だけ編集可」は ProseMirror では
+位置ごとの編集可否を判定するプラグインが要り、記録保護 (`runnerStore.updateStep`) と
+判定が二重化する。操作ステップの設定は右カラム (`RunnerDetailPanel`) で従来どおり編集でき、
+そこは記録保護が効いている。
+
+**本文を編集可にする条件**: セッション中に本文を直したい要求が実際に出たとき。その際は
+編集可否の判定を `runnerStore` 側に一本化し、ProseMirror 側はそれを引くだけにすること。
 
 ---
 
@@ -359,7 +379,7 @@ Dexie の次バージョンで `scenarioData` を読み替える。**`schema-mig
 フェーズ 0 は新画面に依存しない唯一の項目で、他が詰まったときに独立して進められる。
 フェーズ 5 は唯一 `backend/` を触り、デプロイと API スキーマが絡むため最後に置く。
 
-フェーズ 1〜3 は `frontend/src/scenario/` の既存実装を置き換える。
+フェーズ 1〜3 は `frontend/src/scenario/` の旧実装 (ブロック列) を置き換える。
 旧 2 系統 (React Flow・ステップリスト) には引き続き手を入れない (D5 / D15)。
 
 ---

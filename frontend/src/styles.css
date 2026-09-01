@@ -67,3 +67,69 @@ main.padded {
   border-color: var(--color-error);
   color: var(--color-error-content);
 }
+
+/* シナリオ本文 (docs/dev/scenario-editor-architecture.md D20)。ProseMirror が吐くのは
+   素の h1/ul/blockquote なので、Tailwind の preflight で消えた既定スタイルをここで戻す。
+   本文の見た目は編集モードと実行モードで共通なので、コンポーネント側には置かない。 */
+.scenario-doc .ProseMirror {
+  outline: none;
+  line-height: 1.9;
+}
+
+.scenario-doc h1,
+.scenario-doc h2,
+.scenario-doc h3 {
+  font-weight: 700;
+  margin: 1.2em 0 0.4em;
+  scroll-margin-top: 0.5rem;
+}
+
+.scenario-doc h1 {
+  font-size: 1.5rem;
+}
+
+.scenario-doc h2 {
+  font-size: 1.25rem;
+}
+
+.scenario-doc h3 {
+  font-size: 1.1rem;
+}
+
+.scenario-doc p {
+  margin: 0.6em 0;
+}
+
+.scenario-doc ul,
+.scenario-doc ol {
+  margin: 0.6em 0;
+  padding-left: 1.5em;
+}
+
+.scenario-doc ul {
+  list-style: disc;
+}
+
+.scenario-doc ol {
+  list-style: decimal;
+}
+
+.scenario-doc blockquote {
+  margin: 0.8em 0;
+  padding: 0.2em 0 0.2em 0.8em;
+  border-left: 3px solid var(--color-base-300);
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+}
+
+.scenario-doc mark {
+  background-color: var(--color-warning);
+  color: var(--color-warning-content);
+  border-radius: 0.2em;
+  padding: 0 0.15em;
+}
+
+/* 操作チップは文中に置かれるため、行送りを崩さないよう縦の余白を持たせない。 */
+.scenario-doc .ProseMirror-selectednode {
+  outline: 2px solid var(--color-primary);
+  border-radius: 0.25rem;
+}
