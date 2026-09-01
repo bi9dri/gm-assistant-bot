@@ -1,0 +1,47 @@
+name: PR Preview
+
+# 動作確認用に PR の HEAD を Cloudflare の一時アカウントへ立てる。`--temporary` は
+# 認証情報なしでデプロイでき、アカウントごと 60 分で失効するので後始末の仕組みが要らない。
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: preview-pr-${{ inputs.pr }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pr }}/head
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter 'gm-assistant-bot-frontend' --bun build
+        env:
+          # 同一オリジン (preview Worker の /api 中継) を使う。本番 API を直接叩くと CORS で弾かれる。
+          VITE_API_BASE_URL: ""
+      - id: deploy
+        env:
+          NO_COLOR: "1"
+        run: |
+          set -euo pipefail
+          bun x wrangler deploy --config frontend/preview/wrangler.toml \
+            --name "gm-assistant-bot-preview-pr-${{ inputs.pr }}" --temporary | tee deploy.log
+          echo "url=$(grep -oEm1 'https://[a-z0-9.-]+\.workers\.dev' deploy.log)" >> "$GITHUB_OUTPUT"
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ inputs.pr }}" --repo "$GITHUB_REPOSITORY" \
+            --body "Preview: ${{ steps.deploy.outputs.url }} (commit $(git rev-parse --short HEAD) / 60 分で失効します)"

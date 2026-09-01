@@ -4,7 +4,8 @@
     "-lintignore"
   ],
   "ignore": [
-    ".claude/worktrees/**"
+    ".claude/worktrees/**",
+    "frontend/preview/worker.ts"
   ],
   "workspaces": {
     ".": {}

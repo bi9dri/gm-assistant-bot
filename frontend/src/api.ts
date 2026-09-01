@@ -2,7 +2,11 @@ import { hc, type InferRequestType } from "hono/client";
 
 import type { AppType } from "../../backend/src/index";
 
-const API_BASE_URL = import.meta.env.DEV ? "" : "https://gm-assistant-bot-api.bidri.dev";
+// PR preview では同一オリジンの Worker が /api を本番 API へ中継するため空文字を渡す。
+// (frontend/preview/worker.ts)
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.DEV ? "" : "https://gm-assistant-bot-api.bidri.dev");
 
 export const BOT_TOKEN_HEADER = "X-Discord-Bot-Token";
 
