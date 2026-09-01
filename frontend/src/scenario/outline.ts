@@ -1,37 +1,52 @@
-import type { HeadingStep, Step } from "@/flow/schema";
+import type { JSONContent } from "@tiptap/core";
 
-// フラットなブロック列を Heading の level で階層化したビュー (docs: scenario-editor-architecture D8 / D22)。
-// 本文の折りたたみ (<details>) と目次パネルはどちらもこの木を描画する。
-// データはフラットなままなので、index は元のブロック列での位置 (dnd のドロップ先に使う)。
+import { collectStepIds } from "./document";
 
-export interface OutlineSection {
-  kind: "section";
-  heading: HeadingStep;
+// doc の heading ノードから組む目次 (docs: scenario-editor-architecture D22)。
+// 見出しは階層を表すが入れ子ではない (ProseMirror ドキュメント 1 本・D8) ため、
+// 木ではなく level 付きの平坦な列として持ち、表示側がインデントする。
+
+export interface OutlineEntry {
+  // 見出しの出現順。DOM 上の h1〜h3 の並び順と一致し、目次からの scroll と
+  // 「ここから再実行」の範囲指定に使う (heading ノードは id を持たないため)。
   index: number;
-  children: OutlineNode[];
+  level: number;
+  text: string;
 }
 
-export type OutlineNode = { kind: "block"; block: Step; index: number } | OutlineSection;
+const nodeText = (node: JSONContent): string =>
+  node.text ?? (node.content ?? []).map(nodeText).join("");
 
-export const buildOutline = (blocks: Step[]): OutlineNode[] => {
-  const root: OutlineNode[] = [];
-  // 開いている見出しのスタック。同レベル以下の見出しが来たらそこまで閉じる。
-  const open: OutlineSection[] = [];
-  const current = (): OutlineNode[] => open.at(-1)?.children ?? root;
+const headingLevel = (node: JSONContent): number | undefined => {
+  if (node.type !== "heading") return undefined;
+  const level: unknown = node.attrs?.level;
+  return typeof level === "number" ? level : 1;
+};
 
-  blocks.forEach((block, index) => {
-    if (block.type !== "Heading") {
-      current().push({ kind: "block", block, index });
-      return;
-    }
-    for (let top = open.at(-1); top !== undefined && top.heading.level >= block.level;) {
-      open.pop();
-      top = open.at(-1);
-    }
-    const section: OutlineSection = { kind: "section", heading: block, index, children: [] };
-    current().push(section);
-    open.push(section);
-  });
+export const buildOutline = (doc: JSONContent): OutlineEntry[] => {
+  const entries: OutlineEntry[] = [];
+  for (const node of doc.content ?? []) {
+    const level = headingLevel(node);
+    if (level === undefined) continue;
+    entries.push({ index: entries.length, level, text: nodeText(node) });
+  }
+  return entries;
+};
 
-  return root;
+// 見出しが束ねる範囲 (見出し自身から、次の同レベル以下の見出しの手前まで) の stepId。
+// 「ここから再実行」で実行痕跡を消す範囲 (docs: scenario-editor-architecture D9)。
+export const sectionStepIds = (doc: JSONContent, headingIndex: number): string[] => {
+  const nodes = doc.content ?? [];
+  const positions = nodes.flatMap((node, position) =>
+    headingLevel(node) === undefined ? [] : [position],
+  );
+  const start = positions[headingIndex];
+  if (start === undefined) return [];
+  const level = headingLevel(nodes[start] as JSONContent) ?? 1;
+  const end =
+    positions.slice(headingIndex + 1).find((position) => {
+      const nextLevel = headingLevel(nodes[position] as JSONContent);
+      return nextLevel !== undefined && nextLevel <= level;
+    }) ?? nodes.length;
+  return collectStepIds({ type: "doc", content: nodes.slice(start, end) });
 };

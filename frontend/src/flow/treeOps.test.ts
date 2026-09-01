@@ -5,7 +5,6 @@ import {
   clearDescendantExecution,
   collectDescendantStepIds,
   collectSteps,
-  collectStepsIn,
   duplicateStep,
   findSection,
   findStep,
@@ -18,6 +17,7 @@ import {
   removeStep,
   updateSection,
   updateStepById,
+  updateStepIn,
 } from "./treeOps";
 
 const leaf = (id: string, title = id): Step => ({
@@ -415,7 +415,7 @@ describe("collectDescendantStepIds", () => {
   });
 });
 
-describe("findStepIn / collectStepsIn", () => {
+describe("findStepIn / updateStepIn", () => {
   const blocks = [
     leaf("a"),
     branch("br", [
@@ -432,7 +432,12 @@ describe("findStepIn / collectStepsIn", () => {
     expect(findStepIn(blocks, "ghost")).toBeUndefined();
   });
 
-  test("未選択の枝も含めて pre-order で平坦化する", () => {
-    expect(collectStepsIn(blocks).map((step) => step.id)).toEqual(["a", "br", "c", "d"]);
+  test("枝の中のステップを更新し、未変更のステップは参照を保つ", () => {
+    const updated = updateStepIn(blocks, "d", (step) => {
+      step.title = "更新";
+    });
+
+    expect(findStepIn(updated, "d")?.title).toBe("更新");
+    expect(updated[0]).toBe(blocks[0]!);
   });
 });

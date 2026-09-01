@@ -1,85 +1,101 @@
 import { describe, expect, test } from "bun:test";
 
-import type { Step } from "@/flow/schema";
+import type { JSONContent } from "@tiptap/core";
 
-import { buildOutline, type OutlineNode } from "./outline";
+import { buildOutline, sectionStepIds } from "./outline";
 
-const heading = (id: string, level: number): Step => ({
-  id,
-  type: "Heading",
-  title: id,
-  memo: "",
-  autoAdvance: false,
-  level,
-  collapsed: false,
+// 目次 (D22) と見出しの「ここから再実行」の範囲 (D9) はどちらも doc の heading から求める。
+
+const heading = (level: number, text: string): JSONContent => ({
+  type: "heading",
+  attrs: { level },
+  content: [{ type: "text", text }],
 });
 
-const text = (id: string): Step => ({
-  id,
-  type: "Text",
-  title: "本文",
-  memo: "",
-  autoAdvance: false,
-  body: "",
+const stepParagraph = (stepId: string): JSONContent => ({
+  type: "paragraph",
+  content: [{ type: "step", attrs: { stepId } }],
 });
 
-// 木を "id(index)" のネストした配列に落として比較する。
-const shape = (nodes: OutlineNode[]): unknown[] =>
-  nodes.map((node) =>
-    node.kind === "block"
-      ? `${node.block.id}(${node.index})`
-      : [`${node.heading.id}(${node.index})`, shape(node.children)],
-  );
+const doc = (...content: JSONContent[]): JSONContent => ({ type: "doc", content });
 
 describe("buildOutline", () => {
-  test("見出しの無い列はそのまま並ぶ", () => {
-    expect(shape(buildOutline([text("a"), text("b")]))).toEqual(["a(0)", "b(1)"]);
-  });
+  test("見出しを出現順に level 付きで並べる", () => {
+    const source = doc(
+      heading(1, "導入"),
+      { type: "paragraph", content: [{ type: "text", text: "本文" }] },
+      heading(2, "調査"),
+      heading(1, "解決"),
+    );
 
-  test("後続ブロックを直前の見出しの下にぶら下げる", () => {
-    expect(shape(buildOutline([heading("h1", 1), text("a"), text("b")]))).toEqual([
-      ["h1(0)", ["a(1)", "b(2)"]],
+    expect(buildOutline(source)).toEqual([
+      { index: 0, level: 1, text: "導入" },
+      { index: 1, level: 2, text: "調査" },
+      { index: 2, level: 1, text: "解決" },
     ]);
   });
 
-  test("深い見出しは浅い見出しの子になる", () => {
-    const outline = buildOutline([heading("h1", 1), heading("h2", 2), text("a")]);
-
-    expect(shape(outline)).toEqual([["h1(0)", [["h2(1)", ["a(2)"]]]]]);
+  test("見出しが無ければ空", () => {
+    expect(buildOutline(doc({ type: "paragraph" }))).toEqual([]);
   });
 
-  test("同レベルの見出しは兄弟になる", () => {
-    const outline = buildOutline([heading("h1", 2), text("a"), heading("h2", 2), text("b")]);
+  test("装飾された見出しでもテキストだけを取り出す", () => {
+    const source = doc({
+      type: "heading",
+      attrs: { level: 1 },
+      content: [
+        { type: "text", text: "重要な" },
+        { type: "text", marks: [{ type: "highlight" }], text: "導入" },
+      ],
+    });
 
-    expect(shape(outline)).toEqual([
-      ["h1(0)", ["a(1)"]],
-      ["h2(2)", ["b(3)"]],
-    ]);
+    expect(buildOutline(source)[0]?.text).toBe("重要な導入");
+  });
+});
+
+describe("sectionStepIds", () => {
+  test("次の同レベル見出しの手前までを範囲にする", () => {
+    const source = doc(
+      heading(1, "導入"),
+      stepParagraph("s1"),
+      heading(1, "解決"),
+      stepParagraph("s2"),
+    );
+
+    expect(sectionStepIds(source, 0)).toEqual(["s1"]);
   });
 
-  test("浅い見出しは深い見出しを閉じてトップに戻る", () => {
-    const outline = buildOutline([
-      heading("h1", 1),
-      heading("h2", 3),
-      text("a"),
-      heading("h3", 1),
-      text("b"),
-    ]);
+  test("下位の見出しは自分の範囲に含める", () => {
+    const source = doc(
+      heading(1, "導入"),
+      stepParagraph("s1"),
+      heading(2, "調査"),
+      stepParagraph("s2"),
+      heading(1, "解決"),
+      stepParagraph("s3"),
+    );
 
-    expect(shape(outline)).toEqual([
-      ["h1(0)", [["h2(1)", ["a(2)"]]]],
-      ["h3(3)", ["b(4)"]],
-    ]);
+    expect(sectionStepIds(source, 0)).toEqual(["s1", "s2"]);
   });
 
-  test("見出しより前のブロックはトップレベルに残る", () => {
-    expect(shape(buildOutline([text("a"), heading("h1", 1), text("b")]))).toEqual([
-      "a(0)",
-      ["h1(1)", ["b(2)"]],
-    ]);
+  test("下位見出しからの範囲は自分の配下だけに閉じる", () => {
+    const source = doc(
+      heading(1, "導入"),
+      stepParagraph("s1"),
+      heading(2, "調査"),
+      stepParagraph("s2"),
+    );
+
+    expect(sectionStepIds(source, 1)).toEqual(["s2"]);
   });
 
-  test("最初の見出しが H3 でもトップレベルになる", () => {
-    expect(shape(buildOutline([heading("h3", 3), text("a")]))).toEqual([["h3(0)", ["a(1)"]]]);
+  test("末尾の見出しは本文の終わりまで", () => {
+    const source = doc(heading(1, "導入"), stepParagraph("s1"), stepParagraph("s2"));
+
+    expect(sectionStepIds(source, 0)).toEqual(["s1", "s2"]);
+  });
+
+  test("存在しない見出しには空を返す", () => {
+    expect(sectionStepIds(doc(heading(1, "導入")), 3)).toEqual([]);
   });
 });

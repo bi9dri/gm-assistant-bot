@@ -9,6 +9,7 @@ if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
 }
 
 import { applyFlowDataMigration } from "../flow/migrate";
+import { toScenarioDataV2 } from "../scenario/migrate";
 import type {
   CategoryData,
   ChannelData,
@@ -79,6 +80,26 @@ export const applyScenarioDataMigration = async (tx: Transaction): Promise<void>
 
   await tx.table("Template").toCollection().modify(backfill);
   await tx.table("GameSession").toCollection().modify(backfill);
+};
+
+// v10: scenarioData を v1 (ブロック列) から v2 (doc + steps) へ移す
+// (docs: scenario-editor-architecture D26)。旧 flowData と違い同じ道具の中の表現形式の
+// 変更なので 1 対 1 に写せる。変換ロジックは画面側と共有する (二重実装するとドリフトする)。
+export const applyScenarioDataV2Migration = async (tx: Transaction): Promise<void> => {
+  const migrate = (scenarioData: string): string => {
+    try {
+      return JSON.stringify(toScenarioDataV2(JSON.parse(scenarioData)));
+    } catch {
+      // 壊れた JSON はそのまま残す。読み出し側 (getParsedScenarioData) が空へ落とす。
+      return scenarioData;
+    }
+  };
+  const upgrade = (row: { scenarioData?: string }): void => {
+    if (row.scenarioData !== undefined) row.scenarioData = migrate(row.scenarioData);
+  };
+
+  await tx.table("Template").toCollection().modify(upgrade);
+  await tx.table("GameSession").toCollection().modify(upgrade);
 };
 
 export class DB extends Dexie {
@@ -348,5 +369,10 @@ export class DB extends Dexie {
     // issue #245: シナリオドキュメント型 UI の scenarioData を両テーブルへ追加する。
     // 絞り込みには使わないため (有無の判定は行を読んでから行う) インデックスは張らない。
     this.version(9).upgrade(applyScenarioDataMigration);
+
+    // issue #213: 本文をブロック列から段落ベースのリッチテキストへ改める
+    // (docs: scenario-editor-architecture D1 / D26)。インデックスは張らないので
+    // stores() の変更はなく、既存行の scenarioData を読み替えるだけ。
+    this.version(10).upgrade(applyScenarioDataV2Migration);
   }
 }

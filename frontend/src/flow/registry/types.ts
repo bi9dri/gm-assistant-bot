@@ -33,9 +33,6 @@ export interface StepRegistryEntry<S extends Step = Step> {
   // ため、context をモックすれば unit-test できる。tool (category: "tool") は持たない
   // (GM が手動操作するのみ)。action / branch / text が定義する。
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
-  // シナリオドキュメント UI で本文中にインライン描画される本体 (docs: scenario-editor-architecture D11)。
-  // 持たない型は DetailPanel に落ちる。
-  InlineBody?: ComponentType<DetailPanelProps<S>>;
 }
 
 // 具体ステップ型の entry を union 型 (StepRegistryEntry<Step>) に格納するためのヘルパ。
@@ -51,5 +48,4 @@ export const defineStep = <S extends Step>(entry: StepRegistryEntry<S>): StepReg
   // execute も step 引数が反変。summary と同様に引数キャストへ閉じ込める。
   // ランタイムは type が一致する entry しか引かれないため安全。
   execute: entry.execute === undefined ? undefined : (step, ctx) => entry.execute!(step as S, ctx),
-  InlineBody: entry.InlineBody as unknown as ComponentType<DetailPanelProps> | undefined,
 });

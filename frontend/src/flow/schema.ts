@@ -200,17 +200,13 @@ const RecordCombinationStepSchema = StepBaseSchema.extend({
     .default([]),
 });
 
-// ---- 本文ステップ (Discord 操作を伴わない、シナリオ本文と見出し) ----
+// ---- 本文ステップ (Discord 操作を伴わないメモ的ステップ) ----
+// 見出しは heading ノードが担うため、Heading ステップ型は持たない
+// (docs: scenario-editor-architecture 「registry 契約の拡張」)。
 
 const TextStepSchema = StepBaseSchema.extend({
   type: z.literal("Text"),
   body: z.string().default(""),
-});
-
-const HeadingStepSchema = StepBaseSchema.extend({
-  type: z.literal("Heading"),
-  level: z.number().int().min(1).max(3).default(1),
-  collapsed: z.boolean().default(false),
 });
 
 // ---- 分岐ステップ (旧 ConditionalBranch / SelectBranch を統合) ----
@@ -263,7 +259,6 @@ const StepUnionSchema = z.discriminatedUnion("type", [
   RandomSelectStepSchema,
   RecordCombinationStepSchema,
   TextStepSchema,
-  HeadingStepSchema,
   BranchStepSchema,
 ]);
 
@@ -336,7 +331,6 @@ export {
   DeleteCategoryStepSchema,
   DeleteChannelStepSchema,
   DeleteRoleStepSchema,
-  HeadingStepSchema,
   KanbanStepSchema,
   RandomSelectStepSchema,
   RecordCombinationStepSchema,
@@ -365,4 +359,3 @@ export type RandomSelectStep = Extract<Step, { type: "RandomSelect" }>;
 export type RecordCombinationStep = Extract<Step, { type: "RecordCombination" }>;
 export type BranchStep = Extract<Step, { type: "Branch" }>;
 export type TextStep = Extract<Step, { type: "Text" }>;
-export type HeadingStep = Extract<Step, { type: "Heading" }>;

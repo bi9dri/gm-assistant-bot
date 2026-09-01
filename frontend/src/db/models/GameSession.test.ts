@@ -189,18 +189,14 @@ describe("GameSession", () => {
     test("scenarioDataをZodバリデーション付きで更新する", async () => {
       const session = await createTestSession({});
       const scenarioData: ScenarioData = {
-        version: 1,
-        blocks: [
-          {
-            id: "h1",
-            type: "Heading",
-            title: "第1章",
-            memo: "",
-            autoAdvance: false,
-            level: 1,
-            collapsed: false,
-          },
-        ],
+        version: 2,
+        doc: {
+          type: "doc",
+          content: [
+            { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "第1章" }] },
+          ],
+        },
+        steps: [],
       };
 
       await session.update({ scenarioData });

@@ -9,6 +9,7 @@ import { FileSystem, convertFilePathsInReactFlowData } from "@/fileSystem";
 import { convertFilePathsInFlowData } from "@/flow/filePaths";
 import type { FlowData } from "@/flow/schema";
 import { convertFilePathsInScenarioData } from "@/scenario/filePaths";
+import { toScenarioDataV2 } from "@/scenario/migrate";
 import type { ScenarioData } from "@/scenario/schema";
 import { useToast } from "@/toast/ToastProvider";
 
@@ -107,7 +108,9 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const convertedFlowData = JSON.stringify(
         convertFilePathsInFlowData(parsedFlow, replaceFilePath),
       );
-      const parsedScenario: ScenarioData = JSON.parse(template.scenarioData);
+      // Dexie v10 で全行が v2 になっているが、テンプレートは取り込み経路でも増えるため
+      // ここでも形を揃えてから触る (v1 のまま渡すと steps が無く落ちる)。
+      const parsedScenario = toScenarioDataV2(JSON.parse(template.scenarioData)) as ScenarioData;
       const convertedScenarioData = JSON.stringify(
         convertFilePathsInScenarioData(parsedScenario, replaceFilePath),
       );

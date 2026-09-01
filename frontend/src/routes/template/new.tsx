@@ -2,9 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Template } from "@/db";
-import { generateId } from "@/flow/ids";
-import { TextEntry } from "@/flow/registry/Text";
-import type { Step } from "@/flow/schema";
+import type { ScenarioData } from "@/scenario/schema";
 import { useToast } from "@/toast/ToastProvider";
 
 export const Route = createFileRoute("/template/new")({
@@ -17,9 +15,20 @@ export const Route = createFileRoute("/template/new")({
 });
 
 // 新規テンプレートはシナリオ形式のみを作る (docs: scenario-editor-architecture D15)。
-// 空のブロック列にしないのは、v9 で全既存レコードに空の scenarioData が backfill されており、
-// 「空 = 旧形式」と区別できず一覧のバッジと導線が出せないため。
-const initialBlocks = (): Step[] => [{ ...TextEntry.defaults(), id: generateId() } as Step];
+// 本文を空にしないのは、v9 で全既存レコードに空の scenarioData が backfill されており、
+// 「空 = 旧形式」と区別できず一覧のバッジと導線が出せないため (schema: hasScenarioContent)。
+// 見出しをシナリオ名で置くと、その最初の 1 行が目次の起点にもなる。
+const initialScenarioData = (name: string): ScenarioData => ({
+  version: 2,
+  doc: {
+    type: "doc",
+    content: [
+      { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: name }] },
+      { type: "paragraph" },
+    ],
+  },
+  steps: [],
+});
 
 function RouteComponent() {
   const [templateName, setTemplateName] = useState("");
@@ -29,7 +38,7 @@ function RouteComponent() {
   const handleCreate = async () => {
     try {
       const template = await Template.create(templateName);
-      await template.update({ scenarioData: { version: 1, blocks: initialBlocks() } });
+      await template.update({ scenarioData: initialScenarioData(template.name) });
 
       addToast({
         message: `テンプレート「${templateName}」を作成しました`,

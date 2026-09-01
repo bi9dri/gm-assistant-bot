@@ -26,8 +26,8 @@ interface StepLocator {
   step: Step;
 }
 
-// フラットなステップ列に対する入口 (findStepIn / scenario の blockOps が共有する)。
-export const locateInSteps = (steps: Step[], id: string): StepLocator | undefined => {
+// フラットなステップ列に対する入口 (findStepIn / updateStepIn が共有する)。
+const locateInSteps = (steps: Step[], id: string): StepLocator | undefined => {
   for (let index = 0; index < steps.length; index++) {
     const step = steps[index];
     if (step === undefined) continue;
@@ -58,6 +58,13 @@ export const findStep = (flow: FlowData, id: string): Step | undefined =>
 export const findStepIn = (steps: Step[], id: string): Step | undefined =>
   locateInSteps(steps, id)?.step;
 
+// updateStepById のフラットなステップ列版。未変更のステップは参照を保つ。
+export const updateStepIn = (steps: Step[], id: string, patch: (step: Step) => void): Step[] =>
+  produce(steps, (draft) => {
+    const step = findStepIn(draft as Step[], id);
+    if (step !== undefined) patch(step);
+  });
+
 export const findSection = (flow: FlowData, id: string): Section | undefined =>
   flow.sections.find((section) => section.id === id);
 
@@ -70,8 +77,7 @@ const resolveContainerSteps = (flow: FlowData, container: StepContainer): Step[]
   return branch.branches.find((arm) => arm.id === container.armId)?.steps;
 };
 
-export const clampIndex = (index: number, length: number): number =>
-  Math.max(0, Math.min(index, length));
+const clampIndex = (index: number, length: number): number => Math.max(0, Math.min(index, length));
 
 const collectBranchIds = (step: Step, acc: Set<string>): void => {
   if (step.type !== "Branch") return;
@@ -136,13 +142,6 @@ export const collectSteps = (flow: FlowData): Step[] => {
   return out;
 };
 
-// collectSteps のフラットなステップ列版 (findStepIn と同じくブロック列用の入口)。
-export const collectStepsIn = (steps: Step[]): Step[] => {
-  const out: Step[] = [];
-  collectInSteps(steps, out);
-  return out;
-};
-
 // 指定 id 群の実行痕跡 (executedAt と Branch の枝確定) をまとめて消す。見出し配下の
 // 一括再実行 (docs: scenario-editor-architecture D9) が範囲を id 集合として渡す。
 export const clearExecutionByIds = (flow: FlowData, ids: Set<string>): FlowData =>
@@ -176,7 +175,7 @@ export const removeStep = (flow: FlowData, id: string): FlowData =>
 // 複製自身に加え、Branch の枝 (arm) と入れ子ステップの id もすべて採番し直す。
 // id が重複すると locateStep の検索や dnd-kit の sortable id が最初の 1 件しか
 // 指せなくなるため。実行痕跡 (executedAt / executedBranchIds) も一緒に消す。
-export const reassignIds = (step: Step): void => {
+const reassignIds = (step: Step): void => {
   step.id = generateId();
   step.executedAt = undefined;
   if (step.type !== "Branch") return;

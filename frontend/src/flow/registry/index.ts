@@ -10,7 +10,6 @@ import { CreateRoleEntry } from "./CreateRole";
 import { DeleteCategoryEntry } from "./DeleteCategory";
 import { DeleteChannelEntry } from "./DeleteChannel";
 import { DeleteRoleEntry } from "./DeleteRole";
-import { HeadingEntry } from "./Heading";
 import { KanbanEntry } from "./Kanban";
 import { RandomSelectEntry } from "./RandomSelect";
 import { RecordCombinationEntry } from "./RecordCombination";
@@ -41,7 +40,6 @@ const ENTRIES: StepRegistryEntry[] = [
   RandomSelectEntry,
   RecordCombinationEntry,
   TextEntry,
-  HeadingEntry,
 ];
 
 export const registry = new Map<Step["type"], StepRegistryEntry>(
