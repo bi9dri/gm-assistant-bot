@@ -1,0 +1,14 @@
+# PR ごとの一時 preview 環境。CI は `--name gm-assistant-bot-preview-pr-<PR番号> --temporary` で
+# 上書きするため、ここでの name は手元から素の `wrangler deploy` を叩いたとき用でしかない。
+name = "gm-assistant-bot-preview"
+main = "worker.ts"
+compatibility_date = "2025-12-12"
+workers_dev = true
+
+[assets]
+directory = "../dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+# アセットの有無に関わらず Worker を先に通す。SPA フォールバックが /api/* を
+# index.html で握り潰すのを避けるため。
+run_worker_first = true

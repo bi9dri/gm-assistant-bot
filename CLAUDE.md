@@ -23,12 +23,13 @@
 - **Don't reach for `overrides`.** Fix it by updating the direct dependency. Use `overrides` only when a critical vulnerability is reported against a transitive dependency AND no direct update resolves it — document the advisory, why a direct update isn't viable, and the removal condition in the PR.
 
 ## Architecture
-Bun workspace monorepo: `/frontend` (React + Vite, deployed as Cloudflare Workers Static Assets), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack.
+Bun workspace monorepo: `/frontend` (React + Vite, deployed to GitHub Pages), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview だけ Cloudflare Workers Static Assets に載せる (`/frontend/preview`).
 
 ## Docs (`/docs/dev`)
 - [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
 - [scenario-editor-architecture.md](docs/dev/scenario-editor-architecture.md) — **required reading before any issue #213 sub-issue work** (scenario-document UI; the settled cross-cutting decisions). New features go here, not into the older UIs.
 - [step-list-editor-architecture.md](docs/dev/step-list-editor-architecture.md) — step-list editor (issue #182). Frozen: kept only to run existing data, but its registry contract is still shared and live
+- [pr-preview-environment.md](docs/dev/pr-preview-environment.md) — PR ごとの使い捨て Cloudflare Worker preview (作成・破棄・必要な Secrets)
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
 
 ## Skills (`.claude/skills/`)
