@@ -67,6 +67,105 @@ describe("scenarioDataV1ToV2", () => {
     expect(branch.branches[0]?.steps[0]?.id).toBe("nested");
   });
 
+  test("level が範囲外の Heading は 1〜3 に丸める", () => {
+    const { doc } = scenarioDataV1ToV2([
+      { ...base, id: "h", type: "Heading", title: "導入", level: 7, collapsed: false },
+    ]);
+
+    expect(doc.content?.[0]?.attrs).toEqual({ level: 3 });
+  });
+
+  // v1 では Branch のアームにも本文カテゴリのブロックを置けた。Heading は v2 の Step union に
+  // 無いため、そのまま残すと保存済みシナリオ全体が読めなくなる。
+  test("アームの中の Heading は見出し文字列を保った Text になる", () => {
+    const { steps } = scenarioDataV1ToV2([
+      {
+        ...branchBlock("br"),
+        branches: [
+          {
+            id: "br-arm",
+            label: "枝",
+            steps: [
+              {
+                ...base,
+                id: "h",
+                type: "Heading",
+                title: "枝の中の見出し",
+                level: 1,
+                collapsed: false,
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    const branch = steps[0];
+    if (branch?.type !== "Branch") throw new Error("expected Branch");
+    const nested = branch.branches[0]?.steps[0];
+    expect(nested).toMatchObject({ id: "h", type: "Text", body: "枝の中の見出し" });
+  });
+
+  test("入れ子の Branch のアームまで降りる", () => {
+    const { steps } = scenarioDataV1ToV2([
+      {
+        ...branchBlock("outer"),
+        branches: [
+          {
+            id: "outer-arm",
+            label: "枝",
+            steps: [
+              {
+                ...branchBlock("inner"),
+                branches: [
+                  {
+                    id: "inner-arm",
+                    label: "枝",
+                    steps: [
+                      {
+                        ...base,
+                        id: "h",
+                        type: "Heading",
+                        title: "奥の見出し",
+                        level: 1,
+                        collapsed: false,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    const outer = steps[0];
+    if (outer?.type !== "Branch") throw new Error("expected Branch");
+    const inner = outer.branches[0]?.steps[0];
+    if (inner?.type !== "Branch") throw new Error("expected nested Branch");
+    expect(inner.branches[0]?.steps[0]).toMatchObject({ type: "Text", body: "奥の見出し" });
+  });
+
+  test("アームに Heading を含む v1 データも v2 スキーマを満たす", () => {
+    const converted = scenarioDataV1ToV2([
+      {
+        ...branchBlock("br"),
+        branches: [
+          {
+            id: "br-arm",
+            label: "枝",
+            steps: [
+              { ...base, id: "h", type: "Heading", title: "見出し", level: 1, collapsed: false },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(() => ScenarioDataSchema.parse(converted)).not.toThrow();
+  });
+
   test("本文と操作の並び順がそのまま doc の並びになる", () => {
     const { doc } = scenarioDataV1ToV2([textBlock("t", "本文"), counterBlock("c1")]);
 

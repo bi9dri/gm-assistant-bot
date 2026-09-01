@@ -13,18 +13,58 @@ interface V1Block {
   id?: unknown;
   type?: unknown;
   title?: unknown;
+  memo?: unknown;
   body?: unknown;
   level?: unknown;
 }
 
 const textNode = (text: string): JSONContent[] => (text === "" ? [] : [{ type: "text", text }]);
 
+// 保存済みの生 JSON を読むため、v1 の schema (1〜3) は通っていない。範囲外の level は
+// 描画も目次のインデントも壊すので、ここで丸める。
+const clampLevel = (level: unknown): number =>
+  typeof level === "number" ? Math.min(3, Math.max(1, Math.round(level))) : 1;
+
 // v1 の Heading は本文を共通フィールドの title に持っていた。
 const headingNode = (block: V1Block): JSONContent => ({
   type: "heading",
-  attrs: { level: typeof block.level === "number" ? block.level : 1 },
+  attrs: { level: clampLevel(block.level) },
   content: textNode(typeof block.title === "string" ? block.title : ""),
 });
+
+// v1 では Branch のアームにも本文カテゴリのブロックを置けた。アームの中身は doc ではなく
+// Branch 実体の内側に残る (D24) ため段落にはできず、Heading は v2 の Step union から
+// 消えているのでそのままにすると保存済みデータが読めなくなる。見出しの文字列を落とさない
+// よう Text へ移す。
+const armHeadingToText = (block: V1Block, id: string): Step =>
+  ({
+    id,
+    type: "Text",
+    title: "本文",
+    memo: typeof block.memo === "string" ? block.memo : "",
+    autoAdvance: false,
+    body: typeof block.title === "string" ? block.title : "",
+  }) as Step;
+
+const convertArmSteps = (steps: unknown[]): Step[] =>
+  steps.flatMap((raw) => {
+    const block = raw as V1Block;
+    if (block.type !== "Heading") return [convertNestedArms(raw)];
+    return typeof block.id === "string" ? [armHeadingToText(block, block.id)] : [];
+  });
+
+// 入れ子の Branch にも降りる。
+const convertNestedArms = (raw: unknown): Step => {
+  const step = raw as Step;
+  if (step.type !== "Branch" || !Array.isArray(step.branches)) return step;
+  return {
+    ...step,
+    branches: step.branches.map((arm) => ({
+      ...arm,
+      steps: convertArmSteps(Array.isArray(arm.steps) ? arm.steps : []),
+    })),
+  };
+};
 
 // v1 の Text は 1 ブロックに複数段落を含みうるので、空行区切りで段落に割る (D19 と同じ規則)。
 const paragraphNodes = (block: V1Block): JSONContent[] =>
@@ -57,7 +97,7 @@ export const scenarioDataV1ToV2 = (blocks: unknown[]): ScenarioData => {
             content: [{ type: STEP_NODE_NAME, attrs: { stepId: block.id } }],
           },
     );
-    steps.push(raw as Step);
+    steps.push(convertNestedArms(raw));
   }
 
   return {

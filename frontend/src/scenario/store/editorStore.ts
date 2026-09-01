@@ -6,6 +6,7 @@ import { getEntry } from "@/flow/registry";
 import type { Step } from "@/flow/schema";
 import { updateStepIn } from "@/flow/treeOps";
 
+import { collectStepIds, withDescendantIds } from "../document";
 import { emptyDoc } from "../schema";
 
 // シナリオ編集モード (テンプレート著作) の Zustand store。
@@ -58,7 +59,17 @@ export const useScenarioEditorStore = create<EditorStore>()((set) => ({
 
   // 孤児 (本文から参照が消えた実体) はここでは落とさない。打鍵ごとに落とすと
   // 切り取り → 貼り付けの途中や undo で実体が失われる。除去は保存時に行う (D25)。
-  setDoc: (doc) => set({ doc }),
+  // ただし選択だけは外す。本文から消えた操作を右カラムで編集し続けられると、その編集は
+  // 保存時に孤児ごと捨てられ、書いたものが無言で消える。
+  setDoc: (doc) =>
+    set((state) => ({
+      doc,
+      selectedStepId:
+        state.selectedStepId === null ||
+        withDescendantIds(collectStepIds(doc), state.steps).includes(state.selectedStepId)
+          ? state.selectedStepId
+          : null,
+    })),
 
   selectStep: (id) => set({ selectedStepId: id }),
 

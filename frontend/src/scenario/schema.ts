@@ -17,10 +17,10 @@ export const BRANCH_NODE_NAME = "branch";
 export const ScenarioDataSchema = z.object({
   version: z.literal(2),
   // ProseMirror の JSON。許可ノードのホワイトリストは Tiptap の schema が持つため
-  // (docs: scenario-editor-architecture D23)、ここで構造を二重に定義しない。
-  doc: z.custom<JSONContent>(
-    (value) => typeof value === "object" && value !== null && !Array.isArray(value),
-  ),
+  // (docs: scenario-editor-architecture D23)、ここで構造を二重に定義しない。ただし doc
+  // ノードであることは見る。ここを通すと Node.fromJSON が描画中に throw し、空へ落ちる
+  // フォールバックではなく画面のクラッシュになる。
+  doc: z.custom<JSONContent>((value) => (value as JSONContent | null)?.type === "doc"),
   steps: z.array(z.lazy(() => StepSchema)),
 });
 

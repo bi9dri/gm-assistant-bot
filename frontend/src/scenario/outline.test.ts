@@ -35,6 +35,27 @@ describe("buildOutline", () => {
     ]);
   });
 
+  // 引用や箇条書きの中にも見出しは置ける (ツールバーの引用は見出しをそのまま包む)。
+  // 目次が拾わないと index が DOM の h1〜h3 の並びとずれ、別の見出しへ飛ぶ。
+  test("引用や箇条書きの中の見出しも文書順で拾う", () => {
+    const source = doc(
+      heading(1, "導入"),
+      { type: "blockquote", content: [heading(2, "囲まれた見出し")] },
+      {
+        type: "bulletList",
+        content: [{ type: "listItem", content: [heading(3, "箇条書きの中")] }],
+      },
+      heading(1, "解決"),
+    );
+
+    expect(buildOutline(source).map((entry) => entry.text)).toEqual([
+      "導入",
+      "囲まれた見出し",
+      "箇条書きの中",
+      "解決",
+    ]);
+  });
+
   test("見出しが無ければ空", () => {
     expect(buildOutline(doc({ type: "paragraph" }))).toEqual([]);
   });
@@ -93,6 +114,18 @@ describe("sectionStepIds", () => {
     const source = doc(heading(1, "導入"), stepParagraph("s1"), stepParagraph("s2"));
 
     expect(sectionStepIds(source, 0)).toEqual(["s1", "s2"]);
+  });
+
+  test("引用の中の見出しも範囲の区切りになる", () => {
+    const source = doc(
+      heading(1, "導入"),
+      stepParagraph("s1"),
+      { type: "blockquote", content: [heading(1, "囲まれた見出し"), stepParagraph("s2")] },
+      stepParagraph("s3"),
+    );
+
+    expect(sectionStepIds(source, 0)).toEqual(["s1"]);
+    expect(sectionStepIds(source, 1)).toEqual(["s2", "s3"]);
   });
 
   test("存在しない見出しには空を返す", () => {

@@ -73,6 +73,34 @@ describe("setDoc", () => {
     // 孤児の除去は保存時に行うので、打鍵の途中では実体を落とさない。
     expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
   });
+
+  test("本文から消えた操作の選択は外す", () => {
+    const withStep: JSONContent = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "step", attrs: { stepId: "c1" } }] }],
+    };
+    store().initialize(withStep, [counter("c1")], {});
+    store().selectStep("c1");
+
+    store().setDoc(docWith("消した"));
+
+    // 実体は保存時まで残すが、選択が残ると右カラムでの編集が孤児ごと捨てられる。
+    expect(store().selectedStepId).toBeNull();
+    expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
+  });
+
+  test("枝の中の操作を選んでいる間は選択を保つ", () => {
+    const withBranch: JSONContent = {
+      type: "doc",
+      content: [{ type: "branch", attrs: { stepId: "br" } }],
+    };
+    store().initialize(withBranch, [branch("br", counter("c1"))], {});
+    store().selectStep("c1");
+
+    store().setDoc(withBranch);
+
+    expect(store().selectedStepId).toBe("c1");
+  });
 });
 
 describe("createStep", () => {
