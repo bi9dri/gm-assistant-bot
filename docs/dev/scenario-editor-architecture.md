@@ -131,6 +131,7 @@ frontend/src/scenario/
   textTransfer.ts        # コピー (D13) と .txt/.md 取り込み (D19)
   editor/
     extensions.ts        # 許可するノード / マークの定義 (StarterKit + Highlight + 下の 2 つ)
+                         # ハイライトは色 1 種類なので multicolor にしない
     StepNode.ts          # 文中の操作を表すインラインアトム (attrs: stepId)
     BranchNode.ts        # ブロックレベルの分岐 (枝の中身は Branch 実体の内側)
     stepIdAttribute.ts   # 2 つのノードが共有する唯一の属性
@@ -151,18 +152,15 @@ frontend/src/scenario/
     CopyButton.tsx       # クリップボードコピー (D13)
 ```
 
-**ハイライトは自前の Mark を持たない。** Tiptap の `@tiptap/extension-highlight` が
-そのまま使える (色は 1 種類しか使わないので `multicolor` にしない)。
-
 **「ここから再実行」のボタンは目次に置く。** heading ノードは id を持たず、本文側に
 ボタンを出すには heading 専用の NodeView が要る。範囲の決定 (`outline.sectionStepIds`) は
 どちらでも同じで、目次は実行モードで常に見えている回遊面でもある (D22)。
 
-**置き換えて消えたもの**: `blockOps.ts`・`BlockList.tsx`・`BlockDocument.tsx`・
+**置き換えて消えるもの**: `blockOps.ts`・`BlockList.tsx`・`BlockDocument.tsx`・
 `RunnerBlockList.tsx`。フラットな `Step[]` に対する挿入・移動・複製は ProseMirror の
 トランザクションが担うため、同じ操作を 2 系統持たない。`blockOps.sectionBlockIds`
-(「ここから再実行」の範囲・D9) だけは doc の見出しから求める形で `outline.ts` へ移した。
-`textTransfer` / `filePaths` / `autosave` / `runner` はそのまま残っている。
+(「ここから再実行」の範囲・D9) だけは doc の見出しから求める形で `outline.ts` へ移す。
+`textTransfer` / `filePaths` / `autosave` / `runner` はそのまま残る。
 `Step` の更新だけは枝の中まで降りる必要があるため、`flow/treeOps.updateStepIn` を
 共有の入口として使う (再帰を知るのは `treeOps` だけ、という既存の約束を崩さない)。
 
@@ -281,10 +279,13 @@ Dexie の次バージョンで `scenarioData` を読み替える。**`schema-mig
 実行意味論はステップリスト UI の実行モデルを引き継ぐ (D10)。**本文に「既読」という
 別状態を持たせないこと。** `executedAt` と併存する 2 種類の進捗が生まれ、実行エンジンの状態が倍になる。
 
-実行モードの本文は読み取り専用にしてある。「未実行の範囲だけ編集可」は ProseMirror では
+実行モードの本文は読み取り専用とする。「未実行の範囲だけ編集可」は ProseMirror では
 位置ごとの編集可否を判定するプラグインが要り、記録保護 (`runnerStore.updateStep`) と
-判定が二重化する。セッション中に本文を直したい要求が実際に出てから足す。操作ステップの
-設定は右カラム (`RunnerDetailPanel`) で従来どおり編集でき、そこは記録保護が効いている。
+判定が二重化する。操作ステップの設定は右カラム (`RunnerDetailPanel`) で従来どおり編集でき、
+そこは記録保護が効いている。
+
+**本文を編集可にする条件**: セッション中に本文を直したい要求が実際に出たとき。その際は
+編集可否の判定を `runnerStore` 側に一本化し、ProseMirror 側はそれを引くだけにすること。
 
 ---
 
@@ -366,19 +367,19 @@ Dexie の次バージョンで `scenarioData` を読み替える。**`schema-mig
 
 各フェーズを #213 のサブ issue とする。順序は 1 → 2 → 3 →(4 と 5 は並行)。0 は独立。
 
-| # | サブ issue | 内容 | 依存 | 状態 |
-|---|-----------|------|------|------|
-| 0 | メタ情報 | `Template` に 4 カラム + OPFS カバー画像 + 一覧の絞り込み (#213-3) | なし・並行可 | 済 (Dexie v8) |
-| 1 | 基盤 | Tiptap 導入、`ScenarioData` v2、`document.ts` のブリッジ、旧形式からの変換、Dexie バージョン追加、`InlineBody` / `Heading` 型の削除 | なし | 済 (Dexie v10) |
-| 2 | 編集画面 | 本文エディタ、ツールバー、文中の操作チップ + DetailPanel、`Branch` ブロック、フラグパネル、目次 | 1 | 済 |
-| 3 | 実行画面 | 読み取り専用の本文描画、チップからの実行 / スキップ / 再実行、カーソル追従、`autoAdvance`、「ここから再実行」、セッション生成でのコピーとパス変換 | 2 | 済 |
-| 4 | 小物 | コピーボタン (#213-2)、`.txt`/`.md` 取り込み、メモ的ステップ (#213-6) の再確認 | 2 | コピーと取り込みは済 |
-| 5 | バックエンド拡張 | 投票のリアクション集計 (#213-5)、配役の 2 エンドポイント (#213-4) | 3 | 未 |
+| # | サブ issue | 内容 | 依存 |
+|---|-----------|------|------|
+| 0 | メタ情報 | `Template` に 4 カラム + OPFS カバー画像 + 一覧の絞り込み (#213-3) | なし・並行可 |
+| 1 | 基盤 | Tiptap 導入、`ScenarioData` v2、`document.ts` のブリッジ、旧形式からの変換、Dexie バージョン追加、`InlineBody` / `Heading` 型の削除 | なし |
+| 2 | 編集画面 | 本文エディタ、ツールバー、文中の操作チップ + DetailPanel、`Branch` ブロック、フラグパネル、目次 | 1 |
+| 3 | 実行画面 | 読み取り専用の本文描画、チップからの実行 / スキップ / 再実行、カーソル追従、`autoAdvance`、「ここから再実行」、セッション生成でのコピーとパス変換 | 2 |
+| 4 | 小物 | コピーボタン (#213-2)、`.txt`/`.md` 取り込み、メモ的ステップ (#213-6) の再確認 | 2 |
+| 5 | バックエンド拡張 | 投票のリアクション集計 (#213-5)、配役の 2 エンドポイント (#213-4) | 3 |
 
 フェーズ 0 は新画面に依存しない唯一の項目で、他が詰まったときに独立して進められる。
 フェーズ 5 は唯一 `backend/` を触り、デプロイと API スキーマが絡むため最後に置く。
 
-フェーズ 1〜3 が `frontend/src/scenario/` の旧実装 (ブロック列) を置き換えた。
+フェーズ 1〜3 は `frontend/src/scenario/` の旧実装 (ブロック列) を置き換える。
 旧 2 系統 (React Flow・ステップリスト) には引き続き手を入れない (D5 / D15)。
 
 ---
