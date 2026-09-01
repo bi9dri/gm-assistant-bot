@@ -7,16 +7,15 @@ import { useScenarioChips } from "../components/chips";
 
 const stepIdOf = (props: NodeViewProps): string => String(props.node.attrs.stepId ?? "");
 
-// draggable なノードでも、Tiptap の既定 stopEvent は [data-drag-handle] を掴んだ
-// mousedown でしかドラッグを許さず、無いと dragstart を preventDefault して握り潰す。
-// チップ全体を掴んで動かせるようにするため、ラッパ自身をハンドルにする。
-const DRAG_HANDLE = { "data-drag-handle": "" };
+// data-drag-handle: Tiptap の既定 stopEvent はこの属性を掴んだ mousedown でしか
+// ドラッグを許さず、無いと node の draggable 宣言に関わらず dragstart を握り潰す。
+// チップは 1 行サマリだけの小さな要素なので、掴む場所を限らずラッパ全体を handle にする。
 
 // 文中のインラインアトム (D24)。段落の折り返しに乗るよう span で包む。
 export const StepNodeView = (props: NodeViewProps) => {
   const { Step } = useScenarioChips();
   return (
-    <NodeViewWrapper as="span" className="align-baseline" {...DRAG_HANDLE}>
+    <NodeViewWrapper as="span" className="align-baseline" data-drag-handle="">
       <Step stepId={stepIdOf(props)} />
     </NodeViewWrapper>
   );
@@ -26,7 +25,7 @@ export const StepNodeView = (props: NodeViewProps) => {
 export const BranchNodeView = (props: NodeViewProps) => {
   const { Branch } = useScenarioChips();
   return (
-    <NodeViewWrapper className="my-2" {...DRAG_HANDLE}>
+    <NodeViewWrapper className="my-2" data-drag-handle="">
       <Branch stepId={stepIdOf(props)} />
     </NodeViewWrapper>
   );
