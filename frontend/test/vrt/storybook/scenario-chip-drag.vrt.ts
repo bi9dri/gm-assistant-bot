@@ -16,9 +16,20 @@ test("scenario document — 操作チップを空段落へドラッグで移す"
   const lastParagraph = page.getByText("犯人は執事だった。");
   await expect(lastParagraph).toBeVisible();
 
-  // 末尾に空段落を作る。
-  await lastParagraph.click();
-  await page.keyboard.press("End");
+  // 末尾に空段落を作る。キャレットはクリックに任せず DOM 選択で置く。段落の余白を
+  // クリックしてもキャレットが伴わないことがあり、その場合 Enter は文書の先頭で起きる。
+  await page.locator(".ProseMirror").evaluate((editor) => {
+    const lastBlock = editor.lastElementChild;
+    if (lastBlock === null) throw new Error("本文が空");
+
+    const caret = document.createRange();
+    caret.selectNodeContents(lastBlock);
+    caret.collapse(false);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(caret);
+    editor.focus();
+  });
   await page.keyboard.press("Enter");
   const emptyParagraph = page.locator(".ProseMirror > *").last();
   await expect(emptyParagraph).toHaveText("");
