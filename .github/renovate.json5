@@ -47,6 +47,13 @@
       ],
     },
     {
+      // @tiptap/* は互いに peerDependencies でバージョンを固定し合う。
+      // 別々の PR に分かれると nested な @tiptap/core が二重に入り、
+      // 拡張が加える ChainedCommands の型拡張が効かず typecheck が落ちる。
+      groupName: "tiptap",
+      matchPackageNames: ["@tiptap/**"],
+    },
+    {
       // Batched 相当: 影響の小さい minor / patch は 1 PR に集約
       groupName: "non-major dependencies",
       matchManagers: ["bun", "npm"],
