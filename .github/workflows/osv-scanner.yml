@@ -29,6 +29,10 @@ jobs:
   scan-scheduled:
     if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67  # v2.5.1
+    with:
+      # 脆弱性の報告先は Security > Code scanning。ここで job を落とすと code scanning の
+      # setup 側が「スキャン失敗」扱いになり、アラートより先にワークフローのエラーが出てしまう。
+      fail-on-vuln: false
   scan-pr:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67  # v2.5.1
