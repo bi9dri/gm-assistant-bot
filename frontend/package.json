@@ -25,7 +25,7 @@
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-router-devtools": "1.167.1",
     "@tanstack/router-plugin": "1.168.35",
-    "@tiptap/core": "3.30.3",
+    "@tiptap/core": "3.30.5",
     "@tiptap/extension-highlight": "3.30.5",
     "@tiptap/pm": "3.30.5",
     "@tiptap/react": "3.30.5",
