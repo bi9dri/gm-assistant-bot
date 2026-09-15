@@ -18,13 +18,13 @@
     "check:bun-version": "bash scripts/check-bun-version.sh"
   },
   "devDependencies": {
-    "@types/node": "26.4.1",
-    "knip": "6.34.0",
-    "oxfmt": "0.66.0",
-    "oxlint": "1.81.0",
+    "@types/node": "26.5.0",
+    "knip": "6.35.0",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
     "oxlint-tsgolint": "7.0.2001",
     "typescript": "7.0.2",
-    "wrangler": "4.128.0"
+    "wrangler": "4.130.0"
   },
   "overrides": {
     "shell-quote": "1.10.0"
