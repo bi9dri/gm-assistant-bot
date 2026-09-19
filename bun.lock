@@ -46,7 +46,7 @@
         "@tiptap/react": "3.31.3",
         "@tiptap/starter-kit": "3.31.3",
         "@xyflow/react": "12.11.6",
-        "@zip.js/zip.js": "2.14.0",
+        "@zip.js/zip.js": "2.14.1",
         "clsx": "2.1.1",
         "daisyui": "5.7.37",
         "dexie": "4.4.6",
@@ -796,7 +796,7 @@
 
     "@xyflow/system": ["@xyflow/system@0.0.82", "", { "dependencies": { "@types/d3-drag": "^3.0.7", "@types/d3-interpolate": "^3.0.4", "@types/d3-selection": "^3.0.10", "@types/d3-transition": "^3.0.8", "@types/d3-zoom": "^3.0.8", "d3-drag": "^3.0.0", "d3-interpolate": "^3.0.1", "d3-selection": "^3.0.0", "d3-zoom": "^3.0.0" } }, "sha512-4DKnL3CGtCGLRSmgDqaajRVgeksMXq/Yw4wPfdMfm7JvdIiWHGzVYOfFUztiATwdBXZqUU6HhehwUdbV9G23PQ=="],
 
-    "@zip.js/zip.js": ["@zip.js/zip.js@2.14.0", "", {}, "sha512-7HIW+xGAl6LeTlgfLEKeRBPBskNtLSXRNXqb0QuUv6kYO7hhJvSda1UfYvyfyKJxod3q5GRvYZjjdtkxO1FMiQ=="],
+    "@zip.js/zip.js": ["@zip.js/zip.js@2.14.1", "", {}, "sha512-ChDAOmIvj061bWlm6Zqy5llk3V2SSES893DT9CSeiLd+YGgm5l950F/HvUpKj5ED0nqfE+cgDgFuxqVQvTMatg=="],
 
     "acorn": ["acorn@8.18.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ=="],
 
