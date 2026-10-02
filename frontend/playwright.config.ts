@@ -72,7 +72,7 @@ export default defineConfig<{}, VrtWorkerOptions>({
   ]),
   webServer: [
     {
-      command: "vp dev",
+      command: "vp dev --port 3000",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
