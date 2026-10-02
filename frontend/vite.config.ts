@@ -44,6 +44,12 @@ export default defineConfig({
     viteReact(),
     mswServiceWorkerDevOnly(),
   ]),
+  // `db/database.ts` の `await import("fake-indexeddb")` を Vite が起動後に発見すると
+  // 「optimized dependencies changed. reloading」で VRT 中にページが reload され、
+  // Playwright がハングする。起動時の optimize に含めて reload を防ぐ。
+  optimizeDeps: {
+    include: ["fake-indexeddb"],
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
