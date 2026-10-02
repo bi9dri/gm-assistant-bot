@@ -72,7 +72,9 @@ export default defineConfig<{}, VrtWorkerOptions>({
   ]),
   webServer: [
     {
-      command: "vp dev --port 3000",
+      // プロジェクト同梱の vite-plus を使う。グローバル `vp` は CI で別ビルドの
+      // Vite を起動しうるため、`pnpm exec` でローカル解決に固定する。
+      command: "pnpm exec vp dev --port 3000",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
