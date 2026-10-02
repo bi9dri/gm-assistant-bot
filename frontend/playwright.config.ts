@@ -75,6 +75,8 @@ export default defineConfig<{}, VrtWorkerOptions>({
       // プロジェクト同梱の vite-plus を使う。グローバル `vp` は CI で別ビルドの
       // Vite を起動しうるため、`pnpm exec` でローカル解決に固定する。
       command: "pnpm exec vp dev --port 3000",
+      stdout: "pipe",
+      stderr: "pipe",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
