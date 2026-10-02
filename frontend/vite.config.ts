@@ -32,12 +32,10 @@ function mswServiceWorkerDevOnly(): Plugin {
 
 export default defineConfig({
   plugins: lazyPlugins(() => [
-    // VRT (`VITE_USE_MSW`) では devtools の event bus を止める。VRT では使わない上、
-    // ServerEventBus.start() は EADDRINUSE 以外の listen エラーで resolve も reject もせず、
-    // それを await する configureServer が返らないと vite が listen できなくなるため。
-    devtools(
-      process.env.VITE_USE_MSW === "true" ? { eventBusConfig: { enabled: false } } : undefined,
-    ),
+    // VRT (`VITE_USE_MSW`) では devtools プラグインを完全に外す。VRT では不要な上、
+    // ServerEventBus.start() は listen エラーで resolve も reject もせず configureServer が
+    // 返らない、というハング要因を CI でも踏まないようにする。
+    process.env.VITE_USE_MSW === "true" ? undefined : devtools(),
     tailwindcss(),
     tanstackRouter({
       target: "react",

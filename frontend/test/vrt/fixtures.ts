@@ -105,7 +105,9 @@ export const test = base.extend<VrtFixtures, VrtWorkerOptions>({
   },
 
   seedDb: async ({ page }, use) => {
-    await page.goto("/");
+    // devtools / MSW の一部リソースが settle しない環境でもナビゲーションが
+    // ブロックされないよう、load ではなく domcontentloaded で待つ。
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => "__vrtDb" in window && "__vrtFs" in window);
 
     await use(async (payload: SeedPayload) => {
