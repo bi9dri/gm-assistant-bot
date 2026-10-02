@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import { scenarioDataV1ToV2, toScenarioDataV2 } from "./migrate";
 import { ScenarioDataSchema, defaultScenarioData } from "./schema";

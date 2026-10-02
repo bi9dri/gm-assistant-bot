@@ -1,18 +1,13 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+
+import { FileSystem } from "@/fileSystem";
 
 import { formatFileSize, saveFileToOPFS } from "./messageSchema";
 
-const mockReadFile = mock(async (_path: string): Promise<File> => {
-  throw new DOMException("Not found", "NotFoundError");
-});
-const mockWriteFile = mock(async (_path: string, _file: File): Promise<void> => {});
-
-void mock.module("@/fileSystem", () => ({
-  FileSystem: class {
-    readFile = mockReadFile;
-    writeFile = mockWriteFile;
-  },
-}));
+// FileSystem は OPFS に依存するため、プロトタイプの readFile/writeFile だけを
+// スパイで差し替える (vi.mock はエイリアス解決前に登録されるため効かない)。
+const mockReadFile = vi.spyOn(FileSystem.prototype, "readFile");
+const mockWriteFile = vi.spyOn(FileSystem.prototype, "writeFile");
 
 const makeFile = (name: string, content: string): File =>
   new File([content], name, { type: "text/plain" });
@@ -23,7 +18,9 @@ beforeEach(() => {
   mockReadFile.mockImplementation(async (_path: string): Promise<File> => {
     throw new DOMException("Not found", "NotFoundError");
   });
-  mockWriteFile.mockImplementation(async (_path: string, _file: File): Promise<void> => {});
+  mockWriteFile.mockImplementation(
+    async (_path: string, _data: string | Blob): Promise<void> => {},
+  );
 });
 
 describe("saveFileToOPFS", () => {
@@ -50,7 +47,7 @@ describe("saveFileToOPFS", () => {
   it("templateId も sessionId も未指定の場合はエラーをスローする", async () => {
     const file = makeFile("file.txt", "data");
 
-    expect(saveFileToOPFS(file, {})).rejects.toThrow("templateIdまたはsessionIdが必要です");
+    await expect(saveFileToOPFS(file, {})).rejects.toThrow("templateIdまたはsessionIdが必要です");
   });
 
   it("同名・同内容のファイルは書き込みなしで既存パスを返す", async () => {

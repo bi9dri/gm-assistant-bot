@@ -1,4 +1,4 @@
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, vi, test } from "vite-plus/test";
 
 import { foldWarningsIntoFlowData, migrateRecordToFlowData, reactFlowToFlowData } from "./migrate";
 import type { FlowData } from "./schema";
@@ -32,7 +32,7 @@ const sgNode = (id: string, title: string) => ({
 
 // console.error を黙らせつつ fn を実行する (フォールバック経路のログ汚染を防ぐ)
 const silencingErrors = <T>(fn: () => T): T => {
-  const spy = spyOn(console, "error").mockImplementation(() => {});
+  const spy = vi.spyOn(console, "error").mockImplementation(() => {});
   try {
     return fn();
   } finally {

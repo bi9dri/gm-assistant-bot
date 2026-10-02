@@ -1,6 +1,5 @@
-import { describe, expect, it } from "bun:test";
-
 import type { Edge } from "@xyflow/react";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { FlowNode } from "@/stores/templateEditorStore";
 

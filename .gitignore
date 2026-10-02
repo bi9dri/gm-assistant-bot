@@ -1,4 +1,4 @@
-# dependencies (bun install)
+# dependencies (pnpm install)
 node_modules
 
 # output
@@ -42,3 +42,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Database files
 *.sqlite
 *.sqlite-*
+
+# Vitest v5 artifacts
+.vitest/
+
+# VRT baselines are platform-specific (CI commits -linux; local win32/mac are throwaway)
+frontend/test/vrt/**/*-win32.png

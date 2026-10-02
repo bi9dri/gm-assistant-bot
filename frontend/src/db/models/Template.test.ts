@@ -1,4 +1,4 @@
-import { describe, test, expect, spyOn } from "bun:test";
+import { describe, test, expect, vi } from "vite-plus/test";
 
 import type { FlowData } from "@/flow/schema";
 import { defaultFlowData } from "@/flow/schema";
@@ -53,7 +53,7 @@ describe("Template", () => {
         typeof template.update
       >[0]["reactFlowData"];
 
-      expect(template.update({ reactFlowData: invalidData })).rejects.toThrow();
+      await expect(template.update({ reactFlowData: invalidData })).rejects.toThrow();
     });
 
     test("updatedAtタイムスタンプを更新する", async () => {
@@ -103,7 +103,7 @@ describe("Template", () => {
     test("メタ情報の型違反を弾く", async () => {
       const template = await Template.create("Test");
 
-      expect(template.update({ meta: { playerCountMin: -1 } })).rejects.toThrow();
+      await expect(template.update({ meta: { playerCountMin: -1 } })).rejects.toThrow();
     });
   });
 
@@ -123,7 +123,7 @@ describe("Template", () => {
       // 無効なJSONを手動で設定
       template.gameFlags = "invalid json {";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = template.getParsedGameFlags();
       consoleSpy.mockRestore();
 
@@ -152,7 +152,7 @@ describe("Template", () => {
       // 無効なJSONを手動で設定
       template.reactFlowData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = template.getParsedReactFlowData();
       consoleSpy.mockRestore();
 
@@ -165,7 +165,7 @@ describe("Template", () => {
       // パースは成功するがZodバリデーションが失敗するJSONを設定
       template.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = template.getParsedReactFlowData();
       consoleSpy.mockRestore();
 
@@ -199,7 +199,7 @@ describe("Template", () => {
         typeof template.update
       >[0]["flowData"];
 
-      expect(template.update({ flowData: invalidData })).rejects.toThrow();
+      await expect(template.update({ flowData: invalidData })).rejects.toThrow();
     });
 
     test("無効なJSONの場合はdefaultFlowDataを返す", async () => {
@@ -207,7 +207,7 @@ describe("Template", () => {
 
       template.flowData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = template.getParsedFlowData();
       consoleSpy.mockRestore();
 
@@ -245,7 +245,7 @@ describe("Template", () => {
         typeof template.update
       >[0]["scenarioData"];
 
-      expect(template.update({ scenarioData: invalidData })).rejects.toThrow();
+      await expect(template.update({ scenarioData: invalidData })).rejects.toThrow();
     });
 
     test("無効なJSONの場合はdefaultScenarioDataを返す", async () => {
@@ -253,7 +253,7 @@ describe("Template", () => {
 
       template.scenarioData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = template.getParsedScenarioData();
       consoleSpy.mockRestore();
 
@@ -314,7 +314,7 @@ describe("Template", () => {
         reactFlowData: defaultReactFlowData,
       };
 
-      expect(Template.import(exportData)).rejects.toThrow();
+      await expect(Template.import(exportData)).rejects.toThrow();
     });
 
     test("無効なスキーマの場合はZodエラーをスローする", async () => {
@@ -323,7 +323,7 @@ describe("Template", () => {
         // 必須フィールドが欠落
       };
 
-      expect(Template.import(invalidData)).rejects.toThrow();
+      await expect(Template.import(invalidData)).rejects.toThrow();
     });
 
     test("名前が空の場合はエラーをスローする", async () => {
@@ -334,7 +334,7 @@ describe("Template", () => {
         reactFlowData: defaultReactFlowData,
       };
 
-      expect(Template.import(exportData)).rejects.toThrow();
+      await expect(Template.import(exportData)).rejects.toThrow();
     });
   });
 

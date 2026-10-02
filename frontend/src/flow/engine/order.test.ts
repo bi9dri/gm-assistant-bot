@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { BranchStep, FlowData, Step } from "../schema";
 import { advanceCursor, firstRunnableId, runnableSteps, runnableStepsIn } from "./order";

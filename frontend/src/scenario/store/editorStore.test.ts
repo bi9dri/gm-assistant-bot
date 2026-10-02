@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, test } from "bun:test";
-
 import type { JSONContent } from "@tiptap/core";
+import { beforeEach, describe, expect, test } from "vite-plus/test";
 
 import type { Step } from "@/flow/schema";
 

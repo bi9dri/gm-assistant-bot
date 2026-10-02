@@ -1,0 +1,20 @@
+packages:
+  - backend
+  - frontend
+
+# pnpm 11+ は依存の build script を既定で deny する。postinstall を持つものだけ許可する。
+allowBuilds:
+  esbuild: true
+  workerd: true
+  lightningcss: true
+  msw: true
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@1.0.0-rc.0
+  vite-plus: 1.0.0-rc.0
+overrides:
+  vite@*: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    vite: "*"

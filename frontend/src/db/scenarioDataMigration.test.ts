@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, test } from "bun:test";
-
 import Dexie from "dexie";
+import { afterEach, describe, expect, test } from "vite-plus/test";
 
 import { applyScenarioDataMigration, applyScenarioDataV2Migration } from "./database";
 

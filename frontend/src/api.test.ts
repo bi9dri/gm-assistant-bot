@@ -1,4 +1,4 @@
-import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vite-plus/test";
 
 import { ApiClient, BOT_TOKEN_HEADER } from "./api";
 
@@ -8,7 +8,7 @@ let mockFetch: any;
 
 describe("ApiClient", () => {
   beforeEach(() => {
-    mockFetch = mock(() =>
+    mockFetch = vi.fn(() =>
       Promise.resolve(
         new Response(JSON.stringify({ profile: {} }), {
           status: 200,
@@ -69,7 +69,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      expect(client.getProfile()).rejects.toThrow("Invalid token");
+      await expect(client.getProfile()).rejects.toThrow("Invalid token");
     });
 
     test("エラーが文字列でない場合はステータスコードを使用する", async () => {
@@ -83,7 +83,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      expect(client.getProfile()).rejects.toThrow("404");
+      await expect(client.getProfile()).rejects.toThrow("404");
     });
 
     test("エラープロパティがない場合はステータスコードを使用する", async () => {
@@ -97,7 +97,7 @@ describe("ApiClient", () => {
       );
 
       const client = new ApiClient("test-token");
-      expect(client.getProfile()).rejects.toThrow("500");
+      await expect(client.getProfile()).rejects.toThrow("500");
     });
   });
 });

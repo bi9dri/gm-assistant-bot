@@ -8,15 +8,13 @@ description: Verify frontend UI changes end-to-end by driving Storybook stories 
 ## Launch Storybook (dev server)
 
 ```bash
-cd frontend && nohup bun run storybook --ci > /tmp/storybook.log 2>&1 &
+cd frontend && nohup pnpm storybook --ci > /tmp/storybook.log 2>&1 &
 # wait until: curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html?id=<story-id>&viewMode=story  => 200 (~6s)
 ```
 
 Gotchas:
 
-- **Do NOT use `bun run --bun storybook`** — forcing the Bun runtime breaks
-  Storybook's CLI arg parsing (`Invariant failed: expected options to have a port`).
-  Plain `bun run storybook` runs the binary under its node shebang and works.
+- Storybook runs on Node (Vite+ toolchain).
 - Storybook writes `frontend/debug-storybook.log` on errors — delete it before committing.
 
 ## Story URLs
@@ -28,7 +26,7 @@ so no IndexedDB/app setup is needed — this is the cheapest handle on flow-edit
 
 ## Drive with Playwright
 
-Write a script and run it with `bun <script>.ts` importing from `@playwright/test`
+Write a script and run it with `node <script>.ts` importing from `@playwright/test`
 (resolved from `frontend/`, so run with cwd=frontend or keep the script's imports resolvable):
 
 ```ts
@@ -40,7 +38,7 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 
 Gotchas:
 
-- `page.waitForSelector("li")` matches Storybook's *hidden* error-template
+- `page.waitForSelector("li")` matches Storybook's _hidden_ error-template
   `<li>Please check the Storybook config.</li>` and times out. Wait for real
   content instead: `page.getByText("<known row title>").waitFor()`.
 - dnd-kit's PointerSensor has `activationConstraint: { distance: 5 }` — after
@@ -49,7 +47,7 @@ Gotchas:
 
 ## Running the repo's VRT suite locally (remote/sandbox environments)
 
-`bun run test:vrt` needs Playwright's own browser revisions. If the
+`pnpm --filter gm-assistant-bot-frontend test:vrt` needs Playwright's own browser revisions. If the
 pinned @playwright/test expects a revision the environment doesn't have
 (`Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-<rev>/...`),
 shim it instead of downloading (`playwright install` is blocked/unnecessary):
@@ -66,5 +64,5 @@ ln -sfn headless_shell \
   /opt/pw-browsers/chromium_headless_shell-<have>/chrome-linux/chrome-headless-shell
 ```
 
-Storybook stories must be built first (`bun run --bun build-storybook`); the
+Storybook stories must be built first (`pnpm --filter gm-assistant-bot-frontend build-storybook`); the
 vite dev server on :3000 is started by the Playwright webServer config.

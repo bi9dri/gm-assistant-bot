@@ -41,7 +41,7 @@ try {
 } catch (error) {
   throw new Error(
     `Failed to read Storybook index at ${indexPath}. ` +
-      `Run \`bun run --bun --filter gm-assistant-bot-frontend build-storybook\` first.\n${(error as Error).message}`,
+      `Run \`pnpm --filter gm-assistant-bot-frontend build-storybook\` first.\n${(error as Error).message}`,
   );
 }
 

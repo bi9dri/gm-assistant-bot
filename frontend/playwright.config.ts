@@ -4,17 +4,6 @@ import type { VrtWorkerOptions } from "./test/vrt/fixtures";
 
 const THEMES = ["light", "dark"] as const satisfies readonly VrtWorkerOptions["theme"][];
 
-// VRT は Node ランタイムで動かす。`bun run --bun` は `node` を Bun 自身に差し替える
-// shim ディレクトリを PATH 先頭に注入し、子孫プロセスすべてがそれを継承するため、
-// 下の webServer が起動する vite まで Bun で動いてしまう。その vite は listen する前に
-// 確率的にハングし、Playwright が 120 秒待ってタイムアウトする。vite 側のログが
-// 出ないまま落ちるので、ここで検出して理由付きで即座に失敗させる。
-if (typeof Bun !== "undefined") {
-  throw new Error(
-    "VRT must run on Node, not Bun: use `bun run --filter gm-assistant-bot-frontend test:vrt` (no `--bun`).",
-  );
-}
-
 export default defineConfig<{}, VrtWorkerOptions>({
   testDir: "./test/vrt",
   testMatch: "**/*.vrt.ts",
@@ -33,8 +22,7 @@ export default defineConfig<{}, VrtWorkerOptions>({
   },
   // {projectName} に theme suffix が含まれるので light/dark の baseline は自動的に分離される
   // (例: `home-chromium-desktop-light-linux.png` / `home-chromium-desktop-dark-linux.png`)。
-  snapshotPathTemplate:
-    "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   use: {
     trace: "on-first-retry",
     timezoneId: "Asia/Tokyo",
@@ -84,9 +72,9 @@ export default defineConfig<{}, VrtWorkerOptions>({
   ]),
   webServer: [
     {
-      // `--bun` 不使用: Bun runtime だと @tailwindcss/vite が daisyui plugin の
-      // CSS を読み取れず Internal server error になるため (再現: bun@1.3.11 + tailwindcss@4.2.4 + daisyui@5.5.19)。
-      command: "bun run dev",
+      // プロジェクト同梱の vite-plus を使う。グローバル `vp` は CI で別ビルドの
+      // Vite を起動しうるため、`pnpm exec` でローカル解決に固定する。
+      command: "pnpm exec vp dev --port 3000",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
@@ -95,9 +83,9 @@ export default defineConfig<{}, VrtWorkerOptions>({
       env: { VITE_USE_MSW: "true" },
     },
     {
-      // Storybook を事前に build しておく必要あり (`bun run --bun build-storybook`)。
+      // Storybook を事前に build しておく必要あり (`pnpm -F gm-assistant-bot-frontend build-storybook`)。
       // CI では vrt job 内の build-storybook step がこれを保証する。
-      command: "bun run storybook:serve-static",
+      command: "pnpm run storybook:serve-static",
       url: "http://localhost:6007/index.json",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

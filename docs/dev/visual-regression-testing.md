@@ -8,14 +8,14 @@ For purpose, scope, and design principles see [testing-strategy.md § VRT](./tes
 
 VRT runs six Playwright projects in parallel (all chromium-only) — three viewports × two themes:
 
-| Project name                | Scope                                       | Base URL                | Viewport                                     | Theme   |
-| --------------------------- | ------------------------------------------- | ----------------------- | -------------------------------------------- | ------- |
-| `chromium-desktop-light`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                     | `light` |
-| `chromium-desktop-dark`     | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                     | `dark`  |
-| `chromium-mobile-light`     | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`)  | `light` |
-| `chromium-mobile-dark`      | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`)  | `dark`  |
-| `chromium-storybook-light`  | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                     | `light` |
-| `chromium-storybook-dark`   | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                     | `dark`  |
+| Project name               | Scope                                       | Base URL                | Viewport                                    | Theme   |
+| -------------------------- | ------------------------------------------- | ----------------------- | ------------------------------------------- | ------- |
+| `chromium-desktop-light`   | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                    | `light` |
+| `chromium-desktop-dark`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                    | `dark`  |
+| `chromium-mobile-light`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `light` |
+| `chromium-mobile-dark`     | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `dark`  |
+| `chromium-storybook-light` | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                    | `light` |
+| `chromium-storybook-dark`  | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                    | `dark`  |
 
 `chromium-mobile-*` spreads `devices["iPhone 13"]` for the viewport / `isMobile` / `hasTouch` / `deviceScaleFactor` traits, but overrides `defaultBrowserType: "chromium"` because CI only caches the chromium binary.
 
@@ -65,15 +65,15 @@ await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 
 ```bash
 # All six projects (desktop / mobile / storybook × light / dark)
-bun run --bun --filter gm-assistant-bot-frontend build-storybook
-bun run --filter gm-assistant-bot-frontend test:vrt
+pnpm --filter gm-assistant-bot-frontend build-storybook
+pnpm --filter gm-assistant-bot-frontend test:vrt
 
 # Single viewport / theme combination
-bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
-bun run --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
+pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
+pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
 
 # Single theme across all viewports
-bun run --filter gm-assistant-bot-frontend test:vrt -- \
+pnpm --filter gm-assistant-bot-frontend test:vrt -- \
   --project=chromium-desktop-dark --project=chromium-mobile-dark --project=chromium-storybook-dark
 ```
 
@@ -82,17 +82,17 @@ Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` and the Stor
 The first local run also needs the chromium binary:
 
 ```bash
-bun --cwd frontend x playwright install chromium
+pnpm --dir frontend exec playwright install chromium
 ```
 
 ## Updating baselines (local)
 
 ```bash
 # All six projects (desktop + mobile + storybook × light + dark)
-bun run --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
 
 # Single project — useful when only one viewport / theme is intentionally diverging
-bun run --filter gm-assistant-bot-frontend test:vrt -- \
+pnpm --filter gm-assistant-bot-frontend test:vrt -- \
   --update-snapshots --project=chromium-mobile-dark
 
 git add frontend/test/vrt
@@ -126,10 +126,10 @@ This is the canonical reconciliation path: **CI's rendering is the source of tru
 
 VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.ts` の `webServer.env`)。このフラグは MSW の有効化だけでなく「VRT 実行中」の目印も兼ねており、3 箇所で参照している:
 
-| 参照元 | 効果 |
-| --- | --- |
-| `src/main.tsx` | MSW worker を start する |
-| `vite.config.ts` | devtools plugin の event bus を止める |
+| 参照元                  | 効果                                  |
+| ----------------------- | ------------------------------------- |
+| `src/main.tsx`          | MSW worker を start する              |
+| `vite.config.ts`        | devtools plugin の event bus を止める |
 | `src/routes/__root.tsx` | `<TanStackDevtools>` をマウントしない |
 
 `/mockServiceWorker.js` はリポジトリに置かず、インストール済み msw パッケージ同梱の script を `vite.config.ts` の middleware が配信する。**`msw init` は実行しない** — 生成物をコミットすると msw の bump でバージョンがズレる。
@@ -146,7 +146,7 @@ VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.t
 
 - Triggered on `push` to `main` and on every `pull_request` to `main`
 - Runs natively on `ubuntu-latest` (no container) so the env mirrors a typical local Linux / WSL setup
-- Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `bun.lock`); on miss `bun x playwright install --with-deps chromium` populates it. On hit `bun x playwright install-deps chromium` only installs system libs
+- Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `pnpm-lock.yaml`); on miss `pnpm exec playwright install --with-deps chromium` populates it. On hit `pnpm exec playwright install-deps chromium` only installs system libs
 - Vite dev server is launched by `playwright.config.ts`'s `webServer`
 - On failure, `frontend/test-results/` is uploaded as the `vrt-diff` artifact
   - Contents: `*-actual.png`, `*-expected.png`, `*-diff.png`, Playwright trace
@@ -156,24 +156,15 @@ VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.t
 
 ### `vrt` job mass-fails the moment Playwright bumps
 
-A new `@playwright/test` ships a new chromium build, which renders pixels differently. Bump first, then regenerate baselines via the recovery flow above. The browser cache key is `bun.lock` so the new chromium downloads automatically.
+A new `@playwright/test` ships a new chromium build, which renders pixels differently. Bump first, then regenerate baselines via the recovery flow above. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
 
 ### `webServer` hangs / Internal Server Error during VRT
 
-**The vite dev server must run on Node.** Under Bun it fails two ways: `@tailwindcss/vite` cannot read DaisyUI's CSS (Internal Server Error — see [testing-strategy.md § Known Workaround](./testing-strategy.md#known-workaround)), and the server intermittently hangs before it listens, surfacing as `Timed out waiting 120000ms from config.webServer`.
-
-Two things put vite on Bun, and both must be avoided:
-
-- `webServer.command` in `frontend/playwright.config.ts` must stay `bun run dev`, never `bun run --bun dev`, so vite executes via its node shebang.
-- The VRT run itself must not use `--bun`. `bun run --bun` prepends a shim directory (`/tmp/bun-node-*`) where `node` is Bun itself, and every descendant process inherits it — so the node shebang inside `bun run dev` resolves to Bun anyway. A guard at the top of `playwright.config.ts` fails fast when the config is evaluated on Bun.
-
-To confirm which runtime a running dev server uses, check `/proc/<vite pid>/exe`: it points at `bun` when the shim is in play.
-
-When diagnosing a `webServer` timeout, remember that Playwright's `webServer.stdout` defaults to `"ignore"`. The `[WebServer] $ vite --port 3000` line in CI logs comes from bun's stderr; vite's own output (ready banner, optimizer logs) is discarded. Silence there says nothing about whether vite started — set `stdout: "pipe"` if you need to see it.
+**The vite dev server must run on Node.** Vite+ runs Vite on Node; `webServer.command` in `frontend/playwright.config.ts` starts it with `vp dev`. When diagnosing a `webServer` timeout, remember that Playwright's `webServer.stdout` defaults to `"ignore"`; set `stdout: "pipe"` if you need to see Vite's ready banner / optimizer logs.
 
 ### Artifact contains no PNGs, only `trace.zip`
 
-The test failed for a non-snapshot reason (e.g., dev server timeout, route 404). Open `trace.zip` with `bun x playwright show-trace path/to/trace.zip` to investigate.
+The test failed for a non-snapshot reason (e.g., dev server timeout, route 404). Open `trace.zip` with `pnpm exec playwright show-trace path/to/trace.zip` to investigate.
 
 ### Local Linux baseline drifts on every commit
 
@@ -183,7 +174,7 @@ If you regenerate locally and CI keeps failing on the same snapshot, stop syncin
 
 1. Create `frontend/test/stories/Node/nodes/<Name>.stories.tsx` (or any path under `frontend/test/stories/`). Use `renderSingleNode` from `_render.tsx` to wrap React Flow custom nodes in a minimal `<ReactFlow>` instance — direct `<Component {...} />` won't render handles correctly.
 2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the snapshot becomes deterministic).
-3. Run `bun run --bun --filter gm-assistant-bot-frontend build-storybook` then `... test:vrt --update-snapshots` to generate the baseline png (両 theme 分が自動で生成される).
+3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` then `... test:vrt --update-snapshots` to generate the baseline png (両 theme 分が自動で生成される).
 4. Commit both the `*.stories.tsx` and the new `frontend/test/vrt/storybook/components.vrt.ts-snapshots/<id>-chromium-storybook-{light,dark}-linux.png`.
 
 `<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Node/Nodes/SendMessage` + `MultipleMessages` → `node-nodes-sendmessage--multiple-messages`. Verify the actual id in `frontend/storybook-static/index.json` after building.

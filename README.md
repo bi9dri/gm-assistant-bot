@@ -11,12 +11,12 @@ GM がストーリーテリングとプレイヤーとの対話に集中でき�
 
 ## アーキテクチャ
 
-Bun workspace monorepo:
+pnpm workspace monorepo (Node 24 + Vite+):
 
-| パッケージ | スタック | デプロイ先 |
-| --- | --- | --- |
-| `frontend/` | React + Vite + TanStack Router + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | GitHub Pages |
-| `backend/` | Hono + Zod + discord.js | Cloudflare Workers |
+| パッケージ  | スタック                                                                               | デプロイ先         |
+| ----------- | -------------------------------------------------------------------------------------- | ------------------ |
+| `frontend/` | React + Vite + TanStack Router + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | GitHub Pages       |
+| `backend/`  | Hono + Zod + discord.js                                                                | Cloudflare Workers |
 
 詳細は `docs/dev/` を参照:
 
@@ -28,21 +28,21 @@ Bun workspace monorepo:
 
 ### 前提
 
-- [devbox](https://www.jetify.com/devbox)
+- Node 24 LTS (`^22.18.0 || ^24.11.0 || >=26.0.0`)
+- pnpm 12.6.0 (`packageManager` / `devEngines` で固定)
 
-`devbox shell` に入れば `devbox.json` で pin された Bun が揃う。ホストに直接インストールする必要はない。
+Vite+ (`vite-plus` 同梱の `vp` CLI) がビルド / テスト / 整形を担う。依存をインストール:
 
 ```bash
-devbox shell
-bun install
+pnpm install
 ```
 
 ### 開発サーバ
 
-frontend (Vite, :3000) と backend (Wrangler dev, :8787) を同時に起動:
+frontend (Vite, :3000) を起動 (backend は別途 `pnpm --filter gm-assistant-bot-backend dev`):
 
 ```bash
-bun run --bun dev
+pnpm dev
 ```
 
 ### 認証情報の取り扱い
@@ -55,25 +55,23 @@ bun run --bun dev
 
 ## コマンド
 
-ルートから `bun --filter '*'` で frontend / backend に同名スクリプトを並列実行する。
-
 ```bash
-bun run --bun dev         # 開発サーバ起動
-bun run --bun build       # ビルド
-bun run --bun test        # テスト
-bun run --bun typecheck   # 型チェック
-bun run --bun lint        # lint
-bun run --bun format      # format
-bun run knip              # 未使用 export / dep の検出
+pnpm dev                  # 開発サーバ起動
+pnpm build                # ビルド
+pnpm test                 # テスト
+pnpm typecheck            # 型チェック
+pnpm lint                 # lint
+pnpm format               # format
+pnpm knip                 # 未使用 export / dep の検出
 ```
 
-ワークスペース個別実行は `bun run --bun --filter <name> <script>`。
+ワークスペース個別実行は `pnpm --filter <name> <script>`。
 
 ## テスト
 
-- **Unit / 統合**: Bun の組み込みテストランナー (`bun run --bun test`)。
-- **Visual Regression Testing**: Playwright + Storybook + MSW。frontend で `bun run --filter gm-assistant-bot-frontend test:vrt`。
-- **Storybook 単体起動**: `bun run --bun --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
+- **Unit / 統合**: Vite+ 同梱の Vitest (`vp test` / `pnpm test`)。
+- **Visual Regression Testing**: Playwright + Storybook + MSW。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。
+- **Storybook 単体起動**: `pnpm --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
 
 戦略の詳細は [testing-strategy.md](docs/dev/testing-strategy.md)。
 
@@ -83,7 +81,7 @@ bun run knip              # 未使用 export / dep の検出
 - **backend**: Cloudflare Workers に `gm-assistant-bot-api` としてデプロイ。Cloudflare アカウントと `wrangler login` が必要。
 
   ```bash
-  bun run --bun --filter gm-assistant-bot-backend deploy
+  pnpm --filter gm-assistant-bot-backend deploy
   ```
 
   custom domain は `backend/wrangler.toml` を参照。
