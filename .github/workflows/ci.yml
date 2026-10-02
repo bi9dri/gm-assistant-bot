@@ -19,10 +19,10 @@ jobs:
           node-version: "24"
           cache: true
       - run: pnpm install --frozen-lockfile
-      - run: vp run typecheck
-      - run: vp test
-      - run: vp lint
-      - run: vp run fmt:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm fmt:check
 
   vrt:
     runs-on: ubuntu-latest

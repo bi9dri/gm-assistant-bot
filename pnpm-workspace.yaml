@@ -13,6 +13,9 @@ catalog:
   vite-plus: 1.0.0-rc.0
 overrides:
   vite@*: "catalog:"
+  # package.json の overrides は pnpm-workspace.yaml 側で定義すると無視されるため、
+  # サプライチェーン pin はここに集約する。
+  shell-quote: "1.10.0"
 peerDependencyRules:
   allowAny:
     - vite

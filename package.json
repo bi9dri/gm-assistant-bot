@@ -26,9 +26,6 @@
     "vite-plus": "catalog:",
     "wrangler": "4.138.0"
   },
-  "overrides": {
-    "shell-quote": "1.10.0"
-  },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
