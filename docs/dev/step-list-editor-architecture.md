@@ -14,7 +14,7 @@ The React Flow UI exposes graph expressiveness the workflows never use. Real flo
 placement/wiring. We replace it with a **step-list editor**: a vertical list of one-line
 step summaries, a wide detail panel for the selected step, and a resident game-flag panel.
 
-Full product rationale lives in issue #182. This doc is the *implementation* canon.
+Full product rationale lives in issue #182. This doc is the _implementation_ canon.
 
 ---
 
@@ -23,12 +23,12 @@ Full product rationale lives in issue #182. This doc is the *implementation* can
 These were settled by design interview. Do not relitigate them inside a phase; if a phase
 reveals one is wrong, raise it against this doc first.
 
-| # | Decision | Choice |
-|---|----------|--------|
-| D1 | Per-step-type code shape | **Pure-module registry.** Each step type registers `{ type, schema, summary(), DetailPanel, execute() }` into one map. List/runner are generic and iterate the map. `summary()` and `execute()` are pure (no DOM) and unit-tested. |
-| D2 | Existing field-editor UI | **Reuse as-is.** Drop only the `BaseNode` chrome; keep `DynamicValueInput`, message editor, condition-tree editor, tool bodies. Move shared editors into `flow/` as they are extracted. |
-| D3 | Resident flag panel in edit mode | **Edits the template's seed `gameFlags`** in edit mode; shows/edits the live session flags in execute mode. Same panel, different backing store. |
-| D4 | Nested-tree state management | **Zustand + Immer** (`zustand/middleware/immer`), with all tree mutations expressed as pure helpers in `flow/treeOps.ts` implemented via `produce`. |
+| #   | Decision                         | Choice                                                                                                                                                                                                                             |
+| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Per-step-type code shape         | **Pure-module registry.** Each step type registers `{ type, schema, summary(), DetailPanel, execute() }` into one map. List/runner are generic and iterate the map. `summary()` and `execute()` are pure (no DOM) and unit-tested. |
+| D2  | Existing field-editor UI         | **Reuse as-is.** Drop only the `BaseNode` chrome; keep `DynamicValueInput`, message editor, condition-tree editor, tool bodies. Move shared editors into `flow/` as they are extracted.                                            |
+| D3  | Resident flag panel in edit mode | **Edits the template's seed `gameFlags`** in edit mode; shows/edits the live session flags in execute mode. Same panel, different backing store.                                                                                   |
+| D4  | Nested-tree state management     | **Zustand + Immer** (`zustand/middleware/immer`), with all tree mutations expressed as pure helpers in `flow/treeOps.ts` implemented via `produce`.                                                                                |
 
 Rationale summary (D4): at this scale (hundreds of steps, whole-tree JSON persistence) the
 ops/sec benchmarks are irrelevant — the perf axis that matters is **referential stability**
@@ -94,18 +94,22 @@ and one registration line.
 // flow/registry/types.ts
 export interface StepRegistryEntry<S extends Step = Step> {
   type: S["type"];
-  schema: z.ZodType<S>;                      // re-export the per-type schema from flow/schema.ts
-  defaults: () => Omit<S, "id">;             // for "add step" (replaces the addNode switch)
-  summary: (step: S) => string;              // PURE. one-line list-row text. unit-tested.
-  DetailPanel: (props: { step: S; onChange: (patch: Partial<S>) => void; mode?: "edit" | "execute" }) => JSX.Element;
-  category: "action" | "tool" | "branch";    // tool = flag-only UI, no Discord call (see Tools)
+  schema: z.ZodType<S>; // re-export the per-type schema from flow/schema.ts
+  defaults: () => Omit<S, "id">; // for "add step" (replaces the addNode switch)
+  summary: (step: S) => string; // PURE. one-line list-row text. unit-tested.
+  DetailPanel: (props: {
+    step: S;
+    onChange: (patch: Partial<S>) => void;
+    mode?: "edit" | "execute";
+  }) => JSX.Element;
+  category: "action" | "tool" | "branch"; // tool = flag-only UI, no Discord call (see Tools)
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>; // PURE-ish. omit for tools.
 }
 ```
 
 ```ts
 // flow/registry/index.ts
-const ENTRIES = [CreateRoleEntry, SendMessageEntry, BranchEntry, /* ... */] as const;
+const ENTRIES = [CreateRoleEntry, SendMessageEntry, BranchEntry /* ... */] as const;
 export const registry = new Map(ENTRIES.map((e) => [e.type, e]));
 export const getEntry = (type: Step["type"]) => registry.get(type)!;
 ```
@@ -132,14 +136,14 @@ Rules:
 These already exist and are React-Flow-independent. Reuse them directly in `DetailPanel`s;
 extract shared subcomponents from the old nodes into `flow/` as needed, keeping behavior identical.
 
-| Editor | Current location | Reuse for |
-|--------|------------------|-----------|
-| `DynamicValueInput` | `components/Node/utils/DynamicValueInput.tsx` | any `DynamicValueSchema` field (e.g. `CreateCategory.categoryName`) |
-| `FlagValueSelector` | `components/Node/utils/FlagValueSelector.tsx` | flag pickers |
-| `ResourceSelector` / `PortaledSelect` | `components/Node/utils/` | role/channel reference inputs |
-| message-block editor | inline in `components/Node/nodes/SendMessageNode.tsx` / `CombinationSendMessageNode.tsx` | `SendMessage` / `CombinationSendMessage` panels — **extract** to `flow/components/MessageBlocksEditor.tsx` |
-| condition-tree editor | inline in `components/Node/nodes/ConditionalBranchNode.tsx` | `Branch` panel (auto mode) — **extract** to `flow/components/ConditionTreeEditor.tsx` |
-| tool bodies (Kanban etc.) | `components/Node/nodes/*Node.tsx` | tool DetailPanels — reuse the body, drop node chrome |
+| Editor                                | Current location                                                                         | Reuse for                                                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `DynamicValueInput`                   | `components/Node/utils/DynamicValueInput.tsx`                                            | any `DynamicValueSchema` field (e.g. `CreateCategory.categoryName`)                                        |
+| `FlagValueSelector`                   | `components/Node/utils/FlagValueSelector.tsx`                                            | flag pickers                                                                                               |
+| `ResourceSelector` / `PortaledSelect` | `components/Node/utils/`                                                                 | role/channel reference inputs                                                                              |
+| message-block editor                  | inline in `components/Node/nodes/SendMessageNode.tsx` / `CombinationSendMessageNode.tsx` | `SendMessage` / `CombinationSendMessage` panels — **extract** to `flow/components/MessageBlocksEditor.tsx` |
+| condition-tree editor                 | inline in `components/Node/nodes/ConditionalBranchNode.tsx`                              | `Branch` panel (auto mode) — **extract** to `flow/components/ConditionTreeEditor.tsx`                      |
+| tool bodies (Kanban etc.)             | `components/Node/nodes/*Node.tsx`                                                        | tool DetailPanels — reuse the body, drop node chrome                                                       |
 
 `DynamicValue` resolution stays as-is: `resolveDynamicValue(value, ctx)` with `DynamicValueContext`
 (see `docs/dev/node-system-architecture.md`). The new engine builds that context from session resources.
@@ -202,7 +206,7 @@ engine in `flow/engine/execute.ts` owns orchestration only:
   `mode:"select"` takes the GM's choice and writes `flagName`. Records chosen arms in
   `executedBranchIds`, then descends into the chosen arm's `steps`. Unchosen arms collapse in the UI.
 - **Branch re-selection**: an executed `mode:"select"` Branch keeps offering its arm buttons, so a
-  mis-chosen arm can be redone. Re-executing a Branch clears descendant execution *and* skip marks
+  mis-chosen arm can be redone. Re-executing a Branch clears descendant execution _and_ skip marks
   across all arms (`clearDescendantExecution` / `collectDescendantStepIds`) before committing the
   new arm. If the cursor was left inside the now-closed arm (no longer in the run order), it is
   repositioned to the head of the newly opened arm.
@@ -215,13 +219,13 @@ The per-step `execute()` functions must be unit-testable by mocking the Discord 
 
 ## Edit vs execute mode
 
-| Aspect | Edit mode (template) | Execute mode (session) |
-|--------|----------------------|------------------------|
-| Backing record | `Template.flowData` | `GameSession.flowData` (a copy of the template) |
-| Step editing | Full | Unexecuted steps only; executed = read-only |
-| Run / cursor | None | Cursor + run/re-run/skip + chain via `autoAdvance` |
-| Flag panel (D3) | Seed `Template.gameFlags` | Live `GameSession.gameFlags` |
-| Tools | Configured | Operated (open/operate UI) |
+| Aspect          | Edit mode (template)      | Execute mode (session)                             |
+| --------------- | ------------------------- | -------------------------------------------------- |
+| Backing record  | `Template.flowData`       | `GameSession.flowData` (a copy of the template)    |
+| Step editing    | Full                      | Unexecuted steps only; executed = read-only        |
+| Run / cursor    | None                      | Cursor + run/re-run/skip + chain via `autoAdvance` |
+| Flag panel (D3) | Seed `Template.gameFlags` | Live `GameSession.gameFlags`                       |
+| Tools           | Configured                | Operated (open/operate UI)                         |
 
 ---
 
@@ -292,7 +296,7 @@ The autonomy of these phases depends on machine-checkable gates. Per `docs/dev/t
   each DetailPanel, FlagPanel (edit + execute), Branch nesting, section collapse, runner states
   (executed/skipped/cursor badges).
 - Every phase must pass the full gate before "done":
-  `bun run --bun test` · `typecheck` · `format` · `lint` · `bun run knip`.
+  `pnpm test` · `typecheck` · `format` · `lint` · `pnpm knip`.
 
 ---
 
@@ -301,13 +305,13 @@ The autonomy of these phases depends on machine-checkable gates. Per `docs/dev/t
 Each phase becomes a sub-issue of #182 with the design pinned (grilled) before `/goals`.
 Split each into stacked PRs as Phase 0 did.
 
-| Phase | Deliverable | Primary acceptance gate |
-|-------|-------------|-------------------------|
-| 1 | Dexie migration: `flowData` on Template + GameSession, bulk convert, keep `reactFlowData` | Migration unit tests (both tables, legacy + already-new records); `schema-migration` skill |
-| 2 | Edit-mode editor: StepList + DetailPanel + FlagPanel + sections + dnd-kit reorder, new route, registry + treeOps + editorStore | `treeOps`/`summary` unit tests + VRT stories for list/panels/sections |
-| 3 | Session runner: cursor, chain (`autoAdvance`), re-run/skip/arbitrary run, in-session editing, tools, engine + per-type `execute()` | Engine + `execute()` unit tests + VRT for runner states |
-| 4 | New-template wizard (Blueprint replacement): char names / VC count → initial sections + steps | Generator unit tests + VRT for wizard |
-| 5 | Real-session validation → delete React Flow, old nodes/routes, `reactFlowData` | `@xyflow/react` gone; `knip` clean; full gate green |
+| Phase | Deliverable                                                                                                                        | Primary acceptance gate                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1     | Dexie migration: `flowData` on Template + GameSession, bulk convert, keep `reactFlowData`                                          | Migration unit tests (both tables, legacy + already-new records); `schema-migration` skill |
+| 2     | Edit-mode editor: StepList + DetailPanel + FlagPanel + sections + dnd-kit reorder, new route, registry + treeOps + editorStore     | `treeOps`/`summary` unit tests + VRT stories for list/panels/sections                      |
+| 3     | Session runner: cursor, chain (`autoAdvance`), re-run/skip/arbitrary run, in-session editing, tools, engine + per-type `execute()` | Engine + `execute()` unit tests + VRT for runner states                                    |
+| 4     | New-template wizard (Blueprint replacement): char names / VC count → initial sections + steps                                      | Generator unit tests + VRT for wizard                                                      |
+| 5     | Real-session validation → delete React Flow, old nodes/routes, `reactFlowData`                                                     | `@xyflow/react` gone; `knip` clean; full gate green                                        |
 
 Human-in-the-loop is confined to: (a) approving each phase's sub-issue spec, and (b) the Phase 5
 real-session sign-off. Everything else runs autonomously behind the gates above.
@@ -316,14 +320,14 @@ real-session sign-off. Everything else runs autonomously behind the gates above.
 
 ## Reference files
 
-| File | Role |
-|------|------|
-| `frontend/src/flow/schema.ts` | Phase 0 data model (do not redefine) |
-| `frontend/src/flow/convert.ts` | Phase 0 converter (`convertReactFlowToFlowData`) |
-| `frontend/src/components/Node/utils/DynamicValue.ts` | DynamicValue resolution (reused) |
-| `frontend/src/components/Node/utils/DynamicValueInput.tsx` | reused field editor |
-| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | execution context shape |
-| `frontend/src/db/database.ts` | Dexie versions/migrations (Phase 1) |
-| `frontend/src/db/models/{Template,GameSession}.ts` | records gaining `flowData` |
-| `docs/dev/node-system-architecture.md` | old node system (being replaced; still the source for DynamicValue/pipeline) |
-| `docs/dev/testing-strategy.md` | test pyramid + VRT (acceptance gates) |
+| File                                                             | Role                                                                         |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `frontend/src/flow/schema.ts`                                    | Phase 0 data model (do not redefine)                                         |
+| `frontend/src/flow/convert.ts`                                   | Phase 0 converter (`convertReactFlowToFlowData`)                             |
+| `frontend/src/components/Node/utils/DynamicValue.ts`             | DynamicValue resolution (reused)                                             |
+| `frontend/src/components/Node/utils/DynamicValueInput.tsx`       | reused field editor                                                          |
+| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | execution context shape                                                      |
+| `frontend/src/db/database.ts`                                    | Dexie versions/migrations (Phase 1)                                          |
+| `frontend/src/db/models/{Template,GameSession}.ts`               | records gaining `flowData`                                                   |
+| `docs/dev/node-system-architecture.md`                           | old node system (being replaced; still the source for DynamicValue/pipeline) |
+| `docs/dev/testing-strategy.md`                                   | test pyramid + VRT (acceptance gates)                                        |

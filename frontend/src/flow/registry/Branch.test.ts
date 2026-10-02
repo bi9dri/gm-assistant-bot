@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import { BranchStepSchema, type BranchArm, type BranchStep } from "../schema";
 import { BranchEntry } from "./Branch";

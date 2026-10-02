@@ -1,4 +1,4 @@
-import { describe, test, expect, spyOn } from "bun:test";
+import { describe, test, expect, vi } from "vite-plus/test";
 
 import { createTestSession } from "#test/factories";
 import type { FlowData } from "@/flow/schema";
@@ -65,7 +65,7 @@ describe("GameSession", () => {
         typeof session.update
       >[0]["reactFlowData"];
 
-      expect(session.update({ reactFlowData: invalidData })).rejects.toThrow();
+      await expect(session.update({ reactFlowData: invalidData })).rejects.toThrow();
     });
 
     test("更新時に名前をトリムする", async () => {
@@ -93,7 +93,7 @@ describe("GameSession", () => {
       // 無効なJSONを手動で設定
       session.gameFlags = "invalid json {";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = session.getParsedGameFlags();
       consoleSpy.mockRestore();
 
@@ -122,7 +122,7 @@ describe("GameSession", () => {
       // 無効なJSONを手動で設定
       session.reactFlowData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = session.getParsedReactFlowData();
       consoleSpy.mockRestore();
 
@@ -135,7 +135,7 @@ describe("GameSession", () => {
       // パースは成功するがZodバリデーションが失敗するJSONを設定
       session.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = session.getParsedReactFlowData();
       consoleSpy.mockRestore();
 
@@ -169,7 +169,7 @@ describe("GameSession", () => {
         typeof session.update
       >[0]["flowData"];
 
-      expect(session.update({ flowData: invalidData })).rejects.toThrow();
+      await expect(session.update({ flowData: invalidData })).rejects.toThrow();
     });
 
     test("無効なJSONの場合はdefaultFlowDataを返す", async () => {
@@ -177,7 +177,7 @@ describe("GameSession", () => {
 
       session.flowData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = session.getParsedFlowData();
       consoleSpy.mockRestore();
 
@@ -209,7 +209,7 @@ describe("GameSession", () => {
 
       session.scenarioData = "not valid json";
 
-      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const parsed = session.getParsedScenarioData();
       consoleSpy.mockRestore();
 

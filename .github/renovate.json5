@@ -31,22 +31,6 @@
 
   packageRules: [
     {
-      // bun のバージョンは devbox.json / packageManager / @types/bun の 3 箇所を
-      // 揃える必要がある（scripts/check-bun-version.sh）ため 1 PR にまとめる。
-      groupName: "bun",
-      matchPackageNames: ["bun", "@types/bun"],
-      dependencyDashboardApproval: true,
-    },
-    {
-      // Renovate は devbox.json しか書き換えられず devbox.lock は再生成できない。
-      // ダッシュボードで承認 → ブランチ上で `devbox install` してから CI を通す。
-      matchManagers: ["devbox"],
-      dependencyDashboardApproval: true,
-      prBodyNotes: [
-        "⚠️ `devbox.lock` は Renovate では更新されません。このブランチで `devbox install` を実行してコミットしてください。",
-      ],
-    },
-    {
       // @tiptap/* は互いに peerDependencies でバージョンを固定し合う。
       // 別々の PR に分かれると nested な @tiptap/core が二重に入り、
       // 拡張が加える ChainedCommands の型拡張が効かず typecheck が落ちる。
@@ -56,9 +40,8 @@
     {
       // Batched 相当: 影響の小さい minor / patch は 1 PR に集約
       groupName: "non-major dependencies",
-      matchManagers: ["bun", "npm"],
+      matchManagers: ["npm"],
       matchUpdateTypes: ["minor", "patch"],
-      matchPackageNames: ["!bun", "!@types/bun"],
     },
     {
       groupName: "github-actions",

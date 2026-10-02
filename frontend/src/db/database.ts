@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable, type Table, type Transaction } from "dexie";
 import z from "zod";
 
-// Set up fake-indexeddb for test environment (bun test sets NODE_ENV=test)
+// Set up fake-indexeddb for test environment (Vitest sets NODE_ENV=test)
 if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
   const { indexedDB, IDBKeyRange } = await import("fake-indexeddb");
   Dexie.dependencies.indexedDB = indexedDB;

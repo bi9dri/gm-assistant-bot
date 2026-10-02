@@ -1,4 +1,4 @@
-import { afterEach, mock } from "bun:test";
+import { afterEach, vi } from "vite-plus/test";
 
 import { db } from "../src/db/instance";
 
@@ -20,27 +20,27 @@ const createMockDirectoryHandle = (name: string): FileSystemDirectoryHandle =>
   ({
     kind: "directory",
     name,
-    getDirectoryHandle: mock(async (dirName: string, _options?: { create?: boolean }) => {
+    getDirectoryHandle: vi.fn(async (dirName: string, _options?: { create?: boolean }) => {
       return createMockDirectoryHandle(dirName);
     }),
-    getFileHandle: mock(async (fileName: string, _options?: { create?: boolean }) => {
+    getFileHandle: vi.fn(async (fileName: string, _options?: { create?: boolean }) => {
       return createMockFileHandle(fileName);
     }),
-    removeEntry: mock(async () => {}),
-    resolve: mock(async () => [name]),
-    values: mock(async function* () {}),
+    removeEntry: vi.fn(async () => {}),
+    resolve: vi.fn(async () => [name]),
+    values: vi.fn(async function* () {}),
   }) as unknown as FileSystemDirectoryHandle;
 
 const createMockFileHandle = (name: string): FileSystemFileHandle =>
   ({
     kind: "file",
     name,
-    getFile: mock(async () => mockFileSystem.get(name) ?? new Blob()),
-    createWritable: mock(async () => ({
-      write: mock(async (data: Blob | string) => {
+    getFile: vi.fn(async () => mockFileSystem.get(name) ?? new Blob()),
+    createWritable: vi.fn(async () => ({
+      write: vi.fn(async (data: Blob | string) => {
         mockFileSystem.set(name, data instanceof Blob ? data : new Blob([data]));
       }),
-      close: mock(async () => {}),
+      close: vi.fn(async () => {}),
     })),
   }) as unknown as FileSystemFileHandle;
 
@@ -48,7 +48,7 @@ const createMockFileHandle = (name: string): FileSystemFileHandle =>
 Object.defineProperty(globalThis, "navigator", {
   value: {
     storage: {
-      getDirectory: mock(async () => createMockDirectoryHandle("root")),
+      getDirectory: vi.fn(async () => createMockDirectoryHandle("root")),
     },
   },
   writable: true,

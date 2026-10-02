@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import { SendMessageStepSchema, type SendMessageStep } from "../schema";
 import { SendMessageEntry } from "./SendMessage";

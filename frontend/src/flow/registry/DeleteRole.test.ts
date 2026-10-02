@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import type { DeleteRoleStep } from "../schema";
 import { DeleteRoleEntry } from "./DeleteRole";

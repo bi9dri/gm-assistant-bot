@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vite-plus/test";
 
 import type { ReactFlowData } from "./db";
 import {
@@ -76,10 +76,10 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
   return {
     kind: "directory",
     name,
-    isSameEntry: mock(async () => false),
-    queryPermission: mock(async () => "granted" as PermissionState),
-    requestPermission: mock(async () => "granted" as PermissionState),
-    getDirectoryHandle: mock(async (dirName: string, options?: { create?: boolean }) => {
+    isSameEntry: vi.fn(async () => false),
+    queryPermission: vi.fn(async () => "granted" as PermissionState),
+    requestPermission: vi.fn(async () => "granted" as PermissionState),
+    getDirectoryHandle: vi.fn(async (dirName: string, options?: { create?: boolean }) => {
       const newPath = `${path}/${dirName}`;
       if (options?.create) {
         mockStorage.createDirectory(newPath);
@@ -90,7 +90,7 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
       }
       return createMockDirectoryHandle(newPath);
     }),
-    getFileHandle: mock(async (fileName: string, options?: { create?: boolean }) => {
+    getFileHandle: vi.fn(async (fileName: string, options?: { create?: boolean }) => {
       const filePath = `${path}/${fileName}`;
       if (!mockStorage.fileExists(filePath) && !options?.create) {
         const error = new DOMException("File not found", "NotFoundError");
@@ -98,7 +98,7 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
       }
       return createMockFileHandle(filePath);
     }),
-    removeEntry: mock(async (name: string) => {
+    removeEntry: vi.fn(async (name: string) => {
       const entryPath = `${path}/${name}`;
       mockStorage.deleteFile(entryPath);
       // サブディレクトリ内のファイルも削除
@@ -106,20 +106,20 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
         mockStorage.deleteFile(filePath);
       }
     }),
-    resolve: mock(async (_handle: FileSystemHandle) => {
+    resolve: vi.fn(async (_handle: FileSystemHandle) => {
       // このディレクトリからの相対パスセグメントを返す
       return [name];
     }),
-    keys: mock(async function* () {}),
-    values: mock(async function* () {
+    keys: vi.fn(async function* () {}),
+    values: vi.fn(async function* () {
       const files = mockStorage.getFilesInDirectory(path);
       for (const filePath of files) {
         const fileName = filePath.slice(path.length + 1).split("/")[0];
         yield createMockFileHandle(`${path}/${fileName}`);
       }
     }),
-    entries: mock(async function* () {}),
-    [Symbol.asyncIterator]: mock(async function* () {}),
+    entries: vi.fn(async function* () {}),
+    [Symbol.asyncIterator]: vi.fn(async function* () {}),
   } as unknown as FileSystemDirectoryHandle;
 };
 
@@ -129,26 +129,26 @@ const createMockFileHandle = (path: string): FileSystemFileHandle => {
   return {
     kind: "file",
     name,
-    isSameEntry: mock(async () => false),
-    queryPermission: mock(async () => "granted" as PermissionState),
-    requestPermission: mock(async () => "granted" as PermissionState),
-    getFile: mock(async () => {
+    isSameEntry: vi.fn(async () => false),
+    queryPermission: vi.fn(async () => "granted" as PermissionState),
+    requestPermission: vi.fn(async () => "granted" as PermissionState),
+    getFile: vi.fn(async () => {
       const blob = mockStorage.readFile(path);
       if (!blob) {
         return new Blob();
       }
       return new File([blob], name);
     }),
-    createWritable: mock(async () => ({
-      write: mock(async (data: Blob | string) => {
+    createWritable: vi.fn(async () => ({
+      write: vi.fn(async (data: Blob | string) => {
         mockStorage.writeFile(path, data);
       }),
-      seek: mock(async () => {}),
-      truncate: mock(async () => {}),
-      close: mock(async () => {}),
-      abort: mock(async () => {}),
+      seek: vi.fn(async () => {}),
+      truncate: vi.fn(async () => {}),
+      close: vi.fn(async () => {}),
+      abort: vi.fn(async () => {}),
       locked: false,
-      getWriter: mock(() => ({})),
+      getWriter: vi.fn(() => ({})),
     })),
   } as unknown as FileSystemFileHandle;
 };
@@ -157,7 +157,7 @@ const createMockFileHandle = (path: string): FileSystemFileHandle => {
 Object.defineProperty(globalThis, "navigator", {
   value: {
     storage: {
-      getDirectory: mock(async () => createMockDirectoryHandle("")),
+      getDirectory: vi.fn(async () => createMockDirectoryHandle("")),
     },
   },
   writable: true,
@@ -258,7 +258,7 @@ describe("FileSystem", () => {
     });
 
     test("テンプレートディレクトリが存在しない場合はエラーをスローしない", async () => {
-      expect(fs.clearTemplateFiles(999)).resolves.toBeUndefined();
+      await expect(fs.clearTemplateFiles(999)).resolves.toBeUndefined();
     });
   });
 
@@ -272,7 +272,7 @@ describe("FileSystem", () => {
     });
 
     test("セッションディレクトリが存在しない場合はエラーをスローしない", async () => {
-      expect(fs.clearSessionFiles(999)).resolves.toBeUndefined();
+      await expect(fs.clearSessionFiles(999)).resolves.toBeUndefined();
     });
   });
 
@@ -281,7 +281,7 @@ describe("FileSystem", () => {
     // これらのテストはe2eテストに適している
 
     test("テンプレートが見つからない場合はエラーをスローする", async () => {
-      expect(fs.exportTemplate(999)).rejects.toThrow("テンプレートが見つかりません");
+      await expect(fs.exportTemplate(999)).rejects.toThrow("テンプレートが見つかりません");
     });
   });
 });

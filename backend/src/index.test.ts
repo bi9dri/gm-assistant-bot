@@ -1,6 +1,5 @@
-import { describe, test, expect, spyOn, beforeEach, afterEach } from "bun:test";
-
 import { DiscordAPIError, RateLimitError } from "@discordjs/rest";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vite-plus/test";
 
 import * as discord from "./discord";
 import app from "./index";
@@ -27,10 +26,10 @@ describe("Authentication middleware", () => {
 });
 
 describe("Profile endpoint", () => {
-  let getProfileSpy: ReturnType<typeof spyOn>;
+  let getProfileSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    getProfileSpy = spyOn(discord, "getProfile");
+    getProfileSpy = vi.spyOn(discord, "getProfile");
   });
 
   afterEach(() => {
@@ -53,10 +52,10 @@ describe("Profile endpoint", () => {
 });
 
 describe("Guilds endpoint", () => {
-  let getGuildsSpy: ReturnType<typeof spyOn>;
+  let getGuildsSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    getGuildsSpy = spyOn(discord, "getGuilds");
+    getGuildsSpy = vi.spyOn(discord, "getGuilds");
   });
 
   afterEach(() => {
@@ -82,12 +81,12 @@ describe("Guilds endpoint", () => {
 });
 
 describe("Role endpoints", () => {
-  let createRoleSpy: ReturnType<typeof spyOn>;
-  let deleteRoleSpy: ReturnType<typeof spyOn>;
+  let createRoleSpy: ReturnType<typeof vi.spyOn>;
+  let deleteRoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    createRoleSpy = spyOn(discord, "createRole");
-    deleteRoleSpy = spyOn(discord, "deleteRole");
+    createRoleSpy = vi.spyOn(discord, "createRole");
+    deleteRoleSpy = vi.spyOn(discord, "deleteRole");
   });
 
   afterEach(() => {
@@ -151,10 +150,10 @@ describe("Role endpoints", () => {
 });
 
 describe("Category endpoint", () => {
-  let createCategorySpy: ReturnType<typeof spyOn>;
+  let createCategorySpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    createCategorySpy = spyOn(discord, "createCategory");
+    createCategorySpy = vi.spyOn(discord, "createCategory");
   });
 
   afterEach(() => {
@@ -185,14 +184,14 @@ describe("Category endpoint", () => {
 });
 
 describe("Channel endpoints", () => {
-  let createChannelSpy: ReturnType<typeof spyOn>;
-  let deleteChannelSpy: ReturnType<typeof spyOn>;
-  let changeChannelPermissionsSpy: ReturnType<typeof spyOn>;
+  let createChannelSpy: ReturnType<typeof vi.spyOn>;
+  let deleteChannelSpy: ReturnType<typeof vi.spyOn>;
+  let changeChannelPermissionsSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    createChannelSpy = spyOn(discord, "createChannel");
-    deleteChannelSpy = spyOn(discord, "deleteChannel");
-    changeChannelPermissionsSpy = spyOn(discord, "changeChannelPermissions");
+    createChannelSpy = vi.spyOn(discord, "createChannel");
+    deleteChannelSpy = vi.spyOn(discord, "deleteChannel");
+    changeChannelPermissionsSpy = vi.spyOn(discord, "changeChannelPermissions");
   });
 
   afterEach(() => {
@@ -273,10 +272,10 @@ describe("Channel endpoints", () => {
 });
 
 describe("Message endpoint", () => {
-  let sendMessageSpy: ReturnType<typeof spyOn>;
+  let sendMessageSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    sendMessageSpy = spyOn(discord, "sendMessage");
+    sendMessageSpy = vi.spyOn(discord, "sendMessage");
   });
 
   afterEach(() => {
@@ -304,10 +303,10 @@ describe("Message endpoint", () => {
 });
 
 describe("AddRoleToRoleMembers endpoint", () => {
-  let addRoleToRoleMembersSpy: ReturnType<typeof spyOn>;
+  let addRoleToRoleMembersSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    addRoleToRoleMembersSpy = spyOn(discord, "addRoleToRoleMembers");
+    addRoleToRoleMembersSpy = vi.spyOn(discord, "addRoleToRoleMembers");
   });
 
   afterEach(() => {
@@ -350,7 +349,7 @@ describe("Error handling", () => {
   });
 
   test("handles Discord API errors", async () => {
-    const getProfileSpy = spyOn(discord, "getProfile");
+    const getProfileSpy = vi.spyOn(discord, "getProfile");
     const apiError = new DiscordAPIError(
       { message: "Invalid token", code: 50001 },
       50001,
@@ -374,7 +373,7 @@ describe("Error handling", () => {
   });
 
   test("handles rate limit errors", async () => {
-    const getProfileSpy = spyOn(discord, "getProfile");
+    const getProfileSpy = vi.spyOn(discord, "getProfile");
     const rateLimitError = new RateLimitError({
       global: false,
       retryAfter: 5000,
@@ -403,7 +402,7 @@ describe("Error handling", () => {
   });
 
   test("handles generic errors", async () => {
-    const getProfileSpy = spyOn(discord, "getProfile");
+    const getProfileSpy = vi.spyOn(discord, "getProfile");
     getProfileSpy.mockRejectedValue(new Error("Something went wrong"));
 
     const res = await app.request("/api/profile", {

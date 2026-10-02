@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import { KanbanStepSchema, type KanbanStep } from "../schema";
 import { KanbanEntry } from "./Kanban";

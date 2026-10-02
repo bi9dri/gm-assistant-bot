@@ -1,4 +1,4 @@
-import { describe, test, expect, spyOn } from "bun:test";
+import { describe, test, expect, vi } from "vite-plus/test";
 
 import { fisherYatesShuffle } from "./shuffle";
 
@@ -43,7 +43,7 @@ describe("fisherYatesShuffle", () => {
   test("produces different results with different random values", () => {
     const input = [1, 2, 3, 4, 5];
 
-    const randomSpy = spyOn(Math, "random");
+    const randomSpy = vi.spyOn(Math, "random");
     randomSpy.mockReturnValue(0.1);
     const result1 = fisherYatesShuffle(input);
 
@@ -57,7 +57,7 @@ describe("fisherYatesShuffle", () => {
 
   test("deterministic with mocked random", () => {
     const input = [1, 2, 3, 4];
-    const randomSpy = spyOn(Math, "random");
+    const randomSpy = vi.spyOn(Math, "random");
 
     randomSpy.mockReturnValueOnce(0.5);
     randomSpy.mockReturnValueOnce(0.5);

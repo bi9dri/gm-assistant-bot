@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vite-plus/test";
 
 import { collectFilePathsFromNode, collectFilePathsFromNodes } from "./nodeFilePaths";
 import type { FlowNode } from "./templateEditorStore";

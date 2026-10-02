@@ -36,7 +36,7 @@ grid の行トラックは `auto`(コンテンツサイズ)なので、item 側�
   発生していたら連鎖が切れている**
 - 各カラムの `scrollHeight > clientHeight` → カラム内スクロールが成立している
 
-`verify` スキル / `bun <script>` + `playwright-core` + `/opt/pw-browsers/chromium` で
-dev サーバー (`bun run --bun dev`) に対して計測できる。IndexedDB のシードは
+`verify` スキル / `node <script>` + `playwright-core` + `/opt/pw-browsers/chromium` で
+dev サーバー (`pnpm dev`) に対して計測できる。IndexedDB のシードは
 Vite dev サーバー経由で `await import("/src/db/index.ts")` を `page.evaluate` 内で
 実行すると手早い。

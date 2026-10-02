@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vite-plus/test";
 
 import { convertFilePathsInScenarioData } from "./filePaths";
 import { ScenarioDataSchema, emptyDoc, type ScenarioData } from "./schema";
