@@ -27,7 +27,7 @@ jobs:
   vrt:
     runs-on: ubuntu-latest
     # ハングで 6 時間放置されるのを防ぐ安全網。通常は数分で完了する。
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
@@ -52,7 +52,7 @@ jobs:
       # in playwright.config.ts (chromium-storybook project reads index.json
       # from frontend/storybook-static/).
       - run: pnpm --filter gm-assistant-bot-frontend build-storybook
-      - run: pnpm --filter gm-assistant-bot-frontend test:vrt
+      - run: pnpm --filter gm-assistant-bot-frontend test:vrt -- --reporter=list
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
