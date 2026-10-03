@@ -54,8 +54,12 @@ dev server は workerd 上で SSR を実行する。`server.proxy` の `/api` �
 - `/api` の同一オリジン中継はアプリ内 server route (`src/routes/api/$.ts`)。
   preview ビルド (`VITE_API_BASE_URL=""`) が使い、本番ビルドは直接 API origin を叩く。
   詳細は [pr-preview-environment.md](pr-preview-environment.md)
-- CSP は二箇所で同じ policy を持つ: 静的アセット用 `public/_headers` と
-  SSR HTML 用 `__root.tsx` の meta (`httpEquiv`)
+- CSP は nonce 方式。`router.tsx` がリクエストごとに生成した nonce を
+  `ssr.nonce` に渡すと、Start が自前の script/style と `csp-nonce` meta に付与する。
+  自前のインライン script は `ScriptOnce` (テーマ初期化) と `head()` の `scripts`
+  (gtag、HeadContent が付与) を使う。policy 本体は `src/csp.ts` の
+  `buildContentSecurityPolicy(nonce)` で組み立て、`__root.tsx` の `CspMeta` が
+  meta として出す。`public/_headers` は不要のため廃止 (アセット応答の CSP は無視される)
 
 ## 依存
 

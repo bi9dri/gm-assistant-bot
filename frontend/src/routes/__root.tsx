@@ -3,6 +3,7 @@ import {
   HeadContent,
   Link,
   Outlet,
+  ScriptOnce,
   Scripts,
   createRootRoute,
   useRouter,
@@ -14,7 +15,7 @@ import { FaDiscord } from "react-icons/fa";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { SiSessionize } from "react-icons/si";
 
-import { CONTENT_SECURITY_POLICY } from "@/csp";
+import { buildContentSecurityPolicy } from "@/csp";
 import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
@@ -42,10 +43,6 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { title: "GM Assistant Bot" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      {
-        httpEquiv: "Content-Security-Policy",
-        content: CONTENT_SECURITY_POLICY,
-      },
       { name: "theme-color", content: "#000000" },
       { name: "description", content: "Web site created using create-tsrouter-app" },
     ],
@@ -83,15 +80,26 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="ja">
       <head>
+        <CspMeta />
         <HeadContent />
       </head>
       <body>
         {children}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <ScriptOnce>{THEME_INIT_SCRIPT}</ScriptOnce>
         <Scripts />
       </body>
     </html>
   );
+}
+
+// SSR 時のみ描画する (ScriptOnce と同じ server-only パターン。client は出さない)。
+// meta とレスポンスヘッダの両方に CSP があると両方強制されるため、ここ一箇所だけに置く。
+function CspMeta() {
+  const router = useRouter();
+  if (typeof document !== "undefined") return null;
+  const nonce = router.options.ssr?.nonce;
+  if (!nonce) return null;
+  return <meta httpEquiv="Content-Security-Policy" content={buildContentSecurityPolicy(nonce)} />;
 }
 
 function AppChrome() {
