@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as BotIndexRouteImport } from './routes/bot/index'
 import { Route as BotNewRouteImport } from './routes/bot/new'
 import { Route as SessionIndexRouteImport } from './routes/session/index'
@@ -27,6 +28,11 @@ import { Route as TemplateIdStepsRouteImport } from './routes/template/$id/steps
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BotIndexRoute = BotIndexRouteImport.update({
@@ -97,6 +103,7 @@ const TemplateIdStepsRoute = TemplateIdStepsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/$': typeof ApiSplatRoute
   '/bot/new': typeof BotNewRoute
   '/session/new': typeof SessionNewRoute
   '/template/new': typeof TemplateNewRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/$': typeof ApiSplatRoute
   '/bot/new': typeof BotNewRoute
   '/session/new': typeof SessionNewRoute
   '/template/new': typeof TemplateNewRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/$': typeof ApiSplatRoute
   '/bot/new': typeof BotNewRoute
   '/session/new': typeof SessionNewRoute
   '/template/new': typeof TemplateNewRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api/$'
     | '/bot/new'
     | '/session/new'
     | '/template/new'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/$'
     | '/bot/new'
     | '/session/new'
     | '/template/new'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/api/$'
     | '/bot/new'
     | '/session/new'
     | '/template/new'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiSplatRoute: typeof ApiSplatRoute
   BotNewRoute: typeof BotNewRoute
   SessionNewRoute: typeof SessionNewRoute
   TemplateNewRoute: typeof TemplateNewRoute
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bot/': {
@@ -317,6 +337,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiSplatRoute: ApiSplatRoute,
   BotNewRoute: BotNewRoute,
   SessionNewRoute: SessionNewRoute,
   TemplateNewRoute: TemplateNewRoute,

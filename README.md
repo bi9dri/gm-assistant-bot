@@ -13,10 +13,10 @@ GM がストーリーテリングとプレイヤーとの対話に集中でき�
 
 pnpm workspace monorepo (Node 24 + Vite+):
 
-| パッケージ  | スタック                                                                               | デプロイ先         |
-| ----------- | -------------------------------------------------------------------------------------- | ------------------ |
-| `frontend/` | React + Vite + TanStack Router + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | GitHub Pages       |
-| `backend/`  | Hono + Zod + discord.js                                                                | Cloudflare Workers |
+| パッケージ  | スタック                                                                              | デプロイ先         |
+| ----------- | ------------------------------------------------------------------------------------- | ------------------ |
+| `frontend/` | React + Vite + TanStack Start + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | Cloudflare Workers |
+| `backend/`  | Hono + Zod + discord.js                                                               | Cloudflare Workers |
 
 詳細は `docs/dev/` を参照:
 
@@ -77,7 +77,7 @@ pnpm knip                 # 未使用 export / dep の検出
 
 ## デプロイ
 
-- **frontend**: `main` への push で GitHub Actions (`.github/workflows/deploy-frontend.yml`) が走り、GitHub Pages に自動デプロイされる。
+- **frontend**: `main` への push で GitHub Actions (`.github/workflows/deploy-frontend.yml`) が走り、Cloudflare Workers (Static Assets + TanStack Start SSR) に自動デプロイされる。要リポジトリ Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`。custom domain は `frontend/wrangler.jsonc` を参照。
 - **backend**: Cloudflare Workers に `gm-assistant-bot-api` としてデプロイ。Cloudflare アカウントと `wrangler login` が必要。
 
   ```bash

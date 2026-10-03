@@ -1,6 +1,7 @@
-# TanStack Start 構成 (WS2 #307)
+# TanStack Start 構成 (WS2 #307 / WS3 #306)
 
-TanStack Router の SPA 構成から TanStack Start (SSR) へ移行した。本番ホスティングは WS3 で Workers Static Assets に統合するが、その土台がこの構成。`/api` は従来どおり別 Worker (Hono) のまま。
+TanStack Router の SPA 構成から TanStack Start (SSR) へ移行した。本番ホスティングは
+Workers Static Assets に統合済み (WS3)。`/api` は従来どおり別 Worker (Hono) のまま。
 
 ## ディレクトリ / entry
 
@@ -38,6 +39,23 @@ dev server は workerd 上で SSR を実行する。`server.proxy` の `/api` �
 
 - `ThemeProvider` は module 直下で `window`/`localStorage` を触っていたため、`typeof window === "undefined"` をガードした遅延初期化に変更。SSR は `"light"`、クライアントは保存値を読む。
 - `db/database.ts` は `NODE_ENV === "test"` のときだけ `fake-indexeddb` を動的 import する。SSR では読み込まれない。Vite の optimizer がこの動的 import を起動後に発見して reload する問題は、client / ssr 両 env の `optimizeDeps.include` に `fake-indexeddb` を入れて防ぐ。
+
+## ホスティング / デプロイ (WS3)
+
+本番フロントは Workers Static Assets + Start SSR Worker。旧 GitHub Pages 配信は廃止。
+
+- `frontend/wrangler.jsonc` が本番設定。`routes` でカスタムドメイン
+  (`gm-assistant-bot.bidri.dev`) を付ける。ビルド (`vp build`) すると
+  `@cloudflare/vite-plugin` が `dist/server/wrangler.json`
+  (Worker `dist/server/index.js` + assets `dist/client`) を生成し、
+  `wrangler deploy` はそこへリダイレクトされる
+- デプロイは `.github/workflows/deploy-frontend.yml` (`main` push)。
+  要 Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+- `/api` の同一オリジン中継はアプリ内 server route (`src/routes/api/$.ts`)。
+  preview ビルド (`VITE_API_BASE_URL=""`) が使い、本番ビルドは直接 API origin を叩く。
+  詳細は [pr-preview-environment.md](pr-preview-environment.md)
+- CSP は二箇所で同じ policy を持つ: 静的アセット用 `public/_headers` と
+  SSR HTML 用 `__root.tsx` の meta (`httpEquiv`)
 
 ## 依存
 
