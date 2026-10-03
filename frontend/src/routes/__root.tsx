@@ -80,8 +80,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="ja">
       <head>
-        <HeadContent />
         <CspMeta />
+        <HeadContent />
       </head>
       <body>
         {children}
@@ -92,15 +92,12 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   );
 }
 
-// リクエストごとの nonce 入り CSP meta。nonce は server では router option、
-// client では Start が出す csp-nonce meta から読む (値は同一のため mismatch しない)。
+// SSR 時のみ描画する (ScriptOnce と同じ server-only パターン。client は出さない)。
 // meta とレスポンスヘッダの両方に CSP があると両方強制されるため、ここ一箇所だけに置く。
 function CspMeta() {
   const router = useRouter();
-  const nonce =
-    typeof document !== "undefined"
-      ? (document.querySelector('meta[property="csp-nonce"]')?.getAttribute("content") ?? undefined)
-      : router.options.ssr?.nonce;
+  if (typeof document !== "undefined") return null;
+  const nonce = router.options.ssr?.nonce;
   if (!nonce) return null;
   return <meta httpEquiv="Content-Security-Policy" content={buildContentSecurityPolicy(nonce)} />;
 }
