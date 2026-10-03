@@ -18,7 +18,8 @@ export default defineConfig<{}, VrtWorkerOptions>({
     process.env.CI ? ["github"] : ["list"],
     [
       "@argos-ci/playwright/reporter",
-      createArgosReporterOptions({ uploadToArgos: !!process.env.CI }),
+      // fork からの PR では Secrets が渡らず token が空になるため、token がある時だけ upload する。
+      createArgosReporterOptions({ uploadToArgos: !!process.env.CI && !!process.env.ARGOS_TOKEN }),
     ],
   ],
   timeout: 30_000,

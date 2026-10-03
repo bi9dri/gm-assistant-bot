@@ -59,7 +59,7 @@ Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/is
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Browser                     | Chromium only                                                                                                                                              |
 | Snapshot strategy           | Playwright + `@argos-ci/playwright` `argosScreenshot`; the Argos reporter uploads screenshots and diffs are reviewed in the Argos UI (no baselines in git) |
-| OS-difference handling      | Argos diffs server-side, so local / CI rendering parity is not required. Older CI artifact recovery flow is obsolete                                       |
+| OS-difference handling      | Argos diffs server-side, so local / CI rendering parity is not required                                                                                    |
 | External dependency mocking | MSW pins Discord OAuth and the entire `/api`. Activated by passing env `VITE_USE_MSW=true` to the dev server                                               |
 | Component isolation         | Storybook + `@storybook/addon-themes`'s `data-theme` decorator for light/dark switching                                                                    |
 
@@ -73,7 +73,7 @@ Screenshots must be deterministic to be meaningful. The following must always ho
 - Pin React Flow viewport by explicitly calling `fitView`
 - Set `prefers-reduced-motion` on the browser context
 
-### Known Workaround
+### Dev Server
 
 VRT runs on Node (Vite+ bundles Vite for Node). The `webServer.command` in `frontend/playwright.config.ts` starts the dev server via `vp dev`.
 

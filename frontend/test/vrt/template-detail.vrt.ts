@@ -15,12 +15,12 @@ test("template detail — populated", async ({ page, seedDb }, testInfo) => {
   await page.goto(`/template/${template.id}`);
   await expect(page.getByPlaceholder("テンプレート名を入力")).toHaveValue(template.name);
   await page.waitForSelector(".react-flow__viewport");
-  await argosScreenshot(page, "template-detail-populated");
+  await argosScreenshot(page, "template-detail-populated", { fullPage: true });
 });
 
 test("template detail — not found", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/template/99999");
   await expect(page.getByText("テンプレートが見つかりません")).toBeVisible();
-  await argosScreenshot(page, "template-detail-not-found");
+  await argosScreenshot(page, "template-detail-not-found", { fullPage: true });
 });

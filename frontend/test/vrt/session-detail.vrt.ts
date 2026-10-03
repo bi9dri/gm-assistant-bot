@@ -19,12 +19,12 @@ test("session detail — populated", async ({ page, seedDb }, testInfo) => {
   await page.goto(`/session/${session.id}`);
   await expect(page.getByPlaceholder("セッション名を入力")).toHaveValue(session.name);
   await page.waitForSelector(".react-flow__viewport");
-  await argosScreenshot(page, "session-detail-populated");
+  await argosScreenshot(page, "session-detail-populated", { fullPage: true });
 });
 
 test("session detail — not found", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/session/99999");
   await expect(page.getByText("セッションが見つかりません")).toBeVisible();
-  await argosScreenshot(page, "session-detail-not-found");
+  await argosScreenshot(page, "session-detail-not-found", { fullPage: true });
 });

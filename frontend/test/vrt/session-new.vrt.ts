@@ -7,7 +7,7 @@ test("session new — without bots", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/session/new");
   await expect(page.getByText("新しいセッションを作成する")).toBeVisible();
-  await argosScreenshot(page, "session-new-empty");
+  await argosScreenshot(page, "session-new-empty", { fullPage: true });
 });
 
 test("session new — with bot and templates", async ({ page, seedDb }) => {
@@ -15,5 +15,5 @@ test("session new — with bot and templates", async ({ page, seedDb }) => {
   await page.goto("/session/new");
   await expect(page.getByText("新しいセッションを作成する")).toBeVisible();
   await expect(page.getByRole("option", { name: FIXTURE_BOTS[0]!.name })).toBeAttached();
-  await argosScreenshot(page, "session-new-populated");
+  await argosScreenshot(page, "session-new-populated", { fullPage: true });
 });

@@ -6,5 +6,5 @@ test("template new — initial form", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/template/new");
   await expect(page.getByPlaceholder("テンプレート名を入力")).toBeVisible();
-  await argosScreenshot(page, "template-new-initial");
+  await argosScreenshot(page, "template-new-initial", { fullPage: true });
 });

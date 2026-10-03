@@ -57,6 +57,6 @@ for (const id of storyIds) {
     await page.waitForLoadState("networkidle");
     // React Flow handle 等の DOM が確定するまで僅かに待つ。
     await page.waitForTimeout(200);
-    await argosScreenshot(page, id);
+    await argosScreenshot(page, id, { fullPage: true });
   });
 }

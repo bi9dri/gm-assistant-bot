@@ -85,7 +85,9 @@ The first local run also needs the chromium binary:
 pnpm --dir frontend exec playwright install chromium
 ```
 
-The Argos reporter only uploads when `CI` is set (`uploadToArgos: !!process.env.CI`), so local runs never hit Argos. Captures are written to `frontend/screenshots/` (gitignored).
+The Argos reporter only uploads when `CI` is set and `ARGOS_TOKEN` is present (`uploadToArgos: !!process.env.CI && !!process.env.ARGOS_TOKEN`), so local runs never hit Argos. `argosScreenshot` writes captures to `frontend/screenshots/` only when the reporter is not in use (gitignored).
+
+VRT はテスト時のみ `bypassCSP: true` で CSP を無効化する (Argos が inject する inline script を通すため)。CSP 自体の検証は VRT の責務ではない。
 
 ## Reviewing diffs in Argos
 
@@ -93,7 +95,7 @@ On CI, the reporter uploads every `argosScreenshot` capture and Argos compares i
 
 - The Argos check appears on the pull request with a summary of added / changed / unchanged screenshots.
 - Review each change in the Argos UI and approve or reject it. Merging the PR accepts the current build as the new baseline for the default branch.
-- **Orphan builds:** until a build has run once on `main`, PR builds have no baseline to compare against and are marked orphan. Merge this setup (or run the `vrt` job once on `main`) to establish the baseline.
+- **Orphan builds:** until a build has run on the default branch, PR builds have no baseline to compare against and are marked orphan. The first build on `main` establishes the baseline.
 - If a failure is not visual (dev server timeout, route 404), open the uploaded Playwright trace to investigate. The `vrt-diff` CI artifact also holds `frontend/test-results/` (traces / failure screenshots).
 
 ## `VITE_USE_MSW` が切り替えるもの

@@ -23,7 +23,7 @@ test("template editor — single CreateRole", async ({ page, seedDb }) => {
   await expect(page.getByPlaceholder("テンプレート名を入力")).toHaveValue(singleCreateRole!.name);
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="CreateRole-1"]');
-  await argosScreenshot(page, "template-editor-single-create-role");
+  await argosScreenshot(page, "template-editor-single-create-role", { fullPage: true });
 });
 
 test("template editor — single SendMessage", async ({ page, seedDb }) => {
@@ -32,7 +32,7 @@ test("template editor — single SendMessage", async ({ page, seedDb }) => {
   await expect(page.getByPlaceholder("テンプレート名を入力")).toHaveValue(singleSendMessage!.name);
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="SendMessage-1"]');
-  await argosScreenshot(page, "template-editor-single-send-message");
+  await argosScreenshot(page, "template-editor-single-send-message", { fullPage: true });
 });
 
 test("template editor — single ConditionalBranch", async ({ page, seedDb }) => {
@@ -43,7 +43,7 @@ test("template editor — single ConditionalBranch", async ({ page, seedDb }) =>
   );
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="ConditionalBranch-1"]');
-  await argosScreenshot(page, "template-editor-single-conditional-branch");
+  await argosScreenshot(page, "template-editor-single-conditional-branch", { fullPage: true });
 });
 
 test("template editor — connected flow with comment", async ({ page, seedDb }) => {
@@ -55,5 +55,5 @@ test("template editor — connected flow with comment", async ({ page, seedDb })
   await page.waitForSelector('[data-id="SendMessage-1"]');
   await page.waitForSelector('[data-id="ConditionalBranch-1"]');
   await page.waitForSelector('[data-id="Comment-1"]');
-  await argosScreenshot(page, "template-editor-connected-flow");
+  await argosScreenshot(page, "template-editor-connected-flow", { fullPage: true });
 });

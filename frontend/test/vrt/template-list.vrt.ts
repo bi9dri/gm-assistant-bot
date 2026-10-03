@@ -7,7 +7,7 @@ test("template list — empty", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/template");
   await expect(page.getByText("テンプレートが作成されていません")).toBeVisible();
-  await argosScreenshot(page, "template-list-empty");
+  await argosScreenshot(page, "template-list-empty", { fullPage: true });
 });
 
 test("template list — populated", async ({ page, seedDb }) => {
@@ -19,7 +19,7 @@ test("template list — populated", async ({ page, seedDb }) => {
   await expect(
     page.getByRole("heading", { name: FIXTURE_TEMPLATES[1]!.name, exact: true }),
   ).toBeVisible();
-  await argosScreenshot(page, "template-list-populated");
+  await argosScreenshot(page, "template-list-populated", { fullPage: true });
 });
 
 test("template list — メタ情報あり", async ({ page, seedDb }) => {
@@ -27,7 +27,7 @@ test("template list — メタ情報あり", async ({ page, seedDb }) => {
   await page.goto("/template");
   await expect(page.getByRole("heading", { name: "メタ情報つきシナリオ" })).toBeVisible();
   await expect(page.locator("figure img")).toBeVisible();
-  await argosScreenshot(page, "template-list-meta");
+  await argosScreenshot(page, "template-list-meta", { fullPage: true });
 });
 
 test("template list — 絞り込み適用", async ({ page, seedDb }) => {
@@ -38,7 +38,7 @@ test("template list — 絞り込み適用", async ({ page, seedDb }) => {
   // 6人〜 / 5〜6時間 と メタ情報なし が落ち、1 件だけ残る
   await expect(page.getByRole("heading", { name: "メタ情報つきシナリオ" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "大人数・長時間シナリオ" })).toBeHidden();
-  await argosScreenshot(page, "template-list-filtered");
+  await argosScreenshot(page, "template-list-filtered", { fullPage: true });
 });
 
 test("template list — 絞り込み結果が0件", async ({ page, seedDb }) => {
