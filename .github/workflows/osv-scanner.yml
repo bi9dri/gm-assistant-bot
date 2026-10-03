@@ -25,7 +25,7 @@ permissions:
   actions: read
 
 jobs:
-  # scan-args は既定値（`-r ./`）。pnpm-lock.yaml は osv-scanner がサポートしている。
+  # pnpm-lock.yaml は osv-scanner がサポートしている。
   scan-scheduled:
     if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
