@@ -1,3 +1,5 @@
+import { argosScreenshot } from "@argos-ci/playwright";
+
 import { expect, test } from "./fixtures";
 import { FIXTURE_BOTS } from "./seed";
 
@@ -5,7 +7,7 @@ test("bot list — empty", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/bot");
   await expect(page.getByText("Discord botが登録されていません")).toBeVisible();
-  await expect(page).toHaveScreenshot("bot-list-empty.png", { fullPage: true });
+  await argosScreenshot(page, "bot-list-empty");
 });
 
 test("bot list — populated", async ({ page, seedDb }) => {
@@ -14,5 +16,5 @@ test("bot list — populated", async ({ page, seedDb }) => {
   await expect(
     page.getByRole("heading", { name: FIXTURE_BOTS[0]!.name, exact: true }),
   ).toBeVisible();
-  await expect(page).toHaveScreenshot("bot-list-populated.png", { fullPage: true });
+  await argosScreenshot(page, "bot-list-populated");
 });

@@ -1,3 +1,4 @@
+import { createArgosReporterOptions } from "@argos-ci/playwright/reporter";
 import { defineConfig, devices } from "@playwright/test";
 
 import type { VrtWorkerOptions } from "./test/vrt/fixtures";
@@ -11,22 +12,29 @@ export default defineConfig<{}, VrtWorkerOptions>({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? "github" : "list",
+  // Argos reporter がスクリーンショットと trace を Argos へアップロードする。
+  // 比較は Argos 側で行うため、baseline PNG のコミットは不要。
+  reporter: [
+    process.env.CI ? ["github"] : ["list"],
+    [
+      "@argos-ci/playwright/reporter",
+      createArgosReporterOptions({ uploadToArgos: !!process.env.CI }),
+    ],
+  ],
   timeout: 30_000,
-  expect: {
-    toHaveScreenshot: {
-      maxDiffPixelRatio: 0.01,
-      animations: "disabled",
-      caret: "hide",
-    },
-  },
-  // {projectName} に theme suffix が含まれるので light/dark の baseline は自動的に分離される
-  // (例: `home-chromium-desktop-light-linux.png` / `home-chromium-desktop-dark-linux.png`)。
-  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   use: {
     trace: "on-first-retry",
+    // 失敗時のスクリーンショットを Argos に上げてデバッグに使う。
+    screenshot: "only-on-failure",
     timezoneId: "Asia/Tokyo",
     locale: "ja-JP",
+    // index.html の CSP が Argos の inline script を弾く。テスト時のみバイパスする
+    // (Argos docs: "Configure Playwright to bypass CSP")。
+    bypassCSP: true,
+    // サブピクセル描画とフォントヒンティングを切り、ローカルと CI の glyph を揃える。
+    launchOptions: {
+      args: ["--disable-lcd-text", "--font-render-hinting=none"],
+    },
     // viewport は project 側で指定 (mobile は devices["iPhone 13"] が決める)。
   },
   // Project は viewport (desktop / mobile / storybook) × theme (light / dark) のマトリクス。

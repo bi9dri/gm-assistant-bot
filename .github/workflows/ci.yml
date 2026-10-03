@@ -26,10 +26,6 @@ jobs:
 
   vrt:
     runs-on: ubuntu-latest
-    # 非ブロッキング: Bun→Vite+ 移行後、CI 上の VRT が特定テストでハングする
-    # (ローカルでは完走する環境依存の問題)。根本対応は Argos への移行で行う。
-    # 参照: VRT を Argos に移行する issue。
-    continue-on-error: true
     # ハングで長時間放置されるのを防ぐ安全網。
     timeout-minutes: 20
     steps:
@@ -56,7 +52,10 @@ jobs:
       # in playwright.config.ts (chromium-storybook project reads index.json
       # from frontend/storybook-static/).
       - run: pnpm --filter gm-assistant-bot-frontend build-storybook
+      # Argos reporter がスクリーンショット・trace をアップロードし、PR に差分チェックを出す。
       - run: pnpm --filter gm-assistant-bot-frontend test:vrt
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

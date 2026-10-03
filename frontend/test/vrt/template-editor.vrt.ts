@@ -1,3 +1,5 @@
+import { argosScreenshot } from "@argos-ci/playwright";
+
 import { expect, test } from "./fixtures";
 import { FIXTURE_EDITOR_TEMPLATES } from "./seed";
 
@@ -21,9 +23,7 @@ test("template editor — single CreateRole", async ({ page, seedDb }) => {
   await expect(page.getByPlaceholder("テンプレート名を入力")).toHaveValue(singleCreateRole!.name);
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="CreateRole-1"]');
-  await expect(page).toHaveScreenshot("template-editor-single-create-role.png", {
-    fullPage: true,
-  });
+  await argosScreenshot(page, "template-editor-single-create-role");
 });
 
 test("template editor — single SendMessage", async ({ page, seedDb }) => {
@@ -32,9 +32,7 @@ test("template editor — single SendMessage", async ({ page, seedDb }) => {
   await expect(page.getByPlaceholder("テンプレート名を入力")).toHaveValue(singleSendMessage!.name);
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="SendMessage-1"]');
-  await expect(page).toHaveScreenshot("template-editor-single-send-message.png", {
-    fullPage: true,
-  });
+  await argosScreenshot(page, "template-editor-single-send-message");
 });
 
 test("template editor — single ConditionalBranch", async ({ page, seedDb }) => {
@@ -45,9 +43,7 @@ test("template editor — single ConditionalBranch", async ({ page, seedDb }) =>
   );
   await page.waitForSelector(".react-flow__viewport");
   await page.waitForSelector('[data-id="ConditionalBranch-1"]');
-  await expect(page).toHaveScreenshot("template-editor-single-conditional-branch.png", {
-    fullPage: true,
-  });
+  await argosScreenshot(page, "template-editor-single-conditional-branch");
 });
 
 test("template editor — connected flow with comment", async ({ page, seedDb }) => {
@@ -59,7 +55,5 @@ test("template editor — connected flow with comment", async ({ page, seedDb })
   await page.waitForSelector('[data-id="SendMessage-1"]');
   await page.waitForSelector('[data-id="ConditionalBranch-1"]');
   await page.waitForSelector('[data-id="Comment-1"]');
-  await expect(page).toHaveScreenshot("template-editor-connected-flow.png", {
-    fullPage: true,
-  });
+  await argosScreenshot(page, "template-editor-connected-flow");
 });

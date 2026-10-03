@@ -3,3 +3,5 @@ test-results/
 playwright-report/
 playwright/.cache/
 storybook-static/
+# Argos がローカル実行時に書き出すスクリーンショット
+screenshots/

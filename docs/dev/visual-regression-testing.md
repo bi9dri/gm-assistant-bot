@@ -1,8 +1,8 @@
 # Visual Regression Testing (VRT)
 
-Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147), the Desktop / Mobile viewport matrix from [#171](https://github.com/bi9dri/gm-assistant-bot/issues/171), and the light / dark theme matrix from [#148](https://github.com/bi9dri/gm-assistant-bot/issues/148).
+Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147), the Desktop / Mobile viewport matrix from [#171](https://github.com/bi9dri/gm-assistant-bot/issues/171), the light / dark theme matrix from [#148](https://github.com/bi9dri/gm-assistant-bot/issues/148), and the migration to [Argos](https://argos-ci.com) in [#311](https://github.com/bi9dri/gm-assistant-bot/issues/311).
 
-For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to update baselines**.
+For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to review diffs**. Screenshot baselines are no longer committed: the Argos reporter uploads captures and Argos performs the comparison in the cloud.
 
 ## Project matrix
 
@@ -19,7 +19,7 @@ VRT runs six Playwright projects in parallel (all chromium-only) — three viewp
 
 `chromium-mobile-*` spreads `devices["iPhone 13"]` for the viewport / `isMobile` / `hasTouch` / `deviceScaleFactor` traits, but overrides `defaultBrowserType: "chromium"` because CI only caches the chromium binary.
 
-Snapshots are stored as `{arg}-{projectName}-{platform}.png` via `snapshotPathTemplate`, so viewport × theme baselines coexist without conflict (e.g. `home-chromium-desktop-light-linux.png` / `home-chromium-desktop-dark-linux.png`). The CI `vrt-diff` artifact is split by project automatically — no CI changes required when projects are added.
+Argos namespaces each screenshot by Playwright project name (`<project>/<name>`), so calling `argosScreenshot(page, "home")` in every project produces separate baselines under `chromium-desktop-light/home`, `chromium-desktop-dark/home`, etc. — no suffix needs to be encoded in the name.
 
 The mobile projects exist to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
 
@@ -34,13 +34,13 @@ React Flow を使う route は touch UI と小幅 viewport を想定しておら
 
 Mobile UX 対応 (responsive React Flow) が入った段階で各 file の `testInfo.skip(...)` を外して mobile baseline を追加する。判定は `startsWith("chromium-mobile")` なので theme suffix の有無に関わらず両 mobile project が skip 対象となる。
 
-The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the baseline count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
+The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
-The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one snapshot per story per theme — no test file edits needed.
+The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one screenshot per story per theme — no test file edits needed.
 
 ## Theme matrix
 
-DaisyUI の light / dark テーマ両方で snapshot を撮ることで、片テーマだけが壊れる UI 変更を検知できる。
+DaisyUI の light / dark テーマ両方で screenshot を撮ることで、片テーマだけが壊れる UI 変更を検知できる。
 
 ### How theme is applied
 
@@ -85,42 +85,16 @@ The first local run also needs the chromium binary:
 pnpm --dir frontend exec playwright install chromium
 ```
 
-## Updating baselines (local)
+The Argos reporter only uploads when `CI` is set (`uploadToArgos: !!process.env.CI`), so local runs never hit Argos. Captures are written to `frontend/screenshots/` (gitignored).
 
-```bash
-# All six projects (desktop + mobile + storybook × light + dark)
-pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+## Reviewing diffs in Argos
 
-# Single project — useful when only one viewport / theme is intentionally diverging
-pnpm --filter gm-assistant-bot-frontend test:vrt -- \
-  --update-snapshots --project=chromium-mobile-dark
+On CI, the reporter uploads every `argosScreenshot` capture and Argos compares it against the baseline build for the branch:
 
-git add frontend/test/vrt
-git commit -m "chore(vrt): update baselines"
-```
-
-Snapshots are written to `frontend/test/vrt/{name}.vrt.ts-snapshots/{arg}-{projectName}-{platform}.png`. CI runs on Linux so only the `-linux.png` set is consumed by CI; other platforms are ignored.
-
-If your local Linux render matches the GitHub `ubuntu-latest` runner this is enough. When pixels diverge (font / fontconfig / chromium-libdeps differences), use the recovery flow below — **do not** chase pixel parity locally.
-
-## Updating baselines from CI artifact (recovery flow)
-
-Use this when local baselines pass locally but `vrt` fails in CI with rendering diffs.
-
-1. Push the PR and wait for the `vrt` job to fail.
-2. Open the failed run on GitHub Actions and download the `vrt-diff` artifact (zip).
-3. For each failing snapshot, replace the baseline with CI's `*-actual.png`:
-
-   ```bash
-   # inside the unzipped artifact
-   # path layout: test-results/<test-id>/<arg>-<projectName>-<platform>-actual.png
-   cp test-results/.../home-chromium-desktop-light-linux-actual.png \
-      frontend/test/vrt/home.vrt.ts-snapshots/home-chromium-desktop-light-linux.png
-   ```
-
-4. Commit the updated baseline and push. CI should now be green.
-
-This is the canonical reconciliation path: **CI's rendering is the source of truth**.
+- The Argos check appears on the pull request with a summary of added / changed / unchanged screenshots.
+- Review each change in the Argos UI and approve or reject it. Merging the PR accepts the current build as the new baseline for the default branch.
+- **Orphan builds:** until a build has run once on `main`, PR builds have no baseline to compare against and are marked orphan. Merge this setup (or run the `vrt` job once on `main`) to establish the baseline.
+- If a failure is not visual (dev server timeout, route 404), open the uploaded Playwright trace to investigate. The `vrt-diff` CI artifact also holds `frontend/test-results/` (traces / failure screenshots).
 
 ## `VITE_USE_MSW` が切り替えるもの
 
@@ -134,29 +108,37 @@ VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.t
 
 `/mockServiceWorker.js` はリポジトリに置かず、インストール済み msw パッケージ同梱の script を `vite.config.ts` の middleware が配信する。**`msw init` は実行しない** — 生成物をコミットすると msw の bump でバージョンがズレる。
 
-## Storybook baseline に効く vite.config.ts
+## Storybook の画面に効く vite.config.ts
 
 `@storybook/react-vite` の builder は `frontend/vite.config.ts` を自動で読み込み、その plugin を `storybook build` にも適用する。`.storybook/main.ts` の `viteFinal` はマージ先の調整をするだけで、この自動読み込みは止まらない。
 
-そのため `vite.config.ts` への plugin 追加・変更は `chromium-storybook-*` の baseline を動かしうる。routes 側の VRT だけを想定して変更しないこと。
+そのため `vite.config.ts` への plugin 追加・変更は `chromium-storybook-*` の screenshot を動かしうる。routes 側の VRT だけを想定して変更しないこと。
 
 ## CI behavior
 
 `.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the existing `check` job:
 
 - Triggered on `push` to `main` and on every `pull_request` to `main`
-- Runs natively on `ubuntu-latest` (no container) so the env mirrors a typical local Linux / WSL setup
+- Runs natively on `ubuntu-latest` (no container)
 - Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `pnpm-lock.yaml`); on miss `pnpm exec playwright install --with-deps chromium` populates it. On hit `pnpm exec playwright install-deps chromium` only installs system libs
 - Vite dev server is launched by `playwright.config.ts`'s `webServer`
-- On failure, `frontend/test-results/` is uploaded as the `vrt-diff` artifact
-  - Contents: `*-actual.png`, `*-expected.png`, `*-diff.png`, Playwright trace
-  - `retention-days: 14`
+- Playwright runs with `ARGOS_TOKEN` set (repository secret). The `@argos-ci/playwright` reporter uploads screenshots and traces; the Argos check posts to the PR
+- On failure, `frontend/test-results/` is uploaded as the `vrt-diff` artifact (`retention-days: 14`)
+- `timeout-minutes: 20` guards against a hung dev server
+
+### Required secret
+
+`ARGOS_TOKEN` must be configured as a repository secret (GitHub → Settings → Secrets and variables → Actions). It is the project token from Argos **Settings → General → Token**. Use `null`-safe reference only if Argos is intentionally disabled — otherwise the upload step fails without it.
 
 ## Troubleshooting
 
-### `vrt` job mass-fails the moment Playwright bumps
+### Argos upload fails / check is missing
 
-A new `@playwright/test` ships a new chromium build, which renders pixels differently. Bump first, then regenerate baselines via the recovery flow above. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
+Verify `ARGOS_TOKEN` is set as a repository secret and that the Argos project is linked to this repository. Locally the reporter does not upload; trigger the `vrt` job on CI (or a PR) to see the check.
+
+### `vrt` job mass-produces diffs the moment Playwright bumps
+
+A new `@playwright/test` (or chromium build) renders pixels differently, and Argos flags every screenshot as changed. This is expected: review and approve the batch in Argos. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
 
 ### `webServer` hangs / Internal Server Error during VRT
 
@@ -164,21 +146,17 @@ A new `@playwright/test` ships a new chromium build, which renders pixels differ
 
 ### Artifact contains no PNGs, only `trace.zip`
 
-The test failed for a non-snapshot reason (e.g., dev server timeout, route 404). Open `trace.zip` with `pnpm exec playwright show-trace path/to/trace.zip` to investigate.
-
-### Local Linux baseline drifts on every commit
-
-If you regenerate locally and CI keeps failing on the same snapshot, stop syncing from local — switch entirely to the CI artifact recovery flow. Mixing the two sources is what causes ping-pong updates.
+The test failed for a non-visual reason (e.g., dev server timeout, route 404). Open `trace.zip` with `pnpm exec playwright show-trace path/to/trace.zip` to investigate.
 
 ## Adding a Storybook component VRT
 
 1. Create `frontend/test/stories/Node/nodes/<Name>.stories.tsx` (or any path under `frontend/test/stories/`). Use `renderSingleNode` from `_render.tsx` to wrap React Flow custom nodes in a minimal `<ReactFlow>` instance — direct `<Component {...} />` won't render handles correctly.
-2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the snapshot becomes deterministic).
-3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` then `... test:vrt --update-snapshots` to generate the baseline png (両 theme 分が自動で生成される).
-4. Commit both the `*.stories.tsx` and the new `frontend/test/vrt/storybook/components.vrt.ts-snapshots/<id>-chromium-storybook-{light,dark}-linux.png`.
+2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the screenshot becomes deterministic).
+3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot per theme is captured automatically for the next CI run).
+4. Push the PR. The new screenshots appear in Argos as **added**; approve them.
 
 `<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Node/Nodes/SendMessage` + `MultipleMessages` → `node-nodes-sendmessage--multiple-messages`. Verify the actual id in `frontend/storybook-static/index.json` after building.
 
 ## Future work
 
-- PR-comment-triggered automatic baseline updates (e.g., `/update-snapshots` bot reply that opens a follow-up commit). Out of scope for [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144).
+- Stabilize remaining flaky captures surfaced by Argos (e.g. animated / dynamic elements) using `data-visual-test` attributes or `stabilize` options.

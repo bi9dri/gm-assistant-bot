@@ -1,3 +1,5 @@
+import { argosScreenshot } from "@argos-ci/playwright";
+
 import { expect, test } from "./fixtures";
 import { FIXTURE_BOTS, FIXTURE_GUILDS, FIXTURE_SESSIONS } from "./seed";
 
@@ -17,12 +19,12 @@ test("session detail — populated", async ({ page, seedDb }, testInfo) => {
   await page.goto(`/session/${session.id}`);
   await expect(page.getByPlaceholder("セッション名を入力")).toHaveValue(session.name);
   await page.waitForSelector(".react-flow__viewport");
-  await expect(page).toHaveScreenshot("session-detail-populated.png", { fullPage: true });
+  await argosScreenshot(page, "session-detail-populated");
 });
 
 test("session detail — not found", async ({ page, seedDb }) => {
   await seedDb({});
   await page.goto("/session/99999");
   await expect(page.getByText("セッションが見つかりません")).toBeVisible();
-  await expect(page).toHaveScreenshot("session-detail-not-found.png", { fullPage: true });
+  await argosScreenshot(page, "session-detail-not-found");
 });
