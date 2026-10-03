@@ -1,4 +1,0 @@
-# SSR の HTML には適用されない。そちらの CSP は src/routes/__root.tsx の
-# meta (httpEquiv) が持つ。両者の policy は同じに保つこと。
-/*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:

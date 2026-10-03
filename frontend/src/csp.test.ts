@@ -1,21 +1,22 @@
-import { readFileSync } from "node:fs";
-
 import { describe, test, expect } from "vite-plus/test";
 
-import { CONTENT_SECURITY_POLICY } from "./csp";
+import { buildContentSecurityPolicy } from "./csp";
 
 describe("Content-Security-Policy", () => {
-  test("script-src に 'unsafe-inline' を含む (Start SSR のインライン script 用)", () => {
-    const scriptSrc = CONTENT_SECURITY_POLICY.split(";").find((d) =>
-      d.trim().startsWith("script-src"),
-    );
-    expect(scriptSrc).toContain("'unsafe-inline'");
-    // ハッシュ許可はビルドごとに変わる Start の出力と一致しない。混在させない。
-    expect(CONTENT_SECURITY_POLICY).not.toContain("sha256-");
+  const policy = buildContentSecurityPolicy("test-nonce");
+
+  test("script-src は nonce 許可のみ (unsafe-inline・ハッシュ禁止)", () => {
+    const scriptSrc = policy.split(";").find((d) => d.trim().startsWith("script-src"));
+    expect(scriptSrc).toContain("'nonce-test-nonce'");
+    // 'unsafe-inline' があると nonce が無視される。ハッシュはビルドごとに変わる
+    // Start の出力と一致しない。style-src の 'unsafe-inline' は対象外。
+    expect(scriptSrc).not.toContain("unsafe-inline");
+    expect(scriptSrc).not.toContain("sha256-");
   });
 
-  test("public/_headers と同一 policy (二箇所の drift 防止)", () => {
-    const headers = readFileSync(new URL("../public/_headers", import.meta.url), "utf-8");
-    expect(headers).toContain(`Content-Security-Policy: ${CONTENT_SECURITY_POLICY}`);
+  test("外部 script・API 接続先を保つ", () => {
+    expect(policy).toContain("https://www.googletagmanager.com");
+    expect(policy).toContain("https://static.cloudflareinsights.com");
+    expect(policy).toContain("https://gm-assistant-bot-api.bidri.dev");
   });
 });
