@@ -14,6 +14,7 @@ import { FaDiscord } from "react-icons/fa";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { SiSessionize } from "react-icons/si";
 
+import { CONTENT_SECURITY_POLICY } from "@/csp";
 import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
@@ -43,10 +44,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
       {
         httpEquiv: "Content-Security-Policy",
-        // Start の SSR はハイドレーション用インライン script を吐く (内容はビルドごとに変わる
-        // ためハッシュ許可は不可)。nonce 配線までは 'unsafe-inline' で許す。
-        content:
-          "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:",
+        content: CONTENT_SECURITY_POLICY,
       },
       { name: "theme-color", content: "#000000" },
       { name: "description", content: "Web site created using create-tsrouter-app" },
