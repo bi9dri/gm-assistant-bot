@@ -3,6 +3,9 @@
   "tags": ["-lintignore"],
   "ignore": [".claude/worktrees/**"],
   "workspaces": {
-    ".": {}
+    ".": {},
+    "backend": {
+      "entry": ["cloudflare.config.ts", "wrangler.config.ts"]
+    }
   }
 }

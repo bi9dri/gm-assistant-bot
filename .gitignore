@@ -36,6 +36,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Wrangler local state
 .wrangler/
 
+# cf Build Output / generated types
+.cloudflare/
+
 # Development environment
 .dev.vars
 
