@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { test, expect } from "./fixtures";
+import { argosScreenshot } from "@argos-ci/playwright";
+
+import { test } from "./fixtures";
 // Storybook の static build (`storybook-static/`) を /iframe.html 経由で開いて
 // 1 ストーリ × 1 theme = 1 snapshot で VRT を行う。`STORY_IDS` を手書きせず
 // `storybook-static/index.json` を読み取って自動列挙する。新しい *.stories.tsx
@@ -55,6 +57,6 @@ for (const id of storyIds) {
     await page.waitForLoadState("networkidle");
     // React Flow handle 等の DOM が確定するまで僅かに待つ。
     await page.waitForTimeout(200);
-    await expect(page).toHaveScreenshot(`${id}.png`, { fullPage: true });
+    await argosScreenshot(page, id, { fullPage: true });
   });
 }
