@@ -22,6 +22,7 @@
 - **GitHub Actions**: pin external actions to full commit SHA (never tags/branches).
 - **Renovate (GitHub App, `.github/renovate.json5`) proposes every update** and enforces the three rules above. Don't bump versions by hand — review its PRs instead.
   - If CI fails on a Renovate PR, fix it on that branch (replace deprecated APIs, adapt to the new API) rather than closing the PR.
+  - Pin the pnpm version only in `packageManager`. Renovate does not update `devEngines.packageManager` (renovatebot/renovate#38067), so duplicating it there makes artifact updates fail with `ERR_PNPM_BAD_PM_VERSION`.
 - **Avoid `overrides`.** Fix it by updating the direct dependency. Use `overrides` only as a temporary measure when a critical vulnerability is reported against a transitive dependency AND no direct update resolves it — document the advisory, why a direct update isn't viable, and the removal condition in the PR.
 
 ## Architecture

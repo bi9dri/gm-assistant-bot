@@ -47,6 +47,13 @@
       groupName: "github-actions",
       matchManagers: ["github-actions"],
     },
+    {
+      // @vitest/coverage-v8 は vite-plus が同梱する vitest と同じバージョンでないと
+      // vp test が coverage provider 不一致で起動に失敗する（vitest の peerDependencies が exact）。
+      // 独立更新を止め、vite-plus 更新時に同梱 vitest を確認して手動で合わせる。
+      matchPackageNames: ["@vitest/coverage-v8"],
+      enabled: false,
+    },
     // major は既定どおりパッケージごとの個別 PR（Individual 相当）
   ],
 }
