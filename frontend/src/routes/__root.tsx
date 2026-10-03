@@ -1,8 +1,15 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { Outlet, createRootRoute, useRouter, useRouterState } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Link,
+  Outlet,
+  Scripts,
+  createRootRoute,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { FaDiscord } from "react-icons/fa";
 import { LuLayoutTemplate, LuPanelLeftOpen } from "react-icons/lu";
 import { SiSessionize } from "react-icons/si";
@@ -11,6 +18,8 @@ import { ThemeIcon } from "@/theme/ThemeIcon";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ThemeSwichMenu } from "@/theme/ThemeSwichMenu";
 import { ToastProvider } from "@/toast/ToastProvider";
+
+import stylesCss from "../styles.css?url";
 
 declare global {
   function gtag(...args: unknown[]): void;
@@ -21,10 +30,63 @@ interface RootContext {
 }
 
 export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+      {
+        httpEquiv: "Content-Security-Policy",
+        content:
+          "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://www.googletagmanager.com 'sha256-AEp7fPy6lEZUibfBm5EpRgaohKT5eg4TQXX2teIY7nY='; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:",
+      },
+      { name: "theme-color", content: "#000000" },
+      { name: "description", content: "Web site created using create-tsrouter-app" },
+    ],
+    links: [
+      { rel: "icon", href: "/favicon.ico" },
+      { rel: "apple-touch-icon", href: "/logo192.png" },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "stylesheet", href: stylesCss },
+    ],
+    scripts: [
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtag/js?id=G-05FZ21G8P1",
+      },
+      {
+        children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-05FZ21G8P1', { send_page_view: false });`,
+      },
+    ],
+  }),
   component: RootComponent,
 });
 
 function RootComponent() {
+  return (
+    <RootDocument>
+      <AppChrome />
+    </RootDocument>
+  );
+}
+
+function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <html lang="ja">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function AppChrome() {
   // 各ルートの beforeLoad が返す layoutMode は子マッチの context にしか現れない
   // (useRouteContext({ from: "__root__" }) はルート自身の context を返すため見えない)。
   // 最深マッチから遡って最初に見つかった layoutMode を採用する。
