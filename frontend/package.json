@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@argos-ci/playwright": "7.6.0",
-    "@cloudflare/vite-plugin": "1.58.0",
+    "@cloudflare/vite-plugin": "1.60.2",
     "@playwright/test": "1.63.0",
     "@storybook/addon-docs": "10.6.0",
     "@storybook/addon-themes": "10.6.0",
