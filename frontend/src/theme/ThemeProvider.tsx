@@ -3,25 +3,30 @@ import { type PropsWithChildren, createContext, useContext, useState } from "rea
 import { type THEME, THEMES } from ".";
 
 const THEME_LOCAL_STORAGE_KEY = "theme";
-let initialTheme: THEME = window.matchMedia("(prefers-color-scheme: dark)").matches
-  ? "dark"
-  : "light";
-try {
-  const storedTheme = localStorage.getItem(THEME_LOCAL_STORAGE_KEY);
-  if (storedTheme && THEMES.includes(storedTheme as THEME)) {
-    initialTheme = storedTheme as THEME;
+
+// SSR では window / localStorage が無いので既定値 "light" を返し、クライアントで
+// 保存済みテーマを復元する。
+function readInitialTheme(): THEME {
+  if (typeof window === "undefined") return "light";
+  let theme: THEME = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  try {
+    const storedTheme = localStorage.getItem(THEME_LOCAL_STORAGE_KEY);
+    if (storedTheme && THEMES.includes(storedTheme as THEME)) {
+      theme = storedTheme as THEME;
+    }
+  } catch {
+    // ignore
   }
-} catch {
-  // ignore
+  return theme;
 }
 
 const ThemeContext = createContext<{ theme: THEME; setTheme: React.Dispatch<THEME> }>({
-  theme: initialTheme,
+  theme: "light",
   setTheme: () => {},
 });
 
 export const ThemeProvider = ({ children }: PropsWithChildren) => {
-  const [theme, setTheme] = useState<THEME>(initialTheme);
+  const [theme, setTheme] = useState<THEME>(readInitialTheme);
   const onSetTheme = (newTheme: THEME) => {
     setTheme(newTheme);
     try {

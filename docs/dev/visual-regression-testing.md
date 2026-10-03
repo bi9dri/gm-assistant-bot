@@ -38,7 +38,7 @@ DaisyUI の light / dark テーマ両方で screenshot を撮ることで、片�
 Theme は worker option `theme: "light" | "dark"` で渡され、project ごとに二重に効かせている:
 
 1. **`use.colorScheme: "light" | "dark"`** — Playwright が context 起動時に CSS Media Query `(prefers-color-scheme: ...)` を強制設定する。Tailwind の `dark:` バリアント (例: `src/components/Node/base/base-node.tsx` の `dark:bg-secondary`) はこちらで切り替わる。
-2. **`theme` worker option → `localStorage.theme`** — Routes 用 `test/vrt/fixtures.ts` の `context` fixture が `addInitScript` で `localStorage.setItem("theme", t)` を仕込む。`ThemeProvider` (`src/theme/ThemeProvider.tsx`) は module-load 時にこの値を読んで `<div data-theme={theme}>` を出力するので、DaisyUI トークン (`bg-base-100` 等) がテーマに追従する。
+2. **`theme` worker option → `localStorage.theme`** — Routes 用 `test/vrt/fixtures.ts` の `context` fixture が `addInitScript` で `localStorage.setItem("theme", t)` を仕込む。SSR は常に `"light"` で描画するが、`__root.tsx` の inline script (`THEME_INIT_SCRIPT`) が hydrate 前に全 `div[data-theme]` を保存値へ補正するので、初回 paint から正テーマで出る (補正が無いと hydration mismatch で永久に light のままになる)。`ThemeProvider` (`src/theme/ThemeProvider.tsx`) は client render 時に同じ値を読んで `<div data-theme={theme}>` を出力するので、DaisyUI トークン (`bg-base-100` 等) がテーマに追従する。
 
 両方を仕込まないと「`data-theme="dark"` だが `dark:` バリアントが効かない」不整合が発生するので、両者は必ず同期させる。
 
@@ -95,7 +95,7 @@ VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.t
 
 | 参照元                  | 効果                                  |
 | ----------------------- | ------------------------------------- |
-| `src/main.tsx`          | MSW worker を start する              |
+| `src/client.tsx`        | MSW worker を start する              |
 | `vite.config.ts`        | devtools plugin の event bus を止める |
 | `src/routes/__root.tsx` | `<TanStackDevtools>` をマウントしない |
 
@@ -106,6 +106,8 @@ VRT 用 dev server は `VITE_USE_MSW=true` で起動する (`playwright.config.t
 `@storybook/react-vite` の builder は `frontend/vite.config.ts` を自動で読み込み、その plugin を `storybook build` にも適用する。`.storybook/main.ts` の `viteFinal` はマージ先の調整をするだけで、この自動読み込みは止まらない。
 
 そのため `vite.config.ts` への plugin 追加・変更は `chromium-storybook-*` の screenshot を動かしうる。routes 側の VRT だけを想定して変更しないこと。
+
+TanStack Start / `@cloudflare/vite-plugin` は SSR・Workers 前提の plugin で、Storybook や Vitest のビルドとは両立しない (`multiple entries detected` / `depsOptimizer is required`)。`vite.config.ts` は `process.env.STORYBOOK` / `process.env.VITEST` を見て、そのときだけ両 plugin を外している (`STORYBOOK=true` は Storybook CLI が自前で立てる。`VITEST=true` は Vitest が立てる)。
 
 ## CI behavior
 

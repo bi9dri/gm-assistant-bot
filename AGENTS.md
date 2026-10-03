@@ -27,13 +27,14 @@
 
 ## Architecture
 
-pnpm workspace monorepo on Node 24 (Vite+ toolchain): `/frontend` (React + Vite, deployed to GitHub Pages), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview だけ Cloudflare Workers Static Assets に載せる (`/frontend/preview`).
+pnpm workspace monorepo on Node 24 (Vite+ toolchain): `/frontend` (React + TanStack Start, SSR/Workers via `@cloudflare/vite-plugin`), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview だけ Cloudflare Workers Static Assets に載せる (`/frontend/preview`).
 
 ## Docs (`/docs/dev`)
 
 - [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
 - [scenario-editor-architecture.md](docs/dev/scenario-editor-architecture.md) — **required reading before any issue #213 sub-issue work** (scenario-document UI; the settled cross-cutting decisions). New features go here, not into the older UIs.
 - [step-list-editor-architecture.md](docs/dev/step-list-editor-architecture.md) — step-list editor (issue #182). Frozen: kept only to run existing data, but its registry contract is still shared and live
+- [tanstack-start-architecture.md](docs/dev/tanstack-start-architecture.md) — TanStack Start + Cloudflare plugin 構成 (entry / head / plugin 除外の理由)
 - [pr-preview-environment.md](docs/dev/pr-preview-environment.md) — PR ごとの使い捨て Cloudflare Worker preview (作成・破棄・必要な Secrets)
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
 

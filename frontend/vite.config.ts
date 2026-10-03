@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { URL, fileURLToPath } from "node:url";
 
+import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { type Plugin, defineConfig, lazyPlugins } from "vite-plus";
 
@@ -30,6 +31,13 @@ function mswServiceWorkerDevOnly(): Plugin {
   };
 }
 
+// Vitest / Storybook はこの config を丸ごと読み込むため、SSR/Workers を組み立てる
+// cloudflare/start を有効にしたままだと壊れる (Vitest: depsOptimizer is required、
+// Storybook: multiple entries detected)。どちらも Start を必要としないので外す。
+const isVitest = process.env.VITEST === "true";
+const isStorybook = process.env.STORYBOOK === "true";
+const skipStartPlugins = isVitest || isStorybook;
+
 export default defineConfig({
   plugins: lazyPlugins(() => [
     // VRT (`VITE_USE_MSW`) では devtools プラグインを完全に外す。VRT では不要な上、
@@ -37,18 +45,27 @@ export default defineConfig({
     // 返らない、というハング要因を CI でも踏まないようにする。
     process.env.VITE_USE_MSW === "true" ? undefined : devtools(),
     tailwindcss(),
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-    }),
+    ...(skipStartPlugins
+      ? []
+      : [cloudflare({ viteEnvironment: { name: "ssr" } }), tanstackStart()]),
     viteReact(),
     mswServiceWorkerDevOnly(),
   ]),
   // `db/database.ts` の `await import("fake-indexeddb")` を Vite が起動後に発見すると
   // 「optimized dependencies changed. reloading」で VRT 中にページが reload され、
   // Playwright がハングする。起動時の optimize に含めて reload を防ぐ。
+  //
+  // TanStack Start は client / ssr それぞれの環境で optimizeDeps を再設定し client 側の
+  // noDiscovery を上書きするため、環境ごとにも明示する。
   optimizeDeps: {
     include: ["fake-indexeddb"],
+  },
+  environments: {
+    ssr: {
+      optimizeDeps: {
+        include: ["fake-indexeddb"],
+      },
+    },
   },
   resolve: {
     alias: {
