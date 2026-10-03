@@ -33,7 +33,6 @@ interface RootContext {
 // hydration mismatch (描画が永久に light のままになる) を避ける。
 // 対象は ThemeProvider の div のみ (div[data-theme])。ThemeIcon の swatch は
 // テーマ名が固定で SSR/クライアント一致するため触らない。
-// CSP 用 sha256 はこの文字列ちょうどのハッシュ。変えたら CSP も更新すること。
 const THEME_INIT_SCRIPT = `try{var s=localStorage.getItem("theme"),t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"),d=document.querySelector("div[data-theme]");if(d)d.setAttribute("data-theme",t)}catch(e){}`;
 
 export const Route = createRootRoute({
@@ -44,8 +43,10 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
       {
         httpEquiv: "Content-Security-Policy",
+        // Start の SSR はハイドレーション用インライン script を吐く (内容はビルドごとに変わる
+        // ためハッシュ許可は不可)。nonce 配線までは 'unsafe-inline' で許す。
         content:
-          "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://www.googletagmanager.com 'sha256-AEp7fPy6lEZUibfBm5EpRgaohKT5eg4TQXX2teIY7nY=' 'sha256-hbsV1Ahy61js7Yns1aXsjt/xVzufQpWRnzAA20ZJf/M='; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:",
+          "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com; connect-src 'self' https://gm-assistant-bot-api.bidri.dev https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://cdn.discordapp.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:",
       },
       { name: "theme-color", content: "#000000" },
       { name: "description", content: "Web site created using create-tsrouter-app" },
