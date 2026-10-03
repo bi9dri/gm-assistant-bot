@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/knip/schema.json",
   "tags": ["-lintignore"],
-  "ignore": [".claude/worktrees/**", "frontend/preview/worker.ts"],
+  "ignore": [".claude/worktrees/**"],
   "workspaces": {
     ".": {}
   }

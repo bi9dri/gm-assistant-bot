@@ -4,6 +4,10 @@
   "compatibility_date": "2025-12-12",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // 本番フロントのカスタムドメイン (backend の gm-assistant-bot-api.bidri.dev に対応)。
+  // preview (`wrangler deploy --temporary`) は一時アカウントに上げるため、
+  // routes を含まない別フローでデプロイする (.github/workflows/preview.yml)。
+  "routes": [{ "pattern": "gm-assistant-bot.bidri.dev", "custom_domain": true }],
   "observability": {
     "enabled": true,
   },
