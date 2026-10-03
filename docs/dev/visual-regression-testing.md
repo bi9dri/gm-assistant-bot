@@ -23,7 +23,7 @@ Argos namespaces each screenshot by Playwright project name (`<project>/<name>`)
 
 The mobile projects exist to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
 
-React Flow の Node Editor（`/template/$id`・`/session/$id`）は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）は削除した。Storybook の Node コンポーネント VRT（`test/stories/Node/**`）は残している。
+React Flow の Node Editor / Node Element は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）と Storybook の Node コンポーネント VRT（`test/stories/Node/**`・`test/stories/editable-title.stories.tsx`）を削除した。
 
 The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
@@ -143,12 +143,12 @@ The test failed for a non-visual reason (e.g., dev server timeout, route 404). O
 
 ## Adding a Storybook component VRT
 
-1. Create `frontend/test/stories/Node/nodes/<Name>.stories.tsx` (or any path under `frontend/test/stories/`). Use `renderSingleNode` from `_render.tsx` to wrap React Flow custom nodes in a minimal `<ReactFlow>` instance — direct `<Component {...} />` won't render handles correctly.
+1. Create a story file under `frontend/test/stories/` (e.g. `frontend/test/stories/Scenario/<Name>.stories.tsx`).
 2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the screenshot becomes deterministic).
 3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot per theme is captured automatically for the next CI run).
 4. Push the PR. The new screenshots appear in Argos as **added**; approve them.
 
-`<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Node/Nodes/SendMessage` + `MultipleMessages` → `node-nodes-sendmessage--multiple-messages`. Verify the actual id in `frontend/storybook-static/index.json` after building.
+`<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Scenario/TableOfContents` + `Default` → `scenario-tableofcontents--default`. Verify the actual id in `frontend/storybook-static/index.json` after building.
 
 ## Future work
 
