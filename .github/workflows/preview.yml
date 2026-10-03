@@ -1,7 +1,7 @@
 name: PR Preview
 
-# 動作確認用に PR の HEAD を Cloudflare の一時アカウントへ立てる。`--temporary` は
-# 認証情報なしでデプロイでき、アカウントごと 60 分で失効するので後始末の仕組みが要らない。
+# `--temporary` は認証情報なしでデプロイでき、アカウントごと 60 分で失効するので
+# 後始末の仕組みが要らない。
 # 本番と同じ TanStack Start ビルドを上げ、`/api` はアプリ内 server route
 # (src/routes/api/$.ts) が本番 API へ中継する。preview の origin は毎回変わるため
 # 本番 API を直接叩くと CORS で弾かれる。
@@ -36,7 +36,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter 'gm-assistant-bot-frontend' build
         env:
-          # 同一オリジン (アプリ内 /api 中継) を使う。本番 API を直接叩くと CORS で弾かれる。
+          # 同一オリジン (アプリ内 /api 中継) を使う。
           VITE_API_BASE_URL: ""
       - id: deploy
         working-directory: frontend
@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           # ビルド生成 config (dist/server/wrangler.json) には本番 routes が入る。
-          # 一時アカウントに zone は無いので外す。--name は CLI で上書きする。
+          # 一時アカウントに zone は無いので外す。
           tmp="$(mktemp)"
           jq 'del(.routes)' dist/server/wrangler.json > "$tmp"
           mv "$tmp" dist/server/wrangler.json

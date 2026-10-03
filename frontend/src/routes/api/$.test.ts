@@ -64,4 +64,13 @@ describe("/api 中継", () => {
       expect(init.method).toBe(method);
     });
   }
+
+  test("クライアントが絶対 URL を使うビルドでは 404 (本番で開かない)", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", "https://gm-assistant-bot-api.bidri.dev");
+    const res = await handlers.GET({
+      request: new Request("https://gm-assistant-bot.bidri.dev/api/guilds"),
+    });
+    expect(res.status).toBe(404);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

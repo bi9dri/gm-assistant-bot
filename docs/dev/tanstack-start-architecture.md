@@ -1,4 +1,4 @@
-# TanStack Start 構成 (WS2 #307 / WS3 #306)
+# TanStack Start 構成 (#307, #306)
 
 TanStack Router の SPA 構成から TanStack Start (SSR) へ移行した。本番ホスティングは
 Workers Static Assets に統合済み (WS3)。`/api` は従来どおり別 Worker (Hono) のまま。

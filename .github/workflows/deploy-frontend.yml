@@ -1,8 +1,7 @@
 name: Deploy Frontend
 
-# 本番フロントは Workers Static Assets (TanStack Start SSR) で配信する。
-# ビルド後に frontend/ から `wrangler deploy` すると、@cloudflare/vite-plugin が
-# 生成した frontend/dist/server/wrangler.json (Worker + assets) へリダイレクトされる。
+# frontend/ からの `wrangler deploy` は、`@cloudflare/vite-plugin` が生成した
+# frontend/dist/server/wrangler.json (Worker + assets) へリダイレクトされる。
 # 要リポジトリ Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID。
 # カスタムドメイン (gm-assistant-bot.bidri.dev) は frontend/wrangler.jsonc の routes で付く。
 on:
