@@ -44,6 +44,12 @@
       matchUpdateTypes: ["minor", "patch"],
     },
     {
+      // vite-plus 本体と pnpm catalog の `vite` は同じリリースで揃える必要がある。
+      // non-major の一括 PR に埋もれると同梱 vitest の確認を落とすため専用グループ化。
+      groupName: "vite+",
+      matchPackageNames: ["vite-plus", "@voidzero-dev/vite-plus-core"],
+    },
+    {
       groupName: "github-actions",
       matchManagers: ["github-actions"],
     },
@@ -54,6 +60,7 @@
       matchPackageNames: ["@vitest/coverage-v8"],
       enabled: false,
     },
-    // major は既定どおりパッケージごとの個別 PR（Individual 相当）
+    // major は既定どおりパッケージごとの個別 PR（Individual 相当）。
+    // vite+ は同リリースで揃える必要があるため例外として上のグループに含める。
   ],
 }

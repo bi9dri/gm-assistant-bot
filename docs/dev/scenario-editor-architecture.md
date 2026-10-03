@@ -371,7 +371,7 @@ Dexie の次バージョンで `scenarioData` を読み替える。**`schema-mig
 | テーブル・インライン画像・リンク                 | 本文の表現力を増やす前に、まず操作をインライン化した効果を測る (D20)                                                             |
 | 共同編集 (Y.js 等)                               | 単一 GM が編集する前提。同期のためのバックエンドを持たない                                                                       |
 | Markdown の入出力                                | 貼り付けと入力ルールで足りる。パーサを持たない (D6)                                                                              |
-| `docs/dev/node-system-architecture.md` の整理    | `DynamicValue` の解決仕様は新画面でも有効なので、ノード実装手順のみ削る。#182 Phase 5 の後                                       |
+| `docs/dev/node-system-architecture.md` の整理    | 3 系統併存 (D5) で React Flow を残すため対象外。同 doc は現役で参照する                                                          |
 
 ## 参照ファイル
 
