@@ -13,23 +13,25 @@ GM がストーリーテリングとプレイヤーとの対話に集中でき�
 
 pnpm workspace monorepo (Node 24 + Vite+):
 
-| パッケージ  | スタック                                                                              | デプロイ先         |
-| ----------- | ------------------------------------------------------------------------------------- | ------------------ |
-| `frontend/` | React + Vite + TanStack Start + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | Cloudflare Workers |
-| `backend/`  | Hono + Zod + discord.js                                                               | Cloudflare Workers |
+| パッケージ  | スタック                                                                               | デプロイ先         |
+| ----------- | -------------------------------------------------------------------------------------- | ------------------ |
+| `frontend/` | React + TanStack Start (Vite+) + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | Cloudflare Workers |
+| `backend/`  | Hono + Zod + discord.js                                                                | Cloudflare Workers |
 
 詳細は `docs/dev/` を参照:
 
 - [node-system-architecture.md](docs/dev/node-system-architecture.md)
 - [filesystem-architecture.md](docs/dev/filesystem-architecture.md)
 - [testing-strategy.md](docs/dev/testing-strategy.md)
+- [tanstack-start-architecture.md](docs/dev/tanstack-start-architecture.md)
+- [pr-preview-environment.md](docs/dev/pr-preview-environment.md)
 
 ## 開発環境セットアップ
 
 ### 前提
 
 - Node 24 LTS (`^22.18.0 || ^24.11.0 || >=26.0.0`)
-- pnpm 12.6.0 (`packageManager` / `devEngines` で固定)
+- pnpm 12.7.0 (`packageManager` で固定)
 
 Vite+ (`vite-plus` 同梱の `vp` CLI) がビルド / テスト / 整形を担う。依存をインストール:
 
@@ -39,7 +41,7 @@ pnpm install
 
 ### 開発サーバ
 
-frontend (Vite, :3000) を起動 (backend は別途 `pnpm --filter gm-assistant-bot-backend dev`):
+frontend (Vite+ dev / TanStack Start, :3000) を起動 (backend は別途 `pnpm --filter gm-assistant-bot-backend dev`):
 
 ```bash
 pnpm dev
@@ -70,7 +72,7 @@ pnpm knip                 # 未使用 export / dep の検出
 ## テスト
 
 - **Unit / 統合**: Vite+ 同梱の Vitest (`vp test` / `pnpm test`)。
-- **Visual Regression Testing**: Playwright + Storybook + MSW。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。
+- **Visual Regression Testing**: Playwright + Storybook + MSW。差分は [Argos](https://argos-ci.com) のUIでレビューする (baseline画像はコミットしない)。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。詳細は [visual-regression-testing.md](docs/dev/visual-regression-testing.md)。
 - **Storybook 単体起動**: `pnpm --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
 
 戦略の詳細は [testing-strategy.md](docs/dev/testing-strategy.md)。

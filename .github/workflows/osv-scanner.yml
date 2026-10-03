@@ -13,7 +13,7 @@ on:
   merge_group:
     branches: [main]
   schedule:
-    - cron: "0 22 * * *"  # 07:00 JST
+    - cron: "0 22 * * *" # 07:00 JST
   push:
     branches: [main]
 
@@ -25,14 +25,14 @@ permissions:
   actions: read
 
 jobs:
-  # scan-args は既定値（`-r ./`）。bun.lock は osv-scanner がサポートしている。
+  # scan-args は既定値（`-r ./`）。pnpm-lock.yaml は osv-scanner がサポートしている。
   scan-scheduled:
     if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc  # v2.6.0
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
     with:
       # 脆弱性の報告先は Security > Code scanning。ここで job を落とすと code scanning の
       # setup 側が「スキャン失敗」扱いになり、アラートより先にワークフローのエラーが出てしまう。
       fail-on-vuln: false
   scan-pr:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc  # v2.6.0
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0

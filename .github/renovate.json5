@@ -44,6 +44,14 @@
       matchUpdateTypes: ["minor", "patch"],
     },
     {
+      // vite-plus 本体と、pnpm catalog の `vite` エイリアス (実体は
+      // @voidzero-dev/vite-plus-core) は同じリリースで揃える必要がある。
+      // non-major の一括 PR に埋もれると vitest 同梱版の確認を落としやすいため
+      // 専用グループに分ける (@vitest/coverage-v8 を手動で合わせる前提)。
+      groupName: "vite+",
+      matchPackageNames: ["vite-plus", "@voidzero-dev/vite-plus-core"],
+    },
+    {
       groupName: "github-actions",
       matchManagers: ["github-actions"],
     },

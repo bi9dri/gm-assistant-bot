@@ -6,6 +6,12 @@
 >
 > Phase 0 (data model + converter) is already merged — see `frontend/src/flow/schema.ts`
 > and `frontend/src/flow/convert.ts`. This doc covers everything built **on top of** that.
+>
+> **Frozen.** The 3rd-generation scenario-document UI supersedes the plan to delete React Flow:
+> per D5/D15 in [scenario-editor-architecture.md](./scenario-editor-architecture.md), the
+> React Flow and step-list UIs are kept to run existing data. Phase 5 below (delete React Flow /
+> `reactFlowData`) is **not** in effect — do not act on it. Only the registry contract and
+> `treeOps` API remain shared and live.
 
 ## Why this migration
 
