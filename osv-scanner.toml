@@ -1,0 +1,8 @@
+# osv-scanner はスキャン対象ファイルと同じディレクトリのこのファイルを自動で読む
+# (pnpm-lock.yaml はリポジトリ直下)。
+# 修正版が存在しない transitive dependency を期限つきで許可する。
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-01-31
+reason = "braces <= 3.0.3 (最新) に修正版が存在しない。devDependency の @argos-ci/playwright -> @argos-ci/core -> fast-glob -> micromatch 経由のみで、glob パターンは開発者制御のため外部入力ではない。braces 3.0.4+ がリリースされたらこのエントリを削除する。"
