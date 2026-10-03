@@ -13,7 +13,7 @@ VRT was introduced via Issue [#141](https://github.com/bi9dri/gm-assistant-bot/i
 ```
     ┌─────────┐
     │   VRT   │  Playwright + MSW; freeze appearance as fixtures
-    │(Visual) │  Routes / React Flow editor / Storybook stories × light/dark
+    │(Visual) │  Routes / Storybook stories × light/dark
     ├─────────┤
     │ Integra-│  Hono `app.request()`, fake-indexeddb, etc.
     │  tion   │  store ↔ DB collaboration, route handler + schema
@@ -41,7 +41,6 @@ Verifies collaboration between two or more modules. Uses `fake-indexeddb` or Hon
 ### Purpose
 
 - Tailwind + DaisyUI usage makes CSS-driven visual breakage easy to introduce
-- The React Flow-based template editor is highly susceptible to visual regressions in node rendering, connections, and layout
 - Provide a CI safety net that catches visual diffs
 
 ### Scope
@@ -49,7 +48,6 @@ Verifies collaboration between two or more modules. Uses `fake-indexeddb` or Hon
 Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141).
 
 - **All routes** (template / session / bot)
-- **React Flow template editor** (empty state / single representative node / multiple nodes connected by edges)
 - **Individual components via Storybook stories**
 - **light / dark theme matrix**
 

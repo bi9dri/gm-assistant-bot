@@ -23,16 +23,7 @@ Argos namespaces each screenshot by Playwright project name (`<project>/<name>`)
 
 The mobile projects exist to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
 
-### Tests skipped on `chromium-mobile-*`
-
-React Flow を使う route は touch UI と小幅 viewport を想定しておらず、mobile レイアウトでは `.react-flow__viewport` が描画されない。Mobile UX 対応は別 issue で扱う方針なので、以下を `testInfo.skip(...)` で mobile project (`startsWith("chromium-mobile")` 判定) からのみ skip している:
-
-- `template-editor.vrt.ts` — full file (4 tests)
-- `template-new.vrt.ts` — full file (1 test)
-- `session-detail.vrt.ts` — `populated` only (`not found` は mobile でも実行)
-- `template-detail.vrt.ts` — `populated` only (`not found` は mobile でも実行)
-
-Mobile UX 対応 (responsive React Flow) が入った段階で各 file の `testInfo.skip(...)` を外して mobile baseline を追加する。判定は `startsWith("chromium-mobile")` なので theme suffix の有無に関わらず両 mobile project が skip 対象となる。
+React Flow の Node Editor（`/template/$id`・`/session/$id`）は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）は削除した。Storybook の Node コンポーネント VRT（`test/stories/Node/**`）は残している。
 
 The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
