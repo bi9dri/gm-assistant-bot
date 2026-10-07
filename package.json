@@ -24,7 +24,7 @@
     "knip": "6.38.0",
     "typescript": "7.0.2",
     "vite-plus": "catalog:",
-    "wrangler": "4.141.0"
+    "wrangler": "4.144.0"
   },
-  "packageManager": "pnpm@12.7.0"
+  "packageManager": "pnpm@12.8.2"
 }
