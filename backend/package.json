@@ -15,13 +15,13 @@
   "dependencies": {
     "@discordjs/rest": "2.6.3",
     "@hono/zod-validator": "0.9.1",
-    "discord-api-types": "0.38.55",
-    "hono": "4.13.9",
+    "discord-api-types": "0.38.56",
+    "hono": "4.13.11",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260926.1",
+    "@cloudflare/workers-types": "5.20260930.1",
     "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@12.7.0"
+  "packageManager": "pnpm@12.8.2"
 }
