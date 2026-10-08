@@ -5,6 +5,11 @@ import type { VrtWorkerOptions } from "./test/vrt/fixtures";
 
 const THEMES = ["light", "dark"] as const satisfies readonly VrtWorkerOptions["theme"][];
 
+// Argos のスクリーンショット上限に収めるため、dark で撮るのはこの 1 テストだけ。
+// カード + 画像 + バッジ + 絞り込み入力 + ナビ/テーマメニューが同居し、light/dark の
+// 比較に向くページを選ぶ。対象を変え/増やすときはここを書き換える。
+const THEME_COMPARISON = /template list — メタ情報あり/;
+
 export default defineConfig<{}, VrtWorkerOptions>({
   testDir: "./test/vrt",
   testMatch: "**/*.vrt.ts",
@@ -41,44 +46,51 @@ export default defineConfig<{}, VrtWorkerOptions>({
   // Project は viewport (desktop / mobile / storybook) × theme (light / dark) のマトリクス。
   // theme 制御は二重: `colorScheme` で `prefers-color-scheme` (Tailwind `dark:` バリアント用)、
   // `theme` worker option で `localStorage.theme` (DaisyUI `data-theme` 属性用)。
-  projects: THEMES.flatMap((theme) => [
-    {
-      name: `chromium-desktop-${theme}`,
-      testIgnore: "**/storybook/**",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:3000",
-        viewport: { width: 1280, height: 720 },
-        colorScheme: theme,
-        theme,
+  //
+  // Argos のスクリーンショット上限に収めるため、dark は THEME_COMPARISON の 1 テストだけ
+  // (project の `grep` で絞る)、storybook は light のみ。
+  projects: [
+    ...THEMES.flatMap((theme) => [
+      {
+        name: `chromium-desktop-${theme}`,
+        testIgnore: "**/storybook/**",
+        grep: theme === "dark" ? THEME_COMPARISON : undefined,
+        use: {
+          ...devices["Desktop Chrome"],
+          baseURL: "http://localhost:3000",
+          viewport: { width: 1280, height: 720 },
+          colorScheme: theme,
+          theme,
+        },
       },
-    },
-    {
-      name: `chromium-mobile-${theme}`,
-      testIgnore: "**/storybook/**",
-      use: {
-        ...devices["iPhone 13"],
-        // iPhone 13 device は webkit デフォルト。CI は chromium のみキャッシュしているため
-        // mobile emulation (viewport / isMobile / hasTouch / deviceScaleFactor) だけ流用して
-        // browser engine は chromium に固定する。
-        defaultBrowserType: "chromium",
-        baseURL: "http://localhost:3000",
-        colorScheme: theme,
-        theme,
+      {
+        name: `chromium-mobile-${theme}`,
+        testIgnore: "**/storybook/**",
+        grep: theme === "dark" ? THEME_COMPARISON : undefined,
+        use: {
+          ...devices["iPhone 13"],
+          // iPhone 13 device は webkit デフォルト。CI は chromium のみキャッシュしているため
+          // mobile emulation (viewport / isMobile / hasTouch / deviceScaleFactor) だけ流用して
+          // browser engine は chromium に固定する。
+          defaultBrowserType: "chromium" as const,
+          baseURL: "http://localhost:3000",
+          colorScheme: theme,
+          theme,
+        },
       },
-    },
+    ]),
     {
-      name: `chromium-storybook-${theme}`,
+      name: "chromium-storybook-light",
       testMatch: "**/storybook/**/*.vrt.ts",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: "http://localhost:6007",
         viewport: { width: 1280, height: 720 },
-        colorScheme: theme,
-        theme,
+        colorScheme: "light",
+        theme: "light",
       },
     },
-  ]),
+  ],
   webServer: [
     {
       // プロジェクト同梱の vite-plus を使う。グローバル `vp` は CI で別ビルドの

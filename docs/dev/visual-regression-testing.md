@@ -6,32 +6,33 @@ For purpose, scope, and design principles see [testing-strategy.md § VRT](./tes
 
 ## Project matrix
 
-VRT runs six Playwright projects in parallel (all chromium-only) — three viewports × two themes:
+VRT runs five Playwright projects in parallel (all chromium-only): routes in desktop / mobile × light / dark, plus Storybook stories desktop × light.
 
-| Project name               | Scope                                       | Base URL                | Viewport                                    | Theme   |
-| -------------------------- | ------------------------------------------- | ----------------------- | ------------------------------------------- | ------- |
-| `chromium-desktop-light`   | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                    | `light` |
-| `chromium-desktop-dark`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 1280x720                                    | `dark`  |
-| `chromium-mobile-light`    | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `light` |
-| `chromium-mobile-dark`     | Routes (`test/vrt/*.vrt.ts`)                | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `dark`  |
-| `chromium-storybook-light` | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                    | `light` |
-| `chromium-storybook-dark`  | Storybook stories (`test/vrt/storybook/**`) | `http://localhost:6007` | 1280x720                                    | `dark`  |
+| Project name               | Scope                                                              | Base URL                | Viewport                                    | Theme   |
+| -------------------------- | ------------------------------------------------------------------ | ----------------------- | ------------------------------------------- | ------- |
+| `chromium-desktop-light`   | Routes (`test/vrt/*.vrt.ts`)                                       | `http://localhost:3000` | 1280x720                                    | `light` |
+| `chromium-desktop-dark`    | Routes, テーマ比較 1 テストのみ (`playwright.config.ts` の `grep`) | `http://localhost:3000` | 1280x720                                    | `dark`  |
+| `chromium-mobile-light`    | Routes (`test/vrt/*.vrt.ts`)                                       | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `light` |
+| `chromium-mobile-dark`     | Routes, テーマ比較 1 テストのみ (`playwright.config.ts` の `grep`) | `http://localhost:3000` | 390x844 (iPhone 13, `isMobile`, `hasTouch`) | `dark`  |
+| `chromium-storybook-light` | Storybook stories (`test/vrt/storybook/**`)                        | `http://localhost:6007` | 1280x720                                    | `light` |
 
 `chromium-mobile-*` spreads `devices["iPhone 13"]` for the viewport / `isMobile` / `hasTouch` / `deviceScaleFactor` traits, but overrides `defaultBrowserType: "chromium"` because CI only caches the chromium binary.
 
-Argos namespaces each screenshot by Playwright project name (`<project>/<name>`), so calling `argosScreenshot(page, "home")` in every project produces separate baselines under `chromium-desktop-light/home`, `chromium-desktop-dark/home`, etc. — no suffix needs to be encoded in the name.
+Argos namespaces each screenshot by Playwright project name (`<project>/<name>`), so calling `argosScreenshot(page, "home")` in every project produces separate baselines under `chromium-desktop-light/home`, `chromium-mobile-light/home`, etc. — no suffix needs to be encoded in the name.
 
 The mobile projects exist to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
 
-React Flow の Node Editor / Node Element は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）と Storybook の Node コンポーネント VRT（`test/stories/Node/**`・`test/stories/editable-title.stories.tsx`）を削除した。
+Deprecated UI の VRT は削除済み: React Flow の Node Editor / Node Element は route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）と Storybook の Node コンポーネント VRT（`test/stories/Node/**`・`test/stories/editable-title.stories.tsx`）を、step-list editor (第 2 世代) は Storybook VRT（`test/stories/Flow/**`）をそれぞれ削除した。
 
-The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
+The `chromium-storybook-light` project stays desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
-The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one screenshot per story per theme — no test file edits needed.
+The Storybook VRT auto-discovers stories from `storybook-static/index.json`, so adding a new `*.stories.tsx` under `frontend/test/stories/` automatically adds one screenshot per story — no test file edits needed.
 
 ## Theme matrix
 
 DaisyUI の light / dark テーマ両方で screenshot を撮ることで、片テーマだけが壊れる UI 変更を検知できる。
+
+Argos のスクリーンショット上限に収めるため、dark で撮るのは `playwright.config.ts` の `THEME_COMPARISON`（現在は `template list — メタ情報あり` = カード + 画像 + バッジ + 絞り込み入力 + ナビ/テーマメニューが同居する 1 ページ）だけ。dark プロジェクトには `grep: THEME_COMPARISON` が掛かっているので、それ以外のテストはそもそも dark 側に選ばれない。Storybook は light プロジェクトのみ。テーマ比較の対象を変える／追加するときは `THEME_COMPARISON` を書き換える。
 
 ### How theme is applied
 
@@ -50,12 +51,12 @@ Storybook テスト (`test/vrt/storybook/components.vrt.ts`) は `localStorage` 
 await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 ```
 
-`.storybook/preview.ts` で `withThemeByDataAttribute({ themes: { light, dark }, attributeName: "data-theme" })` を decorator 登録済み。`use.colorScheme` は引き続き Playwright が context 経由で適用する。
+`.storybook/preview.ts` で `withThemeByDataAttribute({ themes: { light, dark }, attributeName: "data-theme" })` を decorator 登録済み。`use.colorScheme` は引き続き Playwright が context 経由で適用する。dark も解決できるが、Storybook プロジェクトは light のみ登録しているため実際には light しか使われない。
 
 ## Local execution
 
 ```bash
-# All six projects (desktop / mobile / storybook × light / dark)
+# All five projects (routes: desktop / mobile × light / dark, storybook: light)
 pnpm --filter gm-assistant-bot-frontend build-storybook
 pnpm --filter gm-assistant-bot-frontend test:vrt
 
@@ -63,9 +64,9 @@ pnpm --filter gm-assistant-bot-frontend test:vrt
 pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
 pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
 
-# Single theme across all viewports
+# dark のテーマ比較ページだけ (dark プロジェクトは grep でそれしか選ばない)
 pnpm --filter gm-assistant-bot-frontend test:vrt -- \
-  --project=chromium-desktop-dark --project=chromium-mobile-dark --project=chromium-storybook-dark
+  --project=chromium-desktop-dark --project=chromium-mobile-dark
 ```
 
 Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` and the Storybook static server (see `frontend/playwright.config.ts`). Chromium only.
@@ -147,7 +148,7 @@ The test failed for a non-visual reason (e.g., dev server timeout, route 404). O
 
 1. Create a story file under `frontend/test/stories/` (e.g. `frontend/test/stories/Scenario/<Name>.stories.tsx`).
 2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the screenshot becomes deterministic).
-3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot per theme is captured automatically for the next CI run).
+3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot is captured automatically for the next CI run).
 4. Push the PR. The new screenshots appear in Argos as **added**; approve them.
 
 `<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Scenario/TableOfContents` + `Default` → `scenario-tableofcontents--default`. Verify the actual id in `frontend/storybook-static/index.json` after building.
