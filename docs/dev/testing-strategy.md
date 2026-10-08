@@ -13,7 +13,7 @@ VRT was introduced via Issue [#141](https://github.com/bi9dri/gm-assistant-bot/i
 ```
     ┌─────────┐
     │   VRT   │  Playwright + MSW; freeze appearance as fixtures
-    │(Visual) │  Routes / Storybook stories × light/dark
+    │(Visual) │  Routes × light (+ dark はテーマ比較 1 ページ) / Storybook stories × light
     ├─────────┤
     │ Integra-│  Hono `app.request()`, fake-indexeddb, etc.
     │  tion   │  store ↔ DB collaboration, route handler + schema
@@ -49,7 +49,7 @@ Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/is
 
 - **All routes** (template / session / bot)
 - **Individual components via Storybook stories**
-- **light / dark theme matrix**
+- **light / dark theme matrix** — dark はコンポーネントを横断する 1 ページに限定 (Argos のスクリーンショット上限対策)
 
 ### Stack
 
