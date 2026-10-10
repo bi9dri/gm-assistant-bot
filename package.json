@@ -19,12 +19,12 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.4",
     "@vitest/coverage-v8": "5.0.1",
-    "knip": "6.38.0",
+    "knip": "6.39.0",
     "typescript": "7.0.2",
     "vite-plus": "catalog:",
-    "wrangler": "4.144.0"
+    "wrangler": "4.147.0"
   },
-  "packageManager": "pnpm@12.8.2"
+  "packageManager": "pnpm@12.9.0"
 }
