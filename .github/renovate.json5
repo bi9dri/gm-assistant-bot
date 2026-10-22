@@ -44,6 +44,14 @@
       matchUpdateTypes: ["minor", "patch"],
     },
     {
+      // @tanstack/react-devtools と @tanstack/devtools-vite は同じ TanStack/devtools
+      // リポジトリで、どちらも @tanstack/devtools-event-bus / devtools-client を
+      // exact で pin する。片方だけ上がると event-bus が二重になり、Vite プラグインが
+      // 注入した bus とブラウザ側パネルが繋がらなくなる (開発時のみ)。
+      groupName: "tanstack-devtools",
+      matchPackageNames: ["@tanstack/react-devtools", "@tanstack/devtools-vite"],
+    },
+    {
       // vite-plus 本体と pnpm catalog の `vite` (alias) は同じリリースで揃える必要がある。
       // non-major の一括 PR に埋もれると同梱 vitest の確認を落とすため専用グループ化。
       //
