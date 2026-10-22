@@ -44,10 +44,22 @@
       matchUpdateTypes: ["minor", "patch"],
     },
     {
-      // vite-plus 本体と pnpm catalog の `vite` は同じリリースで揃える必要がある。
+      // vite-plus 本体と pnpm catalog の `vite` (alias) は同じリリースで揃える必要がある。
       // non-major の一括 PR に埋もれると同梱 vitest の確認を落とすため専用グループ化。
+      //
+      // security PR は vulnerabilityAlerts の force (groupName: null) でグループから外れ、
+      // vite-plus だけが上がって alias が 1 つ前のバージョンに取り残される。どのブランチでも
+      // alias を同じ newVersion に同期させるため bumpVersions を使う。
       groupName: "vite+",
       matchPackageNames: ["vite-plus", "@voidzero-dev/vite-plus-core"],
+      bumpVersions: [
+        {
+          name: "vite+ core alias",
+          filePatterns: ["pnpm-workspace.yaml"],
+          matchStrings: ["vite: npm:@voidzero-dev/vite-plus-core@(?<version>[^\\s]+)"],
+          bumpType: "sync",
+        },
+      ],
     },
     {
       groupName: "github-actions",
