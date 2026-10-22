@@ -71,13 +71,16 @@ pnpm --filter gm-assistant-bot-frontend build-storybook
 pnpm --filter gm-assistant-bot-frontend test:vrt
 
 # Single viewport / theme combination
-pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-desktop-light
-pnpm --filter gm-assistant-bot-frontend test:vrt -- --project=chromium-mobile-dark
+pnpm --dir frontend exec playwright test --project=chromium-desktop-light
+pnpm --dir frontend exec playwright test --project=chromium-mobile-dark
 
 # Single theme across all viewports
-pnpm --filter gm-assistant-bot-frontend test:vrt -- \
+pnpm --dir frontend exec playwright test \
   --project=chromium-desktop-dark --project=chromium-mobile-dark --project=chromium-storybook-dark
 ```
+
+`pnpm run <script> -- <args>` は `--` をそのままスクリプトへ渡すため、Playwright のフラグは
+`--` なしで渡す (`--project=...` がテストの絞り込み文字列として扱われてしまう)。
 
 Playwright auto-starts the Vite dev server with `VITE_USE_MSW=true` and the Storybook static server (see `frontend/playwright.config.ts`). Chromium only.
 
@@ -154,7 +157,7 @@ TanStack Start / `@cloudflare/vite-plugin` は SSR・Workers 前提の plugin �
 - Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `pnpm-lock.yaml`); on miss `pnpm exec playwright install --with-deps chromium` populates it. On hit `pnpm exec playwright install-deps chromium` only installs system libs
 - Vite dev server is launched by `playwright.config.ts`'s `webServer`
 - **PR**: `test:vrt` (compare only). A diff fails the job and uploads the `vrt-diff` artifact
-- **main**: `test:vrt -- --update-snapshots` (regenerate). The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
+- **main**: `test:vrt:update` (regenerate). The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
 - `timeout-minutes: 20` guards against a hung dev server
 
 The `vrt-baselines` job (`needs: vrt`, `push` to `main` only) checks out `main`, replaces the `*-snapshots` directories with the artifact, and commits them with `[skip ci]`. The push authenticates with the deploy key in `VRT_BASELINE_DEPLOY_KEY`, so the job's `GITHUB_TOKEN` stays read-only. It is a separate job so that no workflow that runs pull-request code can push.

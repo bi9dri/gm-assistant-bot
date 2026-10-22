@@ -55,6 +55,8 @@ jobs:
           github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
+          # checkout より前なので git remote から repo を推定できない。明示する。
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx 'vrt:accepted'; then
@@ -99,9 +101,11 @@ jobs:
         run: pnpm --filter gm-assistant-bot-frontend test:vrt
 
       # main では差分を承認済みとして baseline を再生成する。生成物は vrt-baselines job がコミットする。
+      # `test:vrt -- --update-snapshots` は pnpm が `--` をそのまま渡し、Playwright が
+      # フラグとして解釈しないため、専用スクリプトを使う。
       - name: Refresh baselines
         if: github.event_name == 'push'
-        run: pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+        run: pnpm --filter gm-assistant-bot-frontend test:vrt:update
 
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
