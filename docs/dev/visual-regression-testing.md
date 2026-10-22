@@ -1,8 +1,10 @@
 # Visual Regression Testing (VRT)
 
-Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147), the Desktop / Mobile viewport matrix from [#171](https://github.com/bi9dri/gm-assistant-bot/issues/171), the light / dark theme matrix from [#148](https://github.com/bi9dri/gm-assistant-bot/issues/148), and the migration to [Argos](https://argos-ci.com) in [#311](https://github.com/bi9dri/gm-assistant-bot/issues/311).
+Operational guide for the VRT setup introduced in [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) / [#142](https://github.com/bi9dri/gm-assistant-bot/issues/142), the CI integration from [#144](https://github.com/bi9dri/gm-assistant-bot/issues/144), the Storybook component VRT from [#147](https://github.com/bi9dri/gm-assistant-bot/issues/147), the Desktop / Mobile viewport matrix from [#171](https://github.com/bi9dri/gm-assistant-bot/issues/171), the light / dark theme matrix from [#148](https://github.com/bi9dri/gm-assistant-bot/issues/148), and the return to Playwright's built-in screenshot comparison (the Argos dependency was removed).
 
-For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to review diffs**. Screenshot baselines are no longer committed: the Argos reporter uploads captures and Argos performs the comparison in the cloud.
+For purpose, scope, and design principles see [testing-strategy.md § VRT](./testing-strategy.md#vrt). This document only covers **how to run it and how to review diffs**.
+
+Baselines are committed to the repository and compared by Playwright itself (`expect(page).toHaveScreenshot()`). There is no external service. The Linux baselines are the source of truth: CI regenerates them on `main` and commits the result automatically.
 
 ## Project matrix
 
@@ -19,11 +21,11 @@ VRT runs six Playwright projects in parallel (all chromium-only) — three viewp
 
 `chromium-mobile-*` spreads `devices["iPhone 13"]` for the viewport / `isMobile` / `hasTouch` / `deviceScaleFactor` traits, but overrides `defaultBrowserType: "chromium"` because CI only caches the chromium binary.
 
-Argos namespaces each screenshot by Playwright project name (`<project>/<name>`), so calling `argosScreenshot(page, "home")` in every project produces separate baselines under `chromium-desktop-light/home`, `chromium-desktop-dark/home`, etc. — no suffix needs to be encoded in the name.
+Snapshot names are namespaced by Playwright project name via `snapshotPathTemplate` (`{arg}-{projectName}-{platform}{ext}`), so the same `toHaveScreenshot("home.png")` produces a separate baseline for every project — no suffix needs to be encoded in the name.
 
 The mobile projects exist to catch Tailwind / DaisyUI responsive regressions (`sm:` / `md:` / `lg:`) that desktop alone cannot detect — most visibly the `lg:drawer-open` sidebar nav in `src/routes/__root.tsx`, which collapses on mobile.
 
-React Flow の Node Editor / Node Element は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）と Storybook の Node コンポーネント VRT（`test/stories/Node/**`・`test/stories/editable-title.stories.tsx`）を削除した。
+React Flow の Node Editor / Node Element は deprecated のため、route VRT（`template-editor.vrt.ts`・`template-detail.vrt.ts`・`session-detail.vrt.ts`）と Storybook の Node コンポーネント VRT（`test/stories/Node/**`・`test/stories/editable-title.stories.tsx`）は存在しない。
 
 The `chromium-storybook-*` projects stay desktop-only because current stories do not use responsive utilities; a mobile pass would only inflate the screenshot count without catching anything. Revisit when stories start consuming `sm:`/`md:` classes.
 
@@ -52,6 +54,15 @@ await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 
 `.storybook/preview.ts` で `withThemeByDataAttribute({ themes: { light, dark }, attributeName: "data-theme" })` を decorator 登録済み。`use.colorScheme` は引き続き Playwright が context 経由で適用する。
 
+## Baselines
+
+`snapshotPathTemplate` と `expect.toHaveScreenshot` の値は `frontend/playwright.config.ts` が正 (このドキュメントには転記しない)。
+
+- Path example: `frontend/test/vrt/home.vrt.ts-snapshots/home-chromium-desktop-light-linux.png`
+- **コミットするのは `-linux.png` だけ**。`-win32.png` / `-darwin.png` はローカルの作業用で、`frontend/.gitignore` が除外する
+- 現在のスイートは 138 枚程度 (43 stories × 2 + route 13 × 4) で、合計 4MB 前後の見込み (1 枚 30KB 前後)。リポジトリに置いて問題ないサイズ
+- `toHaveScreenshot` は撮影前に CSS アニメーションを停止し、キャレットを隠し、連続 2 フレームが一致するまで撮り直す。動的な要素 (相対時刻・ランダム ID) は `mask: [locator]` で明示的に隠す
+
 ## Local execution
 
 ```bash
@@ -76,18 +87,43 @@ The first local run also needs the chromium binary:
 pnpm --dir frontend exec playwright install chromium
 ```
 
-The Argos reporter only uploads when `CI` is set and `ARGOS_TOKEN` is present (`uploadToArgos: !!process.env.CI && !!process.env.ARGOS_TOKEN`), so local runs never hit Argos. `argosScreenshot` writes captures to `frontend/screenshots/` only when the reporter is not in use (gitignored).
+### 非 Linux での初回実行
 
-VRT はテスト時のみ `bypassCSP: true` で CSP を無効化する (Argos が inject する inline script を通すため)。CSP 自体の検証は VRT の責務ではない。
+baseline は CI (Linux) が生成したものだけがコミットされている。Windows / macOS で初めて実行すると、その platform 用の baseline が無いため全テストが "A snapshot doesn't exist ... writing actual" で失敗する。**これは正常**で、このとき各 platform 用の baseline が生成される。もう一度実行すれば比較が通る。
 
-## Reviewing diffs in Argos
+ローカル baseline を意図的に作り直す:
 
-On CI, the reporter uploads every `argosScreenshot` capture and Argos compares it against the baseline build for the branch:
+```bash
+pnpm --filter gm-assistant-bot-frontend test:vrt:update
+```
 
-- The Argos check appears on the pull request with a summary of added / changed / unchanged screenshots.
-- Review each change in the Argos UI and approve or reject it. Merging the PR accepts the current build as the new baseline for the default branch.
-- **Orphan builds:** until a build has run on the default branch, PR builds have no baseline to compare against and are marked orphan. The first build on `main` establishes the baseline.
-- If a failure is not visual (dev server timeout, route 404), open the uploaded Playwright trace to investigate. The `vrt-diff` CI artifact also holds `frontend/test-results/` (traces / failure screenshots).
+生成される `-win32.png` / `-darwin.png` は gitignore 対象なので、**コミットしない**。ローカル描画は OS のフォントに依存するため、比較結果はあくまで参考値で、正となるのは CI の Linux 比較。
+
+## Reviewing diffs
+
+On pull requests the `vrt` job compares against the committed baselines and fails when a screenshot differs:
+
+- 失敗すると `vrt-diff` artifact がアップロードされる。`frontend/playwright-report/` に expected / actual / diff をスライダーで見比べられる HTML レポートが入っている:
+  ```bash
+  # artifact をダウンロード・展開したディレクトリで
+  pnpm --filter gm-assistant-bot-frontend exec playwright show-report path/to/playwright-report
+  ```
+- `frontend/test-results/` には失敗時の trace / screenshot が入っている。非視覚的な失敗 (dev server timeout, route 404) は trace を見る:
+  `pnpm exec playwright show-trace path/to/trace.zip`
+
+### Accepting an intentional diff
+
+差分が意図したものなら、PR に **`vrt:accepted`** ラベルを付ける:
+
+1. `labeled` イベントで `vrt` job が再実行される
+2. `vrt:accepted` を検出すると比較をスキップしてジョブを成功させ、ラベルを消費して外す
+3. マージすると `main` で baseline が再生成され、`vrt-baselines` job が自動コミットする
+
+ラベルは自動で外れるので、承認後に積んだコミットは改めて検証される。ラベルはリポジトリに作成しておく必要がある (GitHub → Labels → `vrt:accepted`)。
+
+fork からの PR は `GITHUB_TOKEN` が read-only になりラベルを外せないため、承認フローは同一リポジトリのブランチにだけ適用される。fork PR の意図した差分は、メンテナが Linux 環境で baseline をコミットするか、マージ後に `main` の自動更新に任せる。`vrt` を必須チェックにしている場合、fork PR は管理者がマージするか、baseline を含む PR を別途作成する必要がある。
+
+Linux 環境があるなら、手元で `test:vrt:update` を実行して baseline PNG を PR に含めてもよい (その場合は PR の Files changed に画像差分が出る)。
 
 ## `VITE_USE_MSW` が切り替えるもの
 
@@ -111,29 +147,42 @@ TanStack Start / `@cloudflare/vite-plugin` は SSR・Workers 前提の plugin �
 
 ## CI behavior
 
-`.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the existing `check` job:
+`.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the `check` job:
 
-- Triggered on `push` to `main` and on every `pull_request` to `main`
+- Triggered on `push` to `main` and on `pull_request` to `main` (`opened` / `synchronize` / `reopened` / `labeled`)
 - Runs natively on `ubuntu-latest` (no container)
 - Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `pnpm-lock.yaml`); on miss `pnpm exec playwright install --with-deps chromium` populates it. On hit `pnpm exec playwright install-deps chromium` only installs system libs
 - Vite dev server is launched by `playwright.config.ts`'s `webServer`
-- Playwright runs with `ARGOS_TOKEN` set (repository secret). The `@argos-ci/playwright` reporter uploads screenshots and traces; the Argos check posts to the PR
-- On failure, `frontend/test-results/` is uploaded as the `vrt-diff` artifact (`retention-days: 14`)
+- **PR**: `test:vrt` (compare only). A diff fails the job and uploads the `vrt-diff` artifact
+- **main**: `test:vrt -- --update-snapshots` (regenerate). The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
 - `timeout-minutes: 20` guards against a hung dev server
 
-### Required secret
+The `vrt-baselines` job (`needs: vrt`, `push` to `main` only) checks out `main`, replaces the `*-snapshots` directories with the artifact, and commits them with `[skip ci]`. The push authenticates with the deploy key in `VRT_BASELINE_DEPLOY_KEY`, so the job's `GITHUB_TOKEN` stays read-only. It is a separate job so that no workflow that runs pull-request code can push.
 
-`ARGOS_TOKEN` must be configured as a repository secret (GitHub → Settings → Secrets and variables → Actions). It is the project token from Argos **Settings → General → Token**. Use `null`-safe reference only if Argos is intentionally disabled — otherwise the upload step fails without it.
+Notes:
+
+- **Required secret:** `VRT_BASELINE_DEPLOY_KEY` — the private key of the deploy key registered in the ruleset bypass list ("Always allow").
+- The commit is a direct push to `main` via that deploy key. If the deploy key is not in the ruleset bypass list, the push is rejected.
+- `ARGOS_TOKEN` is no longer used and can be deleted from the repository secrets.
+- The workflow is serialized per ref (`concurrency: ci-${{ github.ref }}`) so two `main` runs cannot race on the same baseline files.
 
 ## Troubleshooting
 
-### Argos upload fails / check is missing
+### "A snapshot doesn't exist" / every screenshot differs on a PR
 
-Verify `ARGOS_TOKEN` is set as a repository secret and that the Argos project is linked to this repository. Locally the reporter does not upload; trigger the `vrt` job on CI (or a PR) to see the check.
+The PR adds a story or changes a route that has no baseline yet. If the change is intended, add the `vrt:accepted` label and merge; `main` creates the baselines. If the change is not intended, fix the UI.
 
-### `vrt` job mass-produces diffs the moment Playwright bumps
+### The `vrt` job mass-produces diffs the moment Playwright bumps
 
-A new `@playwright/test` (or chromium build) renders pixels differently, and Argos flags every screenshot as changed. This is expected: review and approve the batch in Argos. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
+A new `@playwright/test` (or chromium build) renders pixels differently, so every baseline changes. This is expected: add `vrt:accepted` to the Renovate PR, merge it, and let the `vrt-baselines` job refresh the batch. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
+
+### The baseline commit is rejected
+
+The deploy key is missing from the ruleset bypass list, `VRT_BASELINE_DEPLOY_KEY` is wrong, or the remote was not switched to SSH before `git push`. Check the bypass entry (Always allow) and the secret.
+
+### ローカルで route テストだけが全滅する (別アプリの画面が写る)
+
+`reuseExistingServer: !process.env.CI` のため、既に :3000 で別のプロセスが動いていると Playwright はそれを再利用する。Vite の起動ログが出ていないのに heading が見つからない場合は、ポート 3000 の占有プロセスを確認して停止する。Storybook 側 (:6007) だけで検証するなら `--project=chromium-storybook-light` を使う。
 
 ### `webServer` hangs / Internal Server Error during VRT
 
@@ -147,11 +196,12 @@ The test failed for a non-visual reason (e.g., dev server timeout, route 404). O
 
 1. Create a story file under `frontend/test/stories/` (e.g. `frontend/test/stories/Scenario/<Name>.stories.tsx`).
 2. Use `parameters: { layout: "fullscreen" }` so Storybook does not add padding around the canvas (the screenshot becomes deterministic).
-3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot per theme is captured automatically for the next CI run).
-4. Push the PR. The new screenshots appear in Argos as **added**; approve them.
+3. Run `pnpm --filter gm-assistant-bot-frontend build-storybook` to confirm the story renders (one screenshot per theme is captured automatically on the next CI run).
+4. Push the PR. The new screenshots have no baseline yet, so the `vrt` job fails; review the captures in the `vrt-diff` artifact, then add the `vrt:accepted` label and merge. `main` creates the baselines.
 
 `<id>` follows Storybook's `lowercase(title) + "--" + kebab-case(storyName)` rule. Title segments are joined and lowercased (camelCase is **not** split), while story export names are kebab-cased. Examples: `Scenario/TableOfContents` + `Default` → `scenario-tableofcontents--default`. Verify the actual id in `frontend/storybook-static/index.json` after building.
 
 ## Future work
 
-- Stabilize remaining flaky captures surfaced by Argos (e.g. animated / dynamic elements) using `data-visual-test` attributes or `stabilize` options.
+- Mask remaining dynamic elements (animated / live regions) with `mask:` rather than relaxing the threshold.
+- Switch to lossless WebP (`toHaveScreenshot("x.webp")`) if the baseline directory outgrows a few tens of MB.

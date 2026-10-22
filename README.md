@@ -72,7 +72,7 @@ pnpm knip                 # 未使用 export / dep の検出
 ## テスト
 
 - **Unit / 統合**: Vite+ 同梱の Vitest (`vp test` / `pnpm test`)。
-- **Visual Regression Testing**: Playwright + Storybook + MSW。差分は [Argos](https://argos-ci.com) のUIでレビューする (baseline画像はコミットしない)。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。詳細は [visual-regression-testing.md](docs/dev/visual-regression-testing.md)。
+- **Visual Regression Testing**: Playwright + Storybook + MSW。baseline はリポジトリにコミットし、PR では比較のみ行う (意図した差分は `vrt:accepted` ラベルで承認し、`main` で CI が baseline を自動更新する)。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。詳細は [visual-regression-testing.md](docs/dev/visual-regression-testing.md)。
 - **Storybook 単体起動**: `pnpm --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
 
 戦略の詳細は [testing-strategy.md](docs/dev/testing-strategy.md)。

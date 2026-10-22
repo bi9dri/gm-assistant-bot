@@ -11,6 +11,7 @@
     "preview": "vp preview",
     "test": "vp test",
     "test:vrt": "playwright test",
+    "test:vrt:update": "playwright test --update-snapshots",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "storybook:serve-static": "node test/vrt/serve-storybook-static.ts"
@@ -47,7 +48,6 @@
     "zustand": "5.0.15"
   },
   "devDependencies": {
-    "@argos-ci/playwright": "7.7.0",
     "@cloudflare/vite-plugin": "1.62.2",
     "@playwright/test": "1.63.0",
     "@storybook/addon-docs": "10.6.1",
