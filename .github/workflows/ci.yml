@@ -43,6 +43,9 @@ jobs:
       pull-requests: write
     # ハングで長時間放置されるのを防ぐ安全網。
     timeout-minutes: 20
+    outputs:
+      # 重い step が実際に走ったか。vrt-baselines が artifact の有無を判断する。
+      ran: ${{ steps.scope.outputs.run }}
     steps:
       # 意図した差分を承認する手段。`vrt:accepted` ラベルが付いた PR では比較を
       # スキップしてジョブを成功させる。検出と同時にラベルを消費するので、途中で
@@ -64,50 +67,139 @@ jobs:
             echo "accepted=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # 変更セットから「VRT を走らせるか / どのプロジェクトを走らせるか」を決める。
+      # `vrt` は必須チェックなので workflow 側の paths フィルタは使えない (workflow が
+      # 起動しないと check 自体が作られず pending のままマージを塞ぐ)。job は必ず起動し、
+      # 重い step だけを間引く — skip された job は Success として扱われる。
+      - id: scope
         if: steps.acceptance.outputs.accepted != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          # main への push は baseline 再生成が目的なので常に全プロジェクト。
+          if [ "$EVENT" != "pull_request" ]; then
+            printf 'run=true\nroutes=true\nstorybook=true\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 取得に失敗したときは安全側 (全プロジェクト実行) に倒す。
+          files=$(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files?per_page=100" \
+            --jq '.[].filename' 2>/dev/null) || {
+            printf 'run=true\nroutes=true\nstorybook=true\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          routes=false
+          storybook=false
+          while IFS= read -r file; do
+            case "$file" in
+              # story 側だけで完結する変更。route の screenshot は動かない。
+              frontend/test/stories/* | frontend/test/vrt/storybook/* | frontend/.storybook/*)
+                storybook=true
+                ;;
+              # Storybook の静的配信サーバは story 側の screenshot に効く。
+              frontend/test/vrt/serve-storybook-static.ts)
+                routes=true
+                storybook=true
+                ;;
+              # route 側だけで完結する変更。story の screenshot は動かない。
+              frontend/src/routes/* | frontend/test/vrt/*.ts)
+                routes=true
+                ;;
+              # frontend の共通コード・依存・CI 設定はどちらにも効きうる。
+              frontend/* | package.json | pnpm-lock.yaml | pnpm-workspace.yaml | .github/workflows/ci.yml)
+                routes=true
+                storybook=true
+                ;;
+            esac
+          done <<< "$files"
+
+          run=false
+          if [ "$routes" = true ] || [ "$storybook" = true ]; then
+            run=true
+          fi
+
+          projects=""
+          if [ "$routes" = true ]; then
+            projects="$projects --project=chromium-desktop-light --project=chromium-desktop-dark"
+            projects="$projects --project=chromium-mobile-light --project=chromium-mobile-dark"
+          fi
+          if [ "$storybook" = true ]; then
+            projects="$projects --project=chromium-storybook-light --project=chromium-storybook-dark"
+          fi
+
+          {
+            echo "run=$run"
+            echo "routes=$routes"
+            echo "storybook=$storybook"
+            echo "projects=$projects"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true'
         with:
           # PR コードから GITHUB_TOKEN を読めないようにする (ラベル操作は上で env 渡し)。
           persist-credentials: false
       - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
-        if: steps.acceptance.outputs.accepted != 'true'
+        if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true'
         with:
           node-version: "24.22.0"
           cache: true
       - run: pnpm install --frozen-lockfile
-        if: steps.acceptance.outputs.accepted != 'true'
-      # Cache Playwright browser binaries (~280MB chromium). Key on lockfile
-      # so cache invalidates whenever @playwright/test version changes.
+        if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true'
+      # Cache Playwright browser binaries (~280MB chromium). Key on the resolved
+      # @playwright/test version rather than the lockfile: every unrelated
+      # dependency bump would otherwise miss and re-download the browser.
+      # A key restored only via `restore-keys` sets cache-hit to "false", so the
+      # install step still runs and fills in the new browser revision.
+      - id: playwright-version
+        if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true'
+        working-directory: frontend
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       - id: playwright-cache
-        if: steps.acceptance.outputs.accepted != 'true'
+        if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - if: steps.acceptance.outputs.accepted != 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
-      - if: steps.acceptance.outputs.accepted != 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+      - if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
         working-directory: frontend
         run: pnpm exec playwright install-deps chromium
       # Storybook static build is required by the storybook-static webServer
       # in playwright.config.ts (chromium-storybook project reads index.json
-      # from frontend/storybook-static/).
-      - if: steps.acceptance.outputs.accepted != 'true'
+      # from frontend/storybook-static/). route 側だけの変更では省く。
+      - if: steps.acceptance.outputs.accepted != 'true' && steps.scope.outputs.run == 'true' && steps.scope.outputs.storybook == 'true'
         run: pnpm --filter gm-assistant-bot-frontend build-storybook
 
       - name: Compare against baselines
-        if: github.event_name == 'pull_request' && steps.acceptance.outputs.accepted != 'true'
-        run: pnpm --filter gm-assistant-bot-frontend test:vrt
+        if: >-
+          github.event_name == 'pull_request' &&
+          steps.acceptance.outputs.accepted != 'true' &&
+          steps.scope.outputs.run == 'true'
+        # `pnpm run <script> -- <flags>` は `--` をリテラルで渡してしまうため、
+        # scope が選んだプロジェクトを exec で直接渡す。
+        run: >-
+          pnpm --filter gm-assistant-bot-frontend exec playwright test
+          ${{ steps.scope.outputs.projects }}
 
       # main では差分を承認済みとして baseline を再生成する。生成物は vrt-baselines job がコミットする。
-      # `test:vrt -- --update-snapshots` は pnpm が `--` をそのまま渡し、Playwright が
-      # フラグとして解釈しないため、専用スクリプトを使う。
       - name: Refresh baselines
-        if: github.event_name == 'push'
-        run: pnpm --filter gm-assistant-bot-frontend test:vrt:update
+        if: github.event_name == 'push' && steps.scope.outputs.run == 'true'
+        run: >-
+          pnpm --filter gm-assistant-bot-frontend exec playwright test --update-snapshots
+          ${{ steps.scope.outputs.projects }}
 
-      - if: failure()
+      - if: failure() && steps.scope.outputs.run == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vrt-diff
@@ -118,7 +210,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload refreshed baselines
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.scope.outputs.run == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vrt-baselines
@@ -130,7 +222,11 @@ jobs:
   # push は ruleset の bypass に登録した deploy key で行い、GITHUB_TOKEN は read のまま。
   vrt-baselines:
     needs: vrt
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # frontend に触れていない push では vrt が走らず artifact も無いので省く。
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.vrt.outputs.ran == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -8,7 +8,7 @@ Baselines are committed to the repository and compared by Playwright itself (`ex
 
 ## Project matrix
 
-VRT runs six Playwright projects in parallel (all chromium-only) — three viewports × two themes:
+VRT is defined as six Playwright projects (all chromium-only) — three viewports × two themes. CI runs them with 4 workers on a 4 vCPU runner, so the six projects interleave:
 
 | Project name               | Scope                                       | Base URL                | Viewport                                    | Theme   |
 | -------------------------- | ------------------------------------------- | ----------------------- | ------------------------------------------- | ------- |
@@ -153,12 +153,26 @@ TanStack Start / `@cloudflare/vite-plugin` は SSR・Workers 前提の plugin �
 `.github/workflows/ci.yml` defines a `vrt` job that runs in parallel with the `check` job:
 
 - Triggered on `push` to `main` and on `pull_request` to `main` (`opened` / `synchronize` / `reopened` / `labeled`)
-- Runs natively on `ubuntu-latest` (no container)
-- Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`, key derived from `pnpm-lock.yaml`); on miss `pnpm exec playwright install --with-deps chromium` populates it. On hit `pnpm exec playwright install-deps chromium` only installs system libs
+- Runs natively on `ubuntu-latest` (no container) with `workers: 4` (the runner has 4 vCPU) and `fullyParallel: true`
+- Chromium binary is restored from `actions/cache` (`~/.cache/ms-playwright`), keyed on the resolved `@playwright/test` version (`playwright --version`) with a `restore-keys` fallback, so an unrelated lockfile change does not re-download it. On miss `pnpm exec playwright install --with-deps chromium` populates it; on hit `pnpm exec playwright install-deps chromium` only installs system libs
 - Vite dev server is launched by `playwright.config.ts`'s `webServer`
-- **PR**: `test:vrt` (compare only). A diff fails the job and uploads the `vrt-diff` artifact
-- **main**: `test:vrt:update` (regenerate). The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
+- **PR**: `exec playwright test <selected projects>` (compare only). A diff fails the job and uploads the `vrt-diff` artifact
+- **main**: `exec playwright test --update-snapshots <selected projects>`. The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
+- `retries: 1` (one retake) and `maxFailures: 10` bound the worst case — a mass diff or a dead dev server stops instead of grinding through every screenshot twice. The per-test timeout is 20s
 - `timeout-minutes: 20` guards against a hung dev server
+
+### Change-set scoping
+
+`vrt` is a required check, so the workflow itself cannot use `paths` filters — a filtered-out workflow never creates the check and the PR stays blocked on "Expected". Instead the job always starts, and its first step (`scope`) reads the PR's changed files through the API and decides which projects to run. The heavy steps are then guarded by those outputs:
+
+| Changed files (PR)                                                                                 | Projects          |
+| -------------------------------------------------------------------------------------------------- | ----------------- |
+| `frontend/test/stories/**`, `frontend/test/vrt/storybook/**`, `frontend/.storybook/**` only        | storybook (2)     |
+| `frontend/src/routes/**`, `frontend/test/vrt/*.ts` only (except `serve-storybook-static.ts`)       | routes (4)        |
+| anything else under `frontend/`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `ci.yml` | all (6)           |
+| nothing frontend-related (docs / backend only)                                                     | none (job is ~5s) |
+
+`build-storybook` is skipped when no storybook project runs. If the changed-file lookup fails, the step falls back to all six projects (safe side). A `push` to `main` always runs all six, because it regenerates the baselines.
 
 The `vrt-baselines` job (`needs: vrt`, `push` to `main` only) checks out `main`, replaces the `*-snapshots` directories with the artifact, and commits them with `[skip ci]`. The push authenticates with the deploy key in `VRT_BASELINE_DEPLOY_KEY`, so the job's `GITHUB_TOKEN` stays read-only. It is a separate job so that no workflow that runs pull-request code can push.
 
@@ -177,7 +191,7 @@ The PR adds a story or changes a route that has no baseline yet. If the change i
 
 ### The `vrt` job mass-produces diffs the moment Playwright bumps
 
-A new `@playwright/test` (or chromium build) renders pixels differently, so every baseline changes. This is expected: add `vrt:accepted` to the Renovate PR, merge it, and let the `vrt-baselines` job refresh the batch. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
+A new `@playwright/test` (or chromium build) renders pixels differently, so every baseline changes. This is expected: add `vrt:accepted` to the Renovate PR, merge it, and let the `vrt-baselines` job refresh the batch. The browser cache is keyed on the resolved `@playwright/test` version, so the new chromium downloads automatically when Playwright bumps.
 
 ### The baseline commit is rejected
 

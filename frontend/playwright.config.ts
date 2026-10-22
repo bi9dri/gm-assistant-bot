@@ -9,15 +9,24 @@ export default defineConfig<{}, VrtWorkerOptions>({
   testMatch: "**/*.vrt.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // 失敗 1 件につき撮り直しは 1 回だけ。2 回だと baseline 総入れ替え時に
+  // 148 テスト × リトライで timeout まで張り付く。
+  retries: process.env.CI ? 1 : 0,
+  // ubuntu-latest (public repo) は 4 vCPU。直列では 1 コアしか使わないので 4 で回す。
+  // route 側は Vite dev server を共有するが、context ごとに IndexedDB もテーマも
+  // 隔離されているため screenshot は干渉しない。
+  workers: process.env.CI ? 4 : undefined,
+  // 全滅系の失敗 (dev server ダウン等) で 148 テストを走り切る前に打ち切る。
+  maxFailures: process.env.CI ? 10 : 0,
   // baseline はリポジトリにコミットし、Playwright が自前で比較する。
   // 生成・更新の責任は CI (Linux) が持つ。
   reporter: [
     process.env.CI ? ["github"] : ["list"],
     ["html", { outputFolder: "playwright-report", open: "never" }],
   ],
-  timeout: 30_000,
+  // 1 枚あたりの実測は約 1 秒。30 秒待つのは dev server のハングだけなので、
+  // 失敗時の待ちを短くしてリトライ込みの最悪ケースを縮める。
+  timeout: 20_000,
   expect: {
     toHaveScreenshot: {
       // アンチエイリアス等のレンダリング微差は許容しつつ、小さな退行は検出する。

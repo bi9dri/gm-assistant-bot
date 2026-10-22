@@ -51,10 +51,16 @@ if (storyIds.length === 0) {
 
 for (const id of storyIds) {
   test(id, async ({ page, theme }) => {
-    await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
-    await page.waitForLoadState("networkidle");
-    // React Flow handle 等の DOM が確定するまで僅かに待つ。
-    await page.waitForTimeout(200);
+    await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`, {
+      waitUntil: "domcontentloaded",
+    });
+    // `networkidle` は毎回 500ms の idle 待ちを払う。描画完了は root の子要素の
+    // 出現と font 読み込みで判定し、レイアウトの収束は toHaveScreenshot が
+    // 「連続 2 フレーム一致」で待つので固定 sleep は置かない。
+    await page.locator("#storybook-root > *").first().waitFor();
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
     await expect(page).toHaveScreenshot(`${id}.png`, { fullPage: true });
   });
 }
