@@ -74,6 +74,10 @@ export default defineConfig({
     },
   },
   server: {
+    // VRT (`VITE_USE_MSW`) では HMR が要らない。dev server の dep 再最適化などに
+    // 伴う full-reload ブロードキャストが VRT 実行中にページを再読み込みし、
+    // 「Execution context was destroyed」やリロープループのハングの原因になるため切る。
+    hmr: process.env.VITE_USE_MSW === "true" ? false : undefined,
     proxy: {
       "/api": "http://localhost:8787",
     },
