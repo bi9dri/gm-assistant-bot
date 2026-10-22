@@ -157,12 +157,13 @@ TanStack Start / `@cloudflare/vite-plugin` は SSR・Workers 前提の plugin �
 - **main**: `test:vrt -- --update-snapshots` (regenerate). The refreshed `frontend/test/vrt` is uploaded as the `vrt-baselines` artifact
 - `timeout-minutes: 20` guards against a hung dev server
 
-The `vrt-baselines` job (`needs: vrt`, `push` to `main` only) checks out `main`, replaces the `*-snapshots` directories with the artifact, and commits them as `github-actions[bot]` with `[skip ci]`. It is a separate job so that `contents: write` is never granted to a job that runs pull-request code.
+The `vrt-baselines` job (`needs: vrt`, `push` to `main` only) checks out `main`, replaces the `*-snapshots` directories with the artifact, and commits them with `[skip ci]`. The push authenticates with the deploy key in `VRT_BASELINE_DEPLOY_KEY`, so the job's `GITHUB_TOKEN` stays read-only. It is a separate job so that no workflow that runs pull-request code can push.
 
 Notes:
 
-- **No secrets are required.** `ARGOS_TOKEN` is no longer used and can be deleted from the repository secrets.
-- The commit is a direct push to `main`. If branch protection forbids it, allow the Actions bot to bypass the rule (or change the job to open a PR instead).
+- **Required secret:** `VRT_BASELINE_DEPLOY_KEY` — the private key of the deploy key registered in the ruleset bypass list ("Always allow").
+- The commit is a direct push to `main` via that deploy key. If the deploy key is not in the ruleset bypass list, the push is rejected.
+- `ARGOS_TOKEN` is no longer used and can be deleted from the repository secrets.
 - The workflow is serialized per ref (`concurrency: ci-${{ github.ref }}`) so two `main` runs cannot race on the same baseline files.
 
 ## Troubleshooting
@@ -175,9 +176,9 @@ The PR adds a story or changes a route that has no baseline yet. If the change i
 
 A new `@playwright/test` (or chromium build) renders pixels differently, so every baseline changes. This is expected: add `vrt:accepted` to the Renovate PR, merge it, and let the `vrt-baselines` job refresh the batch. The browser cache key is `pnpm-lock.yaml` so the new chromium downloads automatically.
 
-### The bot's baseline commit is rejected
+### The baseline commit is rejected
 
-Branch protection is blocking the `github-actions[bot]` push. Either let the bot bypass the pull-request requirement on `main`, or switch `vrt-baselines` to open a PR. The PR's `vrt` check may still be red afterwards; the `main` run is the authoritative comparison.
+The deploy key is missing from the ruleset bypass list, `VRT_BASELINE_DEPLOY_KEY` is wrong, or the remote was not switched to SSH before `git push`. Check the bypass entry (Always allow) and the secret.
 
 ### ローカルで route テストだけが全滅する (別アプリの画面が写る)
 

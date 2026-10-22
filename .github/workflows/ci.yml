@@ -123,18 +123,20 @@ jobs:
           if-no-files-found: error
 
   # main への push 時だけ、Linux で再生成した baseline を main にコミットする。
-  # 書き込み権限を「PR のコードを実行しない job」に閉じ込めるため vrt と分離している。
+  # push は ruleset の bypass に登録した deploy key で行い、GITHUB_TOKEN は read のまま。
   vrt-baselines:
     needs: vrt
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
+          # ruleset の bypass (Always allow) に登録した deploy key。この job にだけ渡す。
+          ssh-key: ${{ secrets.VRT_BASELINE_DEPLOY_KEY }}
       # 削除された story / route の baseline を残さないよう、既存の snapshot を
       # 一度消してから artifact を展開する (artifact は差分ではなく全体を持つ)。
       - name: Remove stale snapshots
@@ -164,4 +166,6 @@ jobs:
           fi
           # [skip ci] でこの push による CI の再帰実行を止める。
           git commit -m "chore(vrt): スクリーンショット baseline を更新 [skip ci]"
+          # deploy key で push するため remote を SSH に切り替える。
+          git remote set-url origin "git@github.com:${{ github.repository }}.git"
           git push origin HEAD:main
