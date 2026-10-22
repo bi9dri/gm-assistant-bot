@@ -22,7 +22,7 @@
     "@dnd-kit/utilities": "3.2.2",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/react-devtools": "0.10.13",
-    "@tanstack/react-router": "1.170.40",
+    "@tanstack/react-router": "1.170.44",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/react-start": "1.168.59",
     "@tiptap/core": "3.31.3",
