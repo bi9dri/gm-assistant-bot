@@ -20,13 +20,13 @@ export default defineConfig<{}, VrtWorkerOptions>({
   timeout: 30_000,
   expect: {
     toHaveScreenshot: {
-      // アンチエイリアス等の微差で落とさない (Argos 移行前と同じ閾値)。
-      maxDiffPixelRatio: 0.01,
+      // アンチエイリアス等のレンダリング微差は許容しつつ、小さな退行は検出する。
+      // 画像サイズに依存しない絶対値で判定する。
+      maxDiffPixels: 100,
     },
   },
-  // `{platform}` を含めることで、CI (Linux) の baseline と、ローカルで
-  // `test:vrt:update` が生成する win32/darwin の baseline が衝突しない。
-  // コミットするのは CI が生成する Linux のものだけ (他は frontend/.gitignore)。
+  // OS ごとに描画が異なるため `{platform}` で baseline を分ける。コミットするのは
+  // CI (Linux) が生成するものだけで、他は frontend/.gitignore で除外する。
   snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   use: {
     trace: "on-first-retry",
@@ -34,7 +34,8 @@ export default defineConfig<{}, VrtWorkerOptions>({
     screenshot: "only-on-failure",
     timezoneId: "Asia/Tokyo",
     locale: "ja-JP",
-    // サブピクセル描画とフォントヒンティングを切り、ローカルと CI の glyph を揃える。
+    // サブピクセル描画とフォントヒンティングを切り、同じ baseline を共有する範囲で
+    // glyph 差を減らす。
     launchOptions: {
       args: ["--disable-lcd-text", "--font-render-hinting=none"],
     },

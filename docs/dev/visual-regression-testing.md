@@ -56,18 +56,11 @@ await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
 
 ## Baselines
 
-`frontend/playwright.config.ts` の設定:
-
-```ts
-snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
-expect: {
-  toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
-},
-```
+`snapshotPathTemplate` と `expect.toHaveScreenshot` の値は `frontend/playwright.config.ts` が正 (このドキュメントには転記しない)。
 
 - Path example: `frontend/test/vrt/home.vrt.ts-snapshots/home-chromium-desktop-light-linux.png`
 - **コミットするのは `-linux.png` だけ**。`-win32.png` / `-darwin.png` はローカルの作業用で、`frontend/.gitignore` が除外する
-- 現在の規模は約 140 枚 / 合計 4MB 前後 (1 枚あたり 30KB 前後)。リポジトリに置いて問題ないサイズ
+- 現在のスイートは 138 枚程度 (43 stories × 2 + route 13 × 4) で、合計 4MB 前後の見込み (1 枚 30KB 前後)。リポジトリに置いて問題ないサイズ
 - `toHaveScreenshot` は撮影前に CSS アニメーションを停止し、キャレットを隠し、連続 2 フレームが一致するまで撮り直す。動的な要素 (相対時刻・ランダム ID) は `mask: [locator]` で明示的に隠す
 
 ## Local execution
@@ -128,7 +121,7 @@ On pull requests the `vrt` job compares against the committed baselines and fail
 
 ラベルは自動で外れるので、承認後に積んだコミットは改めて検証される。ラベルはリポジトリに作成しておく必要がある (GitHub → Labels → `vrt:accepted`)。
 
-fork からの PR は `GITHUB_TOKEN` が read-only になりラベルを外せないため、承認フローは同一リポジトリのブランチにだけ適用される。fork PR の意図した差分は、メンテナが Linux 環境で baseline をコミットするか、マージ後に `main` の自動更新に任せる。
+fork からの PR は `GITHUB_TOKEN` が read-only になりラベルを外せないため、承認フローは同一リポジトリのブランチにだけ適用される。fork PR の意図した差分は、メンテナが Linux 環境で baseline をコミットするか、マージ後に `main` の自動更新に任せる。`vrt` を必須チェックにしている場合、fork PR は管理者がマージするか、baseline を含む PR を別途作成する必要がある。
 
 Linux 環境があるなら、手元で `test:vrt:update` を実行して baseline PNG を PR に含めてもよい (その場合は PR の Files changed に画像差分が出る)。
 

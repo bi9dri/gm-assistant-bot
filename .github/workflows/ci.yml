@@ -11,16 +11,15 @@ on:
     # 意図した差分を `vrt:accepted` ラベルで承認できるようにするため labeled も拾う。
     types: [opened, synchronize, reopened, labeled]
 
-# baseline の自動コミットが競合しないよう main は直列化する。PR は最新の push だけ
-# 走らせればよいので、従来どおり古い run を打ち切る。
+# baseline の自動コミットが競合しないよう main の run は直列化する。PR は最新の push
+# だけ検証すればよいので古い run を打ち切るが、labeled は打ち切らない (先行 run の
+# check 結果が消え、生き残った run が check を skip するのを避ける)。
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'labeled' }}
 
 jobs:
   check:
-    # ラベル操作だけで check job を再実行しない。
-    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -45,33 +44,11 @@ jobs:
     # ハングで長時間放置されるのを防ぐ安全網。
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
-        with:
-          node-version: "v24.21.0"
-          cache: true
-      - run: pnpm install --frozen-lockfile
-      # Cache Playwright browser binaries (~280MB chromium). Key on lockfile
-      # so cache invalidates whenever @playwright/test version changes.
-      - id: playwright-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: frontend
-        run: pnpm exec playwright install --with-deps chromium
-      - if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: frontend
-        run: pnpm exec playwright install-deps chromium
-      # Storybook static build is required by the storybook-static webServer
-      # in playwright.config.ts (chromium-storybook project reads index.json
-      # from frontend/storybook-static/).
-      - run: pnpm --filter gm-assistant-bot-frontend build-storybook
-
       # 意図した差分を承認する手段。`vrt:accepted` ラベルが付いた PR では比較を
-      # スキップしてジョブを成功させ、ラベルを消費して消す (次のコミットは再検証される)。
-      # fork PR は token が read-only でラベルを外せないため対象外。
+      # スキップしてジョブを成功させる。検出と同時にラベルを消費するので、途中で
+      # キャンセルされても承認が次のコミットに残らない。fork PR は token が
+      # read-only でラベルを外せないため対象外。重い step より前に置くことで、
+      # 承認済み run では install / build を走らせない。
       - id: acceptance
         if: >-
           github.event_name == 'pull_request' &&
@@ -81,24 +58,50 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx 'vrt:accepted'; then
+            gh pr edit "$PR_NUMBER" --remove-label vrt:accepted
             echo "accepted=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.acceptance.outputs.accepted != 'true'
+        with:
+          # PR コードから GITHUB_TOKEN を読めないようにする (ラベル操作は上で env 渡し)。
+          persist-credentials: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        if: steps.acceptance.outputs.accepted != 'true'
+        with:
+          node-version: "v24.21.0"
+          cache: true
+      - run: pnpm install --frozen-lockfile
+        if: steps.acceptance.outputs.accepted != 'true'
+      # Cache Playwright browser binaries (~280MB chromium). Key on lockfile
+      # so cache invalidates whenever @playwright/test version changes.
+      - id: playwright-cache
+        if: steps.acceptance.outputs.accepted != 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: steps.acceptance.outputs.accepted != 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+      - if: steps.acceptance.outputs.accepted != 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: frontend
+        run: pnpm exec playwright install-deps chromium
+      # Storybook static build is required by the storybook-static webServer
+      # in playwright.config.ts (chromium-storybook project reads index.json
+      # from frontend/storybook-static/).
+      - if: steps.acceptance.outputs.accepted != 'true'
+        run: pnpm --filter gm-assistant-bot-frontend build-storybook
 
       - name: Compare against baselines
         if: github.event_name == 'pull_request' && steps.acceptance.outputs.accepted != 'true'
         run: pnpm --filter gm-assistant-bot-frontend test:vrt
 
-      # main では差分を承認済みとして baseline を再生成する。生成物は次の job がコミットする。
+      # main では差分を承認済みとして baseline を再生成する。生成物は vrt-baselines job がコミットする。
       - name: Refresh baselines
         if: github.event_name == 'push'
         run: pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
-
-      - name: Consume the acceptance label
-        if: steps.acceptance.outputs.accepted == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr edit "$PR_NUMBER" --remove-label vrt:accepted
 
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -140,11 +143,18 @@ jobs:
         with:
           name: vrt-baselines
           path: frontend/test/vrt
+      # snapshot が空の artifact で全 baseline を消してコミットしないためのガード。
+      - name: Verify baselines
+        run: |
+          if ! find frontend/test/vrt -type f -name '*.png' | grep -q .; then
+            echo "No baseline PNGs in the artifact" >&2
+            exit 1
+          fi
       - name: Commit baselines
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # artifact は vrt job の checkout 全体なので .ts も含む。main が artifact 生成後に
+          # artifact には test/vrt 配下のテストコードも含まれる。main が artifact 生成後に
           # 進んでいてもソースを巻き戻さないよう、snapshot だけをステージする
           # (削除された baseline も `-A` + pathspec で拾える)。
           git add -A -- ':(glob)frontend/test/vrt/**/*-snapshots/**'

@@ -65,7 +65,7 @@ Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/is
 
 Screenshots must be deterministic to be meaningful. The following must always hold project-wide:
 
-- Stability (animations, carets, fonts) is handled by `toHaveScreenshot`'s default stabilization; the threshold is `maxDiffPixelRatio: 0.01`. Mask genuinely dynamic elements with `mask:`
+- Stability (animations, carets) is handled by `toHaveScreenshot`'s default stabilization; the diff threshold and font-rendering flags live in `frontend/playwright.config.ts`. Mask genuinely dynamic elements with `mask:`
 - Mask dynamic elements (timestamps, random IDs, counters) or pin them with a fixed seed
 - Wait for `document.fonts.ready` before capturing
 - Pin React Flow viewport by explicitly calling `fitView`
@@ -230,4 +230,4 @@ Aligned with the Development Workflow in CLAUDE.md. After implementation, the ta
 VRT-only verification (optional):
 
 - `pnpm --filter gm-assistant-bot-frontend test:vrt`
-- 差分は `vrt-diff` artifact でレビューし、意図した差分は `vrt:accepted` ラベルで承認する。Running and CI wiring are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)
+- Diffs are reviewed in the `vrt-diff` artifact; intentional diffs are accepted with the `vrt:accepted` label. Running and CI wiring are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)
