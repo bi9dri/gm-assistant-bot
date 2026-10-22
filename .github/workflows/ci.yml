@@ -99,9 +99,11 @@ jobs:
         run: pnpm --filter gm-assistant-bot-frontend test:vrt
 
       # main では差分を承認済みとして baseline を再生成する。生成物は vrt-baselines job がコミットする。
+      # `test:vrt -- --update-snapshots` は pnpm が `--` をそのまま渡し、Playwright が
+      # フラグとして解釈しないため、専用スクリプトを使う。
       - name: Refresh baselines
         if: github.event_name == 'push'
-        run: pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+        run: pnpm --filter gm-assistant-bot-frontend test:vrt:update
 
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
