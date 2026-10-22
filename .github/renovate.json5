@@ -44,17 +44,6 @@
       matchUpdateTypes: ["minor", "patch"],
     },
     {
-      // @tanstack/react-start が同梱する react-start-client は @tanstack/react-router を
-      // exact で pin する。互いのバージョンがずれると router-core が二重に入り、
-      // FilebaseRouteOptionsInterface への module augmentation が別コピーに当たって
-      // route の `server` ハンドラーが型から消える (typecheck が落ちる)。
-      // 一括 PR から外して必ず同じブランチで上がるようにする。
-      // security PR は vulnerabilityAlerts の force でグループから外れるため、
-      // react-start の security 更新だけが来たときは手動で react-router を追随させる。
-      groupName: "tanstack-router",
-      matchPackageNames: ["@tanstack/react-start**", "@tanstack/react-router**"],
-    },
-    {
       // vite-plus 本体と pnpm catalog の `vite` (alias) は同じリリースで揃える必要がある。
       // non-major の一括 PR に埋もれると同梱 vitest の確認を落とすため専用グループ化。
       //
@@ -81,6 +70,16 @@
       // vp test が coverage provider 不一致で起動に失敗する（vitest の peerDependencies が exact）。
       // 独立更新を止め、vite-plus 更新時に同梱 vitest を確認して手動で合わせる。
       matchPackageNames: ["@vitest/coverage-v8"],
+      enabled: false,
+    },
+    {
+      // @tanstack/react-start が同梱する react-start-client は @tanstack/react-router を
+      // exact で pin する。react-router だけが先に上がると router-core が二重に入り、
+      // FilebaseRouteOptionsInterface への module augmentation が別コピーに当たって
+      // route の `server` ハンドラーが型から消える (typecheck が落ちる)。
+      // 逆向き (react-start だけ上がる) も同じ理由で落ちるが、security 更新を止める
+      // わけにはいかないので、react-start の更新ブランチでは router を手で追随させる。
+      matchPackageNames: ["@tanstack/react-router"],
       enabled: false,
     },
     // major は既定どおりパッケージごとの個別 PR（Individual 相当）。
