@@ -4,7 +4,7 @@
 
 AI-driven code generation is central to development; generated code quality must be backed by sustained high test coverage. This document defines the current strategy combining Unit, Integration, and Visual Regression Test (VRT) layers, on top of the Test Pyramid and TDD.
 
-VRT was introduced via Issue [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) using Playwright + MSW + Storybook. Baselines are managed by [Argos](https://argos-ci.com) (cloud visual diffs); Chromium only. No screenshot baselines are committed to the repository.
+VRT was introduced via Issue [#141](https://github.com/bi9dri/gm-assistant-bot/issues/141) using Playwright + MSW + Storybook. Baselines are committed to the repository and compared by Playwright; the Linux baselines are regenerated and auto-committed by CI on `main`. Chromium only.
 
 ---
 
@@ -53,19 +53,19 @@ Follows the policy table in [#141](https://github.com/bi9dri/gm-assistant-bot/is
 
 ### Stack
 
-| Item                        | Decision                                                                                                                                                   |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Browser                     | Chromium only                                                                                                                                              |
-| Snapshot strategy           | Playwright + `@argos-ci/playwright` `argosScreenshot`; the Argos reporter uploads screenshots and diffs are reviewed in the Argos UI (no baselines in git) |
-| OS-difference handling      | Argos diffs server-side, so local / CI rendering parity is not required                                                                                    |
-| External dependency mocking | MSW pins Discord OAuth and the entire `/api`. Activated by passing env `VITE_USE_MSW=true` to the dev server                                               |
-| Component isolation         | Storybook + `@storybook/addon-themes`'s `data-theme` decorator for light/dark switching                                                                    |
+| Item                        | Decision                                                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser                     | Chromium only                                                                                                                                     |
+| Snapshot strategy           | Playwright `expect(page).toHaveScreenshot()`; baselines are committed under `frontend/test/vrt/**/*-snapshots/` and CI regenerates them on `main` |
+| OS-difference handling      | Linux baselines are authoritative; the `{platform}` filename suffix keeps local win32/darwin baselines separate and gitignored                    |
+| External dependency mocking | MSW pins Discord OAuth and the entire `/api`. Activated by passing env `VITE_USE_MSW=true` to the dev server                                      |
+| Component isolation         | Storybook + `@storybook/addon-themes`'s `data-theme` decorator for light/dark switching                                                           |
 
 ### Determinism Principles
 
 Screenshots must be deterministic to be meaningful. The following must always hold project-wide:
 
-- Stability (animations, carets, fonts, images) is handled by Argos' built-in stabilization; no local `maxDiffPixelRatio` tuning is needed
+- Stability (animations, carets, fonts) is handled by `toHaveScreenshot`'s default stabilization; the threshold is `maxDiffPixelRatio: 0.01`. Mask genuinely dynamic elements with `mask:`
 - Mask dynamic elements (timestamps, random IDs, counters) or pin them with a fixed seed
 - Wait for `document.fonts.ready` before capturing
 - Pin React Flow viewport by explicitly calling `fitView`
@@ -77,9 +77,9 @@ VRT runs on Node (Vite+ bundles Vite for Node). The `webServer.command` in `fron
 
 ### Snapshot Operations
 
-- Screenshots are captured with `argosScreenshot(...)` and uploaded to Argos by the reporter on CI
-- Screenshots are namespaced by Playwright project name (`<project>/<name>`), so viewport × theme variants stay distinct without encoding the suffix in the name
-- Diffs are reviewed and approved/rejected in the Argos UI; no baselines are committed
+- Screenshots are captured with `expect(page).toHaveScreenshot(...)` and compared against committed baselines on CI
+- Filenames follow `snapshotPathTemplate` (`<arg>-<project>-<platform>.png`), so viewport × theme variants stay distinct without encoding the suffix in the name
+- An intentional diff is accepted with the `vrt:accepted` label; `main` regenerates and auto-commits the baselines
 - Operations (running locally, CI wiring, adding a Storybook VRT) live in [`docs/dev/visual-regression-testing.md`](./visual-regression-testing.md)
 
 ### What VRT Does Not Cover
@@ -197,15 +197,15 @@ The actual exclusion patterns live in `frontend/vite.config.ts`'s `test.coverage
 
 Do not duplicate config **values** in this doc — files are the source of truth. This keeps the doc from drifting when values change.
 
-| Config                                    | Location                                          | Role                                                                                                                                                                                                                                                    |
-| ----------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend coverage thresholds / exclusions | `frontend/vite.config.ts`                         | `test.coverage.thresholds` / `test.coverage.exclude`                                                                                                                                                                                                    |
-| Backend coverage                          | `backend/vite.config.ts`                          | Coverage enabled (thresholds to be added later)                                                                                                                                                                                                         |
-| Unit test preload                         | `frontend/test/unit.setup.ts`                     | Clear Dexie tables / OPFS in-memory mock                                                                                                                                                                                                                |
-| VRT config                                | `frontend/playwright.config.ts`                   | testDir / Chromium / Argos reporter / `webServer`                                                                                                                                                                                                       |
-| VRT MSW                                   | `frontend/test/vrt/msw/{handlers.ts, browser.ts}` | Per-test handler overrides extend `frontend/test/vrt/fixtures.ts`                                                                                                                                                                                       |
-| Storybook                                 | `frontend/.storybook/{main.ts, preview.ts}`       | Isolation for VRT. `viteFinal` deliberately does not spread `vite.config.ts` (avoids tanstackRouter / MSW middleware / devtools conflicts)                                                                                                              |
-| CI                                        | `.github/workflows/ci.yml`                        | `check` job (typecheck → test → lint) and `vrt` job (`ubuntu-latest` + Playwright with chromium binary cache + Argos upload via `ARGOS_TOKEN`) run in parallel. See [`visual-regression-testing.md`](./visual-regression-testing.md) for VRT operations |
+| Config                                    | Location                                          | Role                                                                                                                                                                                                                                                                     |
+| ----------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Frontend coverage thresholds / exclusions | `frontend/vite.config.ts`                         | `test.coverage.thresholds` / `test.coverage.exclude`                                                                                                                                                                                                                     |
+| Backend coverage                          | `backend/vite.config.ts`                          | Coverage enabled (thresholds to be added later)                                                                                                                                                                                                                          |
+| Unit test preload                         | `frontend/test/unit.setup.ts`                     | Clear Dexie tables / OPFS in-memory mock                                                                                                                                                                                                                                 |
+| VRT config                                | `frontend/playwright.config.ts`                   | testDir / Chromium / `snapshotPathTemplate` / `expect.toHaveScreenshot` / `webServer`                                                                                                                                                                                    |
+| VRT MSW                                   | `frontend/test/vrt/msw/{handlers.ts, browser.ts}` | Per-test handler overrides extend `frontend/test/vrt/fixtures.ts`                                                                                                                                                                                                        |
+| Storybook                                 | `frontend/.storybook/{main.ts, preview.ts}`       | Isolation for VRT. `viteFinal` deliberately does not spread `vite.config.ts` (avoids tanstackRouter / MSW middleware / devtools conflicts)                                                                                                                               |
+| CI                                        | `.github/workflows/ci.yml`                        | `check` job (typecheck → test → lint) and `vrt` job (`ubuntu-latest` + Playwright with chromium binary cache; compares on PRs, regenerates baselines on `main`) run in parallel. See [`visual-regression-testing.md`](./visual-regression-testing.md) for VRT operations |
 
 ### Test File Placement Convention
 
@@ -230,4 +230,4 @@ Aligned with the Development Workflow in CLAUDE.md. After implementation, the ta
 VRT-only verification (optional):
 
 - `pnpm --filter gm-assistant-bot-frontend test:vrt`
-- Changes are reviewed in Argos. Running and CI wiring are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)
+- 差分は `vrt-diff` artifact でレビューし、意図した差分は `vrt:accepted` ラベルで承認する。Running and CI wiring are documented in [`visual-regression-testing.md`](./visual-regression-testing.md)

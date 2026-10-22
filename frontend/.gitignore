@@ -3,5 +3,7 @@ test-results/
 playwright-report/
 playwright/.cache/
 storybook-static/
-# Argos のスクリーンショット出力 (reporter 未使用時の ./screenshots)
-screenshots/
+
+# CI (Linux) が管理する baseline 以外はコミットしない
+test/vrt/**/*-win32.png
+test/vrt/**/*-darwin.png

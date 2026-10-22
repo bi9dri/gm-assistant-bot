@@ -8,9 +8,19 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # 意図した差分を `vrt:accepted` ラベルで承認できるようにするため labeled も拾う。
+    types: [opened, synchronize, reopened, labeled]
+
+# baseline の自動コミットが競合しないよう main は直列化する。PR は最新の push だけ
+# 走らせればよいので、従来どおり古い run を打ち切る。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
+    # ラベル操作だけで check job を再実行しない。
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -26,6 +36,12 @@ jobs:
 
   vrt:
     runs-on: ubuntu-latest
+    # `gh pr view` / `gh pr edit` で承認ラベルを読み取り・消費する。
+    # fork からの PR では token が read-only に降格されるため、承認フローは
+    # 同一リポジトリのブランチにだけ適用する (下の acceptance step を参照)。
+    permissions:
+      contents: read
+      pull-requests: write
     # ハングで長時間放置されるのを防ぐ安全網。
     timeout-minutes: 20
     steps:
@@ -52,14 +68,90 @@ jobs:
       # in playwright.config.ts (chromium-storybook project reads index.json
       # from frontend/storybook-static/).
       - run: pnpm --filter gm-assistant-bot-frontend build-storybook
-      # Argos reporter がスクリーンショット・trace をアップロードし、PR に差分チェックを出す。
-      - run: pnpm --filter gm-assistant-bot-frontend test:vrt
+
+      # 意図した差分を承認する手段。`vrt:accepted` ラベルが付いた PR では比較を
+      # スキップしてジョブを成功させ、ラベルを消費して消す (次のコミットは再検証される)。
+      # fork PR は token が read-only でラベルを外せないため対象外。
+      - id: acceptance
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         env:
-          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx 'vrt:accepted'; then
+            echo "accepted=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compare against baselines
+        if: github.event_name == 'pull_request' && steps.acceptance.outputs.accepted != 'true'
+        run: pnpm --filter gm-assistant-bot-frontend test:vrt
+
+      # main では差分を承認済みとして baseline を再生成する。生成物は次の job がコミットする。
+      - name: Refresh baselines
+        if: github.event_name == 'push'
+        run: pnpm --filter gm-assistant-bot-frontend test:vrt -- --update-snapshots
+
+      - name: Consume the acceptance label
+        if: steps.acceptance.outputs.accepted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --remove-label vrt:accepted
+
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vrt-diff
-          path: frontend/test-results/
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
           retention-days: 14
           if-no-files-found: ignore
+
+      - name: Upload refreshed baselines
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vrt-baselines
+          path: frontend/test/vrt
+          retention-days: 1
+          if-no-files-found: error
+
+  # main への push 時だけ、Linux で再生成した baseline を main にコミットする。
+  # 書き込み権限を「PR のコードを実行しない job」に閉じ込めるため vrt と分離している。
+  vrt-baselines:
+    needs: vrt
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      # 削除された story / route の baseline を残さないよう、既存の snapshot を
+      # 一度消してから artifact を展開する (artifact は差分ではなく全体を持つ)。
+      - name: Remove stale snapshots
+        run: find frontend/test/vrt -type d -name '*-snapshots' -prune -exec rm -rf {} +
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: vrt-baselines
+          path: frontend/test/vrt
+      - name: Commit baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # artifact は vrt job の checkout 全体なので .ts も含む。main が artifact 生成後に
+          # 進んでいてもソースを巻き戻さないよう、snapshot だけをステージする
+          # (削除された baseline も `-A` + pathspec で拾える)。
+          git add -A -- ':(glob)frontend/test/vrt/**/*-snapshots/**'
+          if git diff --cached --quiet; then
+            echo "No baseline changes"
+            exit 0
+          fi
+          # [skip ci] でこの push による CI の再帰実行を止める。
+          git commit -m "chore(vrt): スクリーンショット baseline を更新 [skip ci]"
+          git push origin HEAD:main

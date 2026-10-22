@@ -1,4 +1,3 @@
-import { createArgosReporterOptions } from "@argos-ci/playwright/reporter";
 import { defineConfig, devices } from "@playwright/test";
 
 import type { VrtWorkerOptions } from "./test/vrt/fixtures";
@@ -12,26 +11,29 @@ export default defineConfig<{}, VrtWorkerOptions>({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  // Argos reporter がスクリーンショットと trace を Argos へアップロードする。
-  // 比較は Argos 側で行うため、baseline PNG のコミットは不要。
+  // baseline はリポジトリにコミットし、Playwright が自前で比較する。
+  // 生成・更新の責任は CI (Linux) が持つ。
   reporter: [
     process.env.CI ? ["github"] : ["list"],
-    [
-      "@argos-ci/playwright/reporter",
-      // fork からの PR では Secrets が渡らず token が空になるため、token がある時だけ upload する。
-      createArgosReporterOptions({ uploadToArgos: !!process.env.CI && !!process.env.ARGOS_TOKEN }),
-    ],
+    ["html", { outputFolder: "playwright-report", open: "never" }],
   ],
   timeout: 30_000,
+  expect: {
+    toHaveScreenshot: {
+      // アンチエイリアス等の微差で落とさない (Argos 移行前と同じ閾値)。
+      maxDiffPixelRatio: 0.01,
+    },
+  },
+  // `{platform}` を含めることで、CI (Linux) の baseline と、ローカルで
+  // `test:vrt:update` が生成する win32/darwin の baseline が衝突しない。
+  // コミットするのは CI が生成する Linux のものだけ (他は frontend/.gitignore)。
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
   use: {
     trace: "on-first-retry",
-    // 失敗時のスクリーンショットを Argos に上げてデバッグに使う。
+    // 失敗時のスクリーンショットを artifact に含めてデバッグに使う。
     screenshot: "only-on-failure",
     timezoneId: "Asia/Tokyo",
     locale: "ja-JP",
-    // index.html の CSP が Argos の inline script を弾く。テスト時のみバイパスする
-    // (Argos docs: "Configure Playwright to bypass CSP")。
-    bypassCSP: true,
     // サブピクセル描画とフォントヒンティングを切り、ローカルと CI の glyph を揃える。
     launchOptions: {
       args: ["--disable-lcd-text", "--font-render-hinting=none"],

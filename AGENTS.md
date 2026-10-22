@@ -39,7 +39,7 @@ pnpm workspace monorepo on Node 24 (Vite+ toolchain): `/frontend` (React + TanSt
 - [tanstack-start-architecture.md](docs/dev/tanstack-start-architecture.md) — TanStack Start + Cloudflare plugin 構成 (entry / head / plugin 除外の理由)
 - [pr-preview-environment.md](docs/dev/pr-preview-environment.md) — PR ごとの使い捨て Cloudflare Worker preview (作成・破棄・必要な Secrets)
 - [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
-- [visual-regression-testing.md](docs/dev/visual-regression-testing.md) — VRT の実行・Argos での差分レビュー・CI 構成
+- [visual-regression-testing.md](docs/dev/visual-regression-testing.md) — VRT の実行・baseline のレビューと main での自動更新・CI 構成
 
 ## Skills (`.claude/skills/`)
 
