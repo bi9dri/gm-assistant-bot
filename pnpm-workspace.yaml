@@ -13,6 +13,9 @@ catalog:
   vite-plus: 1.3.0
 overrides:
   vite@*: "catalog:"
+  # miniflare が undici 7.29.1 を exact pin しているため。CVE-2026-109869 /
+  # CVE-2026-109924 修正版が miniflare に降りたら削除する。
+  undici@7.29.1: 7.30.1
 peerDependencyRules:
   allowAny:
     - vite
