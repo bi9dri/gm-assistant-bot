@@ -81,14 +81,16 @@
       enabled: false,
     },
     {
-      // @tanstack/react-start が同梱する react-start-client は @tanstack/react-router を
+      // @tanstack/react-start は react-start-client から @tanstack/react-router を
       // exact で pin する。react-router だけが先に上がると router-core が二重に入り、
       // FilebaseRouteOptionsInterface への module augmentation が別コピーに当たって
-      // route の `server` ハンドラーが型から消える (typecheck が落ちる)。
-      // 逆向き (react-start だけ上がる) も同じ理由で落ちるが、security 更新を止める
-      // わけにはいかないので、react-start の更新ブランチでは router を手で追随させる。
-      matchPackageNames: ["@tanstack/react-router"],
-      enabled: false,
+      // route の `server` ハンドラーが型から消える (typecheck が落ちる)。逆向き
+      // (react-start だけ上がる) も同じ理由で落ちるので、必ず同じ PR で上げる。
+      // TanStack は同一バッチで公開するため minimumReleaseAge もほぼ同時に通る。
+      // router 単独の patch が出た場合は、react-start の pin が追随するまでこの PR が
+      // 一時的に赤くなる (追随後は同じブランチに取り込まれて解消する)。
+      groupName: "tanstack-react-start",
+      matchPackageNames: ["@tanstack/react-start", "@tanstack/react-router"],
     },
     // major は既定どおりパッケージごとの個別 PR（Individual 相当）。
     // vite+ は同リリースで揃える必要があるため例外として上のグループに含める。
