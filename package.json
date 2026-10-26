@@ -21,10 +21,10 @@
   "devDependencies": {
     "@types/node": "26.6.5",
     "@vitest/coverage-v8": "5.0.5",
-    "knip": "6.41.0",
+    "knip": "6.42.0",
     "typescript": "7.0.2",
     "vite-plus": "catalog:",
-    "wrangler": "4.151.1"
+    "wrangler": "4.151.2"
   },
   "packageManager": "pnpm@12.14.0"
 }
