@@ -37,7 +37,7 @@
     "dexie": "4.4.7",
     "dexie-react-hooks": "4.4.0",
     "hono": "4.13.13",
-    "immer": "11.2.6",
+    "immer": "11.2.9",
     "nanoid": "6.0.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -45,10 +45,10 @@
     "tailwind-merge": "3.7.0",
     "tailwindcss": "4.3.3",
     "zod": "4.6.7",
-    "zustand": "5.0.15"
+    "zustand": "5.0.16"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.64.0",
+    "@cloudflare/vite-plugin": "1.65.0",
     "@playwright/test": "1.64.1",
     "@storybook/addon-docs": "10.6.3",
     "@storybook/addon-themes": "10.6.3",
@@ -64,5 +64,5 @@
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@12.14.0"
+  "packageManager": "pnpm@12.15.0"
 }
