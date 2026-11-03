@@ -1,15 +1,11 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: [
-    "config:recommended",
-    // 外部 action を SHA + バージョンコメントに固定する（pinact 相当）
-    "helpers:pinGitHubActionDigests",
-  ],
+  extends: ["config:recommended"],
 
   // 固定バージョンのみ（^ / ~ を使わない）
   rangeStrategy: "pin",
 
-  // 公開から 7 日未満のリリースは PR にしない（ncu --cooldown 7 / pinact -m 7 相当）。
+  // 公開から 7 日未満のリリースは PR にしない（npm / GitHub Actions 共通）。
   // internalChecksFilter: strict で「保留中の新バージョン」も無視する。
   minimumReleaseAge: "7 days",
   internalChecksFilter: "strict",
@@ -70,8 +66,17 @@
       ],
     },
     {
+      // step の uses: は actions.lock が commit を固定するので、ワークフロー側は
+      // タグ参照のままでよい。Renovate は action を更新すると同時に actions.lock も
+      // 再生成する (gh-actions-lock 連携, experimental)。
       groupName: "github-actions",
       matchManagers: ["github-actions"],
+    },
+    {
+      // 再利用可能ワークフロー (jobs.<id>.uses) は actions.lock の対象外なので、
+      // 従来どおり SHA + バージョンコメントで固定する。
+      matchDepTypes: ["workflow"],
+      pinDigests: true,
     },
     {
       // @vitest/coverage-v8 は vite-plus が同梱する vitest と同じバージョンでないと

@@ -1,0 +1,28 @@
+name: Lockfile
+
+# actions.lock がワークフローの uses: とずれていないかを検証する。
+# Renovate は action の更新と同じ PR で lockfile を再生成するので、ここが落ちるのは
+# uses: を手で編集して `gh actions-lock` を流し忘れたときだけ。
+on:
+  pull_request:
+    paths: [.github/workflows/**]
+  push:
+    branches: [main]
+    paths: [.github/workflows/**]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # lockfile の形式は拡張のバージョンに依存するため固定する。
+      - run: gh extension install github/gh-actions-lock --pin v0.4.1
+      # タグの解決に GitHub API を使う。
+      - run: gh actions-lock --verify
+        env:
+          GH_TOKEN: ${{ github.token }}
