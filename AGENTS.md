@@ -20,7 +20,7 @@
 - **Fixed versions only** — no `^` / `~`. Supply chain protection.
 - **Use versions ≥7 days old**, except for security updates. Avoids malicious releases caught shortly after publish.
 - **GitHub Actions (step `uses:`)**: reference release tags; `.github/workflows/actions.lock` pins each ref to a commit. After adding or changing a `uses:`, run `gh actions-lock` and commit the lockfile (never edit it by hand). Reusable workflows (`jobs.<id>.uses`) are not covered by the lockfile, so keep them pinned to a full commit SHA. See [github-actions-lockfile.md](docs/dev/github-actions-lockfile.md).
-- **Renovate (GitHub App, `.github/renovate.json5`) proposes every update** and enforces the rules above. Don't bump versions by hand — review its PRs instead. For GitHub Actions it bumps the tag and regenerates `actions.lock` in the same PR.
+- **Renovate (GitHub App, `.github/renovate.json5`) proposes every update** and enforces the rules above. Don't bump versions by hand — PRs are automatically merged once CI passes. For GitHub Actions it bumps the tag and regenerates `actions.lock` in the same PR.
   - If CI fails on a Renovate PR, fix it on that branch (replace deprecated APIs, adapt to the new API) rather than closing the PR.
   - Pin the pnpm version only in `packageManager`. Renovate does not update `devEngines.packageManager` (renovatebot/renovate#38067), so duplicating it there makes artifact updates fail with `ERR_PNPM_BAD_PM_VERSION`.
 - **Avoid `overrides`.** Fix it by updating the direct dependency. Use `overrides` only as a temporary measure when a critical vulnerability is reported against a transitive dependency AND no direct update resolves it — document the advisory, why a direct update isn't viable, and the removal condition in the PR.
