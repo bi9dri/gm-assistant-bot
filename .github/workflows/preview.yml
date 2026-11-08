@@ -31,7 +31,7 @@ jobs:
           ref: refs/pull/${{ inputs.pr }}/head
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
-          node-version: "24.22.2"
+          node-version: "26.13.0"
           cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter 'gm-assistant-bot-frontend' build
