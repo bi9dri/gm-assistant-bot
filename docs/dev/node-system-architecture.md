@@ -40,9 +40,7 @@ const NODE_WIDTHS = {
   xl: 640, // 40 × 16 (group nodes)
 };
 
-export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
-  /* one entry per node type */
-};
+export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {/* one entry per node type */};
 
 export const NODE_CONTENT_HEIGHTS = {
   sm: 200,
@@ -106,15 +104,15 @@ export const ExampleNode = ({
 
 Re-exported from `frontend/src/components/Node/base/`:
 
-| Name | Purpose |
-|------|---------|
-| `BaseNode` | Top-level node container |
-| `BaseNodeHeader` / `BaseNodeHeaderTitle` | Header |
-| `BaseNodeContent` | Scrollable body (controlled by `maxHeight`) |
-| `BaseNodeFooter` | Footer (execute button etc.) |
-| `BaseHandle` / `LabeledHandle` | Connection handles |
-| `EditableTitle` | Inline-editable title for edit mode |
-| `cn` | Class-name join utility |
+| Name                                     | Purpose                                     |
+| ---------------------------------------- | ------------------------------------------- |
+| `BaseNode`                               | Top-level node container                    |
+| `BaseNodeHeader` / `BaseNodeHeaderTitle` | Header                                      |
+| `BaseNodeContent`                        | Scrollable body (controlled by `maxHeight`) |
+| `BaseNodeFooter`                         | Footer (execute button etc.)                |
+| `BaseHandle` / `LabeledHandle`           | Connection handles                          |
+| `EditableTitle`                          | Inline-editable title for edit mode         |
+| `cn`                                     | Class-name join utility                     |
 
 ### Important CSS classes
 
@@ -126,13 +124,13 @@ Re-exported from `frontend/src/components/Node/base/`:
 
 ## Edit mode vs execute mode
 
-| Aspect | Edit mode | Execute mode |
-|--------|-----------|--------------|
-| Purpose | Template authoring | Session runtime |
-| Data editing | Allowed | Read-only |
-| Execute button | Hidden | Shown |
-| Delete button | Shown | Hidden |
-| Execution context | None | Provided |
+| Aspect            | Edit mode          | Execute mode    |
+| ----------------- | ------------------ | --------------- |
+| Purpose           | Template authoring | Session runtime |
+| Data editing      | Allowed            | Read-only       |
+| Execute button    | Hidden             | Shown           |
+| Delete button     | Shown              | Hidden          |
+| Execution context | None               | Provided        |
 
 ### Execution context
 
@@ -166,8 +164,8 @@ export const DynamicValueSchema = z.discriminatedUnion("type", [
 
 export interface DynamicValueContext {
   sessionName?: string;
-  roles?: Map<string, string>;       // roleName -> roleId
-  channels?: Map<string, string>;    // channelName -> channelId
+  roles?: Map<string, string>; // roleName -> roleId
+  channels?: Map<string, string>; // channelName -> channelId
   gameFlags?: Record<string, string>;
 }
 
@@ -216,10 +214,15 @@ for (let i = 0; i < items.length; i++) {
   // work
 }
 
-{isLoading && (
-  <progress className="progress progress-primary w-full"
-    value={progress.current} max={progress.total} />
-)}
+{
+  isLoading && (
+    <progress
+      className="progress progress-primary w-full"
+      value={progress.current}
+      max={progress.total}
+    />
+  );
+}
 ```
 
 ---
@@ -232,10 +235,10 @@ Schema changes are handled via **Dexie DB versioning** (`this.version(N).upgrade
 
 ### Key files
 
-| File | Role |
-|------|------|
-| `frontend/src/db/database.ts` | Dexie migration definitions |
-| `frontend/src/db/schemas.ts` | DB table type definitions |
+| File                                                    | Role                           |
+| ------------------------------------------------------- | ------------------------------ |
+| `frontend/src/db/database.ts`                           | Dexie migration definitions    |
+| `frontend/src/db/schemas.ts`                            | DB table type definitions      |
 | `frontend/src/components/Node/nodes/{NodeName}Node.tsx` | The `DataSchema` being changed |
 
 ### Things to watch
@@ -246,7 +249,7 @@ Schema changes are handled via **Dexie DB versioning** (`this.version(N).upgrade
 
 ### Procedure
 
-See `.claude/skills/schema-migration/SKILL.md` for full templates and worked examples (rename, string → discriminated union, array element type change).
+See `.agents/skills/schema-migration/SKILL.md` for full templates and worked examples (rename, string → discriminated union, array element type change).
 
 ---
 
@@ -267,15 +270,15 @@ These files must be edited. None of this is automated by type inference — ever
 
 ## Reference files
 
-| File | Description |
-|------|-------------|
-| `frontend/src/components/Node/base/base-node.tsx` | UI primitives |
-| `frontend/src/components/Node/base/base-schema.ts` | Shared schema and width/height constants |
-| `frontend/src/components/Node/base/editable-title.tsx` | Inline-editable title |
-| `frontend/src/components/Node/base/node-wrapper.tsx` | Node-type registration with `mode` injection |
-| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | Execution context provider |
-| `frontend/src/components/Node/utils/DynamicValue.ts` | DynamicValue system |
-| `frontend/src/components/Node/nodes/` | All node implementations |
-| `frontend/src/stores/templateEditorStore.ts` | Zustand store |
-| `frontend/src/components/TemplateEditor.tsx` | Editor entry point |
-| `frontend/src/db/database.ts` | Dexie DB and migrations |
+| File                                                             | Description                                  |
+| ---------------------------------------------------------------- | -------------------------------------------- |
+| `frontend/src/components/Node/base/base-node.tsx`                | UI primitives                                |
+| `frontend/src/components/Node/base/base-schema.ts`               | Shared schema and width/height constants     |
+| `frontend/src/components/Node/base/editable-title.tsx`           | Inline-editable title                        |
+| `frontend/src/components/Node/base/node-wrapper.tsx`             | Node-type registration with `mode` injection |
+| `frontend/src/components/Node/contexts/NodeExecutionContext.tsx` | Execution context provider                   |
+| `frontend/src/components/Node/utils/DynamicValue.ts`             | DynamicValue system                          |
+| `frontend/src/components/Node/nodes/`                            | All node implementations                     |
+| `frontend/src/stores/templateEditorStore.ts`                     | Zustand store                                |
+| `frontend/src/components/TemplateEditor.tsx`                     | Editor entry point                           |
+| `frontend/src/db/database.ts`                                    | Dexie DB and migrations                      |

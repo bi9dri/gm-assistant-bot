@@ -219,7 +219,7 @@ Do not duplicate config **values** in this doc — files are the source of truth
 
 ## Verification Method
 
-Aligned with the Development Workflow in CLAUDE.md. After implementation, the task is not done until **all** of the following pass:
+Aligned with the Development Workflow in AGENTS.md. After implementation, the task is not done until **all** of the following pass:
 
 1. `pnpm test` — all tests pass
 2. `pnpm typecheck` — no type errors
