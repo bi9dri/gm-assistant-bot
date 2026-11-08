@@ -42,7 +42,7 @@ pnpm workspace monorepo on Node 24 (Vite+ toolchain): `/frontend` (React + TanSt
 - [visual-regression-testing.md](docs/dev/visual-regression-testing.md) — VRT の実行・baseline のレビューと main での自動更新・CI 構成
 - [github-actions-lockfile.md](docs/dev/github-actions-lockfile.md) — GitHub Actions の commit 固定 (`actions.lock`) と更新運用
 
-## Skills (`.claude/skills/`)
+## Skills (`.agents/skills/`)
 
 - **schema-migration** — MUST use when changing a node's DataSchema
 

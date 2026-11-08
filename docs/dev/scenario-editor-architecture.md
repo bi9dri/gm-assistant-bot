@@ -75,7 +75,7 @@ ProseMirror は inline atom + NodeView がそのまま (a) の形をしており
 
 Lexical でも同じことはできるが inline decorator の実例が薄く記述量が増える。Tiptap は
 React 用の NodeView が既製で、書く量が最も少ない。バージョンは固定・公開 7 日以上の
-ルールに従って導入時に選ぶ (CLAUDE.md)。
+ルールに従って導入時に選ぶ (AGENTS.md)。
 
 ### D25 — doc と steps を分ける
 
