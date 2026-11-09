@@ -15,6 +15,7 @@ const TextDetailPanel = ({ step, onChange }: DetailPanelProps<TextStep>) => (
 );
 
 const SUMMARY_LENGTH = 40;
+const graphemeSegmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
 
 export const TextEntry = defineStep<TextStep>({
   type: "Text",
@@ -33,10 +34,10 @@ export const TextEntry = defineStep<TextStep>({
       .find((line) => line.trim() !== "")
       ?.trim();
     if (firstLine === undefined) return "本文 (空)";
-    // サロゲートペアを割らないようコードポイント単位で切る
-    const chars = [...firstLine];
-    return chars.length > SUMMARY_LENGTH
-      ? `${chars.slice(0, SUMMARY_LENGTH).join("")}…`
+    // サロゲートペアや結合絵文字を割らないよう書記素クラスタ単位で切る
+    const segments = Array.from(graphemeSegmenter.segment(firstLine), (s) => s.segment);
+    return segments.length > SUMMARY_LENGTH
+      ? `${segments.slice(0, SUMMARY_LENGTH).join("")}…`
       : firstLine;
   },
   DetailPanel: TextDetailPanel,
