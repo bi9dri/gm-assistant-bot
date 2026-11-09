@@ -14,7 +14,6 @@ workflows:
         - 'voidzero-dev/setup-vp@v1.22.0'
     '.github/workflows/lockfile.yml':
         - 'actions/checkout@v7.0.1'
-    '.github/workflows/osv-scanner.yml': []
     '.github/workflows/preview.yml':
         - 'actions/checkout@v7.0.1'
         - 'voidzero-dev/setup-vp@v1.22.0'

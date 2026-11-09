@@ -38,7 +38,7 @@ gh actions-lock --verify                      # CI と同じ検証 (書き込み
 
 - **再利用可能ワークフロー** (`jobs.<id>.uses: owner/repo/.github/workflows/x.yml@ref`)
   は lockfile の対象外 ([gh-actions-lock#179](https://github.com/github/gh-actions-lock/issues/179))。
-  `osv-scanner.yml` のように SHA + バージョンコメントで固定し、Renovate
+  SHA + バージョンコメントで固定し、Renovate
   (`.github/renovate.json5` の `matchDepTypes: ["workflow"]`) に更新させる。
 - ローカルの action (`uses: ./...`) は追跡されない。
 - lockfile の形式・CLI フラグはまだ変更されうる (gh-actions-lock は 1.0 未満)。
