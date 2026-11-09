@@ -32,6 +32,8 @@ jobs:
       - run: pnpm test
       - run: pnpm lint
       - run: pnpm fmt:check
+      - run: pnpm knip
+      - run: pnpm build
 
   vrt:
     runs-on: ubuntu-latest
