@@ -173,7 +173,7 @@ catalogs:
 
 overrides:
   vite@*: npm:@voidzero-dev/vite-plus-core@1.4.0
-  undici@7.29.1: 7.30.1
+  undici@7.29.1: 8.12.3
 
 importers:
 
