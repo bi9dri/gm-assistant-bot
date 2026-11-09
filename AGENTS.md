@@ -10,7 +10,7 @@
 
 ## Runtime / Package Manager (Vite+ / pnpm / Node)
 
-- Use `pnpm install`, `pnpm --filter <pkg> <script>`, and the `vp` CLI (`vp dev/build/test/lint/fmt`). Runtime is Node 24 LTS (Vite+ requires `^22.18.0 || ^24.11.0 || >=26.0.0`). Never npm/yarn/bun.
+- Use `pnpm install`, `pnpm --filter <pkg> <script>`, and the `vp` CLI (`vp dev/build/test/lint/fmt`). Runtime is Node 26 (Vite+ requires `^22.18.0 || ^24.11.0 || >=26.0.0`). Never npm/yarn/bun.
 - Tests run with `vp test` (Vitest 5 bundled by Vite+); API is imported from `vite-plus/test`. Coverage config lives in each `vite.config.ts` `test` block (no `bunfig.toml`).
 - `--filter` matches `package.json` `name` (not workspace dir). Wildcards ok: `--filter '*'`.
 - Coverage thresholds apply globally — exclude untestable files rather than lowering thresholds.
@@ -27,7 +27,7 @@
 
 ## Architecture
 
-pnpm workspace monorepo on Node 24 (Vite+ toolchain): `/frontend` (React + TanStack Start, SSR/Workers via `@cloudflare/vite-plugin`), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview は `.github/workflows/preview.yml` が本番ビルドを `wrangler deploy --temporary` で使い捨て Worker に上げる (詳細: `docs/dev/pr-preview-environment.md`)。
+pnpm workspace monorepo on Node 26 (Vite+ toolchain): `/frontend` (React + TanStack Start, SSR/Workers via `@cloudflare/vite-plugin`), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview は `.github/workflows/preview.yml` が本番ビルドを `wrangler deploy --temporary` で使い捨て Worker に上げる (詳細: `docs/dev/pr-preview-environment.md`)。
 
 ## Docs (`/docs/dev`)
 
