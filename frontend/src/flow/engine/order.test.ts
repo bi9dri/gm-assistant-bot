@@ -44,9 +44,11 @@ describe("runnableSteps", () => {
 
   test("未実行の Branch はリーフ (枝の子を含めない)", () => {
     const br = branch("br", {
+      executedBranchIds: undefined,
       branches: [
         { id: "br-a", label: "A", steps: [step("a1")] },
         { id: "br-b", label: "B", steps: [step("b1")] },
+        { id: "Stryker was here", label: "Default", steps: [step("mutant-child")] },
       ],
     });
     expect(runnableSteps(flowOf(step("x"), br)).map((s) => s.id)).toEqual(["x", "br"]);
@@ -90,6 +92,11 @@ describe("runnableSteps", () => {
 describe("advanceCursor", () => {
   test("null からは先頭を返す", () => {
     expect(advanceCursor(flowOf(step("a"), step("b")), null)).toBe("a");
+  });
+
+  test("ステップが存在しない空フローでは null を返す", () => {
+    expect(advanceCursor({ version: 1, sections: [] }, null)).toBeNull();
+    expect(advanceCursor(flowOf(), null)).toBeNull();
   });
 
   test("次のステップを返す", () => {

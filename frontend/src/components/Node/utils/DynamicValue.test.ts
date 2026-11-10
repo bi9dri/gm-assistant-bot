@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vite-plus/test";
 
 import {
+  DynamicValueSchema,
   resolveDynamicValue,
   defaultDynamicValue,
   type DynamicValue,
@@ -104,5 +105,33 @@ describe("defaultDynamicValue", () => {
   test("returns literal type with empty value", () => {
     const result = defaultDynamicValue();
     expect(result).toEqual({ type: "literal", value: "" });
+  });
+});
+
+describe("DynamicValueSchema", () => {
+  test.each([
+    [{ type: "literal", value: "hello" }],
+    [{ type: "session.name" }],
+    [{ type: "roleRef", roleName: "admin" }],
+    [{ type: "channelRef", channelName: "general" }],
+    [{ type: "gameFlag", flagKey: "score" }],
+  ])("validates valid dynamic value: %o", (input) => {
+    const parsed = DynamicValueSchema.safeParse(input);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data).toEqual(input);
+    }
+  });
+
+  test.each([
+    [{ type: "" }],
+    [{ type: "unknown" }],
+    [{ type: "literal" }],
+    [{ type: "roleRef" }],
+    [{ type: "channelRef" }],
+    [{ type: "gameFlag" }],
+  ])("rejects invalid dynamic value: %o", (input) => {
+    const parsed = DynamicValueSchema.safeParse(input);
+    expect(parsed.success).toBe(false);
   });
 });

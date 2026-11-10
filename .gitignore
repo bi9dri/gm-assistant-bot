@@ -1,4 +1,4 @@
-﻿# dependencies (pnpm install)
+# dependencies (pnpm install)
 node_modules
 
 # output
@@ -47,3 +47,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .vitest/
 
 .worktrees/
+
+# Stryker mutation testing artifacts
+.stryker-tmp/
+reports/
