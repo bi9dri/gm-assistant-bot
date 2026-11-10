@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "pnpm",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "vitest": {
+    "configFile": "frontend/vitest.stryker.config.ts"
+  },
+  "mutate": [
+    "frontend/src/components/Node/utils/DynamicValue.ts",
+    "frontend/src/flow/engine/order.ts",
+    "frontend/src/scenario/textTransfer.ts"
+  ],
+  "reporters": ["progress", "clear-text", "html"],
+  "coverageAnalysis": "perTest",
+  "concurrency": 4
+}

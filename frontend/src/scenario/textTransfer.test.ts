@@ -81,6 +81,20 @@ describe("splitParagraphs", () => {
   test("CRLF 改行でも空行区切りが成立する", () => {
     expect(splitParagraphs("A\r\n\r\nB")).toEqual(["A", "B"]);
   });
+
+  test("CR 単独の改行でも空行区切りが成立する", () => {
+    expect(splitParagraphs("A\r\rB")).toEqual(["A", "B"]);
+  });
+
+  test("段落前後の余白は trim される", () => {
+    expect(splitParagraphs("  A  \n\n\tB\t")).toEqual(["A", "B"]);
+  });
+
+  test("行全体が空白文字の場合のみ空行として扱われ本文行のインデントや行末空白は残る", () => {
+    expect(splitParagraphs("A\n  \u3000\t  \n  B")).toEqual(["A", "B"]);
+    expect(splitParagraphs("  インデントされた行\n  続き")).toEqual(["インデントされた行\n  続き"]);
+    expect(splitParagraphs("行末スペース  \n続き")).toEqual(["行末スペース  \n続き"]);
+  });
 });
 
 describe("isImportableTextFile", () => {
@@ -92,5 +106,7 @@ describe("isImportableTextFile", () => {
   test("それ以外の拡張子は受け入れない", () => {
     expect(isImportableTextFile(new File([], "scenario.pdf"))).toBe(false);
     expect(isImportableTextFile(new File([], "mdtxt"))).toBe(false);
+    expect(isImportableTextFile(new File([], "scenario.txt.bak"))).toBe(false);
+    expect(isImportableTextFile(new File([], "scenario.md.zip"))).toBe(false);
   });
 });
