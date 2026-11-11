@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { isImeComposing } from "@/keyboard";
+
 import { formatFlagValue } from "../resources";
 import { useEditorStore } from "../store/editorStore";
 
@@ -57,7 +59,10 @@ export const FlagPanelView = ({ gameFlags, setGameFlag, removeGameFlag }: FlagPa
           value={newKey}
           onChange={(event) => setNewKey(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") addFlag();
+            if (event.key === "Enter") {
+              if (isImeComposing(event)) return;
+              addFlag();
+            }
           }}
         />
         <button

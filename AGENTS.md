@@ -44,6 +44,7 @@ pnpm workspace monorepo on Node 26 (Vite+ toolchain): `/frontend` (React + TanSt
 
 ## Skills (`.agents/skills/`)
 
+- **modern-web-guidance** — Use for modern web platform capabilities, UI patterns, accessibility, and CSS standards
 - **schema-migration** — MUST use when changing a node's DataSchema
 
 ## Commands

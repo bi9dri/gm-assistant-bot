@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { isImeComposing } from "@/keyboard";
+
 import { useRunnerStore } from "../store/runnerStore";
 
 // D3: execute モードの常駐ゲームフラグパネル (右カラム)。
@@ -54,7 +56,10 @@ export const RunnerFlagPanel = () => {
           value={newKey}
           onChange={(event) => setNewKey(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") addFlag();
+            if (event.key === "Enter") {
+              if (isImeComposing(event)) return;
+              addFlag();
+            }
           }}
         />
         <button

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { HiPencil } from "react-icons/hi";
 
+import { isImeComposing } from "@/keyboard";
+
 interface EditableTitleProps {
   title: string;
   defaultTitle: string;
@@ -36,6 +38,7 @@ export function EditableTitle({ title, defaultTitle, onTitleChange }: EditableTi
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
+      if (isImeComposing(e)) return;
       handleConfirm();
     } else if (e.key === "Escape") {
       handleCancel();
