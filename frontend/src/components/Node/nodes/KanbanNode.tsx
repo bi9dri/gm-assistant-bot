@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import { HiDotsVertical, HiPencil, HiTrash } from "react-icons/hi";
 import z from "zod";
 
+import { isImeComposing } from "@/keyboard";
 import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
 import {
@@ -188,6 +189,7 @@ function EditableKanbanColumn({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
+      if (isImeComposing(e)) return;
       handleConfirm();
     } else if (e.key === "Escape") {
       setEditValue(column.label);

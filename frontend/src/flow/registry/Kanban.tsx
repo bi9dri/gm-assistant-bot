@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { HiDotsVertical, HiPencil, HiTrash } from "react-icons/hi";
 
+import { isImeComposing } from "@/keyboard";
+
 import { generateId } from "../ids";
 import { KanbanStepSchema, type KanbanStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
@@ -117,6 +119,7 @@ const EditableKanbanColumn = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
+      if (isImeComposing(e)) return;
       handleConfirm();
     } else if (e.key === "Escape") {
       setEditValue(column.label);
