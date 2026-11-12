@@ -48,7 +48,7 @@ export default defineConfig({
     ...(skipStartPlugins
       ? []
       : [cloudflare({ viteEnvironment: { name: "ssr" } }), tanstackStart()]),
-    viteReact(),
+    viteReact({ compiler: true }),
     mswServiceWorkerDevOnly(),
   ]),
   // `db/database.ts` の `await import("fake-indexeddb")` を Vite が起動後に発見すると

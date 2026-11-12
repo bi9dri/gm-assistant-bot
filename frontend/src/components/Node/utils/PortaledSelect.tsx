@@ -46,6 +46,8 @@ interface PortaledSelectProps {
   className?: string;
 }
 
+const INITIAL_POSITION = { top: 0, left: 0, width: 0 };
+
 export function PortaledSelect({
   options,
   value,
@@ -55,7 +57,7 @@ export function PortaledSelect({
   className = "",
 }: PortaledSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [position, setPosition] = useState(INITIAL_POSITION);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
@@ -111,7 +113,7 @@ export function PortaledSelect({
 
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
     window.addEventListener("resize", handleResize);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
