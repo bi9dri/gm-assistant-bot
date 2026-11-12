@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/core";
+import { useMemo } from "react";
 
 import { buildOutline } from "../outline";
 import { scrollToHeading } from "../scrollTo";
@@ -17,7 +18,7 @@ export const TableOfContents = ({
   doc: JSONContent;
   onRestart?: (headingIndex: number) => void;
 }) => {
-  const outline = buildOutline(doc);
+  const outline = useMemo(() => buildOutline(doc), [doc]);
 
   return (
     <nav className="flex flex-col gap-2 p-3" aria-label="目次">
