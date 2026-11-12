@@ -23,5 +23,5 @@
     "@cloudflare/workers-types": "5.20261104.1",
     "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@12.17.0"
+  "packageManager": "pnpm@12.18.0"
 }
