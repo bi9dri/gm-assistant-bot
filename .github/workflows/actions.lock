@@ -11,6 +11,8 @@ workflows:
         - 'voidzero-dev/setup-vp@v1.22.0'
     '.github/workflows/deploy-frontend.yml':
         - 'actions/checkout@v7.0.1'
+        - 'actions/download-artifact@v8.0.2'
+        - 'actions/upload-artifact@v7.0.2'
         - 'voidzero-dev/setup-vp@v1.22.0'
     '.github/workflows/lockfile.yml':
         - 'actions/checkout@v7.0.1'
