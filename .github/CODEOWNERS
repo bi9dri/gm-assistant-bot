@@ -1,0 +1,4 @@
+# Protect CI workflows and dependency manifests
+/.github/workflows/ @bi9dri
+/package.json @bi9dri
+/*/package.json @bi9dri
