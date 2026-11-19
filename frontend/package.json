@@ -33,7 +33,7 @@
     "@xyflow/react": "12.12.1",
     "@zip.js/zip.js": "2.24.0",
     "clsx": "2.1.1",
-    "daisyui": "5.7.50",
+    "daisyui": "5.8.0",
     "dexie": "4.4.7",
     "dexie-react-hooks": "4.4.0",
     "hono": "4.13.18",
