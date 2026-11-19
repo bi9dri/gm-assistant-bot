@@ -1,0 +1,11 @@
+{
+  "$schema": "../node_modules/@mizchi/mutator/schema/mutator.config.schema.json",
+  "vitestConfig": "vitest.mutator.config.ts",
+  "include": [
+    "src/components/Node/utils/DynamicValue.ts",
+    "src/flow/engine/order.ts",
+    "src/scenario/textTransfer.ts"
+  ],
+  "reporters": ["text", "html"],
+  "concurrency": 4
+}

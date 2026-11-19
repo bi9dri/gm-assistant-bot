@@ -14,6 +14,9 @@ export default defineConfig({
   },
   test: {
     root: frontendDir,
+    env: {
+      NODE_ENV: "test",
+    },
     include: ["src/**/*.test.ts"],
     setupFiles: [fileURLToPath(new URL("./test/unit.setup.ts", import.meta.url))],
     alias: {
