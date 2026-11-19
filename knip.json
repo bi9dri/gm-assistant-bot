@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/knip/schema.json",
   "tags": ["-lintignore"],
-  "ignore": ["frontend/vitest.stryker.config.ts"],
+  "ignore": ["frontend/vitest.mutator.config.ts"],
   "workspaces": {
     ".": {}
   }
