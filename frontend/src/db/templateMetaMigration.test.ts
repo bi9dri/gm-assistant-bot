@@ -3,10 +3,6 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 
 import { db as appDb } from "./instance";
 
-// version(8) はメタ情報カラムのインデックス追加のみで upgrade 関数を持たない。
-// 既存レコードが v7 → v8 で壊れないことを実 IndexedDB 上で確認する。
-// fake-indexeddb は test/unit.setup.ts で設定済み。
-
 const DB_NAME = "TemplateMetaMigrationTest";
 
 const V7_STORES = {
@@ -65,8 +61,6 @@ describe("template meta migration (v7 → v8)", () => {
     newDb.close();
   });
 
-  // 上のテストは V8_STORES を写経しているため、本体のスキーマが変わっても緑のままになる。
-  // 本体側のインデックス定義と一致していることをここで突き合わせる。
   test("本体の Template スキーマが V8_STORES と一致している", () => {
     const actual = appDb.Template.schema.indexes.map((index) => index.name).sort();
     const expected = V8_STORES.Template.split(",")

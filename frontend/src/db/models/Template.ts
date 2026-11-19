@@ -25,10 +25,10 @@ import {
 export class Template extends Entity<DB> {
   readonly id!: number;
   name!: string;
-  gameFlags!: string; // JSON encoded string
-  reactFlowData!: string; // JSON encoded string
-  flowData!: string; // JSON encoded string
-  scenarioData!: string; // JSON encoded string
+  gameFlags!: string;
+  reactFlowData!: string;
+  flowData!: string;
+  scenarioData!: string;
   readonly createdAt!: Date;
   updatedAt!: Date;
   system?: string;
@@ -102,8 +102,6 @@ export class Template extends Entity<DB> {
       updateData.scenarioData = JSON.stringify(scenarioData);
     }
 
-    // メタ情報は全項目まとめて置き換える。渡されなかった項目は undefined になり、
-    // Dexie がプロパティ削除として扱う (= クリア)。
     const normalizedMeta = meta && {
       system: meta.system,
       playerCountMin: meta.playerCountMin,
@@ -179,7 +177,6 @@ export class Template extends Entity<DB> {
 
   getParsedScenarioData(): ScenarioData {
     try {
-      // Dexie v10 が既存行を v2 へ移すが、取り込みなど別経路で入った v1 も読めるようにする。
       const parsed = toScenarioDataV2(JSON.parse(this.scenarioData));
       return ScenarioDataSchema.parse(parsed);
     } catch (error) {
@@ -188,9 +185,6 @@ export class Template extends Entity<DB> {
     }
   }
 
-  // scenarioData はエクスポートに含めていない。TemplateExportSchema は version を
-  // literal(1) で固定しており、形式を変えるにはバージョンを上げる必要があるため、
-  // 新形式のデータを作る画面と同時に対応する。
   export(): TemplateExport {
     return {
       version: 1,
@@ -208,9 +202,6 @@ export class Template extends Entity<DB> {
     }
 
     const template = await Template.create(validated.name);
-    // flowData は reactFlowData から導出する (両者のファイルパスは常に一致させる)。
-    // インポート経路のパス書き換え (files/ → template/{id}/) は fileSystem.ts の
-    // importTemplate が reactFlowData / flowData 双方に対して行う。
     await template.update({
       gameFlags: validated.gameFlags,
       reactFlowData: validated.reactFlowData,

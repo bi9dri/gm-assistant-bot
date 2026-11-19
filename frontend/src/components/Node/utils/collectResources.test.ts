@@ -456,7 +456,6 @@ describe("collectResourcesBeforeNode", () => {
         makeNode("role-2", "CreateRole", { roles: ["犯人"] }),
         makeNode("target", "ConditionalBranch", {}),
       ];
-      // role-2 is not connected to target
       const edges = [makeEdge("role-1", "target")];
 
       const result = collectResourcesBeforeNode("target", nodes, edges);

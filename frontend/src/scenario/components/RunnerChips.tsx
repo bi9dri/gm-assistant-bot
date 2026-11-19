@@ -13,18 +13,12 @@ import type { ChipProps } from "./chips";
 import { CopyButton } from "./CopyButton";
 import { MissingStepChip, StepChip } from "./StepChip";
 
-// 実行モードで文中に描くチップ (docs: scenario-editor-architecture D10)。
-// 本文には「既読」のような別状態を持たせない。進捗は executedAt 一本で表す。
-
-// 実行ハンドラは ScenarioRunner が持つが、チップは ProseMirror の中に居て props を
-// 受け取れないため context で渡す。
 const RunHandlersContext = createContext<RunHandlers | null>(null);
 export const RunHandlersProvider = RunHandlersContext.Provider;
 
 const useStep = (stepId: string): Step | undefined =>
   useRunnerStore((state) => findStepIn(runnerSteps(state.flowData), stepId));
 
-// 実行状態のマーカー。実行済み ✓ / スキップ ⏭ / カーソル ▶。
 const StateMarker = ({ step }: { step: Step }) => {
   const skipped = useRunnerStore((state) => state.skippedStepIds.includes(step.id));
   const isCursor = useRunnerStore((state) => state.cursorId === step.id);
@@ -44,7 +38,6 @@ const RunControls = ({ step }: { step: Step }) => {
 
   return (
     <>
-      {/* select 分岐は枝を選ばないと実行できない。右カラムの枝ボタンに任せる。 */}
       {canRunStep(step) && (
         <button
           type="button"
@@ -89,8 +82,6 @@ export const RunnerStepChip = ({ stepId }: ChipProps) => {
   );
 };
 
-// 実行済みなら確定した枝だけを展開し、選ばれなかった枝は畳む
-// (実行モードのステップリストと同じ見せ方)。
 export const RunnerBranchBlock = ({ stepId }: ChipProps) => {
   const step = useStep(stepId);
   const selected = useRunnerStore((state) => state.selectedStepId === stepId);

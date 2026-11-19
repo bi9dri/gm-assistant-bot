@@ -60,7 +60,6 @@ describe("markStepExecuted", () => {
     const state = useRunnerStore.getState();
     const stored = findStep(state.flowData, "br");
     expect(stored?.type === "Branch" ? stored.executedBranchIds : undefined).toEqual(["arm-a"]);
-    // 開いた枝の先頭が次の cursor になる。
     expect(state.cursorId).toBe("a1");
   });
 
@@ -68,7 +67,6 @@ describe("markStepExecuted", () => {
     useRunnerStore.getState().initialize(flowOf(step("a"), step("b"), step("c")), {});
     useRunnerStore.getState().setCursor("c");
     useRunnerStore.getState().markStepExecuted("a", {});
-    // cursor は c のまま (a は cursor ではない)。
     expect(useRunnerStore.getState().cursorId).toBe("c");
   });
 
@@ -84,7 +82,6 @@ describe("markStepExecuted", () => {
       ],
     });
     useRunnerStore.getState().initialize(flowOf(branch), {});
-    // 枝 B を選んで再実行 → 旧枝 A の子 a1 の executedAt が消える。
     useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
     const stored = findStep(useRunnerStore.getState().flowData, "a1");
     expect(stored?.executedAt).toBeUndefined();
@@ -104,7 +101,6 @@ describe("markStepExecuted", () => {
     useRunnerStore.getState().initialize(flowOf(branch, step("after")), {});
     useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-a"] });
     expect(useRunnerStore.getState().cursorId).toBe("a1");
-    // 枝 B へ選び直し → a1 は実行順序から消えるので cursor を b1 に置き直す。
     useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
     expect(useRunnerStore.getState().cursorId).toBe("b1");
   });
@@ -142,7 +138,6 @@ describe("markStepExecuted", () => {
     useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-a"] });
     useRunnerStore.getState().skipStep("a1");
     expect(useRunnerStore.getState().skippedStepIds).toEqual(["a1"]);
-    // 選び直しで子孫の実行痕跡が消えるのに合わせ、skip 痕跡も消して整合させる。
     useRunnerStore.getState().markStepExecuted("br", { executedBranchIds: ["arm-b"] });
     expect(useRunnerStore.getState().skippedStepIds).toEqual([]);
   });

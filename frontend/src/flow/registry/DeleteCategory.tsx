@@ -1,7 +1,6 @@
 import { DeleteCategoryStepSchema, type DeleteCategoryStep } from "../schema";
 import { defineStep, type DetailPanelProps } from "./types";
 
-// 編集フィールドを持たないステップ。実行時の振る舞いを説明する固定テキストのみ表示する。
 const DELETE_CATEGORY_DESCRIPTION = "セッション内の全カテゴリとチャンネルを削除します";
 
 const DeleteCategoryDetailPanel = (_props: DetailPanelProps<DeleteCategoryStep>) => (
@@ -27,8 +26,6 @@ export const DeleteCategoryEntry = defineStep<DeleteCategoryStep>({
 
     const total = channels.length + categories.length;
     const failed: string[] = [];
-    // resources を splice する remove* と反復が競合しないよう、対象はコピーで回す。
-    // チャンネルを先に消してからカテゴリを消す (旧 DeleteCategoryNode と同順)。
     for (const channel of channels.slice()) {
       try {
         await ctx.discord.deleteChannel(channel.id);

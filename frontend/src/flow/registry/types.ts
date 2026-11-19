@@ -4,48 +4,25 @@ import type { z } from "zod";
 import type { ExecuteContext, ExecuteResult } from "../engine/types";
 import type { Step } from "../schema";
 
-// DetailPanel は「dumb な controlled component」: step と onChange(patch) のみを受け取り、
-// store には触れない (host 側が onChange を treeOps.updateStepById に配線する)。
 export interface DetailPanelProps<S extends Step = Step> {
   step: S;
   onChange: (patch: Partial<S>) => void;
-  // 省略時は "edit"。execute モードで UI を変えたいパネルだけが参照する。
   mode?: "edit" | "execute";
 }
 
-// ステップタイプ 1 つ分の登録エントリ (docs: step-list-editor-architecture D1)。
-// list / detail panel / runner はこのマップを総当たりするだけで、step.type で switch しない。
 export interface StepRegistryEntry<S extends Step = Step> {
   type: S["type"];
-  // 構造のみを検証する per-type schema。Branch の cross-field 制約 (select 枝は条件不可・
-  // デフォルト枝は末尾1つ) は集約 StepSchema.superRefine 側にあり、ここには含まれない。
-  // Phase 3 で単一ステップ検証に使う際はこの差異に注意。
   schema: z.ZodType<S>;
-  // tool = フラグ操作や手動ボード操作など、Discord 呼び出しを伴わない GM 操作系。
-  // text = シナリオ本文・見出し。Discord 操作は伴わず、execute は通過印を打つだけの no-op。
   category: "action" | "tool" | "branch" | "text";
-  // 「ステップ追加」時の初期値 (旧 addNode の switch を置き換える)。id は呼び出し側が採番する。
   defaults: () => Omit<S, "id">;
-  // PURE。リスト 1 行の要約テキスト。レンダリング無しで unit-test する。
   summary: (step: S) => string;
   DetailPanel: ComponentType<DetailPanelProps<S>>;
-  // 自動実行 (Validate → Resolve → Call → Persist)。PURE-ish で context 越しに副作用を行う
-  // ため、context をモックすれば unit-test できる。tool (category: "tool") は持たない
-  // (GM が手動操作するのみ)。action / branch / text が定義する。
   execute?: (step: S, ctx: ExecuteContext) => Promise<ExecuteResult>;
 }
 
-// 具体ステップ型の entry を union 型 (StepRegistryEntry<Step>) に格納するためのヘルパ。
-// summary / DetailPanel の引数が反変になり Map に入れられない問題を、メソッド単位の
-// キャストに閉じ込める (type/schema/category/defaults は正直な型のまま)。
-// ランタイムは type が一致する entry しか引かれないため安全。
 export const defineStep = <S extends Step>(entry: StepRegistryEntry<S>): StepRegistryEntry => ({
   ...entry,
   summary: (step) => entry.summary(step as S),
-  // React component は反変のため unknown 経由が必要。summary の引数キャストと違いここは
-  // 局所化止まり (whole-object の as unknown as は回避)。
   DetailPanel: entry.DetailPanel as unknown as ComponentType<DetailPanelProps>,
-  // execute も step 引数が反変。summary と同様に引数キャストへ閉じ込める。
-  // ランタイムは type が一致する entry しか引かれないため安全。
   execute: entry.execute === undefined ? undefined : (step, ctx) => entry.execute!(step as S, ctx),
 });

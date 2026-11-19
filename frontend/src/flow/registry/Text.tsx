@@ -34,14 +34,11 @@ export const TextEntry = defineStep<TextStep>({
       .find((line) => line.trim() !== "")
       ?.trim();
     if (firstLine === undefined) return "本文 (空)";
-    // サロゲートペアや結合絵文字を割らないよう書記素クラスタ単位で切る
     const segments = Array.from(graphemeSegmenter.segment(firstLine), (s) => s.segment);
     return segments.length > SUMMARY_LENGTH
       ? `${segments.slice(0, SUMMARY_LENGTH).join("")}…`
       : firstLine;
   },
   DetailPanel: TextDetailPanel,
-  // 実行は no-op。通過した記録 (executedAt) を打つためだけに execute を持つ
-  // (docs: scenario-editor-architecture D10)。
   execute: () => Promise.resolve({ status: "success", message: "" }),
 });

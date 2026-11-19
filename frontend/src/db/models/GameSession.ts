@@ -22,10 +22,10 @@ export class GameSession extends Entity<DB> {
   name!: string;
   readonly guildId!: string;
   readonly botId!: string;
-  gameFlags!: string; // JSON encoded string
-  reactFlowData!: string; // JSON encoded string
-  flowData!: string; // JSON encoded string
-  scenarioData!: string; // JSON encoded string
+  gameFlags!: string;
+  reactFlowData!: string;
+  flowData!: string;
+  scenarioData!: string;
   readonly createdAt!: Date;
   lastUsedAt!: Date;
 
@@ -124,7 +124,6 @@ export class GameSession extends Entity<DB> {
 
   getParsedScenarioData(): ScenarioData {
     try {
-      // Dexie v10 が既存行を v2 へ移すが、取り込みなど別経路で入った v1 も読めるようにする。
       const parsed = toScenarioDataV2(JSON.parse(this.scenarioData));
       return ScenarioDataSchema.parse(parsed);
     } catch (error) {

@@ -103,8 +103,6 @@ describe("convertReactFlowToFlowData: 異常系", () => {
     expect(warnings.some((w) => w.message.includes("循環"))).toBe(true);
   });
 
-  // 合流点計算 (computePostDominators) は逆トポロジカル走査で ipdom を辿るため、
-  // 循環ノードでは ipdom が閉路を成しハングしうる。以下は完了する (ハングしない) ことを検証する
   test("分岐ノードの一方の枝が循環に入っても変換は完了し、循環を警告する", () => {
     const br = setFlag({ x: 0, y: 0 }, "Br");
     const a = setFlag({ x: -100, y: 100 }, "A");
@@ -519,7 +517,6 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     const g2 = group("G2", { x: 0, y: 400 }, { width: 400, height: 400 });
     const inG1 = setFlag({ x: 50, y: 50 }, "G1ステップ");
     const inG2 = setFlag({ x: 50, y: 420 }, "G2ステップ");
-    // Comment 中心 (150, 300) は g1 内だが、空間的には g2 のステップの方が近い
     const c = comment({ comment: "G1向けメモ" }, { x: 50, y: 250 });
     const { flowData } = convert([g1, g2, inG1, inG2, c]);
 
@@ -617,7 +614,6 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
       },
       { x: 0, y: 0 },
     );
-    // 後続はステップではない Blueprint のみ。フラット化判定はステップ宛エッジだけを数える
     const bp = rfNode("Blueprint", { title: "BP", parameters: {} }, { x: 0, y: 300 });
     const { flowData, warnings } = convert([cond, bp], [edge(cond, bp)]);
 
@@ -638,7 +634,6 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     const branch = flowData.sections[0].steps[0];
     if (branch.type !== "Branch") throw new Error("Branch であるべき");
     expect(branch.branches[0].label).toBe("条件1");
-    // condition が undefined のままなのでデフォルト(無条件)枝に化けている
     expect(branch.branches[0].condition).toBeUndefined();
     const w = warnings.find((w) => w.nodeId === cond.id);
     expect(w?.message).toContain("条件1");
@@ -730,7 +725,6 @@ describe("convertReactFlowToFlowData: レビュー指摘の回帰", () => {
     const node = setFlag({ x: 150, y: 150 }, "N");
     const { flowData, warnings } = convert([outer, inner, node]);
 
-    // 内側グループにだけ所属する。外側はセクション化されない
     expect(flowData.sections.map((s) => s.title)).toEqual(["内側"]);
     expect(
       warnings.some((w) => w.nodeId === outer.id && w.message.includes("ラベルが失われ")),

@@ -27,7 +27,6 @@ describe("convertFilePathsInFlowData", () => {
     const step = result.sections[0].steps[0];
     if (step.type !== "SendMessage") throw new Error("expected SendMessage");
     expect(step.messages[0].attachments[0].filePath).toBe("session/9/a.png");
-    // 入力は変更しない
     const original = input.sections[0].steps[0];
     if (original.type !== "SendMessage") throw new Error("expected SendMessage");
     expect(original.messages[0].attachments[0].filePath).toBe("template/1/a.png");

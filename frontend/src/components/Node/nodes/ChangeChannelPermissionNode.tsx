@@ -201,7 +201,6 @@ export const ChangeChannelPermissionNode = ({
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.md}>
         <div className="space-y-3">
-          {/* Channel name input */}
           <ResourceSelector
             nodeId={id}
             resourceType="channel"
@@ -211,7 +210,6 @@ export const ChangeChannelPermissionNode = ({
             disabled={isExecuteMode || isLoading || isExecuted}
           />
 
-          {/* Warning message */}
           <div className="alert alert-warning text-xs p-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -231,7 +229,6 @@ export const ChangeChannelPermissionNode = ({
             </span>
           </div>
 
-          {/* Role permissions */}
           <div className="space-y-1">
             <p className="text-xs font-semibold">ロール権限</p>
             {data.rolePermissions.map((perm, roleIndex) => (

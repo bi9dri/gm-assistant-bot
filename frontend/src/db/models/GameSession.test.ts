@@ -9,14 +9,11 @@ import { defaultScenarioData } from "@/scenario/schema";
 import { defaultReactFlowData } from "../schemas";
 
 describe("GameSession", () => {
-  // Tables are cleared in test/unit.setup.ts afterEach
-
   describe("update", () => {
     test("lastUsedAtを常に更新する", async () => {
       const session = await createTestSession({});
       const originalLastUsedAt = session.lastUsedAt;
 
-      // 時間差を確保するために少し待機
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       await session.update({ name: "Updated Name" });
@@ -60,7 +57,6 @@ describe("GameSession", () => {
     test("reactFlowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const session = await createTestSession({});
 
-      // 無効なreactFlowData（必須フィールドが欠落）
       const invalidData = { nodes: [] } as unknown as Parameters<
         typeof session.update
       >[0]["reactFlowData"];
@@ -90,7 +86,6 @@ describe("GameSession", () => {
     test("無効なJSONの場合は空オブジェクトを返す", async () => {
       const session = await createTestSession({});
 
-      // 無効なJSONを手動で設定
       session.gameFlags = "invalid json {";
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -119,7 +114,6 @@ describe("GameSession", () => {
     test("無効なJSONの場合はdefaultReactFlowDataを返す", async () => {
       const session = await createTestSession({});
 
-      // 無効なJSONを手動で設定
       session.reactFlowData = "not valid json";
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -132,7 +126,6 @@ describe("GameSession", () => {
     test("バリデーションが失敗した場合はdefaultReactFlowDataを返す", async () => {
       const session = await createTestSession({});
 
-      // パースは成功するがZodバリデーションが失敗するJSONを設定
       session.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});

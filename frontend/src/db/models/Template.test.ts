@@ -9,8 +9,6 @@ import { defaultReactFlowData } from "../schemas";
 import { Template } from "./Template";
 
 describe("Template", () => {
-  // Tables are cleared in test/unit.setup.ts afterEach
-
   describe("update", () => {
     test("名前のみを更新し、他のフィールドは保持する", async () => {
       const template = await Template.create("Original Name");
@@ -48,7 +46,6 @@ describe("Template", () => {
     test("reactFlowDataのバリデーションが失敗した場合はエラーをスローする", async () => {
       const template = await Template.create("Test");
 
-      // 無効なreactFlowData（必須フィールドが欠落）
       const invalidData = { nodes: [] } as unknown as Parameters<
         typeof template.update
       >[0]["reactFlowData"];
@@ -60,7 +57,6 @@ describe("Template", () => {
       const template = await Template.create("Test");
       const originalUpdatedAt = template.updatedAt;
 
-      // 時間差を確保するために少し待機
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       await template.update({ name: "Updated" });
@@ -120,7 +116,6 @@ describe("Template", () => {
     test("無効なJSONの場合は空オブジェクトを返す", async () => {
       const template = await Template.create("Test");
 
-      // 無効なJSONを手動で設定
       template.gameFlags = "invalid json {";
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -149,7 +144,6 @@ describe("Template", () => {
     test("無効なJSONの場合はdefaultReactFlowDataを返す", async () => {
       const template = await Template.create("Test");
 
-      // 無効なJSONを手動で設定
       template.reactFlowData = "not valid json";
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -162,7 +156,6 @@ describe("Template", () => {
     test("バリデーションが失敗した場合はdefaultReactFlowDataを返す", async () => {
       const template = await Template.create("Test");
 
-      // パースは成功するがZodバリデーションが失敗するJSONを設定
       template.reactFlowData = JSON.stringify({ nodes: "not an array" });
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -320,7 +313,6 @@ describe("Template", () => {
     test("無効なスキーマの場合はZodエラーをスローする", async () => {
       const invalidData = {
         version: 1,
-        // 必須フィールドが欠落
       };
 
       await expect(Template.import(invalidData)).rejects.toThrow();

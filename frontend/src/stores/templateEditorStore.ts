@@ -85,7 +85,6 @@ export type FlowNode =
   | Node<RandomSelectNodeData, "RandomSelect">
   | Node<CounterNodeData, "Counter">;
 
-// Helper function: Generate next ID with sequential numbering
 const generateNextId = (nodes: FlowNode[], nodeType: string): string => {
   const regex = new RegExp(`^${nodeType}-(\\d+)$`);
   const maxNumber = nodes
@@ -176,7 +175,6 @@ interface TemplateEditorActions {
 
 type TemplateEditorStore = TemplateEditorState & TemplateEditorActions;
 
-// Zustandストア作成
 export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => ({
   nodes: [],
   edges: [],
@@ -598,7 +596,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       : ["PL", "観戦"];
     const allRoles = [...commonRoles, ...validCharacters];
 
-    // 1. Create CreateRoleNode with common roles + character roles
     if (allRoles.length > 0) {
       const roleNodeId = generateNextId(state.nodes.concat(generatedNodes), "CreateRole");
       const roleNode: Node<CreateRoleNodeData, "CreateRole"> = {
@@ -612,7 +609,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       currentX += HORIZONTAL_SPACING;
     }
 
-    // 2. Create CreateCategoryNode if category name is provided
     if (parameters.categoryName.trim()) {
       const categoryNodeId = generateNextId(state.nodes.concat(generatedNodes), "CreateCategory");
       const categoryNode: Node<CreateCategoryNodeData, "CreateCategory"> = {
@@ -639,10 +635,8 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       currentX += HORIZONTAL_SPACING;
     }
 
-    // 3. Create CreateChannelNode with channels
     const channels: CreateChannelNodeData["channels"] = [];
 
-    // Add shared text channels (PL and 観戦 can access)
     for (const channelName of validSharedChannels) {
       channels.push({
         name: channelName,
@@ -651,7 +645,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       });
     }
 
-    // Add character-specific text channels (owner can write, 観戦 can read)
     for (const characterName of validCharacters) {
       channels.push({
         name: characterName,
@@ -663,7 +656,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       });
     }
 
-    // Add voice channels (PL and 観戦 can access)
     for (let i = 1; i <= parameters.voiceChannelCount; i++) {
       channels.push({
         name: `VC-${i}`,
@@ -696,7 +688,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       currentX += HORIZONTAL_SPACING;
     }
 
-    // 4. Create AddRoleToRoleMembersNode: Add spectator role to PL role members
     const addRoleNodeId = generateNextId(
       state.nodes.concat(generatedNodes),
       "AddRoleToRoleMembers",
@@ -725,7 +716,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     previousNodeId = addRoleNodeId;
     currentX += HORIZONTAL_SPACING;
 
-    // 5. Create DeleteCategoryNode
     const deleteCategoryNodeId = generateNextId(
       state.nodes.concat(generatedNodes),
       "DeleteCategory",
@@ -750,7 +740,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
     previousNodeId = deleteCategoryNodeId;
     currentX += HORIZONTAL_SPACING;
 
-    // 6. Create DeleteRoleNode (delete all roles)
     const deleteRoleNodeId = generateNextId(state.nodes.concat(generatedNodes), "DeleteRole");
     const deleteRoleNode: Node<DeleteRoleNodeData, "DeleteRole"> = {
       id: deleteRoleNodeId,
@@ -770,7 +759,6 @@ export const useTemplateEditorStore = create<TemplateEditorStore>((set, get) => 
       });
     }
 
-    // Remove blueprint node and add generated nodes
     set({
       nodes: state.nodes.filter((n) => n.id !== nodeId).concat(generatedNodes),
       edges: state.edges.concat(generatedEdges),

@@ -97,8 +97,6 @@ export const CombinationSendMessageNode = ({
     updateNodeData(id, { title: newTitle });
   };
 
-  // --- Entry-level helpers ---
-
   const updateEntry = (entryIndex: number, patch: Partial<Entry>) => {
     const newEntries = data.entries.map((entry, i) =>
       i === entryIndex ? { ...entry, ...patch } : entry,
@@ -135,8 +133,6 @@ export const CombinationSendMessageNode = ({
     updateEntry(entryIndex, { collapsed: !data.entries[entryIndex].collapsed });
   };
 
-  // --- Message-level helpers ---
-
   const handleContentChange = (entryIndex: number, messageIndex: number, value: string) => {
     const newMessages = [...data.entries[entryIndex].messages];
     newMessages[messageIndex] = { ...newMessages[messageIndex], content: value };
@@ -163,8 +159,6 @@ export const CombinationSendMessageNode = ({
       messages: entry.messages.filter((_, i) => i !== messageIndex),
     });
   };
-
-  // --- File helpers ---
 
   const processFiles = useCallback(
     async (entryIndex: number, messageIndex: number, files: File[]) => {
@@ -295,8 +289,6 @@ export const CombinationSendMessageNode = ({
     await processFiles(entryIndex, messageIndex, Array.from(files));
   };
 
-  // --- Execution ---
-
   const handleSend = async () => {
     if (!executionContext) {
       addToast({ message: "実行コンテキストがありません", status: "error" });
@@ -418,7 +410,6 @@ export const CombinationSendMessageNode = ({
               key={entry.id}
               className="border border-base-content/20 rounded-lg overflow-hidden"
             >
-              {/* Entry header */}
               <div className="flex items-center gap-2 px-3 py-2 bg-base-200/50">
                 <button
                   type="button"
@@ -451,10 +442,8 @@ export const CombinationSendMessageNode = ({
                 )}
               </div>
 
-              {/* Entry body */}
               {!entry.collapsed && (
                 <div className="p-3 space-y-3">
-                  {/* Channel selector */}
                   <div>
                     <label className="text-xs font-semibold mb-1 block">送信先チャンネル</label>
                     <ResourceSelector
@@ -468,7 +457,6 @@ export const CombinationSendMessageNode = ({
                     />
                   </div>
 
-                  {/* Message blocks */}
                   {entry.messages.map((message, messageIndex) => {
                     const dragKey = fileRefKey(entryIndex, messageIndex);
                     return (

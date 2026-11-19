@@ -33,7 +33,6 @@ type Variables = {
 };
 
 const api = new Hono<{ Variables: Variables }>()
-  // Bot token middleware for authenticated endpoints
   .use("*", async (c, next) => {
     const token = c.req.header(BOT_TOKEN_HEADER);
     if (!token) {

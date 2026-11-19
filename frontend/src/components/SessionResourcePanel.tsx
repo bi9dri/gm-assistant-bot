@@ -33,7 +33,6 @@ export function SessionResourcePanel({ sessionId, isOpen, onClose }: SessionReso
       position="top-right"
       className="w-72 max-h-[calc(100%-2rem)] overflow-y-auto bg-base-200 rounded-box shadow-xl m-2"
     >
-      {/* Header */}
       <div className="sticky top-0 flex items-center justify-between p-3 bg-base-200 border-b border-base-300 z-10 rounded-t-box">
         <div className="flex items-center gap-2">
           <LuPanelRight size={18} />
@@ -45,13 +44,10 @@ export function SessionResourcePanel({ sessionId, isOpen, onClose }: SessionReso
       </div>
 
       <div className="p-3 space-y-3">
-        {/* Roles Section */}
         <RoleSection roles={resources?.roles ?? []} />
 
-        {/* Channels Section */}
         <ChannelSection channels={resources?.channels ?? []} />
 
-        {/* Game Flags Section */}
         <GameFlagSection flags={resources?.gameFlags ?? {}} />
       </div>
     </Panel>

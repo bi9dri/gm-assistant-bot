@@ -2,7 +2,6 @@ import { afterEach, vi } from "vite-plus/test";
 
 import { db } from "../src/db/instance";
 
-// Clear all tables after each test (instead of delete/recreate which causes issues)
 afterEach(async () => {
   await db.Template.clear();
   await db.GameSession.clear();
@@ -13,7 +12,6 @@ afterEach(async () => {
   await db.Role.clear();
 });
 
-// OPFS (navigator.storage) mock
 const mockFileSystem = new Map<string, Blob>();
 
 const createMockDirectoryHandle = (name: string): FileSystemDirectoryHandle =>
@@ -44,7 +42,6 @@ const createMockFileHandle = (name: string): FileSystemFileHandle =>
     })),
   }) as unknown as FileSystemFileHandle;
 
-// Mock navigator.storage.getDirectory
 Object.defineProperty(globalThis, "navigator", {
   value: {
     storage: {

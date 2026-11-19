@@ -51,7 +51,6 @@ function RouteComponent() {
     }
   }, [session, id, previousSessionId]);
 
-  // 自動保存（実行モード時は常に有効）
   const { showSaved } = useAutoSave({
     sessionId: session?.id,
     enabled: !!session,

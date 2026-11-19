@@ -31,10 +31,6 @@ interface RootContext {
   layoutMode: "padded" | "full-height";
 }
 
-// hydrate 前に保存済みテーマを DOM に反映し、SSR "light" との
-// hydration mismatch (描画が永久に light のままになる) を避ける。
-// 対象は ThemeProvider の div のみ (div[data-theme])。ThemeIcon の swatch は
-// テーマ名が固定で SSR/クライアント一致するため触らない。
 const THEME_INIT_SCRIPT = `try{var s=localStorage.getItem("theme"),t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"),d=document.querySelector("div[data-theme]");if(d)d.setAttribute("data-theme",t)}catch(e){}`;
 
 export const Route = createRootRoute({
@@ -92,8 +88,6 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   );
 }
 
-// SSR 時のみ描画する (ScriptOnce と同じ server-only パターン。client は出さない)。
-// meta とレスポンスヘッダの両方に CSP があると両方強制されるため、ここ一箇所だけに置く。
 function CspMeta() {
   const router = useRouter();
   if (typeof document !== "undefined") return null;
@@ -103,9 +97,6 @@ function CspMeta() {
 }
 
 function AppChrome() {
-  // 各ルートの beforeLoad が返す layoutMode は子マッチの context にしか現れない
-  // (useRouteContext({ from: "__root__" }) はルート自身の context を返すため見えない)。
-  // 最深マッチから遡って最初に見つかった layoutMode を採用する。
   const layoutMode = useRouterState({
     select: (state) => {
       for (let i = state.matches.length - 1; i >= 0; i--) {
@@ -201,8 +192,6 @@ function AppChrome() {
             </aside>
           </div>
         </div>
-        {/* VRT では起動ボタンが全 baseline に写り込み、パネルの dynamic import が
-            vite の依存再最適化とレースして毎回 fetch 失敗するのでマウントしない。 */}
         {import.meta.env.VITE_USE_MSW !== "true" && (
           <TanStackDevtools
             config={{

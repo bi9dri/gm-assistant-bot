@@ -14,10 +14,6 @@ export const Route = createFileRoute("/template/new")({
   },
 });
 
-// 新規テンプレートはシナリオ形式のみを作る (docs: scenario-editor-architecture D15)。
-// 本文を空にしないのは、v9 で全既存レコードに空の scenarioData が backfill されており、
-// 「空 = 旧形式」と区別できず一覧のバッジと導線が出せないため (schema: hasScenarioContent)。
-// 見出しをシナリオ名で置くと、その最初の 1 行が目次の起点にもなる。
 const initialScenarioData = (name: string): ScenarioData => ({
   version: 2,
   doc: {

@@ -13,7 +13,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// H1 > H2 の階層がインデントで出ること。
 export const Default: Story = {
   args: { doc: sampleDoc },
   render: (args) => (
@@ -32,7 +31,6 @@ export const NoHeading: Story = {
   ),
 };
 
-// 実行モードでは見出しごとに「ここから再実行」が並ぶ (docs: scenario-editor-architecture D9)。
 export const WithRestart: Story = {
   args: { doc: sampleDoc, onRestart: () => {} },
   render: (args) => (

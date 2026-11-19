@@ -109,12 +109,9 @@ export class FileSystem {
 
     const templateData = template.export();
 
-    // Collect all file paths referenced in reactFlowData
     const allFilePaths = collectFilePathsFromReactFlowData(templateData.reactFlowData);
-    // Deduplicate and sort by path length ascending (shorter = preferred canonical path)
     const uniquePaths = [...new Set(allFilePaths)].sort((a, b) => a.length - b.length);
 
-    // Build content-hash → canonical path and path → canonical path maps
     const hashToCanonical = new Map<string, string>();
     const pathToCanonical = new Map<string, string>();
     for (const filePath of uniquePaths) {
@@ -131,7 +128,6 @@ export class FileSystem {
       pathToCanonical.set(filePath, hashToCanonical.get(hash)!);
     }
 
-    // Convert template data: deduplicate paths, then rewrite template/{id}/ → files/
     const convertedTemplateData = {
       ...templateData,
       reactFlowData: convertFilePathsInReactFlowData(templateData.reactFlowData, (filePath) => {
@@ -145,7 +141,6 @@ export class FileSystem {
 
     await zipWriter.add("template.json", new TextReader(JSON.stringify(convertedTemplateData)));
 
-    // Add only canonical path files (skip duplicates)
     for (const [filePath, canonical] of pathToCanonical) {
       if (filePath !== canonical) continue;
       const file = await this.readFile(filePath);
@@ -164,7 +159,6 @@ export class FileSystem {
     let templateData: unknown = null;
     let oldTemplateId: number | null = null;
 
-    // First pass: read template.json and detect old-format IDs (backward compat)
     for await (const entry of zipReader.getEntriesGenerator()) {
       if (!entry.directory && entry.filename === "template.json") {
         const templateJson = await entry.getData(new TextWriter());
@@ -174,7 +168,6 @@ export class FileSystem {
           throw new Error("テンプレートデータが壊れています");
         }
       } else if (!entry.directory && entry.filename.startsWith("template/")) {
-        // Old format: template/{oldId}/file — extract the old ID
         const parts = entry.filename.split("/");
         if (parts.length >= 3) {
           const id = parseInt(parts[1], 10);
@@ -188,7 +181,6 @@ export class FileSystem {
     const template = await Template.import(templateData);
     const newId = template.id;
 
-    // Second pass: write files with paths converted to the new template ID
     for await (const entry of zipReader.getEntriesGenerator()) {
       if (entry.filename === "template.json" || entry.directory) {
         continue;
@@ -196,13 +188,11 @@ export class FileSystem {
 
       let targetPath: string | null = null;
       if (entry.filename.startsWith("files/")) {
-        // New format: files/xxx → template/{newId}/xxx
         targetPath = `template/${newId}/${entry.filename.slice("files/".length)}`;
       } else if (
         oldTemplateId !== null &&
         entry.filename.startsWith(`template/${oldTemplateId}/`)
       ) {
-        // Old format (backward compat): template/{oldId}/xxx → template/{newId}/xxx
         targetPath = `template/${newId}/${entry.filename.slice(`template/${oldTemplateId}/`.length)}`;
       }
 
@@ -212,8 +202,6 @@ export class FileSystem {
       await this.writeFile(targetPath, file);
     }
 
-    // Rewrite filePaths to point to the new template ID. reactFlowData / flowData は
-    // パスを共有するため同じ replacer で両方書き換える。
     const replaceFilePath = (filePath: string) => {
       if (filePath.startsWith("files/")) {
         return `template/${newId}/${filePath.slice("files/".length)}`;
@@ -236,7 +224,6 @@ export class FileSystem {
   async clearTemplateFiles(templateId: number) {
     const root = await navigator.storage.getDirectory();
     try {
-      // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
       const td = await root.getDirectoryHandle("template");
       await td.removeEntry(`${templateId}`, { recursive: true });
     } catch (e) {
@@ -248,7 +235,6 @@ export class FileSystem {
   }
 
   async writeFile(path: string, data: Blob | string) {
-    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
     let dir = await navigator.storage.getDirectory();
     const segments = path.split("/").filter((seg) => seg.length > 0);
     while (segments.length > 1) {
@@ -267,7 +253,6 @@ export class FileSystem {
   }
 
   async readFile(path: string) {
-    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
     let dir = await navigator.storage.getDirectory();
     const segments = path.split("/").filter((seg) => seg.length > 0);
     while (segments.length > 1) {
@@ -285,7 +270,6 @@ export class FileSystem {
   }
 
   async deleteFile(path: string) {
-    // ディレクトリを1つずつ取得しないとNotAllowedErrorになるブラウザがある
     let dir = await navigator.storage.getDirectory();
     const segments = path.split("/").filter((seg) => seg.length > 0);
     while (segments.length > 1) {
@@ -331,7 +315,7 @@ export class FileSystem {
       sourceDir = await td.getDirectoryHandle(`${templateId}`);
     } catch (e) {
       if (e instanceof DOMException && e.name === "NotFoundError") {
-        return; // No files in template
+        return;
       }
       throw e;
     }

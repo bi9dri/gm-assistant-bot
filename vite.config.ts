@@ -10,10 +10,7 @@ export default defineConfig({
     options: { typeAware: true, typeCheck: true },
   },
   fmt: {
-    // ignorePatterns are rooted at this config file's directory (oxfmt >=0.59),
-    // so paths must be repo-root-relative, not per-workspace-relative.
     ignorePatterns: ["frontend/src/routeTree.gen.ts"],
-    // Enable import sorting with default settings
     experimentalSortImports: {},
   },
 });

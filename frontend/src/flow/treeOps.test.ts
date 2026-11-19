@@ -44,7 +44,6 @@ const branch = (id: string, arms: Array<{ id: string; label: string; steps: Step
   branches: arms,
 });
 
-// s1: [a, b]   s2: [ br{ arm1:[c], arm2:[d] } ]
 const makeFlow = (): FlowData => ({
   version: 1,
   sections: [
@@ -64,7 +63,6 @@ const makeFlow = (): FlowData => ({
   ],
 });
 
-// s1: [ outer{ outerArm:[ inner{ innerArm:[x] } ] } ] — Branch を arm に入れ子にする
 const makeNestedFlow = (): FlowData => ({
   version: 1,
   sections: [
@@ -99,8 +97,8 @@ describe("findStep / findSection", () => {
   test("トップレベルとネストの両方を見つける", () => {
     const flow = makeFlow();
     expect(findStep(flow, "a")?.id).toBe("a");
-    expect(findStep(flow, "c")?.id).toBe("c"); // arm1 内
-    expect(findStep(flow, "d")?.id).toBe("d"); // arm2 内
+    expect(findStep(flow, "c")?.id).toBe("c");
+    expect(findStep(flow, "d")?.id).toBe("d");
     expect(findStep(flow, "br")?.type).toBe("Branch");
   });
 
@@ -131,7 +129,7 @@ describe("updateStepById", () => {
       step.title = "updated";
     });
     expect(findStep(next, "c")?.title).toBe("updated");
-    expect(findStep(flow, "c")?.title).toBe("c"); // 元は不変
+    expect(findStep(flow, "c")?.title).toBe("c");
   });
 
   test("未変更のセクションは参照が保たれる (構造的共有)", () => {
@@ -139,8 +137,8 @@ describe("updateStepById", () => {
     const next = updateStepById(flow, "c", (step) => {
       step.title = "updated";
     });
-    expect(next.sections[0]).toBe(flow.sections[0]); // s1 は触っていない
-    expect(next.sections[1]).not.toBe(flow.sections[1]); // s2 は変わった
+    expect(next.sections[0]).toBe(flow.sections[0]);
+    expect(next.sections[1]).not.toBe(flow.sections[1]);
   });
 
   test("存在しない id は no-op", () => {
@@ -148,7 +146,7 @@ describe("updateStepById", () => {
     const next = updateStepById(flow, "zzz", (step) => {
       step.title = "x";
     });
-    expect(next).toBe(flow); // produce は変更なしなら同一参照を返す
+    expect(next).toBe(flow);
   });
 });
 
@@ -236,8 +234,8 @@ describe("duplicateStep", () => {
     expect(newStep.branches.map((arm) => arm.id)).not.toContain("arm1");
     expect(newStep.branches.map((arm) => arm.id)).not.toContain("arm2");
     const allIds = collectSteps(flowData).map((step) => step.id);
-    expect(new Set(allIds).size).toBe(allIds.length); // ツリー全体で id 重複なし
-    expect(newStep.branches[0]?.steps[0]?.title).toBe("c"); // 内容は保たれる
+    expect(new Set(allIds).size).toBe(allIds.length);
+    expect(newStep.branches[0]?.steps[0]?.title).toBe("c");
   });
 
   test("実行痕跡 (executedAt / executedBranchIds) は消える", () => {
@@ -313,18 +311,16 @@ describe("moveStep", () => {
       container: { kind: "branchArm", branchStepId: "br", armId: "arm1" },
       index: 0,
     });
-    expect(next).toBe(flow); // no-op
+    expect(next).toBe(flow);
   });
 
   test("子孫の分岐枝の中へも移動できない (再帰的な循環防止)", () => {
-    // outer を、その内側にある inner の枝へ移そうとするとツリーが自己包含する。
-    // collectBranchIds が {outer, inner} を再帰収集して阻止する。
     const flow = makeNestedFlow();
     const next = moveStep(flow, "outer", {
       container: { kind: "branchArm", branchStepId: "inner", armId: "innerArm" },
       index: 0,
     });
-    expect(next).toBe(flow); // no-op
+    expect(next).toBe(flow);
   });
 });
 
@@ -359,7 +355,7 @@ describe("section ops", () => {
       section.collapsed = true;
     });
     expect(findSection(next, "s1")?.collapsed).toBe(true);
-    expect(next.sections[1]).toBe(flow.sections[1]); // s2 は同一参照で保たれる
+    expect(next.sections[1]).toBe(flow.sections[1]);
   });
 
   test("moveSection (arrayMove 意味論)", () => {

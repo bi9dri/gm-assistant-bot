@@ -63,7 +63,6 @@ export const RandomSelectEntry = defineStep<RandomSelectStep>({
     title: "ランダム選択",
     memo: "",
     autoAdvance: false,
-    // schema が items に非空要素を 1 つ以上、resultFlagKey に非空を要求するため初期値を入れる。
     items: ["候補1"],
     resultFlagKey: "result",
   }),

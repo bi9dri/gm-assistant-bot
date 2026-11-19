@@ -3,10 +3,6 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 
 import { applyScenarioDataMigration, applyScenarioDataV2Migration } from "./database";
 
-// version(9) は scenarioData カラムの追加、version(10) は本文の v1 → v2 変換。インデックスを張らないため stores は変わらず、
-// 既存レコードへ空の scenarioData を書き込むだけの upgrade を実 IndexedDB 上で検証する。
-// fake-indexeddb は test/unit.setup.ts で設定済み。
-
 const DB_NAME = "ScenarioDataMigrationTest";
 
 const V8_STORES = {
@@ -16,8 +12,6 @@ const V8_STORES = {
     "++id, name, guildId, botId, gameFlags, reactFlowData, flowData, createdAt, lastUsedAt",
 };
 
-// v9 が書き込む空の形。migration 側と同じくバージョン当時のリテラルで持つ
-// (defaultScenarioData を参照すると、スキーマが進んだときに過去の期待値が変わる)。
 const emptyScenarioDataV1 = JSON.stringify({ version: 1, blocks: [] });
 const emptyFlow = JSON.stringify({ version: 1, sections: [] });
 const emptyReactFlow = JSON.stringify({
@@ -33,8 +27,6 @@ const openV8 = async (): Promise<Dexie> => {
   return db;
 };
 
-// 本体と同じ upgrade 関数を張った v9。本体は 1 つの Dexie インスタンスに全バージョンを
-// 積むため、ここでは v8 → v9 の差分だけを再現する。
 const openV9 = async (): Promise<Dexie> => {
   const db = new Dexie(DB_NAME);
   db.version(8).stores(V8_STORES);
@@ -108,7 +100,6 @@ describe("scenarioData migration (v8 → v9)", () => {
     oldDb.close();
 
     const db = await openV9();
-    // 一度上がった DB に対してもう一度同じ関数を流す (再オープンでは upgrade が走らない)
     await db.transaction("rw", db.table("Template"), db.table("GameSession"), (tx) =>
       applyScenarioDataMigration(tx),
     );
@@ -119,8 +110,6 @@ describe("scenarioData migration (v8 → v9)", () => {
   });
 });
 
-// version(10) は本文をブロック列から段落ベースのリッチテキストへ移す
-// (docs: scenario-editor-architecture D26)。
 const openV10 = async (): Promise<Dexie> => {
   const db = new Dexie(DB_NAME);
   db.version(8).stores(V8_STORES);
@@ -173,7 +162,6 @@ describe("scenarioData migration (v9 → v10)", () => {
       "paragraph",
       "paragraph",
     ]);
-    // 本文と見出しは doc へ、Discord 操作の実体だけが steps に残る。
     expect(migrated.steps.map((step: { id: string }) => step.id)).toEqual(["c1"]);
 
     db.close();

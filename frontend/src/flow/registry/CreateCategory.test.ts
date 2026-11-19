@@ -40,7 +40,6 @@ describe("CreateCategoryEntry.summary", () => {
     ).toBe("カテゴリ作成 (未設定)");
   });
 
-  // step() の categoryName 既定値は entry.defaults() (literal 空文字) と同形。
   test("既定値 (literal 空文字) は未設定扱いになる", () => {
     expect(CreateCategoryEntry.summary(step())).toBe("カテゴリ作成 (未設定)");
   });

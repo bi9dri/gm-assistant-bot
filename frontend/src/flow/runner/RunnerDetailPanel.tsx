@@ -11,11 +11,6 @@ import { findStep } from "../treeOps";
 import { RunnerToolPanel } from "./RunnerToolPanel";
 import type { RunHandlers } from "./types";
 
-// 中央カラム (execute モード)。選択中ステップの実行操作 + 詳細を表示する。
-// - 実行済みステップは read-only (記録保護)。runnable なら [再実行] のみ許す。
-// - 未実行の action / auto 分岐は編集可能な DetailPanel + [実行]/[スキップ]。
-// - select 分岐は枝ボタンで実行。実行済みでも枝を選び直せる (誤選択のやり直し)。
-//   tool は操作 UI。
 export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
   const selectedStepId = useRunnerStore((state) => state.selectedStepId);
   const flowData = useRunnerStore((state) => state.flowData);
@@ -23,7 +18,6 @@ export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
   const updateStep = useRunnerStore((state) => state.updateStep);
   const runningStepId = useRunnerStore((state) => state.runningStepId);
 
-  // ライブの session gameFlags も候補に含める (edit モードの seed に対応)。
   const resources = useMemo(
     () => collectResourcesFromFlow(flowData, gameFlags),
     [flowData, gameFlags],
@@ -80,7 +74,6 @@ export const RunnerDetailPanel = ({ handlers }: { handlers: RunHandlers }) => {
         {StepDetailPanel !== undefined && (
           <>
             <div className="divider my-0" />
-            {/* 実行済み action/branch は read-only。tool は常に操作可能。 */}
             <fieldset disabled={isExecuted && !isTool} className="contents">
               <StepDetailPanel step={step} onChange={handleChange} mode="execute" />
             </fieldset>
@@ -101,7 +94,6 @@ interface RunControlsProps {
 const RunControls = ({ step, isExecuted, isRunning, handlers }: RunControlsProps) => {
   const entry = getEntry(step.type);
   if (entry?.category === "tool") return null;
-  // select 分岐は枝ボタン側で実行するのでここには直接実行ボタンを出さない。
   const isSelectBranch = step.type === "Branch" && step.mode === "select";
 
   return (

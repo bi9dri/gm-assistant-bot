@@ -39,7 +39,7 @@ interface Props {
 interface ContextMenu {
   type: "node" | "pane";
   nodeId?: string;
-  position?: { x: number; y: number }; // Flow coordinates for node creation
+  position?: { x: number; y: number };
   top?: number;
   left?: number;
   right?: number;
@@ -139,7 +139,6 @@ const TemplateEditorContent = ({
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
   const [addNodePosition, setAddNodePosition] = useState<{ x: number; y: number } | null>(null);
 
-  // Reconnect成功フラグ（何もない場所にドロップされた場合にEdge削除を判定）
   const edgeReconnectSuccessful = useRef(true);
 
   useEffect(() => {
@@ -170,7 +169,6 @@ const TemplateEditorContent = ({
 
   const onReconnectEnd = useCallback((_: unknown, edge: Edge) => {
     if (!edgeReconnectSuccessful.current) {
-      // 何もない場所にドロップされた場合、Edgeを削除
       useTemplateEditorStore.setState((state) => ({
         edges: state.edges.filter((e) => e.id !== edge.id),
       }));
@@ -184,10 +182,8 @@ const TemplateEditorContent = ({
     let position: { x: number; y: number };
 
     if (addNodePosition) {
-      // Use position from right-click context menu
       position = addNodePosition;
     } else {
-      // Fallback: Get the center of the current viewport
       const pane = document.querySelector(".react-flow__pane") as HTMLElement;
       if (!pane) return;
 
@@ -497,7 +493,6 @@ export const TemplateEditor = (props: Props) => {
     </ReactFlowProvider>
   );
 
-  // Wrap with TemplateEditorContext when templateId is available
   const withTemplateContext = templateId ? (
     <TemplateEditorContext.Provider value={{ templateId }}>
       {content}

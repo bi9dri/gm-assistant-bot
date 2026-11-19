@@ -6,7 +6,6 @@ import { useTemplateEditorStore } from "@/stores/templateEditorStore";
 
 import { BaseNode, cn, BaseNodeDataSchema, LABELED_GROUP_DEFAULTS } from "../base";
 
-// Available background colors for LabeledGroupNode
 const GROUP_BG_COLORS = [
   { name: "default", value: "", label: "デフォルト" },
   { name: "red", value: "bg-red-500/20", label: "赤" },
@@ -25,8 +24,6 @@ export const DataSchema = BaseNodeDataSchema.extend({
 });
 
 type LabeledGroupNodeData = Node<z.infer<typeof DataSchema>, "LabeledGroup">;
-
-/* GROUP NODE Label ------------------------------------------------------- */
 
 type GroupNodeLabelProps = ComponentProps<"div">;
 
@@ -59,8 +56,6 @@ function GroupNode({ label, selected, bgColor }: GroupNodeProps) {
     </BaseNode>
   );
 }
-
-/* LABELED GROUP NODE ------------------------------------------------------ */
 
 export const LabeledGroupNode = ({
   id,

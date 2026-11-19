@@ -11,21 +11,12 @@ import {
   type WizardParams,
 } from "./generateFlow";
 
-// 新規テンプレートウィザード (旧 Blueprint ノードの置き換え)。
-// キャラクター名 / VC 数 / カテゴリ名 / 共通チャンネルを入力し、生成される
-// セクション + ステップをプレビューしてからテンプレートを作成する。
-// 生成ロジックは純粋な generateWizardFlow に委譲し、本コンポーネントは入力とプレビューのみ。
-
 interface TemplateWizardProps {
-  // 入力から生成した FlowData を受け取ってテンプレートを作成する (route が Dexie 保存を担う)。
   onCreate: (name: string, flowData: FlowData) => void;
-  // 作成処理中は二重送信を防ぐためボタンを無効化する。
   creating?: boolean;
-  // 初期パラメータ (プレビュー付きの初期状態を出したい VRT / 再利用向け)。
   initialParams?: WizardParams;
 }
 
-// 文字列配列を編集する小さなリストエディタ (キャラクター名 / 共通チャンネル)。
 const StringListField = ({
   label,
   placeholder,
@@ -82,7 +73,6 @@ export const TemplateWizard = ({
   const update = <K extends keyof WizardParams>(key: K, value: WizardParams[K]) =>
     setParams((prev) => ({ ...prev, [key]: value }));
 
-  // 入力から生成されるフローのプレビュー。id は毎回変わるが表示には現れないため VRT は安定。
   const preview = useMemo(() => generateWizardFlow(params), [params]);
 
   const canCreate = name.trim() !== "" && !creating;
@@ -94,7 +84,6 @@ export const TemplateWizard = ({
 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)] divide-x divide-base-300">
-      {/* 入力カラム */}
       <div className="flex flex-col gap-5 overflow-y-auto p-4">
         <label className="flex flex-col gap-1">
           <span className="text-sm font-semibold">テンプレート名</span>
@@ -138,7 +127,6 @@ export const TemplateWizard = ({
             max={MAX_VOICE_CHANNEL_COUNT}
             value={params.voiceChannelCount}
             onChange={(evt) => {
-              // 空欄や不正入力で NaN が state に載ると preview が黙って 0 本になるため 0 に丸める。
               const parsed = Number(evt.target.value);
               update("voiceChannelCount", Number.isFinite(parsed) ? parsed : 0);
             }}
@@ -163,7 +151,6 @@ export const TemplateWizard = ({
         </button>
       </div>
 
-      {/* プレビューカラム */}
       <div className="flex flex-col gap-4 overflow-y-auto bg-base-200/40 p-4">
         <span className="text-sm font-semibold">生成されるステップ</span>
         {preview.sections.map((section) => (

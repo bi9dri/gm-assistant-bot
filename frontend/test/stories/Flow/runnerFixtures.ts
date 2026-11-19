@@ -1,8 +1,5 @@
 import type { FlowData } from "@/flow/schema";
 
-// execute モード (runner) の VRT 用フィクスチャ。実行済み (executedAt)・スキップ・cursor・
-// 分岐の確定 (executedBranchIds) が 1 つに揃うようにしてある。決定性のため id は固定、
-// executedAt は固定日時 (表示はバッジのみで日時は出さないため値は不問)。
 const EXECUTED_AT = new Date("2026-01-01T00:00:00.000Z");
 
 export const runnerFlow: FlowData = {
@@ -119,7 +116,6 @@ export const runnerGameFlags: Record<string, string> = {
   executed: "2",
 };
 
-// runner UI stories 共通の no-op ハンドラ (VRT は静的描画のみ)。
 export const noopHandlers = {
   onRun: () => {},
   onSkip: () => {},

@@ -23,8 +23,6 @@ const flowOf = (...steps: Step[]): FlowData => ({
   sections: [{ id: "s", title: "", memo: "", collapsed: false, steps }],
 });
 
-// runOne が executedAt / executedBranchIds を刻む挙動を模した StepRunner。
-// results で各 id の返り値を差し替えられる。実行された id の順序を order に記録する。
 const makeRunner = (
   initial: FlowData,
   results: Record<string, ExecuteResult> = {},
@@ -95,7 +93,6 @@ describe("runChain", () => {
       br: { status: "success", message: "", branchArmIds: ["br-a"] },
     });
     await runChain(runner, "br");
-    // br → 選ばれた枝 br-a の a1(autoAdvance) → a2(停止)。b1 と after は含まない。
     expect(runner.order).toEqual(["br", "a1", "a2"]);
   });
 
@@ -111,7 +108,6 @@ describe("runChain", () => {
       flowOf(step("a", { autoAdvance: true }), step("b", { executedAt: new Date() }), step("c")),
     );
     await runChain(runner, "a");
-    // a は開始ステップなので実行、b は実行済みなので停止。
     expect(runner.order).toEqual(["a"]);
   });
 
@@ -128,7 +124,6 @@ describe("runChain", () => {
       (step) => step.id !== "b",
     );
     await runChain(runner, "a");
-    // a は実行、b は自動実行不可なので停止 (エラーにしない)。
     expect(runner.order).toEqual(["a"]);
   });
 });

@@ -4,12 +4,11 @@ export const BaseNodeDataSchema = z.object({
   executedAt: z.coerce.date().optional(),
 });
 
-// Node width constants (multiples of 16px)
 const NODE_WIDTHS = {
-  sm: 192, // 12 × 16
-  md: 256, // 16 × 16
-  lg: 480, // 30 × 16
-  xl: 640, // 40 × 16
+  sm: 192,
+  md: 256,
+  lg: 480,
+  xl: 640,
 } as const;
 
 export type NodeWidth = (typeof NODE_WIDTHS)[keyof typeof NODE_WIDTHS];
@@ -37,7 +36,6 @@ export const NODE_TYPE_WIDTHS: Record<string, NodeWidth> = {
   Counter: NODE_WIDTHS.md,
 } as const;
 
-// Comment node default dimensions
 export const COMMENT_DEFAULTS = {
   width: NODE_WIDTHS.md,
   height: 120,
@@ -45,7 +43,6 @@ export const COMMENT_DEFAULTS = {
   minHeight: 80,
 } as const;
 
-// LabeledGroup node default dimensions
 export const LABELED_GROUP_DEFAULTS = {
   width: NODE_WIDTHS.xl * 2,
   height: 400,
@@ -53,9 +50,8 @@ export const LABELED_GROUP_DEFAULTS = {
   minHeight: 200,
 } as const;
 
-// Node content height constants for scrollable areas
 export const NODE_CONTENT_HEIGHTS = {
-  sm: 200, // Small nodes
-  md: 300, // Standard nodes
-  lg: 400, // Large/complex nodes
+  sm: 200,
+  md: 300,
+  lg: 400,
 } as const;

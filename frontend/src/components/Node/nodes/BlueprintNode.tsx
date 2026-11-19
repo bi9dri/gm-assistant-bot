@@ -130,7 +130,6 @@ export const BlueprintNode = ({
         )}
       </BaseNodeHeader>
       <BaseNodeContent maxHeight={NODE_CONTENT_HEIGHTS.lg}>
-        {/* Category name */}
         <div className="mb-4">
           <label className="text-xs font-semibold mb-1 block">カテゴリ名</label>
           <input
@@ -143,7 +142,6 @@ export const BlueprintNode = ({
           />
         </div>
 
-        {/* Character names */}
         <div className="mb-4">
           <label className="text-xs font-semibold mb-1 block">キャラクター名</label>
           {data.parameters.characterNames.map((name, index) => (
@@ -178,7 +176,6 @@ export const BlueprintNode = ({
           )}
         </div>
 
-        {/* Voice channel count */}
         <div className="mb-4">
           <label className="text-xs font-semibold mb-1 block">ボイスチャンネル数</label>
           <input
@@ -192,7 +189,6 @@ export const BlueprintNode = ({
           />
         </div>
 
-        {/* Shared text channels */}
         <div className="mb-4">
           <label className="text-xs font-semibold mb-1 block">共通テキストチャンネル</label>
           {data.parameters.sharedTextChannels.map((name, index) => (
@@ -227,7 +223,6 @@ export const BlueprintNode = ({
           )}
         </div>
 
-        {/* Preview */}
         <div className="text-xs text-base-content/60 mt-4 p-2 bg-base-200 rounded">
           <p className="font-semibold mb-1">生成されるノード:</p>
           <ul className="list-disc list-inside space-y-0.5">

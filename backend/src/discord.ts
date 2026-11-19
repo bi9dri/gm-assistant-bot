@@ -22,10 +22,6 @@ import type {
   SendMessageData,
 } from "./schemas";
 
-/**
- * guild.idをハッシュ化してデフォルトアバターインデックス(0-5)を決定
- * 同じguildは常に同じアバターを返す
- */
 export function getDefaultAvatarIndex(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -35,9 +31,6 @@ export function getDefaultAvatarIndex(id: string): number {
   return Math.abs(hash) % 6;
 }
 
-/**
- * guild.iconがnull/undefinedの場合、デフォルトアバターURLを返す
- */
 export function getGuildIconUrl(guildId: string, iconHash: string | null): string {
   if (!iconHash) {
     const avatarIndex = getDefaultAvatarIndex(guildId);
@@ -46,9 +39,6 @@ export function getGuildIconUrl(guildId: string, iconHash: string | null): strin
   return `https://cdn.discordapp.com/icons/${guildId}/${iconHash}.webp`;
 }
 
-/**
- * user.avatarがnull/undefinedの場合、デフォルトアバターURLを返す
- */
 export function getUserAvatarUrl(userId: string, avatarHash: string | null): string {
   if (!avatarHash) {
     const avatarIndex = getDefaultAvatarIndex(userId);
@@ -220,7 +210,6 @@ export async function deleteChannel(token: string, data: DeleteChannelData) {
 export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMembersData) {
   const rest = createRestClient(token);
 
-  // 指定されたロールを持つメンバーを取得
   const membersWithRole = [];
   let after: string | undefined = undefined;
   while (true) {
@@ -251,7 +240,6 @@ export async function addRoleToRoleMembers(token: string, data: AddRoleToRoleMem
     after = members[members.length - 1].user.id;
   }
 
-  // メンバーにロールを追加
   for (const memberId of membersWithRole) {
     await rest.put(Routes.guildMemberRole(data.guildId, memberId, data.addRoleId));
   }

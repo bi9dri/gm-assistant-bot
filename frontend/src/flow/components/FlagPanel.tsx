@@ -11,8 +11,6 @@ interface FlagPanelViewProps {
   removeGameFlag: (key: string) => void;
 }
 
-// フラグ編集の見た目と操作。store に触れない presentational component として、
-// ステップリスト UI とシナリオドキュメント UI の両方から使う。
 export const FlagPanelView = ({ gameFlags, setGameFlag, removeGameFlag }: FlagPanelViewProps) => {
   const [newKey, setNewKey] = useState("");
 
@@ -78,8 +76,6 @@ export const FlagPanelView = ({ gameFlags, setGameFlag, removeGameFlag }: FlagPa
   );
 };
 
-// 常駐するゲームフラグパネル (右カラム・docs: step-list-editor-architecture D3)。
-// edit モードでは Template.gameFlags (セッション開始時の seed) を編集する。
 export const FlagPanel = () => {
   const gameFlags = useEditorStore((state) => state.gameFlags);
   const setGameFlag = useEditorStore((state) => state.setGameFlag);

@@ -8,12 +8,6 @@ import type { ChipProps } from "./chips";
 import { CopyButton } from "./CopyButton";
 import { MissingStepChip, StepChip } from "./StepChip";
 
-// 編集モードで文中に描くチップ (docs: scenario-editor-architecture D7)。
-// 挿入・移動・削除は ProseMirror のトランザクションが担うため、ここには持たない。
-
-// 本文が doc に移った今、文中の操作で追加したいのは Discord 操作・分岐・ツールだけ。
-// 本文ステップ (category: "text") は v1 データの受け皿として registry に残るが、
-// 新規に挿す道は出さない (書きたい本文は段落として直接書ける)。
 export const INSERTABLE_CATEGORIES = ["action", "branch", "tool"] as const;
 
 export const EditorStepChip = ({ stepId }: ChipProps) => {
@@ -31,14 +25,10 @@ export const EditorStepChip = ({ stepId }: ChipProps) => {
   );
 };
 
-// 枝の中身は doc ではなく Branch 実体の内側に持つ (D24)。したがって枝への追加・削除は
-// ProseMirror ではなく Branch ステップの branches を書き換えて行う。
 const ArmEditor = ({ branch, arm }: { branch: BranchStep; arm: BranchArm }) => {
   const updateStep = useScenarioEditorStore((state) => state.updateStep);
 
   const setArm = (patch: Partial<BranchArm>) => {
-    // updateStep の patch 型は union 共通のキーに畳まれるため、型を明示して渡す
-    // (flow 側の store と同じ規約)。
     const branches: Partial<BranchStep> = {
       branches: branch.branches.map((current) =>
         current.id === arm.id ? { ...current, ...patch } : current,

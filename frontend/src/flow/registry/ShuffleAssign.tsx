@@ -110,7 +110,6 @@ export const ShuffleAssignEntry = defineStep<ShuffleAssignStep>({
     title: "シャッフル割り当て",
     memo: "",
     autoAdvance: false,
-    // schema が items/targets に非空要素を 1 つ以上要求するため placeholder を入れる。
     items: ["アイテム1"],
     targets: ["対象1"],
     resultFlagPrefix: "result",

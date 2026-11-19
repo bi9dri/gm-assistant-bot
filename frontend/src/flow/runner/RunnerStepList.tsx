@@ -120,8 +120,6 @@ interface RunnerBranchArmsProps {
   handlers: RunHandlers;
 }
 
-// 分岐の枝表示。実行済みなら選ばれた枝の子だけを展開し、選ばれなかった枝は畳む
-// (docs: "Unchosen arms collapse in the UI")。未実行ならすべての枝を候補として見せる。
 const RunnerBranchArms = ({ step, handlers }: RunnerBranchArmsProps) => {
   const chosen = step.executedBranchIds;
   return (
@@ -154,8 +152,6 @@ interface RunnerStepListProps {
   handlers: RunHandlers;
 }
 
-// 実行モードのステップリスト。edit の StepList と違い並べ替えは無く、実行状態バッジと
-// 実行/再実行/スキップの操作を持つ。
 export const RunnerStepList = ({ steps, handlers }: RunnerStepListProps) => {
   if (steps.length === 0) {
     return <p className="px-2 py-1 text-xs text-base-content/40">(ステップなし)</p>;

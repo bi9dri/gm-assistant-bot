@@ -22,8 +22,6 @@ const BranchDetailPanel = ({ step, onChange }: DetailPanelProps<BranchStep>) => 
       onChange({ branches: [...step.branches, createArm(label)] });
       return;
     }
-    // auto モード: 新規枝は条件付きで追加し、末尾にデフォルト枝 (条件なし) があれば
-    // その手前に挿入する (schema: デフォルト枝は末尾に1つまで)。
     const newArm: BranchArm = { ...createArm(label), condition: createDefaultRule() };
     const branches = [...step.branches];
     const lastArm = branches[branches.length - 1];
@@ -40,15 +38,12 @@ const BranchDetailPanel = ({ step, onChange }: DetailPanelProps<BranchStep>) => 
 
   const setMode = (mode: BranchStep["mode"]) => {
     if (mode === "select") {
-      // select モードの枝は条件を持てない (schema superRefine)
       onChange({
         mode,
         branches: step.branches.map((arm) => ({ ...arm, condition: undefined })),
       });
       return;
     }
-    // auto モード: デフォルト枝 (条件なし) は末尾 1 つだけ許される。末尾以外で条件が
-    // 無い枝にはプレースホルダ条件を補い、デフォルト枝の重複で保存不能になるのを防ぐ。
     const lastIndex = step.branches.length - 1;
     onChange({
       mode,
@@ -188,8 +183,6 @@ export const BranchEntry = defineStep<BranchStep>({
     return `分岐(自動): ${count}枝`;
   },
   DetailPanel: BranchDetailPanel,
-  // Branch は「どの枝 (arm) に descend するか」を返す。engine が返り値の branchArmIds を
-  // executedBranchIds として刻み、その枝の子ステップを実行順序に開く。
   execute: async (step, ctx) => {
     if (step.mode === "select") {
       const armId = ctx.branchChoice;

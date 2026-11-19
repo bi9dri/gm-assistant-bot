@@ -14,12 +14,9 @@ import { findStep } from "../treeOps";
 import { canRunStep } from "./canRun";
 
 interface RunOptions {
-  // Branch select モードで GM が選んだ枝 (arm) id。開始ステップにのみ適用される。
   branchChoice?: string;
 }
 
-// engine と store・db・ApiClient を配線するフック。engine/execute() は純粋なまま、
-// ここが副作用 (ctx 構築・実行・store 更新・toast) を担う。
 export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
   const { addToast } = useToast();
 
@@ -49,7 +46,6 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
             return { status: "error", message: "このステップは自動実行できません" };
           }
 
-          // リソースはステップごとにロードし直し、直前ステップの副作用を反映する。
           const resources = await loadResourceStore(session.id, session.guildId);
           const ctx: ExecuteContext = {
             guildId: session.guildId,
@@ -58,14 +54,11 @@ export const useSessionRunner = (session: GameSession, bot: DiscordBotData) => {
             discord: gateway,
             resources,
             flags: {
-              // FlagStore 契約はスナップショット。store の内部オブジェクトを直接返さず
-              // コピーを返し、execute() が誤って書き換えても store を壊さないようにする。
               get: () => ({ ...useRunnerStore.getState().gameFlags }),
               set: async (patch) => {
                 useRunnerStore.getState().setFlags(patch);
               },
             },
-            // GM の選択は開始ステップにのみ適用 (連鎖先の select 分岐には引き継がない)。
             branchChoice: id === stepId ? options.branchChoice : undefined,
           };
 

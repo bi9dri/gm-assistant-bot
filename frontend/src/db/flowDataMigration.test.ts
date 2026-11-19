@@ -4,11 +4,6 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { applyFlowDataMigration } from "@/flow/migrate";
 import { FlowDataSchema } from "@/flow/schema";
 
-// version(7) の flowData マイグレーションを実 IndexedDB (fake-indexeddb) 上で検証する。
-// 純粋ロジックは migrate.test.ts が網羅するので、ここは「v6 → v7 の upgrade が両テーブルへ
-// 適用され、legacy は変換・already-new は保持・reactFlowData は維持される」ことを確認する。
-// fake-indexeddb の配線は test/unit.setup.ts の db import で済んでいる前提。
-
 const DB_NAME = "FlowDataMigrationTest";
 
 const V6_STORES = {
@@ -46,7 +41,6 @@ afterEach(async () => {
 
 describe("flowData migration (v6 → v7)", () => {
   test("両テーブルの legacy を変換し、already-new を保持し、reactFlowData を維持する", async () => {
-    // --- v6 でレコードを投入 ---
     const oldDb = new Dexie(DB_NAME);
     oldDb.version(6).stores(V6_STORES);
     await oldDb.open();
@@ -88,7 +82,6 @@ describe("flowData migration (v6 → v7)", () => {
     });
     oldDb.close();
 
-    // --- v7 で開く → upgrade が走る ---
     const newDb = new Dexie(DB_NAME);
     newDb.version(6).stores(V6_STORES);
     newDb.version(7).stores(V7_STORES).upgrade(applyFlowDataMigration);
@@ -100,7 +93,6 @@ describe("flowData migration (v6 → v7)", () => {
     const sesNew = await newDb.table("GameSession").get(sesNewId);
     newDb.close();
 
-    // legacy: flowData が変換生成され、reactFlowData は保持される (両テーブル)
     for (const record of [tplLegacy, sesLegacy]) {
       expect(record.reactFlowData).toBe(legacyReactFlow);
       const parsed = FlowDataSchema.parse(JSON.parse(record.flowData));
@@ -108,7 +100,6 @@ describe("flowData migration (v6 → v7)", () => {
       expect(parsed.sections[0].steps[0].title).toBe("開始");
     }
 
-    // already-new: 既存の flowData がそのまま保持される (両テーブル)
     for (const record of [tplNew, sesNew]) {
       expect(record.flowData).toBe(existingFlow);
       expect(record.reactFlowData).toBe(legacyReactFlow);

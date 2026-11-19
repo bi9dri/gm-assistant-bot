@@ -3,8 +3,6 @@ import { describe, expect, test } from "vite-plus/test";
 import { scenarioDataV1ToV2, toScenarioDataV2 } from "./migrate";
 import { ScenarioDataSchema, defaultScenarioData } from "./schema";
 
-// v1 (ブロック列) → v2 (doc + steps) の変換 (docs: scenario-editor-architecture D26)。
-
 const base = { title: "", memo: "", autoAdvance: false };
 
 const textBlock = (id: string, body: string) => ({ ...base, id, type: "Text", body });
@@ -75,8 +73,6 @@ describe("scenarioDataV1ToV2", () => {
     expect(doc.content?.[0]?.attrs).toEqual({ level: 3 });
   });
 
-  // v1 では Branch のアームにも本文カテゴリのブロックを置けた。Heading は v2 の Step union に
-  // 無いため、そのまま残すと保存済みシナリオ全体が読めなくなる。
   test("アームの中の Heading は見出し文字列を保った Text になる", () => {
     const { steps } = scenarioDataV1ToV2([
       {

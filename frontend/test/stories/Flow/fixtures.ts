@@ -1,7 +1,5 @@
 import type { FlowData } from "@/flow/schema";
 
-// 各カテゴリ (操作 / 分岐 / ツール)・分岐ネスト・折りたたみセクションを 1 つに含む
-// step-list editor 用のサンプル。VRT stories の共通シード。
 export const sampleFlow: FlowData = {
   version: 1,
   sections: [

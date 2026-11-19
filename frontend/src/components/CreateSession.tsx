@@ -85,7 +85,6 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         guildId: selectedGuildId,
         botId: selectedBotId,
         gameFlags: template.gameFlags,
-        // reactFlowData / flowData / scenarioData ともパスは下の update で session/{id}/ へ書き換える
         reactFlowData: template.reactFlowData,
         flowData: template.flowData,
         scenarioData: template.scenarioData,
@@ -93,11 +92,9 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
         lastUsedAt: new Date(),
       });
 
-      // Copy files from template to session and update file paths
       const fileSystem = new FileSystem();
       await fileSystem.copyTemplateFilesToSession(selectedTemplateId, newSessionId);
 
-      // reactFlowData / flowData / scenarioData はファイルパスを共有するため、同じ replacer で書き換える
       const replaceFilePath = (filePath: string) =>
         filePath.replace(`template/${selectedTemplateId}/`, `session/${newSessionId}/`);
       const parsed: ReactFlowData = JSON.parse(template.reactFlowData);
@@ -108,8 +105,6 @@ export const CreateSession = ({ onCreate, onCancel }: Props) => {
       const convertedFlowData = JSON.stringify(
         convertFilePathsInFlowData(parsedFlow, replaceFilePath),
       );
-      // Dexie v10 で全行が v2 になっているが、テンプレートは取り込み経路でも増えるため
-      // ここでも形を揃えてから触る (v1 のまま渡すと steps が無く落ちる)。
       const parsedScenario = toScenarioDataV2(JSON.parse(template.scenarioData)) as ScenarioData;
       const convertedScenarioData = JSON.stringify(
         convertFilePathsInScenarioData(parsedScenario, replaceFilePath),

@@ -6,15 +6,10 @@ import { defaultFlowData, type FlowData, type Step } from "../schema";
 import type { Section, StepLocation } from "../treeOps";
 import * as treeOps from "../treeOps";
 
-// edit モード (テンプレート作成) の Zustand store。
-// FlowData ツリーの変更は必ず treeOps の named helper を経由する (docs D4)。
-// treeOps が produce で構造的共有を保つため、未変更の行は参照が変わらず memo 化が効く。
-
 type GameFlags = Record<string, unknown>;
 
 interface EditorState {
   flowData: FlowData;
-  // D3: edit モードでは Template.gameFlags (セッション開始時の seed) を編集する。
   gameFlags: GameFlags;
   selectedStepId: string | null;
   initialized: boolean;
@@ -24,14 +19,11 @@ interface EditorActions {
   initialize: (flowData: FlowData, gameFlags: GameFlags) => void;
   reset: () => void;
   selectStep: (id: string | null) => void;
-  // type (判別子) は patch で変更させない。Object.assign で discriminant を壊し
-  // union 不変条件を破る事故を型レベルで防ぐ。
   updateStep: (id: string, patch: Omit<Partial<Step>, "type">) => void;
   addStep: (type: Step["type"], at: StepLocation) => void;
   duplicateStep: (id: string) => void;
   removeStep: (id: string) => void;
   moveStep: (id: string, to: StepLocation) => void;
-  // ドラッグキャンセル時などに、以前の immutable スナップショットへ丸ごと差し戻す。
   restoreFlowData: (flowData: FlowData) => void;
   addSection: (title: string, index?: number) => void;
   updateSection: (id: string, patch: Partial<Section>) => void;
@@ -82,8 +74,6 @@ export const useEditorStore = create<EditorStore>()((set) => ({
   removeStep: (id) =>
     set((state) => {
       const flowData = treeOps.removeStep(state.flowData, id);
-      // 削除した step 自身だけでなく、その分岐枝に居た選択中の子 step も消えるため、
-      // 「新ツリーに選択 id が残っているか」で判定して掃除する。
       return {
         flowData,
         selectedStepId:
@@ -113,7 +103,6 @@ export const useEditorStore = create<EditorStore>()((set) => ({
   removeSection: (id) =>
     set((state) => {
       const flowData = treeOps.removeSection(state.flowData, id);
-      // セクションごと消えた step が選択中なら掃除する。
       return {
         flowData,
         selectedStepId:

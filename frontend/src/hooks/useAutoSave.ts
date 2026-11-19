@@ -35,7 +35,6 @@ export function useAutoSave({
       if (session) {
         await session.update({ reactFlowData: { nodes, edges, viewport } });
 
-        // 保存完了インジケーターを表示
         setShowSaved(true);
         if (savedTimeoutRef.current) {
           clearTimeout(savedTimeoutRef.current);
@@ -55,17 +54,14 @@ export function useAutoSave({
     if (!enabled || !sessionId) return;
 
     const unsubscribe = useTemplateEditorStore.subscribe((state, prevState) => {
-      // nodes または edges が変更された場合のみトリガー
       if (state.nodes === prevState.nodes && state.edges === prevState.edges) {
         return;
       }
 
-      // 既存の timeout をクリア
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
-      // 新しい debounce タイマーを設定
       timeoutRef.current = setTimeout(save, debounceMs);
     });
 

@@ -65,7 +65,6 @@ export const DeleteCategoryNode = ({
 
     const { guildId, bot } = executionContext;
 
-    // If no categories exist, mark as executed and return silently
     if (categories.length === 0) {
       updateNodeData(id, { executedAt: new Date() });
       return;

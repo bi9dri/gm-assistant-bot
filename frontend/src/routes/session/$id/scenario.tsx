@@ -13,7 +13,6 @@ function RouteComponent() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  // useLiveQuery の undefined (ロード中) と not-found の undefined を null に正規化して区別する。
   const data = useLiveQuery(async () => {
     const session = await GameSession.getById(Number(id));
     if (!session) return { session: null, bot: undefined };
