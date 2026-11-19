@@ -2,18 +2,12 @@ import { hc, type InferRequestType } from "hono/client";
 
 import type { AppType } from "../../backend/src/index";
 
-// PR preview では同一オリジンの server route (src/routes/api/$.ts) が /api を
-// 本番 API へ中継するため空文字を渡す。
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   (import.meta.env.DEV ? "" : "https://gm-assistant-bot-api.bidri.dev");
 
 export const BOT_TOKEN_HEADER = "X-Discord-Bot-Token";
 
-/**
- * Extract error message from unknown error object.
- * https://kentcdodds.com/blog/get-a-catch-block-error-message-with-typescript
- */
 function getErrorMessage(error: unknown, fallback: string | number): string {
   if (
     error !== null &&

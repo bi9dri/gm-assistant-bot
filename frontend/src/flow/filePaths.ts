@@ -1,11 +1,5 @@
 import type { FlowData, Step } from "./schema";
 
-// ステップ列の添付ファイルパスを書き換える。reactFlowData 側の
-// convertFilePathsInReactFlowData (fileSystem.ts) と対の関数で、セッション作成や
-// テンプレートインポート時に template/{id}/ ↔ session/{id}/ ↔ files/ のパスを移し替える。
-// SendMessage / CombinationSendMessage の attachments[].filePath を対象とし、Branch は
-// branches[].steps へ再帰する。フラットなブロック列 (シナリオドキュメント UI) と
-// FlowData の両方がこの再帰を共有する。
 export function convertFilePathsInSteps(
   steps: Step[],
   replacer: (filePath: string) => string,

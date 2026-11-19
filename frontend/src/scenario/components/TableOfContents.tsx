@@ -4,15 +4,10 @@ import { useMemo } from "react";
 import { buildOutline } from "../outline";
 import { scrollToHeading } from "../scrollTo";
 
-// heading ノードから自動生成する目次 (docs: scenario-editor-architecture D22)。
-// 全文が常に展開されているので折りたたみもアプリ内検索も持たず、飛び先だけを提供する。
-
 const INDENT: Record<number, string> = { 1: "", 2: "pl-3", 3: "pl-6" };
 
 export const TableOfContents = ({
   doc,
-  // 実行モードだけが渡す「ここから再実行」(docs: scenario-editor-architecture D9)。
-  // heading ノードは id を持てないので、ボタンは本文ではなく目次側に置く。
   onRestart,
 }: {
   doc: JSONContent;

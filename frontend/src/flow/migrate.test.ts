@@ -4,8 +4,6 @@ import { foldWarningsIntoFlowData, migrateRecordToFlowData, reactFlowToFlowData 
 import type { FlowData } from "./schema";
 import { FlowDataSchema, defaultFlowData } from "./schema";
 
-// ---- フィクスチャ ----
-
 const flow = (sections: unknown[]): FlowData => FlowDataSchema.parse({ version: 1, sections });
 
 const setFlagStep = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -30,7 +28,6 @@ const sgNode = (id: string, title: string) => ({
   data: { title, flagKey: "k", flagValue: "v" },
 });
 
-// console.error を黙らせつつ fn を実行する (フォールバック経路のログ汚染を防ぐ)
 const silencingErrors = <T>(fn: () => T): T => {
   const spy = vi.spyOn(console, "error").mockImplementation(() => {});
   try {
@@ -52,7 +49,6 @@ describe("foldWarningsIntoFlowData", () => {
     const result = foldWarningsIntoFlowData(input, [{ nodeId: "st1", message: "危険" }]);
 
     expect(result.sections[0].steps[0].memo).toBe("⚠️ 危険");
-    // 入力は変更しない (純粋)
     expect(input.sections[0].steps[0].memo).toBe("");
   });
 
@@ -115,7 +111,6 @@ describe("foldWarningsIntoFlowData", () => {
     expect(result.sections[0].memo).toContain("⚠️ 変換時の警告:");
     expect(result.sections[0].memo).toContain("- 全体警告");
     expect(result.sections[0].memo).toContain("- 未一致");
-    // ステップ memo は変更されない
     expect(result.sections[0].steps[0].memo).toBe("");
   });
 
@@ -219,8 +214,6 @@ describe("migrateRecordToFlowData", () => {
   });
 
   test("変換結果を再度マイグレートしても変化しない (冪等)", () => {
-    // 警告を伴うグラフ (Bogus ノード混在) で、畳み込み済みメモが再検証を通り
-    // already-new 短絡に乗る = 二重畳み込みが起きないことを確認する
     const legacy = JSON.stringify(
       rfGraph([sgNode("n1", "A"), { id: "x1", type: "Bogus", position: { x: 0, y: 0 }, data: {} }]),
     );

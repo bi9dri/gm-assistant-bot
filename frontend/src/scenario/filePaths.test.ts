@@ -3,10 +3,6 @@ import { describe, expect, test } from "vite-plus/test";
 import { convertFilePathsInScenarioData } from "./filePaths";
 import { ScenarioDataSchema, emptyDoc, type ScenarioData } from "./schema";
 
-// セッション作成時のパス書き換え (docs: scenario-editor-architecture D16)。
-// 再帰そのものは flow/filePaths のテストが担保するので、ここではステップ列の入口と
-// Branch アームの中まで届くことを確認する。
-
 const scenario = (steps: unknown[]): ScenarioData =>
   ScenarioDataSchema.parse({ version: 2, doc: emptyDoc(), steps });
 

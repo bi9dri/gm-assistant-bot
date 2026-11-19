@@ -8,10 +8,6 @@ export interface TemplateResources {
   gameFlags: Array<{ key: string; values: string[]; sourceNodeId: string }>;
 }
 
-/**
- * Collects all resources that would be available before a specific node executes.
- * Traverses the graph backwards from the target node to find all predecessor nodes.
- */
 export function collectResourcesBeforeNode(
   targetNodeId: string,
   nodes: FlowNode[],

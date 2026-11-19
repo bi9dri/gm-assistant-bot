@@ -241,7 +241,6 @@ describe("templateEditorStore", () => {
       expect(duplicatedNode.type).toBe(originalNode.type);
       expect(duplicatedNode.data).toEqual({ title: "ロールを作成する", roles: ["Role1", "Role2"] });
 
-      // ディープコピーであることを確認（参照ではない）
       expect(duplicatedNode.data).not.toBe(originalNode.data);
     });
 

@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TemplateWizard } from "@/flow/wizard/TemplateWizard";
 
-// 新規テンプレートウィザード (Phase 4)。入力フォームと生成ステップのプレビューを
-// VRT で押さえる。onCreate は VRT では発火しないので no-op。
 const meta = {
   title: "Flow/TemplateWizard",
   component: TemplateWizard,
@@ -18,12 +16,10 @@ const frame = (node: React.ReactNode) => (
   <div className="flex h-[640px] w-[880px] flex-col bg-base-100">{node}</div>
 );
 
-// 初期状態: 入力は空。プレビューは常に生成される準備・片付けの最小構成。
 export const Empty: Story = {
   render: () => frame(<TemplateWizard onCreate={() => {}} />),
 };
 
-// キャラ名・VC・カテゴリ・共通チャンネルを入れた状態のプレビュー (連鎖バッジ含む)。
 export const Populated: Story = {
   render: () =>
     frame(

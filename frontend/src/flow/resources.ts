@@ -9,10 +9,6 @@ export const formatFlagValue = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-// FlowData ツリーから、フィールドエディタ (ResourceSelector / FlagValueSelector /
-// DynamicValueInput) が候補表示に使う TemplateResources を集める。
-// React Flow 版の collectResourcesBeforeNode の flowData 版。edit モードでは順序を厳密に
-// 追わず (engine 不在)、ツリー全体を走査する。sourceNodeId には step.id を入れる。
 const collectFromStep = (step: Step, resources: TemplateResources): void => {
   switch (step.type) {
     case "CreateRole":
@@ -78,9 +74,6 @@ const collectFromStep = (step: Step, resources: TemplateResources): void => {
   }
 };
 
-// フラットなステップ列からリソース候補を集める (シナリオドキュメント UI の入口)。
-// gameFlags には edit モードでは Template.gameFlags (seed)、execute モードでは
-// GameSession.gameFlags (live) を渡す。フラグパネルで定義しただけのフラグも候補に載せる。
 export const collectResourcesFromSteps = (
   steps: Step[],
   gameFlags?: Record<string, unknown>,
@@ -104,8 +97,6 @@ export const collectResourcesFromFlow = (
     flow.sections.flatMap((section) => section.steps),
     gameFlags,
   );
-
-// ---- フィールドエディタ向けの候補リスト (PURE / unit-tested) ----
 
 export const collectFlagKeyOptions = (resources: TemplateResources): string[] => [
   ...new Set(resources.gameFlags.map((f) => f.key.trim()).filter((k) => k !== "")),

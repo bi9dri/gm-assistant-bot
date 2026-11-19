@@ -1,4 +1,3 @@
-// https://daisyui.com/docs/themes/#list-of-themes
 export const THEMES = [
   "light",
   "dark",

@@ -50,7 +50,6 @@ export function useFileExistenceValidation() {
     return () => {
       aborted = true;
     };
-    // Intentionally run only once when initialized becomes true
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialized]);
 }

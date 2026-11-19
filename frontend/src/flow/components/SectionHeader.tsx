@@ -5,7 +5,6 @@ import type { Section } from "../treeOps";
 
 interface SectionHeaderProps {
   section: Section;
-  // dnd-kit の並べ替えハンドル。StepListPanel の SortableSection から配線される。
   dragHandleProps?: {
     attributes: DraggableAttributes;
     listeners: DraggableSyntheticListeners;

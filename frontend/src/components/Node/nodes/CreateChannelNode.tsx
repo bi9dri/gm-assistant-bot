@@ -316,7 +316,6 @@ export const CreateChannelNode = ({
                 )}
               </div>
 
-              {/* Role permissions */}
               <div className="mt-2 space-y-1">
                 <p className="text-xs font-semibold">ロール権限</p>
                 {channel.rolePermissions.map((perm, roleIndex) => (

@@ -2,9 +2,6 @@ import { db } from "@/db";
 
 import type { ResourceStore, SessionCategory, SessionChannel, SessionRole } from "./types";
 
-// db (Dexie) を back に持つ本番 ResourceStore。sessionId スコープの Role/Channel/Category を
-// ロードし、add/remove/update は db に永続化しつつローカル配列も更新する。ステップ実行のたびに
-// ロードし直す (useSessionRunner が毎回 load する) ため、前ステップの副作用が反映される。
 export const loadResourceStore = async (
   sessionId: number,
   guildId: string,

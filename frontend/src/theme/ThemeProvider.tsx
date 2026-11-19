@@ -4,8 +4,6 @@ import { type THEME, THEMES } from ".";
 
 const THEME_LOCAL_STORAGE_KEY = "theme";
 
-// SSR では window / localStorage が無いので既定値 "light" を返し、クライアントで
-// 保存済みテーマを復元する。
 function readInitialTheme(): THEME {
   if (typeof window === "undefined") return "light";
   let theme: THEME = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -14,9 +12,7 @@ function readInitialTheme(): THEME {
     if (storedTheme && THEMES.includes(storedTheme as THEME)) {
       theme = storedTheme as THEME;
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
   return theme;
 }
 
@@ -31,9 +27,7 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
     setTheme(newTheme);
     try {
       localStorage.setItem(THEME_LOCAL_STORAGE_KEY, newTheme);
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
   const value = { theme, setTheme: onSetTheme };
   return (

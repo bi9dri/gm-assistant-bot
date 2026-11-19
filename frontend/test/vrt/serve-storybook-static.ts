@@ -1,7 +1,3 @@
-// 静的ビルドした Storybook (`storybook-static/`) を Node の標準 http で配信する
-// 小さな CLI。新規 npm dep を増やさず supply chain ルール (≥7 day cooldown) を
-// 回避する。Playwright config の webServer から起動される。
-
 import { createReadStream, existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize, resolve } from "node:path";
@@ -29,7 +25,6 @@ const CONTENT_TYPES: Record<string, string> = {
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
   const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
-  // パストラバーサル防止: root 配下に正規化して閉じ込める。
   const filePath = normalize(join(root, requestedPath));
   const fallback = join(root, "index.html");
   const target = existsSync(filePath) ? filePath : fallback;

@@ -13,8 +13,6 @@ interface MenuItem {
   label: string;
 }
 
-// text カテゴリ (本文・見出し) はシナリオドキュメント UI 専用のため、ここには並べない
-// (docs: scenario-editor-architecture D15)。
 const CATEGORY_ORDER: StepRegistryEntry["category"][] = ["action", "branch", "tool"];
 
 interface StepTypeMenuProps {
@@ -23,8 +21,6 @@ interface StepTypeMenuProps {
   onPick: (type: Step["type"]) => void;
 }
 
-// registry からステップタイプをカテゴリ別に並べるドロップダウン。
-// 並べるカテゴリと挿入先の決め方は呼び出し側 (UI ごと) が決める。
 export const StepTypeMenu = ({ label, categories, onPick }: StepTypeMenuProps) => {
   const items = useMemo<MenuItem[]>(
     () =>

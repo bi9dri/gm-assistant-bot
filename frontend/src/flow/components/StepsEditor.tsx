@@ -14,30 +14,23 @@ const SAVED_INDICATOR_MS = 2000;
 
 type SaveState = "saved" | "invalid" | "error" | null;
 
-// edit モードの 3 カラムレイアウト + store 初期化 + flowData/gameFlags の自動保存。
 export const StepsEditor = ({ template }: { template: Template }) => {
   const initialize = useEditorStore((state) => state.initialize);
   const [loadedId, setLoadedId] = useState<number | null>(null);
   const [saveState, setSaveState] = useState<SaveState>(null);
 
-  // 毎保存で useLiveQuery が template を差し替えても購読を張り直さないよう、
-  // 購読 effect は template.id でのみ依存し、最新レコードは ref で読む。
   const templateRef = useRef(template);
   templateRef.current = template;
 
-  // template 切り替え時に store を初期化する。
   useEffect(() => {
     if (loadedId === template.id) return;
     initialize(template.getParsedFlowData(), template.getParsedGameFlags());
     setLoadedId(template.id);
   }, [template, loadedId, initialize]);
 
-  // flowData / gameFlags の変更を debounce して Template に保存する。
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let savedTimeout: ReturnType<typeof setTimeout> | null = null;
-    // 保存要求の世代。update() の解決順が前後しても最新要求の結果だけを UI に反映し、
-    // 遅延した "保存しました" が後続の "未保存"/"失敗" を上書きするのを防ぐ。
     let saveSeq = 0;
 
     const unsubscribe = useEditorStore.subscribe((state, prev) => {
@@ -47,12 +40,8 @@ export const StepsEditor = ({ template }: { template: Template }) => {
       timeout = setTimeout(() => {
         const seq = ++saveSeq;
         const { flowData, gameFlags } = useEditorStore.getState();
-        // FlowDataSchema を満たさない編集途中状態 (空のロール行・空の項目など) は保存しない。
-        // Template.update が parse で throw して編集が無言で失われるのを防ぎ、「未保存」を明示する。
         const parsed = FlowDataSchema.safeParse(flowData);
         if (!parsed.success) {
-          // 「未保存」を sticky に保つ。直前の save 成功が予約した自動消去タイマーに
-          // この警告を消されないようクリアする。
           if (savedTimeout !== null) clearTimeout(savedTimeout);
           savedTimeout = null;
           setSaveState("invalid");
@@ -61,7 +50,7 @@ export const StepsEditor = ({ template }: { template: Template }) => {
         templateRef.current
           .update({ flowData, gameFlags })
           .then(() => {
-            if (seq !== saveSeq) return; // 後続の保存要求が出ていれば古い結果は捨てる
+            if (seq !== saveSeq) return;
             setSaveState("saved");
             if (savedTimeout !== null) clearTimeout(savedTimeout);
             savedTimeout = setTimeout(() => setSaveState(null), SAVED_INDICATOR_MS);
@@ -69,7 +58,6 @@ export const StepsEditor = ({ template }: { template: Template }) => {
           .catch((error: unknown) => {
             console.error("Failed to autosave flowData:", error);
             if (seq !== saveSeq) return;
-            // 「保存に失敗」も sticky に保つ (同上)。
             if (savedTimeout !== null) clearTimeout(savedTimeout);
             savedTimeout = null;
             setSaveState("error");

@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// 同一オリジン `/api` 中継。preview の origin はデプロイごとに変わるため本番 API の
-// CORS 許可 origin に足せず、Worker が本番 API へ転送する。
 const PROD_API_ORIGIN = "https://gm-assistant-bot-api.bidri.dev";
 
-// 転送先の上書き用 (staging 等)。未設定なら DEV=ローカル API、それ以外=本番 API。
 function apiOrigin(): string {
   return (
     import.meta.env.VITE_API_PROXY_TARGET ??
@@ -12,8 +9,6 @@ function apiOrigin(): string {
   );
 }
 
-// クライアントが相対 URL を使うビルド (api.ts と同じ解決) でのみ中継する。
-// 本番ビルドは直接 API origin を叩くので、この route は 404 にして開かない。
 function relayEnabled(): boolean {
   return (import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "" : PROD_API_ORIGIN)) === "";
 }

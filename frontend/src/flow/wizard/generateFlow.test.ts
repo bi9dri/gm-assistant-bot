@@ -3,7 +3,6 @@ import { describe, expect, it } from "vite-plus/test";
 import { FlowDataSchema, type Step } from "../schema";
 import { defaultWizardParams, generateWizardFlow, type WizardParams } from "./generateFlow";
 
-// テスト用の決定的な id 生成 (id-0, id-1, ...)。
 const seqId = () => {
   let n = 0;
   return () => `id-${n++}`;
@@ -12,7 +11,6 @@ const seqId = () => {
 const gen = (params: Partial<WizardParams>) =>
   generateWizardFlow({ ...defaultWizardParams, ...params }, seqId());
 
-// 準備セクションの step を type で引く。
 const setupStepsOf = (params: Partial<WizardParams>) => gen(params).sections[0].steps;
 const findStep = (steps: Step[], type: Step["type"]) => steps.find((s) => s.type === type);
 
@@ -97,7 +95,6 @@ describe("generateWizardFlow", () => {
     );
     if (channelStep?.type !== "CreateChannel") throw new Error("unreachable");
 
-    // 共通チャンネル・VC: 接頭辞付き PL / 観戦。キャラチャンネル: 接頭辞付き観戦を閲覧のみ。
     expect(channelStep.channels).toEqual([
       {
         name: "全体",

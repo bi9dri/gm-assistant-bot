@@ -4,8 +4,6 @@ import { FileSystem } from "@/fileSystem";
 
 import { formatFileSize, saveFileToOPFS } from "./messageSchema";
 
-// FileSystem は OPFS に依存するため、プロトタイプの readFile/writeFile だけを
-// スパイで差し替える (vi.mock はエイリアス解決前に登録されるため効かない)。
 const mockReadFile = vi.spyOn(FileSystem.prototype, "readFile");
 const mockWriteFile = vi.spyOn(FileSystem.prototype, "writeFile");
 

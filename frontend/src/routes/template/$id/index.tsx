@@ -21,8 +21,6 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  // useLiveQuery 自体が「ロード中」を undefined で表現するため、Template.getById の
-  // undefined (= 見つからない) を null に正規化して not-found 状態を区別する。
   const template = useLiveQuery(async () => (await Template.getById(Number(id))) ?? null, [id]);
 
   const [templateName, setTemplateName] = useState("");

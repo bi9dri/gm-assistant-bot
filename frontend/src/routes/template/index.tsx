@@ -10,7 +10,6 @@ import { hasScenarioContent } from "@/scenario/schema";
 import { matchesTemplateFilter, type TemplateFilterCriteria } from "@/templateFilter";
 import { useToast } from "@/toast/ToastProvider";
 
-// 所要時間は「以内」で絞るため選択肢を固定する (分)。
 const DURATION_OPTIONS = [60, 120, 180, 240, 360];
 
 export const Route = createFileRoute("/template/")({
@@ -23,10 +22,7 @@ function RouteComponent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [criteria, setCriteria] = useState<TemplateFilterCriteria>({});
 
-  // 件数が高々数十なのでインデックス検索はせず、取得済みの一覧を絞る
-  // (複数条件の AND は Dexie でも結局 1 インデックス + フィルタになる)。
   const systems = [...new Set(templates?.map((t) => t.system).filter((s) => s !== undefined))];
-  // 選択中のシステムが編集で一覧から消えることがある。選択肢に無い値は「すべて」に戻す。
   const system =
     criteria.system !== undefined && systems.includes(criteria.system)
       ? criteria.system

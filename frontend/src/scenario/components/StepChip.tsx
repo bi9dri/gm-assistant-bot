@@ -3,21 +3,15 @@ import clsx from "clsx";
 import { StepRowContent } from "@/flow/components/StepList";
 import type { Step } from "@/flow/schema";
 
-// 文中の操作 1 つ分の見た目 (docs: scenario-editor-architecture D7 / D24)。
-// 1 行サマリだけを出し、編集は右カラムの DetailPanel に任せる。行内にフォームを
-// 押し込むと、React Flow を離れる原因になったコンテンツのはみ出しが再発する。
-
 interface ChipShellProps {
   step: Step;
   selected: boolean;
   onSelect: () => void;
-  // マーカー・実行ボタンなど、モードごとの付属物。
   children?: React.ReactNode;
 }
 
 export const StepChip = ({ step, selected, onSelect, children }: ChipShellProps) => (
   <span
-    // 目次・カーソル追従のアンカー。
     id={`step-${step.id}`}
     contentEditable={false}
     className={clsx(
@@ -32,8 +26,6 @@ export const StepChip = ({ step, selected, onSelect, children }: ChipShellProps)
   </span>
 );
 
-// 実体を失った参照。保存時に落ちるのは doc から参照されなくなった実体のほうなので、
-// この向きの食い違いは自動では直らない。無言で消さずに本文上で見せる。
 export const MissingStepChip = () => (
   <span className="mx-0.5 rounded border border-error px-1.5 py-0.5 text-xs text-error">
     (削除された操作)

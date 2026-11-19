@@ -3,22 +3,16 @@ import { fisherYatesShuffle } from "@/components/Node/utils/shuffle";
 
 import type { KanbanStep, RecordCombinationStep } from "../schema";
 
-// ツールの「操作」ロジック (旧 Counter/RandomSelect/ShuffleAssign/Kanban/RecordCombination
-// ノードから抽出)。フラグ/ステップへの副作用ではなく次の値/結果を返す純関数にして
-// unit-test 可能にする。shuffle は差し替え可能 (テストでは恒等シャッフルを渡して検証する)。
-
 type Shuffle = <T>(array: T[]) => T[];
 
 const trimmed = (values: string[]): string[] =>
   values.map((value) => value.trim()).filter((value) => value !== "");
 
-// Counter: 現在値 (数値化不能なら 0) に step を足した文字列。
 export const counterNextValue = (current: string | undefined, step: number): string => {
   const base = Number(current ?? "0");
   return String((Number.isFinite(base) ? base : 0) + step);
 };
 
-// RandomSelect: 候補から 1 つ抽選する。候補が空なら undefined。
 export const drawRandomSelect = (
   items: string[],
   shuffle: Shuffle = fisherYatesShuffle,
@@ -33,8 +27,6 @@ interface ShuffleAssignResult {
   flagPatch: Record<string, string>;
 }
 
-// ShuffleAssign: items を targets にラウンドロビンで割り当て、`prefix_target` フラグに集約する。
-// items か targets が空なら undefined。
 export const shuffleAssign = (
   items: string[],
   targets: string[],
@@ -63,13 +55,9 @@ export const shuffleAssign = (
 
 type CardPlacement = KanbanStep["cardPlacements"][number];
 
-// Kanban: 実行時盤面の表示用配置。カードがまだ一度も動かされていなければ
-// initialPlacements を盤面として見せる (旧 KanbanNode の execute モード初期化と同義)。
 export const kanbanBoardPlacements = (step: KanbanStep): { cardId: string; columnId: string }[] =>
   step.cardPlacements.length > 0 ? step.cardPlacements : step.initialPlacements;
 
-// Kanban: カード移動後の cardPlacements。初回移動時は initialPlacements から盤面を
-// 確定した上で動かす。配置の並び順に意味はない (表示順は step.cards 由来)。
 export const moveKanbanCard = (
   step: KanbanStep,
   cardId: string,
@@ -86,8 +74,6 @@ export const moveKanbanCard = (
   ];
 };
 
-// RecordCombination: ペアを検証して追加した recordedPairs を返す。
-// 無効 (重複・自己ペア等) なら undefined。
 export const recordPair = (
   step: RecordCombinationStep,
   sourceId: string,

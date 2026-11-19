@@ -3,8 +3,6 @@ import { describe, expect, test } from "vite-plus/test";
 
 import { buildOutline, sectionStepIds } from "./outline";
 
-// 目次 (D22) と見出しの「ここから再実行」の範囲 (D9) はどちらも doc の heading から求める。
-
 const heading = (level: number, text: string): JSONContent => ({
   type: "heading",
   attrs: { level },
@@ -34,8 +32,6 @@ describe("buildOutline", () => {
     ]);
   });
 
-  // 引用や箇条書きの中にも見出しは置ける (ツールバーの引用は見出しをそのまま包む)。
-  // 目次が拾わないと index が DOM の h1〜h3 の並びとずれ、別の見出しへ飛ぶ。
   test("引用や箇条書きの中の見出しも文書順で拾う", () => {
     const source = doc(
       heading(1, "導入"),

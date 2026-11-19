@@ -7,9 +7,6 @@ import type { Step } from "@/flow/schema";
 import { BRANCH_NODE_NAME, STEP_NODE_NAME } from "../schema";
 import { INSERTABLE_CATEGORIES } from "./EditorChips";
 
-// 本文の書式と文中への操作挿入 (docs: scenario-editor-architecture D20 / D24)。
-// Markdown 風の打鍵は ProseMirror の入力ルールが担うため、ここは補助の並び。
-
 const ToolbarButton = ({
   label,
   active,
@@ -22,7 +19,6 @@ const ToolbarButton = ({
   <button
     type="button"
     className={clsx("btn btn-ghost btn-xs", active && "btn-active")}
-    // ボタンを押した瞬間に本文のキャレットが飛ぶと、書式が別の場所に当たる。
     onMouseDown={(event) => event.preventDefault()}
     onClick={onClick}
   >
@@ -35,7 +31,6 @@ export const Toolbar = ({
   onInsertStep,
 }: {
   editor: Editor | null;
-  // 実体を作って id を返す。ノードの挿入だけをここで行う (doc の変更経路は 1 本)。
   onInsertStep: (type: Step["type"]) => Step | undefined;
 }) => {
   if (editor === null) return null;

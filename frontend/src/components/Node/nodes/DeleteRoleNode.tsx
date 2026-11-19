@@ -103,7 +103,6 @@ export const DeleteRoleNode = ({
         }
       }
 
-      // If any role is not found, show error and abort
       if (notFoundNames.length > 0) {
         addToast({
           message: `ロールが見つかりません: ${notFoundNames.join(", ")}`,

@@ -4,9 +4,6 @@ import { FileSystem } from "@/fileSystem";
 
 import type { DiscordGateway } from "./types";
 
-// 本番の DiscordGateway 実装。旧 ApiClient を意味的な操作に薄くラップし、guildId を閉じ込める。
-// sendMessage は添付を filePath で受け取り、ここで OPFS から File を読んでから送る
-// (execute() 自身は FileSystem に触れず純粋なまま)。
 export const createDiscordGateway = (bot: DiscordBotData, guildId: string): DiscordGateway => {
   const client = new ApiClient(bot.token);
   const fs = new FileSystem();

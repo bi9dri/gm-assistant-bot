@@ -24,9 +24,6 @@ interface MessageBlocksEditorProps {
   nodeId: string;
 }
 
-// SendMessage / CombinationSendMessage 共通のメッセージブロック編集 UI。
-// 添付の保存先 (templateId/sessionId) は useAttachmentTarget() から取得し、
-// 取得できない場合は添付を無効化してテキストのみ編集できるようにする。
 export const MessageBlocksEditor = ({ messages, onChange, nodeId }: MessageBlocksEditorProps) => {
   const { templateId, sessionId } = useAttachmentTarget();
   const { addToast } = useToast();
@@ -50,7 +47,6 @@ export const MessageBlocksEditor = ({ messages, onChange, nodeId }: MessageBlock
   const handleRemoveMessageBlock = (messageIndex: number) => {
     const fs = new FileSystem();
     for (const attachment of messages[messageIndex].attachments) {
-      // ベストエフォート削除。失敗しても処理は続けるが、孤児ファイルの調査用にログは残す。
       void fs.deleteFile(attachment.filePath).catch((error: unknown) => {
         console.error("Failed to delete attachment file:", error);
       });

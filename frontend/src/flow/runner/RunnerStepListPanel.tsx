@@ -2,8 +2,6 @@ import { useRunnerStore } from "../store/runnerStore";
 import { RunnerStepList } from "./RunnerStepList";
 import type { RunHandlers } from "./types";
 
-// 左カラム全体 (execute モード)。セクションを縦に並べ、各セクションのステップリストを描画する。
-// edit モードと違いセクションの追加・改名は無く、折りたたみのみ可能。
 export const RunnerStepListPanel = ({ handlers }: { handlers: RunHandlers }) => {
   const sections = useRunnerStore((state) => state.flowData.sections);
   const toggleSection = useRunnerStore((state) => state.toggleSection);

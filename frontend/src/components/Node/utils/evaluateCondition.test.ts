@@ -259,7 +259,6 @@ describe("evaluateRule", () => {
         value: "nonExistentFlag",
         valueType: "flag",
       };
-      // team is "" and nonExistentFlag resolves to "", so they are equal
       expect(evaluateRule(rule, flags)).toBe(true);
     });
 
@@ -387,7 +386,6 @@ describe("evaluateConditionNode", () => {
 
   describe("nested conditions", () => {
     it("A AND (B OR C) - all true", () => {
-      // team=A AND (role=detective OR status=active) → true
       const node: ConditionNode = {
         type: "group",
         id: "g1",
@@ -398,7 +396,6 @@ describe("evaluateConditionNode", () => {
     });
 
     it("A AND (B OR C) - outer false", () => {
-      // team=Z AND (role=detective OR status=active) → false
       const node: ConditionNode = {
         type: "group",
         id: "g1",
@@ -435,8 +432,6 @@ describe("evaluateConditionNode", () => {
     });
 
     it("A AND (B OR (C AND false)) - inner OR false, outer AND false", () => {
-      // team=A AND (role=detective OR (status=active AND team=Z))
-      // = true AND (true OR false) = true AND true = true
       const node: ConditionNode = {
         type: "group",
         id: "g1",

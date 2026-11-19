@@ -3,14 +3,6 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { expect, test } from "./fixtures";
-// Storybook の static build (`storybook-static/`) を /iframe.html 経由で開いて
-// 1 ストーリ × 1 theme = 1 snapshot で VRT を行う。`STORY_IDS` を手書きせず
-// `storybook-static/index.json` を読み取って自動列挙する。新しい *.stories.tsx
-// を追加するだけで対応 snapshot が増える。
-//
-// theme 切替は `@storybook/addon-themes` の `withThemeByDataAttribute` decorator が
-// URL globals (`?globals=theme:dark`) を解釈する仕組みに乗っている。Playwright の
-// project.use.theme から worker option として渡された `theme` を URL に append するだけ。
 
 interface StoryEntry {
   id: string;
@@ -54,9 +46,6 @@ for (const id of storyIds) {
     await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`, {
       waitUntil: "domcontentloaded",
     });
-    // `networkidle` は毎回 500ms の idle 待ちを払う。描画完了は root の子要素の
-    // 出現と font 読み込みで判定し、レイアウトの収束は toHaveScreenshot が
-    // 「連続 2 フレーム一致」で待つので固定 sleep は置かない。
     await page.locator("#storybook-root > *").first().waitFor();
     await page.evaluate(async () => {
       await document.fonts.ready;

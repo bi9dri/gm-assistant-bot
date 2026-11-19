@@ -29,7 +29,6 @@ const toNumber = (value: string): number | undefined => {
 
 const toOptionalString = (value: string): string | undefined => value.trim() || undefined;
 
-// 呼び出し側で開いている間だけマウントする (閉じるたびに編集中の値が捨てられる)。
 export const TemplateMetaModal = ({ id, name, meta, onClose }: Props) => {
   const { addToast } = useToast();
   const [form, setForm] = useState<FormState>(() => toForm(meta));
@@ -60,7 +59,6 @@ export const TemplateMetaModal = ({ id, name, meta, onClose }: Props) => {
       coverPath: toOptionalString(form.coverPath),
     };
 
-    // 保存前に弾かないと Template.update の中で zod が throw し、どの項目が悪いか伝わらない。
     if (!TemplateMetaSchema.safeParse(next).success) {
       addToast({ message: "人数と所要時間は 1 以上の整数で入力してください", status: "error" });
       return;

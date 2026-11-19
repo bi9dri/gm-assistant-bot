@@ -6,11 +6,6 @@ import { useRunnerStore } from "../store/runnerStore";
 import { collectSteps } from "../treeOps";
 import { counterNextValue } from "./toolOperate";
 
-// 右カラム常駐のツール欄 (issue #182)。フロー内の Counter / Kanban / RecordCombination を
-// ステップ選択に関わらず任意のタイミングで操作できるようにする。
-// - Counter: 単純なのでこの欄で直接 +N 操作する。
-// - Kanban / RecordCombination: クリックで該当ステップを選択し、中央カラムの操作 UI で
-//   詳細操作する (盤面・記録フォームは右カラムには収まらない)。
 const DOCK_TOOL_TYPES = ["Counter", "Kanban", "RecordCombination"] as const;
 
 type DockToolStep = Extract<Step, { type: (typeof DOCK_TOOL_TYPES)[number] }>;

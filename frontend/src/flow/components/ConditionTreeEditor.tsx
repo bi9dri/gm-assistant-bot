@@ -4,10 +4,6 @@ import { ResourceSelector } from "@/components/Node/utils/ResourceSelector";
 
 import { generateId } from "../ids";
 
-// ConditionalBranchNode から抽出した条件ツリーエディタ (React Flow 非依存)。
-// 単一の ConditionNode (rule | group) を controlled に再帰編集する。
-// store / Handle / エッジ操作には触れず、value -> onChange のみを行う。
-
 const MAX_NESTING_DEPTH = 4;
 
 const OPERATOR_LABELS = {
@@ -23,7 +19,6 @@ const GROUP_BORDER_COLORS = ["#60a5fa", "#a78bfa", "#4ade80", "#fb923c"];
 const getGroupBorderColor = (depth: number): string =>
   GROUP_BORDER_COLORS[depth % GROUP_BORDER_COLORS.length];
 
-// 「条件を追加」「グループに子を追加」で生成する空ルール。id は採番する。
 export const createDefaultRule = (): RuleNode => ({
   type: "rule",
   id: generateId(),
@@ -32,8 +27,6 @@ export const createDefaultRule = (): RuleNode => ({
   value: "",
   valueType: "literal",
 });
-
-// ---- RuleEditor ----
 
 interface RuleEditorProps {
   nodeId: string;
@@ -147,8 +140,6 @@ function RuleEditor({ nodeId, rule, onChange, onRemove, onWrapInGroup }: RuleEdi
   );
 }
 
-// ---- GroupEditor ----
-
 interface GroupEditorProps {
   nodeId: string;
   group: GroupNode;
@@ -168,7 +159,6 @@ function GroupEditor({ nodeId, group, onChange, onRemove, depth }: GroupEditorPr
   const handleChildRemove = (index: number) => {
     const newChildren = group.children.filter((_, i) => i !== index);
     if (newChildren.length === 1) {
-      // グループを解除して残り 1 つの子で置き換える
       onChange(newChildren[0]);
     } else {
       onChange({ ...group, children: newChildren });
@@ -242,8 +232,6 @@ function GroupEditor({ nodeId, group, onChange, onRemove, depth }: GroupEditorPr
   );
 }
 
-// ---- ConditionNodeEditor (rule / group の相互再帰ディスパッチ) ----
-
 interface ConditionNodeEditorProps {
   nodeId: string;
   node: ConditionNode;
@@ -283,8 +271,6 @@ function ConditionNodeEditor({
     />
   );
 }
-
-// ---- ConditionTreeEditor (公開 controlled component) ----
 
 interface ConditionTreeEditorProps {
   nodeId: string;

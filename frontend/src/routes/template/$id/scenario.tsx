@@ -13,8 +13,6 @@ function RouteComponent() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  // useLiveQuery の undefined (ロード中) と Template.getById の undefined (not-found) を
-  // null に正規化して区別する (既存 routes/template/$id.tsx と同じ規約)。
   const template = useLiveQuery(async () => (await Template.getById(Number(id))) ?? null, [id]);
 
   if (template === undefined) {

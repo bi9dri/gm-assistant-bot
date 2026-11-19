@@ -21,9 +21,6 @@ import { RunHandlersProvider, RunnerBranchBlock, RunnerStepChip } from "./Runner
 import { ScenarioDocument } from "./ScenarioDocument";
 import { TableOfContents } from "./TableOfContents";
 
-// 実行モードの本文は読み取り専用 (docs: scenario-editor-architecture フェーズ 3)。
-// 保存対象は GameSession.scenarioData (doc はそのまま、steps は実行痕跡が乗ったもの) と
-// ライブの GameSession.gameFlags。
 const runnerSource = (doc: JSONContent): AutosaveSource => ({
   subscribe: (listener) =>
     useRunnerStore.subscribe((state, prev) => {
@@ -39,11 +36,8 @@ const runnerSource = (doc: JSONContent): AutosaveSource => ({
 
 const CHIPS = { Step: RunnerStepChip, Branch: RunnerBranchBlock };
 
-// 読み込み前のプレースホルダ。毎レンダー作ると autosave の source が張り直される。
 const EMPTY_DOC = emptyDoc();
 
-// シナリオ実行画面 (docs: scenario-editor-architecture D10 / D16)。
-// 目次 + 本文 + 詳細/フラグ/ツールの 3 カラムで、編集画面と同じ並びにする。
 export const ScenarioRunner = ({ session, bot }: { session: GameSession; bot: DiscordBotData }) => {
   const initialize = useRunnerStore((state) => state.initialize);
   const setCursor = useRunnerStore((state) => state.setCursor);
@@ -52,8 +46,6 @@ export const ScenarioRunner = ({ session, bot }: { session: GameSession; bot: Di
   const [loaded, setLoaded] = useState<{ id: number; doc: JSONContent } | null>(null);
   const { runStep } = useSessionRunner(session, bot);
 
-  // session 切り替え時に store を初期化する。effect の登録順がそのまま実行順になるため、
-  // 自動保存の購読より前に置く (逆だと開いただけで保存が走る)。
   useEffect(() => {
     if (loaded?.id === session.id) return;
     const { doc, steps } = session.getParsedScenarioData();
@@ -63,12 +55,10 @@ export const ScenarioRunner = ({ session, bot }: { session: GameSession; bot: Di
   }, [session, loaded, initialize, setCursor]);
 
   const doc = loaded?.doc ?? EMPTY_DOC;
-  // source が毎レンダー変わると autosave が購読を張り直し、debounce が効かなくなる。
   const source = useMemo(() => runnerSource(doc), [doc]);
   const saveState = useScenarioAutosave(session, source);
   const editor = useScenarioDocument({ doc, editable: false, recordKey: loaded?.id ?? null });
 
-  // カーソルが動いたらその位置へスクロールを追従させる (D10)。
   useEffect(() => {
     if (cursorId !== null) scrollToStep(cursorId);
   }, [cursorId]);

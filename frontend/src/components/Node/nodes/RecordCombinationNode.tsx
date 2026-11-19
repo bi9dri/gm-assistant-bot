@@ -26,10 +26,6 @@ import {
   type FilteredOption,
 } from "../utils";
 
-// ============================================================
-// Schema Definitions
-// ============================================================
-
 const OptionItemSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -47,7 +43,7 @@ const CombinationConfigSchema = z.object({
   mode: z.enum(["same-set", "different-set"]),
   allowSelfPairing: z.boolean().default(false),
   allowDuplicates: z.boolean().default(false),
-  distinguishOrder: z.boolean().default(true), // true: A→B ≠ B→A, false: A-B = B-A
+  distinguishOrder: z.boolean().default(true),
   allowMultipleAssignments: z.boolean().default(false),
 });
 
@@ -72,17 +68,9 @@ export const DataSchema = BaseNodeDataSchema.extend({
 type RecordCombinationNodeData = z.infer<typeof DataSchema>;
 type RecordCombinationNode = Node<RecordCombinationNodeData, "RecordCombination">;
 
-// ============================================================
-// Utility Functions
-// ============================================================
-
 function generateId(): string {
   return crypto.randomUUID();
 }
-
-// ============================================================
-// Sub Components
-// ============================================================
 
 interface OptionListEditorProps {
   label: string;
@@ -173,10 +161,8 @@ function PairingInputForm({
       if (!config.allowDuplicates) {
         const existingPair = recordedPairs.find((pair) => {
           if (config.distinguishOrder) {
-            // 順序を区別: A→B と B→A は別扱い
             return pair.sourceId === selectedSourceId && pair.targetId === opt.id;
           }
-          // 順序を区別しない: A-B と B-A は同じ扱い
           return (
             (pair.sourceId === selectedSourceId && pair.targetId === opt.id) ||
             (pair.sourceId === opt.id && pair.targetId === selectedSourceId)
@@ -299,10 +285,6 @@ function PairingTimeline({
   );
 }
 
-// ============================================================
-// Main Component
-// ============================================================
-
 export const RecordCombinationNode = ({
   id,
   data,
@@ -391,7 +373,6 @@ export const RecordCombinationNode = ({
       <BaseNodeContent>
         {!isExecuteMode && (
           <>
-            {/* Config Section - 固定表示 */}
             <div className="collapse collapse-arrow bg-base-200 shrink-0">
               <input type="checkbox" className="nodrag" />
               <div className="collapse-title text-sm font-medium py-2 min-h-0">設定</div>
@@ -447,7 +428,6 @@ export const RecordCombinationNode = ({
               </div>
             </div>
 
-            {/* Options - スクロール領域 */}
             <div
               className="flex flex-col gap-4 overflow-y-auto nowheel"
               style={{ maxHeight: NODE_CONTENT_HEIGHTS.md }}
@@ -474,7 +454,6 @@ export const RecordCombinationNode = ({
 
         {isExecuteMode && (
           <>
-            {/* Pairing Input Form */}
             <PairingInputForm
               config={data.config}
               sourceOptions={data.sourceOptions.items}
@@ -488,7 +467,6 @@ export const RecordCombinationNode = ({
 
             <div className="divider my-2" />
 
-            {/* Timeline */}
             <PairingTimeline
               pairs={data.recordedPairs}
               sourceOptions={data.sourceOptions.items}

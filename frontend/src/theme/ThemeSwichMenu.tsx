@@ -6,8 +6,6 @@ import { useTheme } from "./ThemeProvider";
 
 export const ThemeSwichMenu = () => {
   const { theme, setTheme } = useTheme();
-  // SSR は常に "light" で描画するため、初回 render をテーマ非依存に揃えて
-  // hydration mismatch を避け、mount 後に正しい選択状態を付ける。
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);

@@ -1,32 +1,3 @@
-/**
- * PortaledSelect - React Flowノード内で使用するためのselectコンポーネント
- *
- * ## なぜこのコンポーネントが必要か
- *
- * React Flowはノードに `transform: translate3d(x, y, 0) scale(zoom)` を適用して
- * ズーム・パン機能を実装している。CSSの仕様により、`transform`プロパティを持つ要素は
- * 新しいstacking contextを作成し、その子孫の`position: absolute/fixed`の
- * 計算基準が変わってしまう。
- *
- * そのため、通常の<select>やDaisyUIのselectコンポーネントを使うと、
- * ドロップダウンメニューがノードから離れた位置に表示されるバグが発生する。
- *
- * ## このコンポーネントの解決策
- *
- * React Portalを使用してドロップダウンメニューを`document.body`直下にレンダリングし、
- * React Flowのtransformの影響を受けないようにする。
- *
- * ## いつ使うべきか
- *
- * - React Flowノード内でドロップダウン選択UIが必要な場合
- * - transformが適用された親要素の中でドロップダウンを使う場合
- *
- * ## いつ使わなくてよいか
- *
- * - React Flowノード外での通常のselect（DaisyUIのselectで十分）
- * - ラジオボタンやチェックボックスで代替できる場合（そちらの方がシンプル）
- */
-
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 
@@ -61,7 +32,6 @@ export function PortaledSelect({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
-  // 位置を計算
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
@@ -73,7 +43,6 @@ export function PortaledSelect({
     }
   }, []);
 
-  // トグル動作
   const handleToggle = () => {
     if (disabled) return;
     if (isOpen) {
@@ -84,7 +53,6 @@ export function PortaledSelect({
     }
   };
 
-  // 各種イベントで閉じる
   useEffect(() => {
     if (!isOpen) return;
 
@@ -123,7 +91,6 @@ export function PortaledSelect({
     };
   }, [isOpen]);
 
-  // 選択された項目のラベルを取得
   const selectedLabel = options.find((o) => o.id === value)?.label;
 
   return (
@@ -144,7 +111,6 @@ export function PortaledSelect({
       {isOpen &&
         createPortal(
           <>
-            {/* 背景オーバーレイ - クリックで閉じる */}
             <div className="fixed inset-0 z-9998" onClick={() => setIsOpen(false)} />
             <ul
               ref={menuRef}

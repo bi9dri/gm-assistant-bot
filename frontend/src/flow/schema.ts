@@ -4,12 +4,6 @@ import { DynamicValueSchema } from "@/components/Node/utils/DynamicValue";
 import type { ConditionNode } from "@/components/Node/utils/evaluateCondition";
 import { MessageBlockSchema } from "@/components/Node/utils/messageSchema";
 
-// ステップツリー型データモデル (issue #182 / #183)。
-// reactFlowData (ノード+エッジ+座標) を置き換える新表現で、
-// Section[] > Step[] のネスト JSON を丸ごと保存する。座標・viewport は持たない。
-
-// ---- 条件ツリー (旧 ConditionalBranchNode と同形。型は evaluateCondition と共有) ----
-
 const RuleNodeSchema = z.object({
   type: z.literal("rule"),
   id: z.string(),
@@ -29,19 +23,13 @@ const ConditionNodeSchema: z.ZodType<ConditionNode> = z.union([
   }),
 ]);
 
-// ---- ステップ共通フィールド ----
-
 const StepBaseSchema = z.object({
   id: z.string(),
   title: z.string(),
-  // GM 向けメモ。旧 Comment ノードの吸収先でもある
   memo: z.string().default(""),
-  // 連鎖実行: 実行完了後に次のステップを自動実行する
   autoAdvance: z.boolean().default(false),
   executedAt: z.coerce.date().optional(),
 });
-
-// ---- アクション系ステップ (Discord 操作) ----
 
 const CreateRoleStepSchema = StepBaseSchema.extend({
   type: z.literal("CreateRole"),
@@ -125,12 +113,9 @@ const SetGameFlagStepSchema = StepBaseSchema.extend({
   type: z.literal("SetGameFlag"),
   flagKey: z.string().trim(),
   flagValue: z.string().trim(),
-  // edit モードで用意する実行時の選択肢。空なら execute モードは自由入力のまま。
   flagKeyOptions: z.array(z.string().trim()).default([]),
   flagValueOptions: z.array(z.string().trim()).default([]),
 });
-
-// ---- ツール系ステップ (Discord 操作を伴わないフラグ操作 UI) ----
 
 const KanbanLabeledItemSchema = z.object({
   id: z.string(),
@@ -200,21 +185,14 @@ const RecordCombinationStepSchema = StepBaseSchema.extend({
     .default([]),
 });
 
-// ---- 本文ステップ (Discord 操作を伴わないメモ的ステップ) ----
-// 見出しは heading ノードが担うため、Heading ステップ型は持たない
-// (docs: scenario-editor-architecture 「registry 契約の拡張」)。
-
 const TextStepSchema = StepBaseSchema.extend({
   type: z.literal("Text"),
   body: z.string().default(""),
 });
 
-// ---- 分岐ステップ (旧 ConditionalBranch / SelectBranch を統合) ----
-
 export type BranchArm = {
   id: string;
   label: string;
-  // auto モードの評価条件。未指定の枝はデフォルト枝 (else) として末尾にのみ置ける
   condition?: ConditionNode;
   steps: Step[];
 };
@@ -228,18 +206,12 @@ const BranchArmSchema: z.ZodType<BranchArm> = z.object({
 
 const BranchStepSchema = StepBaseSchema.extend({
   type: z.literal("Branch"),
-  // auto: 条件ツリーで自動評価 / select: GM が選択肢から選ぶ
   mode: z.enum(["auto", "select"]),
-  // auto モード: "all" はマッチした全枝を上から順に実行してから合流する
   matchMode: z.enum(["first", "all"]).default("first"),
-  // select モード: 選択結果を書き込むゲームフラグ名
   flagName: z.string().default(""),
   branches: z.array(BranchArmSchema).min(1),
-  // 実行状態: 実行された (auto) / 選択された (select) 枝の id
   executedBranchIds: z.array(z.string()).optional(),
 });
-
-// ---- ステップ / セクション / フロー全体 ----
 
 const StepUnionSchema = z.discriminatedUnion("type", [
   CreateRoleStepSchema,
@@ -312,13 +284,8 @@ export const FlowDataSchema = z.object({
 export type Step = z.infer<typeof StepSchema>;
 export type FlowData = z.infer<typeof FlowDataSchema>;
 
-// 空の FlowData。新規作成時の初期値、およびパース失敗時のフォールバック
-// (defaultReactFlowData と同じ役割)。
 export const defaultFlowData: FlowData = { version: 1, sections: [] };
 
-// ---- ステップタイプ別 schema / 型の re-export ----
-// registry (flow/registry/*) の各エントリが per-type schema を保持するために公開する。
-// 定義そのものは上の Phase 0 のものを変更しない。
 export {
   AddRoleToRoleMembersStepSchema,
   BranchStepSchema,
@@ -340,7 +307,6 @@ export {
   TextStepSchema,
 };
 
-// 個別ステップ型。`Extract<Step, { type: "X" }>` の別名で、各 registry module / DetailPanel が使う。
 export type CreateRoleStep = Extract<Step, { type: "CreateRole" }>;
 export type DeleteRoleStep = Extract<Step, { type: "DeleteRole" }>;
 export type CreateCategoryStep = Extract<Step, { type: "CreateCategory" }>;

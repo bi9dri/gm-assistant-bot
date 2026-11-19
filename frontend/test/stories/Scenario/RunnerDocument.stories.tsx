@@ -13,8 +13,6 @@ import { toRunnerFlow } from "@/scenario/runner";
 
 import { executedSampleSteps, sampleDoc, sampleGameFlags } from "./fixtures";
 
-// 実行モードの本文: 実行済み (✓) / スキップ (⏭) / カーソル (▶) のマーカー、
-// Branch の確定枝の展開を撮る。VRT 各 story は個別 iframe なので store を都度 seed する。
 const seed = (cursorId: string | null, skippedStepIds: string[], runningStepId: string | null) => {
   useRunnerStore.setState({
     flowData: toRunnerFlow(executedSampleSteps),
@@ -60,12 +58,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// ロール作成は実行済み、開始メッセージはスキップ、カーソルは確定枝の中のカウンタ。
 export const Default: Story = {
   args: { cursorId: "ct", skippedStepIds: ["sm"], runningStepId: null },
 };
 
-// 実行中: 実行系ボタンが無効化された状態。
 export const Running: Story = {
   args: { cursorId: "ct", skippedStepIds: ["sm"], runningStepId: "ct" },
 };

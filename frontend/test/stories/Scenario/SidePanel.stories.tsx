@@ -24,7 +24,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// 文中の操作を選択すると、既存 registry の DetailPanel がここに開く (docs: scenario-editor-architecture D7)。
 export const StepSelected: Story = {
   args: { steps: sampleSteps, selectedId: "sm" },
   render: (args) => {

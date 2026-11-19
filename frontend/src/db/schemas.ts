@@ -1,9 +1,5 @@
 import z from "zod";
 
-// ========================================
-// Basic Entity Schemas
-// ========================================
-
 const DiscordBotSchema = z.object({
   id: z.string().nonempty().trim(),
   name: z.string().nonempty().trim(),
@@ -39,10 +35,6 @@ const RoleSchema = z.object({
   name: z.string().nonempty().trim(),
 });
 
-// ========================================
-// JSON Structure Schemas (for gameFlags and reactFlowData)
-// ========================================
-
 export const GameFlagsSchema = z.record(z.string(), z.any());
 
 export const ReactFlowDataSchema = z.object({
@@ -63,49 +55,39 @@ export const defaultReactFlowData: ReactFlowData = {
   viewport: { x: 0, y: 0, zoom: 1 },
 };
 
-// ========================================
-// Complex Entity Schemas (with JSON fields)
-// ========================================
-
 const GameSessionSchema = z.object({
   id: z.number().int(),
   name: z.string().nonempty().trim(),
   guildId: z.string().nonempty().trim(),
   botId: z.string().nonempty().trim(),
-  gameFlags: z.string(), // JSON encoded
-  reactFlowData: z.string(), // JSON encoded
-  flowData: z.string(), // JSON encoded (issue #182 step-list editor)
-  scenarioData: z.string(), // JSON encoded (issue #213 scenario document editor)
+  gameFlags: z.string(),
+  reactFlowData: z.string(),
+  flowData: z.string(),
+  scenarioData: z.string(),
   createdAt: z.date(),
   lastUsedAt: z.date(),
 });
 
-// issue #244: テンプレートのメタ情報。人数と所要時間は 1 シナリオでも範囲を取る
-// (例: 2〜4 人 / 2〜3 時間) ため、下限と上限を別カラムに持つ。
 export const TemplateMetaSchema = z.object({
   system: z.string().optional(),
   playerCountMin: z.number().int().positive().optional(),
   playerCountMax: z.number().int().positive().optional(),
   durationMinutesMin: z.number().int().positive().optional(),
   durationMinutesMax: z.number().int().positive().optional(),
-  coverPath: z.string().optional(), // OPFS: template/{id}/xxx
+  coverPath: z.string().optional(),
 });
 
 const TemplateSchema = z.object({
   id: z.number().int(),
   name: z.string().nonempty().trim(),
-  gameFlags: z.string(), // JSON encoded
-  reactFlowData: z.string(), // JSON encoded
-  flowData: z.string(), // JSON encoded (issue #182 step-list editor)
-  scenarioData: z.string(), // JSON encoded (issue #213 scenario document editor)
+  gameFlags: z.string(),
+  reactFlowData: z.string(),
+  flowData: z.string(),
+  scenarioData: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
   ...TemplateMetaSchema.shape,
 });
-
-// ========================================
-// Import/Export Schemas
-// ========================================
 
 export const TemplateExportSchema = z.object({
   version: z.literal(1),
@@ -114,10 +96,6 @@ export const TemplateExportSchema = z.object({
   reactFlowData: ReactFlowDataSchema,
 });
 
-// ========================================
-// Type Exports
-// ========================================
-
 export type DiscordBotData = z.infer<typeof DiscordBotSchema>;
 export type GuildData = z.infer<typeof GuildSchema>;
 export type CategoryData = z.infer<typeof CategorySchema>;
@@ -125,7 +103,6 @@ export type ChannelData = z.infer<typeof ChannelSchema>;
 export type RoleData = z.infer<typeof RoleSchema>;
 
 export type GameFlags = z.infer<typeof GameFlagsSchema>;
-// ReactFlowData already exported above
 
 export type GameSessionData = z.infer<typeof GameSessionSchema>;
 export type TemplateData = z.infer<typeof TemplateSchema>;
