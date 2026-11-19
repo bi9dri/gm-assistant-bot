@@ -19,7 +19,7 @@
 
 - **Fixed versions only** — no `^` / `~`. Supply chain protection.
 - **Use versions ≥7 days old**, except for security updates. Avoids malicious releases caught shortly after publish.
-- **GitHub Actions (step `uses:`)**: reference release tags; `.github/workflows/actions.lock` pins each ref to a commit. After adding or changing a `uses:`, run `gh actions-lock` and commit the lockfile (never edit it by hand). Reusable workflows (`jobs.<id>.uses`) are not covered by the lockfile, so keep them pinned to a full commit SHA. See [github-actions-lockfile.md](docs/dev/github-actions-lockfile.md).
+- **GitHub Actions (step `uses:`)**: reference release tags; `.github/workflows/actions.lock` pins each ref to a commit. After adding or changing a `uses:`, run `gh actions-lock` and commit the lockfile (never edit it by hand). Reusable workflows (`jobs.<id>.uses`) are not covered by the lockfile, so keep them pinned to a full commit SHA.
 - **Renovate (GitHub App, `.github/renovate.json5`) proposes every update** and enforces the rules above. Don't bump versions by hand — PRs are automatically merged once CI passes. For GitHub Actions it bumps the tag and regenerates `actions.lock` in the same PR.
   - If CI fails on a Renovate PR, fix it on that branch (replace deprecated APIs, adapt to the new API) rather than closing the PR.
   - Pin the pnpm version only in `packageManager`. Renovate does not update `devEngines.packageManager` (renovatebot/renovate#38067), so duplicating it there makes artifact updates fail with `ERR_PNPM_BAD_PM_VERSION`.
@@ -27,20 +27,17 @@
 
 ## Architecture
 
-pnpm workspace monorepo on Node 26 (Vite+ toolchain): `/frontend` (React + TanStack Start, SSR/Workers via `@cloudflare/vite-plugin`), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview は `.github/workflows/preview.yml` が本番ビルドを `wrangler deploy --temporary` で使い捨て Worker に上げる (詳細: `docs/dev/pr-preview-environment.md`)。
+pnpm workspace monorepo on Node 26 (Vite+ toolchain): `/frontend` (React + TanStack Start, SSR/Workers via `@cloudflare/vite-plugin`), `/backend` (Hono on Cloudflare Workers). See each `package.json` for the full stack. PR 動作確認用の preview は `.github/workflows/preview.yml` が本番ビルドを `wrangler deploy --temporary` で使い捨て Worker に上げる。
+
+### Key Constraints
+
+- **Full-height layout chain**: daisyUI `.drawer` is CSS Grid, so `.drawer-content` must stay `height: 100dvh` (`frontend/src/styles.css`). TanStack Router child `beforeLoad` context is not visible from `useRouteContext({ from: "__root__" })`, so `__root.tsx` resolves `layoutMode` by walking `state.matches` from deepest match upward.
+- **Vite plugins (`frontend/vite.config.ts`)**: Place `cloudflare({ viteEnvironment: { name: "ssr" } })` before `tanstackStart()`. Both plugins must be omitted when `STORYBOOK=true` or `VITEST=true` (otherwise Storybook build / Vitest breaks).
+- **SSR safety**: Guard `window`/`localStorage` with `typeof window === "undefined"`. Dynamically import `fake-indexeddb` only when `NODE_ENV === "test"` (and keep it in `optimizeDeps.include`).
 
 ## Docs (`/docs/dev`)
 
-- [node-system-architecture.md](docs/dev/node-system-architecture.md) — required reading before implementing a new node
 - [scenario-editor-architecture.md](docs/dev/scenario-editor-architecture.md) — **required reading before any issue #213 sub-issue work** (scenario-document UI; the settled cross-cutting decisions). New features go here, not into the older UIs.
-- [step-list-editor-architecture.md](docs/dev/step-list-editor-architecture.md) — step-list editor (issue #182). Frozen: kept only to run existing data, but its registry contract is still shared and live
-- [filesystem-architecture.md](docs/dev/filesystem-architecture.md) — OPFS-backed file storage for node attachments
-- [app-shell-layout.md](docs/dev/app-shell-layout.md) — full-height view の高さ連鎖 (drawer / TanStack Router context)
-- [tanstack-start-architecture.md](docs/dev/tanstack-start-architecture.md) — TanStack Start + Cloudflare plugin 構成 (entry / head / plugin 除外の理由)
-- [pr-preview-environment.md](docs/dev/pr-preview-environment.md) — PR ごとの使い捨て Cloudflare Worker preview (作成・破棄・必要な Secrets)
-- [testing-strategy.md](docs/dev/testing-strategy.md) — test pyramid, TDD, coverage strategy
-- [visual-regression-testing.md](docs/dev/visual-regression-testing.md) — VRT の実行・baseline のレビューと main での自動更新・CI 構成
-- [github-actions-lockfile.md](docs/dev/github-actions-lockfile.md) — GitHub Actions の commit 固定 (`actions.lock`) と更新運用
 
 ## Skills (`.agents/skills/`)
 
@@ -56,11 +53,6 @@ See root `package.json` scripts. Run from repo root via `pnpm <script>`, or per-
 After implementing, the task is not done until all of the following pass:
 
 1. `pnpm test` · 2. `pnpm typecheck` · 3. `pnpm format` · 4. `pnpm lint` · 5. `pnpm knip`
-
-## Knowledge Management
-
-- **Update AGENTS.md** when project structure, dev conventions, or the tech stack changes materially.
-- **Add to `/docs/dev/`** for reusable implementation patterns, hard-won troubleshooting knowledge, or significant design decisions (and their rationale).
 
 ## Vite+ Reference
 

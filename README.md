@@ -18,14 +18,6 @@ pnpm workspace monorepo (Node 24 + Vite+):
 | `frontend/` | React + TanStack Start (Vite+) + Tailwind CSS / daisyUI + Zustand + Dexie + React Flow | Cloudflare Workers |
 | `backend/`  | Hono + Zod + discord.js                                                                | Cloudflare Workers |
 
-詳細は `docs/dev/` を参照:
-
-- [node-system-architecture.md](docs/dev/node-system-architecture.md)
-- [filesystem-architecture.md](docs/dev/filesystem-architecture.md)
-- [testing-strategy.md](docs/dev/testing-strategy.md)
-- [tanstack-start-architecture.md](docs/dev/tanstack-start-architecture.md)
-- [pr-preview-environment.md](docs/dev/pr-preview-environment.md)
-
 ## 開発環境セットアップ
 
 ### 前提
@@ -72,10 +64,8 @@ pnpm knip                 # 未使用 export / dep の検出
 ## テスト
 
 - **Unit / 統合**: Vite+ 同梱の Vitest (`vp test` / `pnpm test`)。
-- **Visual Regression Testing**: Playwright + Storybook + MSW。baseline はリポジトリにコミットし、PR では比較のみ行う (意図した差分は `vrt:accepted` ラベルで承認し、`main` で CI が baseline を自動更新する)。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。詳細は [visual-regression-testing.md](docs/dev/visual-regression-testing.md)。
+- **Visual Regression Testing**: Playwright + Storybook + MSW。baseline はリポジトリにコミットし、PR では比較のみ行う (意図した差分は `vrt:accepted` ラベルで承認し、`main` で CI が baseline を自動更新する)。frontend で `pnpm --filter gm-assistant-bot-frontend test:vrt`。
 - **Storybook 単体起動**: `pnpm --filter gm-assistant-bot-frontend storybook` (ポート 6006)。
-
-戦略の詳細は [testing-strategy.md](docs/dev/testing-strategy.md)。
 
 ## デプロイ
 
