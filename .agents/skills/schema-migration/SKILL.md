@@ -109,4 +109,3 @@ delete node.data.names;
 ## 参考
 
 - 実際の実装例: `frontend/src/db/database.ts`（version 2, 3 の upgrade）
-- アーキテクチャの背景: `docs/dev/node-system-architecture.md` の「DataSchema 変更とマイグレーション」セクション
