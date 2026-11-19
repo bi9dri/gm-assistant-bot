@@ -48,6 +48,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 .worktrees/
 
-# Stryker mutation testing artifacts
-.stryker-tmp/
+# Mutator mutation testing artifacts
+.mutator/
 reports/
