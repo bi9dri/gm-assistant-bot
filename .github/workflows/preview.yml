@@ -32,7 +32,7 @@ jobs:
           persist-credentials: false
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
-          node-version: "26.13.0"
+          node-version: "26.13.1"
           cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter 'gm-assistant-bot-frontend' build
