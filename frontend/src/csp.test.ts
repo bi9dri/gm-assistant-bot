@@ -8,8 +8,6 @@ describe("Content-Security-Policy", () => {
   test("script-src は nonce 許可のみ (unsafe-inline・ハッシュ禁止)", () => {
     const scriptSrc = policy.split(";").find((d) => d.trim().startsWith("script-src"));
     expect(scriptSrc).toContain("'nonce-dGVzdG5vbmNl'");
-    // 'unsafe-inline' があると nonce が無視される。ハッシュはビルドごとに変わる
-    // Start の出力と一致しない。style-src の 'unsafe-inline' は対象外。
     expect(scriptSrc).not.toContain("unsafe-inline");
     expect(scriptSrc).not.toContain("sha256-");
   });

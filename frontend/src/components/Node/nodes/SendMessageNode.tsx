@@ -136,7 +136,6 @@ export const SendMessageNode = ({
     updateNodeData(id, { messages: newMessages });
   };
 
-  // Common file processing logic for a specific message block
   const processFiles = useCallback(
     async (messageIndex: number, files: File[]) => {
       const templateId = templateEditorContext?.templateId;
@@ -262,7 +261,6 @@ export const SendMessageNode = ({
       await fs.deleteFile(attachment.filePath);
     } catch (error) {
       console.error("Failed to delete file:", error);
-      // Don't show error if file doesn't exist
     }
 
     const newMessages = [...data.messages];
@@ -289,7 +287,6 @@ export const SendMessageNode = ({
       return;
     }
 
-    // Resolve channel names from targets (direct name or flag-based lookup)
     let gameFlags: Record<string, string> = {};
     const hasFlagTargets = data.channelTargets.some((t) => t.type === "flagKey");
     if (hasFlagTargets) {

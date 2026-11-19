@@ -88,7 +88,6 @@ export const DeleteChannelNode = ({
       }
     }
 
-    // If any channel is not found, show error and abort
     if (notFoundNames.length > 0) {
       addToast({
         message: `チャンネルが見つかりません: ${notFoundNames.join(", ")}`,

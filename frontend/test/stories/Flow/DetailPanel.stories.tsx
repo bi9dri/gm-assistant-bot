@@ -5,8 +5,6 @@ import { getEntry } from "@/flow/registry";
 import type { Step } from "@/flow/schema";
 import { useEditorStore } from "@/flow/store/editorStore";
 
-// registry の defaults をベースに、表示が意味を持つよう具体値を被せた 1 ステップを
-// 単一セクションに入れて選択状態にする。各 step type の DetailPanel を VRT で個別に撮る。
 const stepFor = (type: Step["type"], extra: Record<string, unknown>): Step =>
   ({ ...getEntry(type)?.defaults(), id: type, ...extra }) as Step;
 
@@ -90,8 +88,6 @@ export const Branch = story(
     ],
   }),
 );
-// auto モード: 条件付き枝が ConditionTreeEditor を描画する経路を VRT で押さえる。
-// 決定的にするため id は固定 (generateId / randomUUID を介さない)。
 export const BranchAuto = story(
   stepFor("Branch", {
     mode: "auto",

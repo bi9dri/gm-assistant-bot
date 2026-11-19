@@ -1,6 +1,5 @@
 import { useId } from "react";
 
-// datalist のポップアップはブラウザネイティブ UI のため CSS transform の影響を受けない。
 interface DatalistInputProps {
   value: string;
   onChange: (value: string) => void;

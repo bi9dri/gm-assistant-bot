@@ -1,14 +1,3 @@
-/**
- * VRT 用の固定 seed payload。Date は固定値、id も固定値。
- * playwright fixture から page.evaluate 経由で Dexie に bulkAdd される。
- *
- * 制約:
- * - Date は ISO 文字列で渡し、ブラウザ側で `new Date()` 復元する。Playwright の
- *   page.evaluate 第二引数は構造化複製対象なので Date も渡せるが、JSON シリアライズ
- *   経路で安定させるため意図的に文字列に統一。
- * - reactFlowData / gameFlags は JSON 文字列(Dexie schema が string)。
- */
-
 import { avatarDataUri } from "./avatar";
 
 const FIXED_REACT_FLOW_DATA = JSON.stringify({
@@ -26,8 +15,6 @@ interface SeedTemplate {
   reactFlowData: string;
   createdAtIso: string;
   updatedAtIso: string;
-  // issue #244 のメタ情報。coverColor があるとその色の PNG を coverPath へ書き込む
-  // (OPFS も seed 対象。実画像を置かないとカバー表示が VRT に写らない)。
   system?: string;
   playerCountMin?: number;
   playerCountMax?: number;
@@ -87,8 +74,6 @@ export const FIXTURE_TEMPLATES: SeedTemplate[] = [
   },
 ];
 
-// メタ情報あり (システム / 人数 / 所要時間 / カバー画像) のテンプレート。
-// 絞り込みの VRT でも使うため、人数と所要時間の範囲を意図的にずらしてある。
 export const FIXTURE_META_TEMPLATES: SeedTemplate[] = [
   {
     id: 111,

@@ -24,7 +24,6 @@ const EditableKanbanCard = ({
   onDragStart,
 }: EditableKanbanCardProps) => {
   const handleDragStart = (e: React.DragEvent) => {
-    // input からのドラッグはテキスト選択を優先する
     if ((e.target as HTMLElement).tagName === "INPUT") {
       e.preventDefault();
       return;

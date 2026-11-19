@@ -43,7 +43,6 @@ export function ResourceSelector({
         break;
     }
 
-    // Deduplicate by name
     const seen = new Set<string>();
     const unique: typeof items = [];
     for (const item of items) {
@@ -61,7 +60,6 @@ export function ResourceSelector({
 
   const hasOptions = options.length > 0;
 
-  // If no options available, always show text input
   if (!hasOptions) {
     return (
       <input
@@ -75,7 +73,6 @@ export function ResourceSelector({
     );
   }
 
-  // Show dropdown with options
   return (
     <PortaledSelect
       options={options}

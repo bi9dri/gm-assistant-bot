@@ -15,11 +15,6 @@ import {
   shuffleAssign,
 } from "./toolOperate";
 
-// ツールの操作 UI (execute モード)。旧ツールノードの設定 DetailPanel を再利用しつつ、
-// フラグを書き換える「操作」ボタンを添える (docs: tools は "open/operate" UI でフラグを直接変更)。
-// Counter/RandomSelect/ShuffleAssign の操作結果はゲームフラグにのみ書き込み、表示もフラグから読む。
-// Kanban / RecordCombination は実行時状態 (cardPlacements / recordedPairs) をステップ本体に持つため、
-// updateStep でセッションの flowData を直接書き換える (旧ノードの execute モードと同義)。
 export const RunnerToolPanel = ({ step }: { step: Step }) => {
   const setFlag = useRunnerStore((state) => state.setFlag);
   const setFlags = useRunnerStore((state) => state.setFlags);
@@ -121,8 +116,6 @@ const OperateSection = ({ step, gameFlags, setFlag, setFlags }: OperateSectionPr
   return null;
 };
 
-// Kanban の実行時盤面。カードをドラッグして列間を移動する (cardPlacements を更新)。
-// 下部の設定エディタ (initialPlacements) とは独立で、こちらが実行中の現在盤面。
 const KanbanOperate = ({ step }: { step: KanbanStep }) => {
   const updateToolState = useRunnerStore((state) => state.updateToolState);
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
@@ -217,7 +210,6 @@ const KanbanOperate = ({ step }: { step: KanbanStep }) => {
   );
 };
 
-// RecordCombination のペア記録 UI。ペアの選択→記録と記録履歴の削除 (recordedPairs を更新)。
 const RecordCombinationOperate = ({ step }: { step: RecordCombinationStep }) => {
   const updateToolState = useRunnerStore((state) => state.updateToolState);
   const [selectedSourceId, setSelectedSourceId] = useState("");

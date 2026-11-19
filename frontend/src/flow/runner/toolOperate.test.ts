@@ -10,7 +10,6 @@ import {
   shuffleAssign,
 } from "./toolOperate";
 
-// 決定的に検証するため恒等シャッフルを渡す。
 const identity = <T>(array: T[]): T[] => [...array];
 
 describe("counterNextValue", () => {

@@ -2,8 +2,6 @@ import { createRouter } from "@tanstack/react-router";
 
 import { routeTree } from "./routeTree.gen";
 
-// server でのみ生成する。client は Start が出す csp-nonce meta から読む。
-// node:crypto ではなく Web Crypto (workerd / Node / browser 共通) を使う。
 function generateNonce(): string | undefined {
   if (typeof window !== "undefined") return undefined;
   const bytes = crypto.getRandomValues(new Uint8Array(16));

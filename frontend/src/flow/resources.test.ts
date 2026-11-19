@@ -145,7 +145,6 @@ describe("collectResourcesFromFlow", () => {
   });
 });
 
-// auto モード分岐は select と異なり flagName を持たず、枝ラベルも values にしない。
 const autoFlow: FlowData = {
   version: 1,
   sections: [

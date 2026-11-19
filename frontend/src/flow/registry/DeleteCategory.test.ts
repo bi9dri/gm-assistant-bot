@@ -13,7 +13,6 @@ const step = (overrides: Partial<DeleteCategoryStep> = {}): DeleteCategoryStep =
 });
 
 describe("DeleteCategoryEntry.summary", () => {
-  // 編集フィールドを持たないため、設定値によらず固定の説明文を返す。
   test("固定の説明文を返す", () => {
     expect(DeleteCategoryEntry.summary(step())).toBe(
       "カテゴリ削除: セッション内の全カテゴリとチャンネルを削除します",

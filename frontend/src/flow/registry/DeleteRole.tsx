@@ -75,7 +75,6 @@ export const DeleteRoleEntry = defineStep<DeleteRoleStep>({
   execute: async (step, ctx) => {
     const sessionRoles = ctx.resources.roles;
 
-    // resources.roles を splice する removeRole と反復が競合しないよう、対象はコピーで持つ。
     let targets: typeof sessionRoles;
     if (step.deleteAll) {
       if (sessionRoles.length === 0)

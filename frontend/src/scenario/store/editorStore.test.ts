@@ -6,9 +6,6 @@ import type { Step } from "@/flow/schema";
 import { emptyDoc } from "../schema";
 import { newStep, useScenarioEditorStore } from "./editorStore";
 
-// 編集モードの store。本文 (doc) は ProseMirror の木をそのまま預かるだけで、
-// 操作の実体 (steps) だけをこの store が変更する (docs: scenario-editor-architecture D25)。
-
 const counter = (id: string): Step => ({
   id,
   type: "Counter",
@@ -69,7 +66,6 @@ describe("setDoc", () => {
     store().setDoc(docWith("書き換えた"));
 
     expect(store().doc).toEqual(docWith("書き換えた"));
-    // 孤児の除去は保存時に行うので、打鍵の途中では実体を落とさない。
     expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
   });
 
@@ -83,7 +79,6 @@ describe("setDoc", () => {
 
     store().setDoc(docWith("消した"));
 
-    // 実体は保存時まで残すが、選択が残ると右カラムでの編集が孤児ごと捨てられる。
     expect(store().selectedStepId).toBeNull();
     expect(store().steps.map((step) => step.id)).toEqual(["c1"]);
   });

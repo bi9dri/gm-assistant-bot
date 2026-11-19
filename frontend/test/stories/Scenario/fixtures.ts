@@ -2,9 +2,6 @@ import type { JSONContent } from "@tiptap/core";
 
 import type { Step } from "@/flow/schema";
 
-// 段落・見出し・箇条書き・強調・ハイライト・引用と、文中の操作チップ・ブロック分岐を
-// 1 本に含むシナリオドキュメント UI 用のサンプル。VRT stories の共通シード。
-
 export const sampleSteps: Step[] = [
   {
     id: "cr",
@@ -107,11 +104,8 @@ export const sampleDoc: JSONContent = {
   ],
 };
 
-// フラグ値は string (evaluateCondition / DynamicValue が string 前提)。実行モードの
-// ライブフラグにもそのまま渡せる。
 export const sampleGameFlags: Record<string, string> = { evidence: "見つけた", round: "1" };
 
-// 実行モード用に実行痕跡を載せたステップ列。実行済み ✓ と確定枝 (a1) を撮れるようにしてある。
 const EXECUTED_AT = new Date("2026-01-01T00:00:00.000Z");
 
 export const executedSampleSteps: Step[] = sampleSteps.map((step) =>

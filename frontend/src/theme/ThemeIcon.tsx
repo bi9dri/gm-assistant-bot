@@ -6,9 +6,6 @@ interface Props {
 }
 
 export const ThemeIcon = ({ theme, size = 24 }: Props) => {
-  // 一覧用 swatch (theme 指定あり) だけ data-theme を出す。現在テーマの
-  // プレビュー (指定なし) は Provider の data-theme を継承する。
-  // SSR と初回 render で食い違う属性を出さないことで hydration mismatch を避ける。
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

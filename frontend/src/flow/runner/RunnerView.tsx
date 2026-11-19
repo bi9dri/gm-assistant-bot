@@ -18,8 +18,6 @@ const SAVED_INDICATOR_MS = 2000;
 
 type SaveState = "saved" | "invalid" | "error" | null;
 
-// execute モードの 3 カラムレイアウト + store 初期化 + flowData/gameFlags の自動保存。
-// edit モードの StepsEditor に対応する execute モード版。
 export const RunnerView = ({ session, bot }: { session: GameSession; bot: DiscordBotData }) => {
   const initialize = useRunnerStore((state) => state.initialize);
   const skipStep = useRunnerStore((state) => state.skipStep);
@@ -36,7 +34,6 @@ export const RunnerView = ({ session, bot }: { session: GameSession; bot: Discor
     setLoadedId(session.id);
   }, [session, loadedId, initialize]);
 
-  // flowData / gameFlags の変更を debounce して GameSession に保存する (StepsEditor と同型)。
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let savedTimeout: ReturnType<typeof setTimeout> | null = null;

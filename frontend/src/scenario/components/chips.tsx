@@ -1,9 +1,5 @@
 import { createContext, useContext, type ComponentType } from "react";
 
-// 文中の操作ノード (D24) を何で描くかは編集モードと実行モードで違う。ノードビュー
-// (editor/nodeViews.tsx) は ProseMirror の中に居るため store を選べないので、
-// 描画コンポーネントを外側から context で渡す。
-
 export interface ChipProps {
   stepId: string;
 }

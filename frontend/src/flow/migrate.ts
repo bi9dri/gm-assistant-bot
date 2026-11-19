@@ -5,17 +5,10 @@ import { convertReactFlowToFlowData } from "./convert";
 import type { FlowData, Step } from "./schema";
 import { FlowDataSchema, defaultFlowData } from "./schema";
 
-// reactFlowData → flowData の Dexie マイグレーション (issue #182 Phase 1)。
-// 変換そのものは convert.ts。ここは純粋な変換ラッパー 3 種
-// (reactFlowToFlowData / foldWarningsIntoFlowData / migrateRecordToFlowData) と、
-// それを両テーブルへ適用する副作用 orchestrator (applyFlowDataMigration) を持つ。
-// database.ts の version(7).upgrade は applyFlowDataMigration を呼ぶだけ。
-
 const WARNING_PREFIX = "⚠️";
 
 const appendMemo = (memo: string, text: string) => (memo === "" ? text : `${memo}\n\n${text}`);
 
-// branches[].steps を含めて全ステップを id で引けるよう再帰的に索引する
 function indexStepsById(flowData: FlowData): Map<string, Step> {
   const byId = new Map<string, Step>();
   const visit = (step: Step) => {
@@ -27,10 +20,6 @@ function indexStepsById(flowData: FlowData): Map<string, Step> {
   return byId;
 }
 
-// converter の warnings を FlowData 内のメモへ畳み込み、UI 未整備の段階でも喪失させない。
-// nodeId がステップに一致→そのステップ memo、セクションに一致→そのセクション memo、
-// それ以外 (グローバル警告・未実体化グループ等) は先頭セクション memo へ集約する。
-// セクションが無ければ受け皿セクションを 1 つ作る。
 export function foldWarningsIntoFlowData(
   flowData: FlowData,
   warnings: ConversionWarning[],
@@ -74,13 +63,6 @@ export function foldWarningsIntoFlowData(
   return next;
 }
 
-// reactFlowData (パース済みオブジェクト) を FlowData へ best-effort 変換し、warnings を
-// メモへ畳み込む。変換が throw した場合 (例: 形が不正で ConvertInputSchema が ZodError、
-// または converter のバグ) は、空フローを無言で返さず、ログを残しつつ警告メモ付きの
-// 空フローにフォールバックする (本 PR の「捨てずに surface」方針)。
-// migration の upgrade トランザクションと Template.import の両方から呼ばれる。再 throw
-// しないのは、upgrade では DB の version 移行ごと中断してアプリが開けなくなり、import では
-// Template.create 済みの半端なレコードが取り残されるため。失敗はログ + メモで surface する。
 export function reactFlowToFlowData(input: unknown): FlowData {
   try {
     const { flowData, warnings } = convertReactFlowToFlowData(input ?? {});
@@ -96,18 +78,12 @@ export function reactFlowToFlowData(input: unknown): FlowData {
   }
 }
 
-// レコード 1 件に保存する flowData JSON 文字列を決める。
-// - 既に妥当な flowData を持つ (already-new) なら冪等にそのまま返す
-// - それ以外は reactFlowData を変換して返す (警告はメモへ畳み込み済み)
-// - reactFlowData が JSON として壊れていれば、警告メモ付きの空フローにフォールバック
-//   (変換失敗時と同じく「捨てずに surface」する)
 export function migrateRecordToFlowData(reactFlowData: unknown, existingFlowData: unknown): string {
   if (typeof existingFlowData === "string" && existingFlowData !== "") {
     try {
       FlowDataSchema.parse(JSON.parse(existingFlowData));
       return existingFlowData;
     } catch (error) {
-      // 壊れた既存 flowData は信用せず reactFlowData から再構築する (ログは残す)
       console.error("flowData migration: 既存 flowData が不正なため再構築します", error);
     }
   }
@@ -132,9 +108,6 @@ export function migrateRecordToFlowData(reactFlowData: unknown, existingFlowData
 
 type MigratableRecord = { reactFlowData?: string; flowData?: string };
 
-// Template / GameSession 両テーブルへ flowData を付与する副作用 orchestrator。
-// reactFlowData は保持。version(7).upgrade から呼ばれる実体で、両テーブルが同じ純粋
-// 変換 (migrateRecordToFlowData) を共有する。
 export async function applyFlowDataMigration(tx: Transaction): Promise<void> {
   for (const tableName of ["Template", "GameSession"]) {
     await tx

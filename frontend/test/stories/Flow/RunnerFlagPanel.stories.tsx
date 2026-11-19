@@ -5,7 +5,6 @@ import { useRunnerStore } from "@/flow/store/runnerStore";
 
 import { runnerFlow, runnerGameFlags } from "./runnerFixtures";
 
-// D3: execute モードのフラグパネル。ライブな GameSession.gameFlags を編集する。
 const seed = (gameFlags: Record<string, string>) => {
   useRunnerStore.setState({
     flowData: runnerFlow,

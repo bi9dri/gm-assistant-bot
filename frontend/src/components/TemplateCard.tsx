@@ -13,13 +13,11 @@ const TemplateCardSchema = z.object({
   name: z.string().trim().nonempty(),
   updatedAt: z.date().optional(),
   meta: TemplateMetaSchema,
-  // シナリオ形式のブロックを持つか。持つ場合だけシナリオ編集への導線を出す (docs: scenario-editor-architecture D12)。
   hasScenario: z.boolean(),
 });
 
 type Props = z.infer<typeof TemplateCardSchema>;
 
-// OPFS のカバー画像は blob URL 経由でしか <img> に渡せない。
 const useCoverUrl = (coverPath: string | undefined): string | undefined => {
   const [url, setUrl] = useState<string>();
 

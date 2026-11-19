@@ -1,6 +1,3 @@
-// 文中の操作ノードが持つ唯一の属性 (docs: scenario-editor-architecture D25)。
-// StepNode (インライン) と BranchNode (ブロック) で同じ形を使う。
-
 const asStepId = (attributes: Record<string, unknown>): string =>
   typeof attributes.stepId === "string" ? attributes.stepId : "";
 

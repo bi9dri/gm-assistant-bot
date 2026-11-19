@@ -7,7 +7,6 @@ import {
   convertFilePathsInReactFlowData,
 } from "./fileSystem";
 
-// 実際のファイルストレージを持つ拡張OPFSモック
 class MockFileSystemStorage {
   private files = new Map<string, Blob>();
   private directories = new Set<string>();
@@ -26,7 +25,6 @@ class MockFileSystemStorage {
     const blob = data instanceof Blob ? data : new Blob([data]);
     this.files.set(path, blob);
 
-    // 親ディレクトリが存在することを確認
     const parts = path.split("/").filter(Boolean);
     let current = "";
     for (let i = 0; i < parts.length - 1; i++) {
@@ -69,7 +67,6 @@ class MockFileSystemStorage {
 
 const mockStorage = new MockFileSystemStorage();
 
-// モックファイルシステムハンドルを作成
 const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
   const name = path.split("/").filter(Boolean).pop() || "root";
 
@@ -101,13 +98,11 @@ const createMockDirectoryHandle = (path: string): FileSystemDirectoryHandle => {
     removeEntry: vi.fn(async (name: string) => {
       const entryPath = `${path}/${name}`;
       mockStorage.deleteFile(entryPath);
-      // サブディレクトリ内のファイルも削除
       for (const filePath of mockStorage.getFilesInDirectory(entryPath)) {
         mockStorage.deleteFile(filePath);
       }
     }),
     resolve: vi.fn(async (_handle: FileSystemHandle) => {
-      // このディレクトリからの相対パスセグメントを返す
       return [name];
     }),
     keys: vi.fn(async function* () {}),
@@ -153,7 +148,6 @@ const createMockFileHandle = (path: string): FileSystemFileHandle => {
   } as unknown as FileSystemFileHandle;
 };
 
-// navigator.storage.getDirectoryモックをオーバーライド
 Object.defineProperty(globalThis, "navigator", {
   value: {
     storage: {
@@ -170,7 +164,6 @@ describe("FileSystem", () => {
   beforeEach(() => {
     mockStorage.reset();
     fs = new FileSystem();
-    // Tables are cleared in test/unit.setup.ts afterEach
   });
 
   describe("constructor", () => {
@@ -277,9 +270,6 @@ describe("FileSystem", () => {
   });
 
   describe("exportTemplate", () => {
-    // ZIPエクスポートは複雑でOPFSウォーキングの適切なモックが必要
-    // これらのテストはe2eテストに適している
-
     test("テンプレートが見つからない場合はエラーをスローする", async () => {
       await expect(fs.exportTemplate(999)).rejects.toThrow("テンプレートが見つかりません");
     });

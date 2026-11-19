@@ -75,8 +75,6 @@ describe("ScenarioDataSchema", () => {
     ).toThrow();
   });
 
-  // 通してしまうと Node.fromJSON が描画中に throw し、空へ落ちるフォールバックではなく
-  // 画面のクラッシュになる。
   test("doc ノードでない本文は弾く", () => {
     expect(() =>
       ScenarioDataSchema.parse({ version: 2, doc: { content: [] }, steps: [] }),

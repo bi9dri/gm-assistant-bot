@@ -12,8 +12,6 @@ import type { StepContainer } from "../treeOps";
 import { AddStepMenu } from "./AddStepMenu";
 import { type DragData, emptyContainerDropId, sameContainer } from "./dnd";
 
-// 行の中身 (カテゴリバッジ + タイトル + autoAdvance)。リスト行と DragOverlay、
-// およびシナリオドキュメント UI の操作ブロック 1 行サマリで共用する。
 export const StepRowContent = ({ step }: { step: Step }) => {
   const entry = getEntry(step.type);
   return (
@@ -39,9 +37,6 @@ export const StepRowContent = ({ step }: { step: Step }) => {
   );
 };
 
-// DragOverlay 用: ドラッグ中ポインタに追従する行の複製。
-// コンテナを跨ぐ移動では行が DOM 上で親を移る (remount) ため、
-// 元要素へ transform を当てる方式だと追従が途切れる。
 export const StepRowOverlay = ({ step }: { step: Step }) => (
   <div className="flex items-center gap-2 rounded border border-primary bg-base-100 px-2 py-1 shadow-lg">
     <span className="px-1 text-base-content/40">⠿</span>
@@ -134,8 +129,6 @@ const StepRow = memo(
       </li>
     );
   },
-  // container は親の render ごとに新しいオブジェクトになるため、参照でなく値で比較して
-  // memo を効かせる (未変更行の再レンダー回避は D4 の要)。
   (prev, next) =>
     prev.step === next.step &&
     prev.index === next.index &&
@@ -143,8 +136,6 @@ const StepRow = memo(
 );
 StepRow.displayName = "StepRow";
 
-// 空リストの表示。droppable にして、空のセクションや分岐枝にもステップを
-// ドラッグで移動できるようにする。
 const EmptyStepDropZone = ({ container }: { container: StepContainer }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: emptyContainerDropId(container),
@@ -169,9 +160,6 @@ interface StepListProps {
   steps: Step[];
 }
 
-// コンテナ (セクション直下 or 分岐枝) 1 つ分のステップリスト。
-// DndContext は持たない — ドラッグは StepListPanel の単一 DndContext が一括で扱い、
-// これによりコンテナを跨いだ並べ替えが可能になる。
 export const StepList = ({ container, steps }: StepListProps) => {
   if (steps.length === 0) {
     return <EmptyStepDropZone container={container} />;

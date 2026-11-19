@@ -11,10 +11,6 @@ import { findStep } from "@/flow/treeOps";
 
 import { restartFromHeading, resumeCursorId, runnerSteps, toRunnerFlow } from "./runner";
 
-// 実行モードはステップ列を FlowData に包んで flow の runnerStore / engine に載せる。
-// ここで検証するのはシナリオ側の意味論: 見出しの「ここから再実行」の範囲と、
-// autoAdvance の連鎖・カーソル追従。見出しは doc 側にあるため範囲指定は doc を渡す。
-
 const EXECUTED_AT = new Date("2026-01-01T00:00:00.000Z");
 
 const heading = (level: number): JSONContent => ({ type: "heading", attrs: { level } });
@@ -138,7 +134,6 @@ describe("restartFromHeading", () => {
     expect(inner.executedBranchIds).toBeUndefined();
     expect(stepById("t1").executedAt).toBeUndefined();
     expect(stepById("t2").executedAt).toBeUndefined();
-    // 次の見出し以降は範囲外なので残る
     expect(stepById("t3").executedAt).toEqual(EXECUTED_AT);
   });
 
@@ -153,8 +148,6 @@ describe("restartFromHeading", () => {
   });
 });
 
-// 本文の通過ではなく操作ステップの実行が進捗の単位になる (docs D10)。
-// autoAdvance の連鎖と、カーソルが実行位置に追従することを合わせて確認する。
 describe("連鎖実行とカーソル追従", () => {
   const runFrom = async (startId: string) => {
     const { ctx } = createFakeContext();

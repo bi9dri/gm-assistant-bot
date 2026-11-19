@@ -1,9 +1,5 @@
 # Project Instructions for AI Assistants
 
-## Code Comments
-
-- Don't restate what identifiers already convey. Keep comments only for Why (context/constraints), non-obvious logic, or TODO/FIXME.
-
 ## TypeScript
 
 - Narrow discriminated unions via type guards: `if (node.type !== "XxxNode") return;`

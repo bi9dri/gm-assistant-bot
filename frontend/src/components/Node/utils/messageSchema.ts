@@ -15,7 +15,7 @@ export const MessageBlockSchema = z.object({
 
 export type Attachment = z.infer<typeof AttachmentSchema>;
 
-export const FILE_SIZE_WARNING_THRESHOLD = 1 * 1024 * 1024; // 1MB
+export const FILE_SIZE_WARNING_THRESHOLD = 1 * 1024 * 1024;
 
 export const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;
@@ -51,9 +51,7 @@ export const saveFileToOPFS = async (
   let existingFile: File | null = null;
   try {
     existingFile = await fs.readFile(basePath);
-  } catch {
-    // file doesn't exist
-  }
+  } catch {}
 
   if (existingFile) {
     const [existingHash, newHash] = await Promise.all([

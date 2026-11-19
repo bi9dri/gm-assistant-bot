@@ -6,10 +6,6 @@ import type {
   SessionRole,
 } from "./types";
 
-// execute() を unit-test するためのインメモリ ExecuteContext。Discord 呼び出しは記録し、
-// リソース/フラグはインメモリ配列・オブジェクトを直接更新する。テストは state を検査して
-// 副作用を確認し、discord.*.fail に true を積めば失敗経路を再現できる。
-
 interface FakeGatewayCall {
   method: keyof DiscordGateway;
   arg: unknown;
@@ -30,7 +26,6 @@ interface FakeContextOptions {
   categories?: SessionCategory[];
   sessionName?: string;
   branchChoice?: string;
-  // 指定した method を呼んだとき例外を投げる (失敗経路のテスト用)。
   failOn?: Partial<Record<keyof DiscordGateway, boolean>>;
 }
 

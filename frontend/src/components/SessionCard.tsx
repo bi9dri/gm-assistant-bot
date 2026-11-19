@@ -12,7 +12,6 @@ const SessionCardSchema = z.object({
   name: z.string().trim().nonempty(),
   guildId: z.string().trim().nonempty(),
   lastUsedAt: z.date(),
-  // シナリオ形式のブロックを持つか。実行画面は空でないほうを開く (docs: scenario-editor-architecture D16)。
   hasScenario: z.boolean(),
 });
 

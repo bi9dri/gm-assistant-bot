@@ -3,14 +3,8 @@ import { produce } from "immer";
 import { generateId } from "./ids";
 import type { FlowData, Step } from "./schema";
 
-// FlowData のツリー (Section[] > Step[]、Branch は branches[].steps に再帰) を
-// 純粋に変換するヘルパ群。**ツリーが再帰的であることを知るのはこのファイルだけ**で、
-// store / コンポーネントは名前付きヘルパを呼ぶだけにする (docs: step-list-editor-architecture D4)。
-// すべて produce ベースで、未変更のノードは参照を保つ (memo 化された行が再レンダーを免れる)。
-
 export type Section = FlowData["sections"][number];
 
-// ステップが属しうるコンテナ。セクション直下か、分岐ステップの枝 (arm) の直下。
 export type StepContainer =
   | { kind: "section"; sectionId: string }
   | { kind: "branchArm"; branchStepId: string; armId: string };
@@ -26,7 +20,6 @@ interface StepLocator {
   step: Step;
 }
 
-// フラットなステップ列に対する入口 (findStepIn / updateStepIn が共有する)。
 const locateInSteps = (steps: Step[], id: string): StepLocator | undefined => {
   for (let index = 0; index < steps.length; index++) {
     const step = steps[index];
@@ -53,12 +46,9 @@ const locateStep = (flow: FlowData, id: string): StepLocator | undefined => {
 export const findStep = (flow: FlowData, id: string): Step | undefined =>
   locateStep(flow, id)?.step;
 
-// フラットなステップ列に対する入口。シナリオドキュメント UI のブロック列が使う
-// (docs: scenario-editor-architecture「既存エンジンの再利用」)。Branch 降下は共有する。
 export const findStepIn = (steps: Step[], id: string): Step | undefined =>
   locateInSteps(steps, id)?.step;
 
-// updateStepById のフラットなステップ列版。未変更のステップは参照を保つ。
 export const updateStepIn = (steps: Step[], id: string, patch: (step: Step) => void): Step[] =>
   produce(steps, (draft) => {
     const step = findStepIn(draft as Step[], id);
@@ -87,8 +77,6 @@ const collectBranchIds = (step: Step, acc: Set<string>): void => {
   }
 };
 
-// 移動先コンテナが移動対象ステップ自身またはその子孫の分岐枝なら true。
-// 自分自身の内側へ移動する循環を防ぐ。
 const isSelfOrDescendantContainer = (moved: Step, container: StepContainer): boolean => {
   if (container.kind !== "branchArm") return false;
   const ids = new Set<string>();
@@ -96,9 +84,6 @@ const isSelfOrDescendantContainer = (moved: Step, container: StepContainer): boo
   return ids.has(container.branchStepId);
 };
 
-// Branch の全枝の子孫ステップの実行痕跡 (executedAt / 入れ子 Branch の executedBranchIds) を消す。
-// Branch を再実行する際、以前 descend した (今回は選ばれない) 枝の子が実行済みのまま孤立する
-// のを防ぐ。draft を in-place で書き換える前提で updateStepById の produce 内から呼ぶ。
 export const clearDescendantExecution = (step: Step): void => {
   if (step.type !== "Branch") return;
   for (const arm of step.branches) {
@@ -112,9 +97,6 @@ export const clearDescendantExecution = (step: Step): void => {
   }
 };
 
-// Branch の全枝の子孫ステップ id を集める (入れ子 Branch にも再帰)。Branch 以外は空。
-// clearDescendantExecution で実行痕跡が消える範囲と一致させ、store 側の skip 痕跡の
-// リセットに使う。
 export const collectDescendantStepIds = (step: Step): string[] => {
   if (step.type !== "Branch") return [];
   const out: string[] = [];
@@ -134,16 +116,12 @@ const collectInSteps = (steps: Step[], out: Step[]): void => {
   }
 };
 
-// フロー内の全ステップを pre-order で平坦化する。engine/order の runnableSteps と違い、
-// Branch の未実行・未選択の枝の中も含む (ツール常駐欄など「存在する全ステップ」を見たい用途)。
 export const collectSteps = (flow: FlowData): Step[] => {
   const out: Step[] = [];
   for (const section of flow.sections) collectInSteps(section.steps, out);
   return out;
 };
 
-// 指定 id 群の実行痕跡 (executedAt と Branch の枝確定) をまとめて消す。見出し配下の
-// 一括再実行 (docs: scenario-editor-architecture D9) が範囲を id 集合として渡す。
 export const clearExecutionByIds = (flow: FlowData, ids: Set<string>): FlowData =>
   produce(flow, (draft) => {
     for (const step of collectSteps(draft as FlowData)) {
@@ -172,9 +150,6 @@ export const removeStep = (flow: FlowData, id: string): FlowData =>
     if (located !== undefined) located.parentSteps.splice(located.index, 1);
   });
 
-// 複製自身に加え、Branch の枝 (arm) と入れ子ステップの id もすべて採番し直す。
-// id が重複すると locateStep の検索や dnd-kit の sortable id が最初の 1 件しか
-// 指せなくなるため。実行痕跡 (executedAt / executedBranchIds) も一緒に消す。
 const reassignIds = (step: Step): void => {
   step.id = generateId();
   step.executedAt = undefined;
@@ -201,7 +176,6 @@ export const duplicateStep = (
   return { flowData, newStep };
 };
 
-// dnd-kit の arrayMove と同じ意味論: 対象を取り除いた後の配列に to.index で挿入する。
 export const moveStep = (flow: FlowData, id: string, to: StepLocation): FlowData =>
   produce(flow, (draft) => {
     const located = locateStep(draft as FlowData, id);

@@ -35,8 +35,6 @@ import {
   ResourceSelector,
 } from "../utils";
 
-// ---- Zod schemas ----
-
 const RuleNodeSchema = z.object({
   type: z.literal("rule"),
   id: z.string(),
@@ -75,8 +73,6 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
-// ---- Constants ----
-
 const MAX_NESTING_DEPTH = 4;
 
 const OPERATOR_LABELS = {
@@ -92,8 +88,6 @@ const GROUP_BORDER_COLORS = ["#60a5fa", "#a78bfa", "#4ade80", "#fb923c"];
 function getGroupBorderColor(depth: number): string {
   return GROUP_BORDER_COLORS[depth % GROUP_BORDER_COLORS.length];
 }
-
-// ---- RuleEditor ----
 
 interface RuleEditorProps {
   nodeId: string;
@@ -223,8 +217,6 @@ function RuleEditor({
   );
 }
 
-// ---- ConditionNodeEditor (forward declaration for mutual recursion) ----
-
 interface ConditionNodeEditorProps {
   nodeId: string;
   node: ConditionNode;
@@ -274,8 +266,6 @@ function ConditionNodeEditor({
   );
 }
 
-// ---- GroupEditor ----
-
 interface GroupEditorProps {
   nodeId: string;
   group: GroupNode;
@@ -295,7 +285,6 @@ function GroupEditor({ nodeId, group, onChange, onRemove, disabled, depth }: Gro
   const handleChildRemove = (index: number) => {
     const newChildren = group.children.filter((_, i) => i !== index);
     if (newChildren.length === 1) {
-      // Auto-unwrap: グループを解除して残り1つの子で置き換える
       onChange(newChildren[0]);
     } else {
       onChange({ ...group, children: newChildren });
@@ -389,8 +378,6 @@ function GroupEditor({ nodeId, group, onChange, onRemove, disabled, depth }: Gro
     </div>
   );
 }
-
-// ---- BranchEditor ----
 
 interface BranchEditorProps {
   nodeId: string;
@@ -500,8 +487,6 @@ function BranchEditor({ nodeId, branches, onBranchesChange, disabled }: BranchEd
   );
 }
 
-// ---- ConditionNodeSummary ----
-
 interface ConditionNodeSummaryProps {
   node: ConditionNode;
   depth?: number;
@@ -539,8 +524,6 @@ function ConditionNodeSummary({ node, depth = 0 }: ConditionNodeSummaryProps) {
   );
 }
 
-// ---- BranchSummary ----
-
 interface BranchSummaryProps {
   branches: Branch[];
   evaluatedConditionIds?: string[];
@@ -573,8 +556,6 @@ function BranchSummary({ branches, evaluatedConditionIds }: BranchSummaryProps) 
     </div>
   );
 }
-
-// ---- ConditionalBranchNode ----
 
 export const ConditionalBranchNode = ({
   id,

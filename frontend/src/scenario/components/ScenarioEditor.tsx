@@ -20,7 +20,6 @@ import { ScenarioDocument } from "./ScenarioDocument";
 import { TableOfContents } from "./TableOfContents";
 import { Toolbar } from "./Toolbar";
 
-// 編集モードの保存対象は Template.scenarioData と Template.gameFlags (セッション開始時の seed)。
 const editorSource: AutosaveSource = {
   subscribe: (listener) =>
     useScenarioEditorStore.subscribe((state, prev) => {
@@ -41,7 +40,6 @@ const editorSource: AutosaveSource = {
 
 const CHIPS = { Step: EditorStepChip, Branch: EditorBranchBlock };
 
-// 右カラム: 選択中の操作の詳細 (共通フィールド + registry の DetailPanel) とフラグパネル。
 export const SidePanel = ({ steps, selectedId }: { steps: Step[]; selectedId: string | null }) => {
   const gameFlags = useScenarioEditorStore((state) => state.gameFlags);
   const setGameFlag = useScenarioEditorStore((state) => state.setGameFlag);
@@ -72,15 +70,12 @@ export const SidePanel = ({ steps, selectedId }: { steps: Step[]; selectedId: st
   );
 };
 
-// .txt / .md の取り込み (docs: scenario-editor-architecture D19)。貼り付けが主体なので、
-// 取り込みもキャレット位置への挿入に寄せる。
 const useTextFileDrop = (editor: Editor | null) => {
   const { addToast } = useToast();
 
   const importFiles = async (files: File[]) => {
     try {
       const texts = await Promise.all(
-        // fatal 指定で復号し、Shift_JIS を文字化けしたまま取り込んで保存するのを防ぐ。
         files.map(async (file) =>
           new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer()),
         ),
@@ -96,7 +91,6 @@ const useTextFileDrop = (editor: Editor | null) => {
         )
         .run();
     } catch {
-      // 読み込み失敗を黙って捨てると、ドロップしても何も起きないように見える。
       addToast({
         message: "ファイルを取り込めませんでした (UTF-8 のテキストのみ)",
         status: "error",
@@ -111,16 +105,13 @@ const useTextFileDrop = (editor: Editor | null) => {
     },
     onDrop: (event: DragEvent<HTMLDivElement>) => {
       if (!event.dataTransfer.types.includes("Files")) return;
-      // 取り込めない種類でもブラウザの既定動作 (ファイルを開いて編集中の画面を離れる) は止める。
       event.preventDefault();
-      // dataTransfer は await を跨ぐと空になるため、ここで取り出しておく。
       const files = Array.from(event.dataTransfer.files).filter(isImportableTextFile);
       if (files.length > 0) void importFiles(files);
     },
   };
 };
 
-// 編集モードのレイアウト (目次 + 本文 + 詳細/フラグ) と store 初期化・自動保存。
 export const ScenarioEditor = ({ template }: { template: Template }) => {
   const initialize = useScenarioEditorStore((state) => state.initialize);
   const setDoc = useScenarioEditorStore((state) => state.setDoc);
@@ -130,9 +121,6 @@ export const ScenarioEditor = ({ template }: { template: Template }) => {
   const selectedStepId = useScenarioEditorStore((state) => state.selectedStepId);
   const [loadedId, setLoadedId] = useState<number | null>(null);
 
-  // template 切り替え時に store を初期化する。effect の登録順がそのまま実行順になるため、
-  // 自動保存の購読より前に置く。逆だと initialize が購読を発火させ、開いただけで
-  // 保存が走る (updatedAt が動き、壊れた scenarioData が空で上書きされる)。
   useEffect(() => {
     if (loadedId === template.id) return;
     const scenario = template.getParsedScenarioData();

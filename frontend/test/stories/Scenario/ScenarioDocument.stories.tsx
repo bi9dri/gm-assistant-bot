@@ -9,9 +9,6 @@ import { useScenarioEditorStore } from "@/scenario/store/editorStore";
 
 import { sampleDoc, sampleGameFlags, sampleSteps } from "./fixtures";
 
-// 編集モードの本文 (docs: scenario-editor-architecture D20 / D24)。
-// 段落・見出し・箇条書き・太字・ハイライト・引用と、文中の操作チップ・ブロック分岐を撮る。
-// zustand は外部ストアなので、render 内で setState すれば同一レンダーで反映される。
 const seed = (selectedStepId: string | null) => {
   useScenarioEditorStore.setState({
     doc: sampleDoc,
@@ -56,5 +53,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: { selectedStepId: null } };
 
-// 操作チップを選択した状態 (選択ハイライト)。詳細は右カラム (SidePanel) に出る。
 export const StepSelected: Story = { args: { selectedStepId: "sm" } };

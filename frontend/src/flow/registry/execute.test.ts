@@ -7,15 +7,11 @@ import type { ExecuteContext } from "../engine/types";
 import type { Step } from "../schema";
 import { getEntry } from "./index";
 
-// 各ステップタイプの execute() を、インメモリ ExecuteContext (createFakeContext) で検証する。
-// Discord 呼び出しは state.calls に記録され、リソース/フラグはインメモリで更新される。
-
 const base = {
   memo: "",
   autoAdvance: false,
 };
 
-// getEntry(type).execute を引く薄いヘルパ。
 const run = (step: Step, ctx: ExecuteContext) => {
   const entry = getEntry(step.type);
   if (entry?.execute === undefined) throw new Error(`no execute for ${step.type}`);

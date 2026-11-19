@@ -5,9 +5,6 @@ import type { Step } from "@/flow/schema";
 
 import { collectStepIds, orderedSteps, withDescendantIds } from "./document";
 
-// doc と steps のブリッジ (docs: scenario-editor-architecture D25)。
-// 実行順が「読む順」と一致すること、本文から参照が消えた実体が保存時に落ちることを見る。
-
 const stepNode = (stepId: string): JSONContent => ({ type: "step", attrs: { stepId } });
 const branchNode = (stepId: string): JSONContent => ({ type: "branch", attrs: { stepId } });
 const paragraph = (...content: JSONContent[]): JSONContent => ({ type: "paragraph", content });

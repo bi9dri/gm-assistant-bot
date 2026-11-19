@@ -4,9 +4,6 @@ import { isImeComposing } from "@/keyboard";
 
 import { useRunnerStore } from "../store/runnerStore";
 
-// D3: execute モードの常駐ゲームフラグパネル (右カラム)。
-// ライブな GameSession.gameFlags を編集する。scripted な SetGameFlag / ツール操作と共存し、
-// ここでの編集は動作中セッションのフラグを直接書き換える。
 export const RunnerFlagPanel = () => {
   const gameFlags = useRunnerStore((state) => state.gameFlags);
   const setFlag = useRunnerStore((state) => state.setFlag);

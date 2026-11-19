@@ -9,9 +9,6 @@ import type { Step } from "../schema";
 import { useEditorStore } from "../store/editorStore";
 import { findStep } from "../treeOps";
 
-// ステップ 1 つ分の編集フォーム (共通フィールド + registry[type].DetailPanel)。
-// store に触れない presentational component として、ステップリスト UI と
-// シナリオドキュメント UI の両方から使う。
 export const StepDetail = ({
   step,
   resources,
@@ -70,15 +67,12 @@ export const StepDetail = ({
   );
 };
 
-// 中央カラム。選択中ステップを store から引いて StepDetail に渡す。
 export const DetailPanel = () => {
   const selectedStepId = useEditorStore((state) => state.selectedStepId);
   const flowData = useEditorStore((state) => state.flowData);
   const gameFlags = useEditorStore((state) => state.gameFlags);
   const updateStep = useEditorStore((state) => state.updateStep);
 
-  // フィールドエディタ (ResourceSelector 等) が候補表示に使うリソースを flowData と
-  // seed gameFlags (フラグパネル) から供給する。
   const resources = useMemo(
     () => collectResourcesFromFlow(flowData, gameFlags),
     [flowData, gameFlags],
