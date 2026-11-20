@@ -207,7 +207,7 @@ importers:
         version: 1.4.0(@types/node@26.6.6)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.28.2)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(playwright@1.65.0)(typescript@7.0.2)(yaml@2.9.1)
       wrangler:
         specifier: 4.161.0
-        version: 4.161.0(@cloudflare/workers-types@5.20261112.1)(@types/node@26.6.6)
+        version: 4.161.0(@cloudflare/workers-types@5.20261113.1)(@types/node@26.6.6)
 
   backend:
     dependencies:
@@ -218,8 +218,8 @@ importers:
         specifier: 0.9.1
         version: 0.9.1(hono@4.13.18)(zod@4.6.7)
       discord-api-types:
-        specifier: 0.38.58
-        version: 0.38.58
+        specifier: 0.38.59
+        version: 0.38.59
       hono:
         specifier: 4.13.18
         version: 4.13.18
@@ -228,8 +228,8 @@ importers:
         version: 4.6.7
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: 5.20261112.1
-        version: 5.20261112.1
+        specifier: 5.20261113.1
+        version: 5.20261113.1
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -279,8 +279,8 @@ importers:
         specifier: 12.12.1
         version: 12.12.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@zip.js/zip.js':
-        specifier: 2.24.0
-        version: 2.24.0
+        specifier: 2.25.0
+        version: 2.25.0
       clsx:
         specifier: 2.1.1
         version: 2.1.1
@@ -326,7 +326,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 1.69.1
-        version: 1.69.1(@types/node@26.6.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))(workerd@1.20261110.1)(wrangler@4.161.0(@cloudflare/workers-types@5.20261112.1)(@types/node@26.6.6))
+        version: 1.69.1(@types/node@26.6.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))(workerd@1.20261110.1)(wrangler@4.161.0(@cloudflare/workers-types@5.20261113.1)(@types/node@26.6.6))
       '@playwright/test':
         specifier: 1.65.0
         version: 1.65.0
@@ -505,8 +505,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@5.20261112.1':
-    resolution: {integrity: sha512-FhkAlCQ+J/pV89nhehVaarhlvZFz+ybUsePmIDN1yfI7PMmpjwdxV663e9qu+G+oQSw9oM8u5sVmheNBFn4tnw==}
+  '@cloudflare/workers-types@5.20261113.1':
+    resolution: {integrity: sha512-FhF8hRtsQCr/BWZyUN7wm2x+jqAOkRIpLOW+2fJu5OQyIDOv+c3PxY8duEAkOYXuprLImxjW+PHTbvz9+Px5cw==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3400,8 +3400,8 @@ packages:
   '@yuku-toolchain/types@0.19.0':
     resolution: {integrity: sha512-tFkNbsP4WXX9UMUC5syJGdK9dPMLK0PPaIuXCcCYH75sZ8MrebfBZ2XvCILRTw8AgLivSSCfDa4R67iYBDa4Kg==}
 
-  '@zip.js/zip.js@2.24.0':
-    resolution: {integrity: sha512-WlaVKzdqBK+RF3bdiXZWbdCnvGB6PdO4IHC1mn/2Yfl3bASgqUNegnU3+PNg61iecwoPfUi5BgLUPqBukXpyWw==}
+  '@zip.js/zip.js@2.25.0':
+    resolution: {integrity: sha512-oNRqUuU1XFu6G5d7Z0jufJ9dS9WteO0xiU/PNxsUrb4itZCsSbn191jpJzU00Gmc6S680X3DPZeF5EV4zAEMAg==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
   acorn@8.18.0:
@@ -3645,8 +3645,8 @@ packages:
     resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
     engines: {node: '>=0.3.1'}
 
-  discord-api-types@0.38.58:
-    resolution: {integrity: sha512-6utghVho47hBzmx8nIp+pKEDDNIlVk6On/J5Y1Q529payNLZjBsrw+mt+G5Y3NYRE3kgta6eBx5hRYVyfHGdOA==}
+  discord-api-types@0.38.59:
+    resolution: {integrity: sha512-LZqh8gvWU/Bhl9qEVIRLeLJuaPGO7rA26IXLrXnMcjXxofh/h5UhP6notfCTj4X5kR1ogMvVgcrVYIuynY/CxQ==}
 
   doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
@@ -4930,13 +4930,13 @@ snapshots:
     optionalDependencies:
       workerd: 1.20261110.1
 
-  '@cloudflare/vite-plugin@1.69.1(@types/node@26.6.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))(workerd@1.20261110.1)(wrangler@4.161.0(@cloudflare/workers-types@5.20261112.1)(@types/node@26.6.6))':
+  '@cloudflare/vite-plugin@1.69.1(@types/node@26.6.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))(workerd@1.20261110.1)(wrangler@4.161.0(@cloudflare/workers-types@5.20261113.1)(@types/node@26.6.6))':
     dependencies:
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261110.1)
       miniflare: 5.20261110.0-beta(@types/node@26.6.6)
       unenv: 2.0.0-rc.24
       vite: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)'
-      wrangler: 4.161.0(@cloudflare/workers-types@5.20261112.1)(@types/node@26.6.6)
+      wrangler: 4.161.0(@cloudflare/workers-types@5.20261113.1)(@types/node@26.6.6)
       ws: 8.22.0
     transitivePeerDependencies:
       - '@types/node'
@@ -4960,7 +4960,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261110.1':
     optional: true
 
-  '@cloudflare/workers-types@5.20261112.1': {}
+  '@cloudflare/workers-types@5.20261113.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -4975,14 +4975,14 @@ snapshots:
       '@sapphire/async-queue': 1.5.5
       '@sapphire/snowflake': 3.5.5
       '@vladfrangu/async_event_emitter': 2.4.7
-      discord-api-types: 0.38.58
+      discord-api-types: 0.38.59
       magic-bytes.js: 1.13.1
       tslib: 2.8.1
       undici: 6.29.1
 
   '@discordjs/util@1.2.0':
     dependencies:
-      discord-api-types: 0.38.58
+      discord-api-types: 0.38.59
 
   '@dnd-kit/accessibility@3.1.1(react@19.3.1)':
     dependencies:
@@ -7259,7 +7259,7 @@ snapshots:
 
   '@yuku-toolchain/types@0.19.0': {}
 
-  '@zip.js/zip.js@2.24.0': {}
+  '@zip.js/zip.js@2.25.0': {}
 
   acorn@8.18.0: {}
 
@@ -7462,7 +7462,7 @@ snapshots:
 
   diff@9.0.0: {}
 
-  discord-api-types@0.38.58: {}
+  discord-api-types@0.38.59: {}
 
   doctrine@3.0.0:
     dependencies:
@@ -8801,7 +8801,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20261110.1
       '@cloudflare/workerd-windows-64': 1.20261110.1
 
-  wrangler@4.161.0(@cloudflare/workers-types@5.20261112.1)(@types/node@26.6.6):
+  wrangler@4.161.0(@cloudflare/workers-types@5.20261113.1)(@types/node@26.6.6):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261110.1)
@@ -8813,7 +8813,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20261110.1
     optionalDependencies:
-      '@cloudflare/workers-types': 5.20261112.1
+      '@cloudflare/workers-types': 5.20261113.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - '@types/node'
