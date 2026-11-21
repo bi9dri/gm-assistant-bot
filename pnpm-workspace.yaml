@@ -9,8 +9,8 @@ allowBuilds:
   lightningcss: true
   msw: true
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
-  vite-plus: 1.4.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
+  vite-plus: 1.6.0
 minimumReleaseAgeExclude:
   - "@mizchi/mutator-core@0.4.5"
   - "@mizchi/mutator-jest@0.4.5"
