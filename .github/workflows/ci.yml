@@ -38,6 +38,7 @@ jobs:
       - run: pnpm build
 
   vrt:
+    needs: check
     runs-on: ubuntu-latest
     # `gh pr view` / `gh pr edit` で承認ラベルを読み取り・消費する。
     # fork からの PR では token が read-only に降格されるため、承認フローは
@@ -231,7 +232,7 @@ jobs:
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.vrt.outputs.ran == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       actions: read
