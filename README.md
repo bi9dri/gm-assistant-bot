@@ -69,14 +69,8 @@ pnpm knip                 # 未使用 export / dep の検出
 
 ## デプロイ
 
-- **frontend**: `main` への push で GitHub Actions (`.github/workflows/deploy-frontend.yml`) が走り、Cloudflare Workers (Static Assets + TanStack Start SSR) に自動デプロイされる。要リポジトリ Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`。custom domain は `frontend/wrangler.jsonc` を参照。
-- **backend**: Cloudflare Workers に `gm-assistant-bot-api` としてデプロイ。Cloudflare アカウントと `wrangler login` が必要。
-
-  ```bash
-  pnpm --filter gm-assistant-bot-backend deploy
-  ```
-
-  custom domain は `backend/wrangler.toml` を参照。
+- **frontend**: `main` への push で GitHub Actions (`.github/workflows/deploy-frontend.yml`) が走り、Cloudflare Workers (Static Assets + TanStack Start SSR) に自動デプロイされる。要 `production` Environment Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`。custom domain は `frontend/wrangler.jsonc` を参照。
+- **backend**: `main` への push で GitHub Actions (`.github/workflows/deploy-backend.yml`) が走り、Cloudflare Workers に `gm-assistant-bot-api` として自動デプロイされる（`frontend` と同じ `production` Environment Secrets を使用）。手動デプロイ時は `pnpm --filter gm-assistant-bot-backend deploy`。custom domain は `backend/wrangler.toml` を参照。
 
 ## ライセンス
 
