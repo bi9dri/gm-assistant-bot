@@ -9,7 +9,8 @@
 - Use `pnpm install`, `pnpm --filter <pkg> <script>`, and the `vp` CLI (`vp dev/build/test/lint/fmt`). Runtime is Node 26 (Vite+ requires `^22.18.0 || ^24.11.0 || >=26.0.0`). Never npm/yarn/bun.
 - Tests run with `vp test` (Vitest 5 bundled by Vite+); API is imported from `vite-plus/test`. Coverage config lives in each `vite.config.ts` `test` block (no `bunfig.toml`).
 - `--filter` matches `package.json` `name` (not workspace dir). Wildcards ok: `--filter '*'`.
-- Coverage thresholds apply globally — exclude untestable files rather than lowering thresholds.
+- Coverage guideline is ~80% for domain code, with **no hard threshold** (overall coverage drops caused by deleting unused modules are acceptable). Exclude generated files, type-only/barrel files, UI components, and thin browser/external I/O wrappers from coverage reporting so domain coverage stays clear.
+- Do not write mock-only tests, tests requiring excessive mocking, or tests written solely to satisfy coverage metrics. Verify domain behavior and invariants instead, and run mutation testing (`pnpm run test:mutation`) alongside coverage to verify that tests meaningfully detect defects.
 
 ## Dependency Management
 

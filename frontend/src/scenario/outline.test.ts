@@ -67,6 +67,12 @@ describe("buildOutline", () => {
 
     expect(buildOutline(source)[0]?.text).toBe("重要な導入");
   });
+
+  test("テキストが空の見出しは空文字として扱う", () => {
+    const source = doc({ type: "heading", attrs: { level: 2 } });
+
+    expect(buildOutline(source)).toEqual([{ index: 0, level: 2, text: "" }]);
+  });
 });
 
 describe("sectionStepIds", () => {

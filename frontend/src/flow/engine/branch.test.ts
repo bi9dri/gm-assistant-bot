@@ -73,4 +73,9 @@ describe("selectAutoArms (all)", () => {
     const step = autoBranch([arm("a", { condition: rule("x", "1") }), arm("default")], "all");
     expect(selectAutoArms(step, { x: "0" })).toEqual(["default"]);
   });
+
+  test("デフォルト枝も無くマッチしなければ空", () => {
+    const step = autoBranch([arm("a", { condition: rule("x", "1") })], "all");
+    expect(selectAutoArms(step, { x: "0" })).toEqual([]);
+  });
 });

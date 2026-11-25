@@ -67,10 +67,6 @@ describe("fisherYatesShuffle", () => {
 
     randomSpy.mockRestore();
 
-    expect(result).toHaveLength(4);
-    expect(result).toContain(1);
-    expect(result).toContain(2);
-    expect(result).toContain(3);
-    expect(result).toContain(4);
+    expect(result).toEqual([1, 4, 2, 3]);
   });
 });
