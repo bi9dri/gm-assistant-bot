@@ -3,7 +3,12 @@
   "vitestConfig": "vitest.mutator.config.ts",
   "include": [
     "src/components/Node/utils/DynamicValue.ts",
+    "src/components/Node/utils/evaluateCondition.ts",
+    "src/flow/engine/branch.ts",
+    "src/flow/engine/execute.ts",
     "src/flow/engine/order.ts",
+    "src/scenario/document.ts",
+    "src/scenario/outline.ts",
     "src/scenario/textTransfer.ts"
   ],
   "reporters": ["text", "html"],

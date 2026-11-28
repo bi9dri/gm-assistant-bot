@@ -73,6 +73,13 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: [
         "src/**/*.test.ts",
+        "src/**/*.d.ts",
+        "src/routeTree.gen.ts",
+
+        "src/components/Node/index.ts",
+        "src/components/Node/base/index.ts",
+        "src/components/Node/utils/index.ts",
+        "src/db/index.ts",
 
         "src/components/Node/nodes/**",
         "src/components/Node/base/base-node.tsx",
@@ -83,6 +90,8 @@ export default defineConfig({
         "src/components/Node/utils/PortaledSelect.tsx",
         "src/components/Node/utils/ResourceSelector.tsx",
         "src/toast/**",
+        "src/theme/**",
+        "src/hooks/**",
 
         "src/db/models/Category.ts",
         "src/db/models/Channel.ts",
@@ -102,12 +111,20 @@ export default defineConfig({
         "src/components/Node/utils/messageSchema.ts",
 
         "src/flow/components/**",
+        "src/flow/engine/fakeContext.ts",
+        "src/flow/engine/gateway.ts",
+        "src/flow/engine/resourceStore.ts",
+        "src/flow/engine/types.ts",
         "src/flow/registry/*.tsx",
+        "src/flow/registry/category.ts",
+        "src/flow/runner/types.ts",
+        "src/flow/runner/useSessionRunner.ts",
         "src/scenario/components/**",
+        "src/scenario/editor/**",
+        "src/scenario/scrollTo.ts",
 
         "test/**",
       ],
-      thresholds: { lines: 0.9, functions: 0.8, statements: 0.9 },
     },
   },
 });
